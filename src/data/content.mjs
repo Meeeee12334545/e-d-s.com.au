@@ -45,11 +45,24 @@ export const stats = [
 /* ------------------------------------------------------------------ */
 /* Services                                                            */
 /* ------------------------------------------------------------------ */
+// Services are listed by group, in this order, on the services page and in
+// the menus. `featured` services also appear on the home page and in the
+// footer. `solutions` links a service to the solution pages (the old site's
+// "Applications") it is used for, and `papers` to white papers by id.
+export const serviceGroups = [
+  { id: "sewer", title: "Sewer networks", heading: "Know what is in the pipe, and what should not be.", lede: "Measuring what flows through the network, finding where water gets in, and proving the fixes worked." },
+  { id: "water", title: "Water & environment", heading: "Quality, sampling and rainfall, measured properly.", lede: "For utilities, industry and environmental projects, with full pipe flow alongside." },
+  { id: "data", title: "Real-time data & analysis", heading: "From a reading to a decision.", lede: "Data that arrives as it happens, reaches the systems you already run, and ends in a report you can act on." },
+  { id: "field", title: "Field services & support", heading: "The people and equipment behind every program.", lede: "Calibration, hire, facility management and training, from five offices across Australia." },
+];
+
 export const services = [
   {
     slug: "sewer-flow-monitoring",
     title: "Sewer Flow Monitoring",
     icon: "waves",
+    group: "sewer",
+    featured: true,
     summary: "Temporary and permanent flow monitoring for councils and water authorities, installed by trained crews Australia wide.",
     intro: [
       "EDS provides comprehensive sewer flow monitoring to help councils and water authorities manage their wastewater infrastructure efficiently and effectively. With more than three decades of experience, we pair industry-leading technology with hands-on support to deliver accurate, reliable data for informed decisions.",
@@ -89,12 +102,16 @@ export const services = [
     ],
     widget: "lab",
     related: ["inflow-infiltration-studies", "data-as-a-service", "sewer-model-calibration"],
+    solutions: ["wastewater-monitoring"],
     products: ["detectronic", "hach-flow", "eds"],
+    papers: ["unforeseen-benefits"],
   },
   {
     slug: "inflow-infiltration-studies",
     title: "Inflow & Infiltration Studies",
     icon: "cloud-rain",
+    group: "sewer",
+    featured: true,
     summary: "Find where stormwater and groundwater enter the sewer, and how much, so investment goes where it counts.",
     intro: [
       "EDS specialises in identifying and addressing the challenges of sewer inflow and infiltration (I&I). Excess stormwater and groundwater entering sewer systems remains one of the most costly and complex challenges for councils and utilities across Australia.",
@@ -121,14 +138,18 @@ export const services = [
       },
     ],
     widget: "lab",
-    related: ["sewer-flow-monitoring", "sewer-model-calibration", "data-as-a-service"],
+    related: ["sewer-flow-monitoring", "thermal-infiltration-surveys", "sewer-model-calibration"],
+    solutions: ["network-thermal-monitoring", "wastewater-monitoring"],
     products: ["detectronic", "beadedstream"],
+    papers: ["measuring-the-invisible", "thermistor-strings"],
   },
   {
     slug: "data-as-a-service",
     title: "Sewer Flow Data as a Service",
     short: "Data as a Service (DaaS)",
     icon: "database-zap",
+    group: "sewer",
+    featured: true,
     summary: "A complete open channel sewer monitoring solution with no capital outlay, managed end to end by EDS.",
     intro: [
       "EDS DaaS delivers a structured workflow that ensures accuracy, reliability and defensible results. We select the sites, install and maintain the equipment, validate the data continuously and deliver insights you can act on.",
@@ -179,12 +200,306 @@ export const services = [
       ],
     },
     related: ["sewer-flow-monitoring", "real-time-monitoring", "inflow-infiltration-studies"],
+    solutions: ["wastewater-monitoring"],
     products: ["detectronic"],
+  },
+  {
+    slug: "sewer-model-calibration",
+    title: "Sewer Network Model Calibrations",
+    short: "Model Calibration",
+    icon: "drafting-compass",
+    group: "sewer",
+    featured: true,
+    summary: "Monitoring programs designed to calibrate and enhance hydraulic and sewer network models.",
+    intro: [
+      "We work closely with our clients to design and deliver tailored network monitoring programs, from project initiation through to final delivery. These programs support the calibration and enhancement of existing hydraulic and sewer network models.",
+      "Hydraulic modelling helps communities understand, plan and future-proof their wastewater infrastructure. High-resolution flow and rainfall data are essential for accurate simulation of collection system performance in both dry and wet weather.",
+      "Today's leading modelling platforms can import and process flow and rainfall data in near real time. But the quality of a model depends entirely on the accuracy of the field data fed into it.",
+      "Whether you are starting your hydraulic modelling journey or need updated flow monitoring to re-calibrate an existing model, EDS is ready to partner with you. Our team has worked with major councils and utilities across Australia, and understands the importance of reliable, defensible data that supports confident engineering decisions.",
+    ],
+    blocks: [],
+    related: ["sewer-flow-monitoring", "inflow-infiltration-studies", "network-assessment"],
+    products: ["detectronic", "hach-flow"],
+  },
+  {
+    slug: "thermal-infiltration-surveys",
+    title: "Thermal Infiltration Surveys",
+    icon: "thermometer",
+    group: "sewer",
+    summary: "Thermistor strings and open channel flow meters used together to pinpoint where groundwater is getting into a sewer.",
+    intro: [
+      "Flow monitoring shows how much infiltration a catchment has. Temperature shows where it is getting in. Groundwater and surface water usually enter a sewer at a different temperature from the wastewater already in the pipe, so a string of temperature sensors laid along the pipe registers the change at the point of entry.",
+      "EDS combines Beadedstream thermistor strings with open channel sewer flow meters. When a crack opens, the sensors nearest it shift while the flow meter records the extra water arriving, so infiltration is located as well as measured.",
+      "Temperature studies are not limited to sewers. EDS delivers short to long term temperature studies in water networks and most other atmospheric or pressurised reticulated networks.",
+    ],
+    blocks: [
+      {
+        heading: "Why combine temperature and flow",
+        items: [
+          ["Accuracy and sensitivity", "Temperature locates infiltration and flow quantifies it, so even minor ingress points show up early."],
+          ["Continuous monitoring", "Both record continuously in near real time, so new infiltration points are picked up as they appear."],
+          ["Non-intrusive installation", "Strings go in through existing manholes and inspection points, with no excavation or shutdown."],
+          ["Built for sewers", "Robust, waterproof sensors that stand up to corrosion, chemicals and physical damage."],
+          ["Targeted repairs", "Knowing where water enters narrows the scope, and the cost, of remedial work."],
+        ],
+      },
+      {
+        heading: "Typical uses",
+        list: [
+          "Locating the infiltration an I&I study has measured",
+          "Prioritising CCTV inspections and repairs",
+          "Intermittent infiltration that conventional methods miss",
+          "Temperature studies in water and other pressurised networks",
+        ],
+      },
+    ],
+    related: ["inflow-infiltration-studies", "sewer-flow-monitoring", "rehabilitation-verification"],
+    solutions: ["network-thermal-monitoring", "asset-network-assessment"],
+    products: ["beadedstream", "detectronic"],
+    papers: ["thermistor-strings"],
+  },
+  {
+    slug: "blockage-overflow-alarms",
+    title: "Blockage & Overflow Alarms",
+    icon: "siren",
+    group: "sewer",
+    summary: "Level alarms and continuous depth monitoring that warn of blockages and surcharges before they become overflows.",
+    intro: [
+      "Blockages and surcharges give warning if something is watching. EDS deploys level monitoring through sewer networks that alerts crews to rising wastewater depth, so utilities can react quickly to a blockage, or a surcharge caused by a sewer collapse, before it becomes a spill.",
+      "Detectronic's LIDoTT ALARM puts a radar level sensor, battery, modem and aerial into one Zone 0 certified device, suited to deployment throughout sewer networks and in domestic or lateral sewers.",
+      "Where flow meters are already installed, the data does the watching too. A steady rise in depth with no rain to explain it points to a developing blockage or sediment build-up, often long before field crews would report it.",
+    ],
+    blocks: [
+      {
+        heading: "How it works",
+        items: [
+          ["Three alarm states", "Thresholds such as normal, high and high-high are configured on site, with a message when levels return to normal."],
+          ["Alarms that reach people", "Delivered by SMS, email and website, with GIS options and optional weather-managed alarm filtering."],
+          ["Daily heartbeat", "A daily message confirms each sensor is still operational."],
+          ["Long life, zero maintenance", "Battery life of up to seven years, in a submersible, naturally self-cleaning enclosure."],
+          ["Depth watched against flow", "On metered sites, FlowSense Blockage Watch looks for depth creeping upward while flow does not, and gives crews a shortlist."],
+        ],
+      },
+      {
+        heading: "What it helps you catch",
+        list: [
+          "Blockages in main, domestic and lateral sewers",
+          "Surcharges caused by sewer collapses",
+          "Sediment build-up, cleared before the next storm",
+          "Partial obstructions, sags and displaced joints",
+          "Rising risk of a wet weather overflow",
+        ],
+      },
+    ],
+    widget: "lidott",
+    related: ["sewer-flow-monitoring", "real-time-monitoring", "pump-station-monitoring"],
+    solutions: ["wastewater-monitoring", "asset-network-assessment"],
+    products: ["detectronic"],
+    papers: ["unforeseen-benefits"],
+  },
+  {
+    slug: "rehabilitation-verification",
+    title: "Rehabilitation & Works Verification",
+    short: "Works Verification",
+    icon: "badge-check",
+    group: "sewer",
+    summary: "Before and after flow monitoring that shows whether relining, cleaning and repair works delivered what was paid for.",
+    intro: [
+      "Rehabilitation is a large investment, and flow data is the most direct way to show it worked. EDS monitors before and after relining, cleaning and repair programs, so the change in the network is measured rather than assumed.",
+      "After a cleaning and relining program in one coastal network, flow profiles recorded by EDS showed the network back to its baseline hydraulic behaviour within 24 hours, confirming the works had restored full capacity.",
+      "Utilities increasingly use these before and after comparisons to verify contractor performance, reducing disputes and improving accountability across maintenance programs.",
+    ],
+    blocks: [
+      {
+        heading: "A before and after approach",
+        list: [
+          "Baseline monitoring before works begin",
+          "Rainfall recorded alongside flow, so wet weather response before and after can be compared",
+          "Monitoring through and after the works",
+          "Depth, flow and wet weather response compared against the baseline",
+          "A report that documents the outcome for asset and planning teams",
+        ],
+      },
+      {
+        heading: "What it tells you",
+        items: [
+          ["Whether capacity was restored", "Flow profiles show the network returning to baseline hydraulic behaviour."],
+          ["Whether infiltration fell", "Less depth and flow variation during rainfall confirms the rehabilitation reduced infiltration."],
+          ["Whether the model was right", "Measured results confirm, or correct, the improvements the model predicted."],
+          ["Where to spend next", "Long term monitoring validates past interventions and guides the next round of investment."],
+        ],
+      },
+    ],
+    related: ["inflow-infiltration-studies", "data-analysis-reporting", "sewer-flow-monitoring"],
+    solutions: ["asset-network-assessment"],
+    products: ["detectronic"],
+    papers: ["unforeseen-benefits", "measuring-the-invisible"],
+  },
+  {
+    slug: "water-quality-monitoring",
+    title: "Water Quality Monitoring",
+    icon: "droplet",
+    group: "water",
+    summary: "pH, EC, turbidity and nutrient monitoring for wastewater, process water and the environment, from one sensor to a whole network.",
+    intro: [
+      "EDS has provided both flow and quality monitoring to the wastewater industry since its founding, and quality monitoring remains a major part of what we do. Whatever the requirement, from single point EC monitoring to a network program delivering real-time data from thousands of field instruments, we supply, install and look after the equipment.",
+      "EDS manufactures its own pH, EC and turbidity sensors and the iLab multi-parameter range, and represents Aquamonitrix for real-time nitrate and nitrite measurement. Readings can go straight to your SCADA or telemetry system.",
+    ],
+    blocks: [
+      {
+        heading: "What we measure",
+        items: [
+          ["pH, EC and turbidity", "EDS-made sensors for continuous measurement in water and wastewater."],
+          ["Several parameters at once", "The iLab 901 multi-parameter analytical sensor, and the handheld iLab Sonde for field checks."],
+          ["Nitrate and nitrite", "Aquamonitrix measures both from the same sample, with laboratory accuracy in the field and no sample pre-treatment."],
+          ["Flow and quality together", "One program can cover both, as EDS has done for the wastewater industry for decades."],
+        ],
+      },
+      {
+        heading: "Where it is used",
+        list: [
+          "Wastewater networks and treatment processes",
+          "Raw, process and effluent water",
+          "Trade waste discharges",
+          "Rivers, stormwater and surface water",
+          "Baseline, impact and compliance monitoring for projects",
+        ],
+      },
+    ],
+    related: ["sampling-programs", "trade-waste", "auditing-calibration"],
+    solutions: ["wastewater-monitoring", "environmental-monitoring"],
+    products: ["eds", "aquamonitrix", "ori"],
+  },
+  {
+    slug: "sampling-programs",
+    title: "Sampling & Sampler Hire",
+    icon: "test-tubes",
+    group: "water",
+    summary: "Automatic water and wastewater samplers to buy or hire, including the only true intrinsically safe sampler in Australia.",
+    intro: [
+      "EDS offers the largest range of automated water and wastewater samplers, and supplies the only true intrinsically safe sampler in Australia. We sell the widest range of sampler configurations in the country and keep a select rental fleet for short to long term projects.",
+      "The range covers mobile and stationary samplers from ORI, the world's leading manufacturer of ATEX and IECEx certified sampling systems, and MicroLevel's portable, fixed and refrigerated composite samplers.",
+    ],
+    blocks: [
+      {
+        heading: "What we offer",
+        items: [
+          ["Purchase", "The widest range of sampler configurations in Australia."],
+          ["Hire", "A select rental fleet for short to long term projects."],
+          ["Certified for hazardous areas", "ATEX and IECEx certified ORI samplers for sewers and other demanding sites."],
+          ["Composite and refrigerated", "MicroLevel MICROSAMPLER units for portable, fixed and refrigerated composite sampling."],
+          ["Expert advice", "Help choosing the right sampler and configuration for the job."],
+        ],
+      },
+      {
+        heading: "Suitable for",
+        list: [
+          "Wastewater, sewer and pretreatment sludge sampling",
+          "Trade waste and process water monitoring",
+          "Stormwater, surface water, river and well sampling",
+          "Watershed monitoring",
+          "Product sampling for quality verification",
+        ],
+      },
+    ],
+    related: ["water-quality-monitoring", "trade-waste", "equipment-rental"],
+    solutions: ["automatic-sampling", "environmental-monitoring"],
+    products: ["ori", "microlevel"],
+  },
+  {
+    slug: "trade-waste",
+    title: "Trade Waste Monitoring",
+    icon: "factory",
+    group: "water",
+    featured: true,
+    summary: "Compliance monitoring, real-time data and reporting for industrial discharge.",
+    intro: [
+      "EDS provides comprehensive trade waste monitoring to help businesses stay compliant and efficient. We work with some of Australia's largest companies, helping them manage their trade waste efficiently and sustainably.",
+    ],
+    blocks: [
+      {
+        heading: "Trade waste services",
+        items: [
+          ["Compliance monitoring", "Accurate, reliable monitoring systems that keep you within local and national regulations."],
+          ["Real-time data collection", "Continuous monitoring of trade waste parameters, allowing timely intervention."],
+          ["Customised solutions", "Systems tailored to your operations and waste streams."],
+          ["Reporting and analysis", "Comprehensive reporting to help you understand and manage your trade waste."],
+          ["Maintenance and support", "Ongoing servicing so your monitoring is always working."],
+        ],
+      },
+      {
+        heading: "Why EDS",
+        items: [
+          ["Decades of experience", "Knowledge gained over decades in the industry."],
+          ["Exceptional customer service", "A team dedicated to supporting you."],
+          ["Cutting-edge technology", "Precise and reliable monitoring solutions."],
+          ["Tailored solutions", "Designed around the needs of your business."],
+        ],
+      },
+    ],
+    related: ["sampling-programs", "water-quality-monitoring", "auditing-calibration"],
+    solutions: ["automatic-sampling", "wastewater-monitoring"],
+    products: ["ori", "microlevel", "dynaflox", "aquamonitrix"],
+  },
+  {
+    slug: "closed-channel-flow",
+    title: "Closed Channel Flow Monitoring",
+    short: "Closed Channel Flow",
+    icon: "cylinder",
+    group: "water",
+    summary: "Magnetic, ultrasonic and contacting technologies to measure and totalise flow in full pipes.",
+    intro: [
+      "In closed channel flow monitoring there are several products and technologies that can be used to measure flow.",
+      "The options include magnetic and ultrasonic flow meters, pressure transmitters and contacting technologies such as capacitance, TDR (time domain reflectometry) and paddle wheel, to measure and totalise the flow. Each technology has its pluses and minuses.",
+      "EDS staff would welcome the opportunity to discuss the options and services available.",
+    ],
+    blocks: [],
+    related: ["auditing-calibration", "equipment-rental", "real-time-monitoring"],
+    products: ["dynaflox", "eds"],
+  },
+  {
+    slug: "rainfall-monitoring",
+    title: "Rainfall Monitoring",
+    icon: "cloud-drizzle",
+    group: "water",
+    summary: "Tipping bucket rain gauges installed alongside flow meters, so every change in the network can be read against the rain that caused it.",
+    intro: [
+      "Flow data shows that something changed. Rainfall data shows why. EDS integrates data from RIMCO 7499 tipping bucket rain gauges sited in the catchments we monitor, so the network's wet weather response can be measured against the rain that produced it.",
+      "Rainfall correlation is how inflow is told apart from infiltration. Inflow arrives quickly during a storm. Infiltration builds slowly and lingers as groundwater rises. On-site gauges, read with historical climate data, let the two be separated with confidence.",
+      "Rainfall data is in our history: EDS developed the data logger for the Bureau of Meteorology in the 1990s, and those loggers are still in use today.",
+    ],
+    blocks: [
+      {
+        heading: "What is included",
+        items: [
+          ["Tipping bucket rain gauges", "RIMCO 7499 gauges sited within the catchment being monitored."],
+          ["High resolution logging", "Rain recorded at short intervals, typically 1 to 5 minutes, so storm peaks are captured."],
+          ["Rainfall dependent I&I analysis", "Flow response separated into rapid inflow and slower, groundwater driven infiltration."],
+          ["Historical context", "Site records read against historical climate data."],
+          ["Rainfall in FlowSense", "Weather on the network map, and a rainfall outlook that states its odds."],
+        ],
+      },
+      {
+        heading: "Applications",
+        list: [
+          "Inflow and infiltration studies",
+          "Hydraulic model calibration in dry and wet weather",
+          "Wet weather overflow risk",
+          "Environmental monitoring programs",
+        ],
+      },
+    ],
+    related: ["inflow-infiltration-studies", "sewer-model-calibration", "sewer-flow-monitoring"],
+    solutions: ["environmental-monitoring"],
+    products: ["eds"],
+    papers: ["measuring-the-invisible"],
   },
   {
     slug: "real-time-monitoring",
     title: "Real-Time Monitoring",
     icon: "radio-tower",
+    group: "data",
+    featured: true,
     summary: "Rugged wireless monitoring equipment that integrates with the SCADA systems you already run.",
     intro: [
       "EDS offers an extensive selection of rugged, wireless monitoring equipment designed for the most demanding and critical applications. Our devices are engineered for resilience and accuracy, performing reliably in any condition.",
@@ -212,57 +527,121 @@ export const services = [
     products: ["eds", "detectronic"],
   },
   {
-    slug: "trade-waste",
-    title: "Trade Waste Monitoring",
-    icon: "factory",
-    summary: "Compliance monitoring, real-time data and reporting for industrial discharge.",
+    slug: "pump-station-monitoring",
+    title: "Pump Station Monitoring",
+    icon: "fan",
+    group: "data",
+    summary: "Wet well levels, pump runs and alarms watched around the clock, from the company that built the Pump Station Manager.",
     intro: [
-      "EDS provides comprehensive trade waste monitoring to help businesses stay compliant and efficient. We work with some of Australia's largest companies, helping them manage their trade waste efficiently and sustainably.",
+      "Pump stations are where EDS began. The company was founded in 1991 alongside the release of its flagship product, the Pump Station Manager (PSM), and EDS still designs and builds the instruments that keep pump stations under watch.",
+      "We supply and install monitoring for wet well levels, pump runs and alarms, and connect it to the SCADA systems you already run. Flow data from the network upstream adds what SCADA alone cannot show: how the catchment responds to rain, and whether pump start and stop levels suit the flows actually arriving.",
+      "Utilities have used flow data from LIDoTT Smart sensors to refine pump start and stop levels, reducing both run time and power consumption.",
     ],
     blocks: [
       {
-        heading: "Trade waste services",
+        heading: "What we provide",
         items: [
-          ["Compliance monitoring", "Accurate, reliable monitoring systems that keep you within local and national regulations."],
-          ["Real-time data collection", "Continuous monitoring of trade waste parameters, allowing timely intervention."],
-          ["Customised solutions", "Systems tailored to your operations and waste streams."],
-          ["Reporting and analysis", "Comprehensive reporting to help you understand and manage your trade waste."],
-          ["Maintenance and support", "Ongoing servicing so your monitoring is always working."],
+          ["Pump Station Manager", "The EDS flagship since 1991, designed and built by EDS."],
+          ["Wet well level", "Radar and pressure level sensing with the LIDoTT R, or EDS ultrasonic level sensors."],
+          ["Loggers and telemetry", "EDS EMS data loggers and the 4G Metalog send readings in real time."],
+          ["SCADA integration", "Works with ClearSCADA, Schneider CITECT, ELPRO and other leading SCADA architectures."],
+          ["The wet well in FlowSense", "Drawn to scale with its start, stop, surcharge and overflow levels and the live water level."],
         ],
       },
       {
-        heading: "Why EDS",
-        items: [
-          ["Decades of experience", "Knowledge gained over decades in the industry."],
-          ["Exceptional customer service", "A team dedicated to supporting you."],
-          ["Cutting-edge technology", "Precise and reliable monitoring solutions."],
-          ["Tailored solutions", "Designed around the needs of your business."],
+        heading: "Applications",
+        list: [
+          "Wet well level and overflow alarms",
+          "Refining pump start and stop levels",
+          "Reducing pump run time and power consumption",
+          "Cross-checking network flow data against pump station records",
         ],
       },
     ],
-    related: ["auditing-calibration", "equipment-rental", "real-time-monitoring"],
-    products: ["ori", "microlevel", "dynaflox", "aquamonitrix"],
+    related: ["real-time-monitoring", "scada-telemetry-integration", "blockage-overflow-alarms"],
+    solutions: ["wastewater-monitoring"],
+    products: ["eds", "detectronic"],
+    papers: ["unforeseen-benefits"],
   },
   {
-    slug: "sewer-model-calibration",
-    title: "Sewer Network Model Calibrations",
-    short: "Model Calibration",
-    icon: "drafting-compass",
-    summary: "Monitoring programs designed to calibrate and enhance hydraulic and sewer network models.",
+    slug: "scada-telemetry-integration",
+    title: "SCADA & Telemetry Integration",
+    short: "SCADA & Telemetry",
+    icon: "plug-zap",
+    group: "data",
+    summary: "Monitoring data delivered into the SCADA, telemetry and building management systems you already run.",
     intro: [
-      "We work closely with our clients to design and deliver tailored network monitoring programs, from project initiation through to final delivery. These programs support the calibration and enhancement of existing hydraulic and sewer network models.",
-      "Hydraulic modelling helps communities understand, plan and future-proof their wastewater infrastructure. High-resolution flow and rainfall data are essential for accurate simulation of collection system performance in both dry and wet weather.",
-      "Today's leading modelling platforms can import and process flow and rainfall data in near real time. But the quality of a model depends entirely on the accuracy of the field data fed into it.",
-      "Whether you are starting your hydraulic modelling journey or need updated flow monitoring to re-calibrate an existing model, EDS is ready to partner with you. Our team has worked with major councils and utilities across Australia, and understands the importance of reliable, defensible data that supports confident engineering decisions.",
+      "Telemetry is in EDS's roots. Before founding EDS, Graham Harper started Elpro, now one of the world's largest SCADA suppliers.",
+      "Our monitoring equipment works with leading SCADA architectures including ClearSCADA, Schneider CITECT and ELPRO. Data can also reach your systems from our platform by API, and real-time analytical sensors can be integrated into new or existing building management systems.",
     ],
-    blocks: [],
-    related: ["sewer-flow-monitoring", "inflow-infiltration-studies", "network-assessment"],
-    products: ["detectronic", "hach-flow"],
+    blocks: [
+      {
+        heading: "Ways to connect",
+        items: [
+          ["Direct to SCADA", "Instruments that work with ClearSCADA, Schneider CITECT, ELPRO and many more."],
+          ["4G telemetry", "Integrated 4G communications on flow meters and loggers, for real-time data."],
+          ["API access", "Data passed from our platform straight into your existing systems."],
+          ["Hosted SFTP", "One of five ways FlowSense connects to SCADA, so nothing is exposed at your end."],
+          ["Building management systems", "Real-time analytical sensors integrated into new or existing BMS."],
+          ["Analysers to telemetry", "Aquamonitrix sends nitrate and nitrite readings straight to SCADA or telemetry."],
+        ],
+      },
+      {
+        heading: "Applications",
+        list: [
+          "Pump stations and wet wells",
+          "Network flow and level sites",
+          "Treatment process and quality analysers",
+          "Facilities and buildings",
+        ],
+      },
+    ],
+    related: ["real-time-monitoring", "pump-station-monitoring", "facility-management"],
+    products: ["eds", "aquamonitrix"],
+  },
+  {
+    slug: "data-analysis-reporting",
+    title: "Data Analysis & Reporting",
+    icon: "chart-line",
+    group: "data",
+    summary: "Validated flow, depth and rainfall data turned into reports that show where the problems are and what to fix first.",
+    intro: [
+      "Data is only valuable if it leads to a decision. EDS validates the data it collects and turns it into reports that are easy to interpret, supporting planning, investment and regulatory compliance.",
+      "Our data validation processes are ISO compliant. Readings are checked continuously and, where it matters, cross-checked against SCADA pump station records and field inspections to verify anomalies.",
+      "In EDS's experience, about 20% of a sewer network typically accounts for 80% of its inflow and infiltration. Good analysis finds that 20%, so rehabilitation goes where it pays back.",
+    ],
+    blocks: [
+      {
+        heading: "What we deliver",
+        items: [
+          ["Continuous QA/QC", "Data validated as it arrives, with calibration checks and remote telemetry throughout the program."],
+          ["Rainfall dependent I&I analysis", "Inflow separated from infiltration using on-site rain gauges and historical climate data."],
+          ["Prioritised remediation plans", "Subcatchments ranked by contribution, with cost benefit analyses and a phased program of works."],
+          ["Asset condition insights", "Shifts in the depth to velocity relationship that point to blockages, sediment and structural defects."],
+          ["Cross connection detection", "Dry weather flow signatures that reveal illegal discharges and stormwater tied into the sewer."],
+          ["Full access to your data", "Through FlowSense, or by API into your own systems."],
+        ],
+      },
+      {
+        heading: "From an EDS project",
+        items: [
+          ["Three subcatchments, 65% of the I&I", "A regional council engaged EDS ahead of a treatment plant upgrade. Twenty short term flow meters and on-site rain gauges showed where the water was coming from."],
+          ["A $6M expansion avoided", "The evidence let the council redirect capital into relining, manhole sealing and inflow source reduction."],
+          ["Peak wet weather flows down 35%", "Targeted rehabilitation delivered the reduction within two years."],
+        ],
+      },
+    ],
+    related: ["data-as-a-service", "inflow-infiltration-studies", "rehabilitation-verification"],
+    solutions: ["asset-network-assessment"],
+    products: ["detectronic"],
+    papers: ["measuring-the-invisible", "unforeseen-benefits"],
   },
   {
     slug: "network-assessment",
     title: "Network Assessment & Review",
     icon: "network",
+    group: "data",
+    featured: true,
     summary: "In-depth network analysis and reporting on the performance and condition of water and wastewater networks.",
     intro: [
       "EDS has in-depth knowledge and a long history of working with Australia's largest networks in the water and wastewater industry. We offer full network analysis and reports that show overall performance and operating condition.",
@@ -280,13 +659,16 @@ export const services = [
         ],
       },
     ],
-    related: ["sewer-model-calibration", "sewer-flow-monitoring", "auditing-calibration"],
+    related: ["sewer-model-calibration", "data-analysis-reporting", "sewer-flow-monitoring"],
+    solutions: ["asset-network-assessment"],
     products: ["detectronic", "eds"],
   },
   {
     slug: "auditing-calibration",
     title: "Auditing & Calibration",
     icon: "clipboard-check",
+    group: "field",
+    featured: true,
     summary: "In situ audits and calibration of your monitoring equipment by experienced service technicians.",
     intro: [
       "EDS's experienced team of service and network technicians offers in situ audit and calibration of your monitoring equipment. This includes closed channel, open channel, quantity and analytical equipment.",
@@ -297,24 +679,10 @@ export const services = [
     products: ["hach-flow", "dynaflox", "eds"],
   },
   {
-    slug: "closed-channel-flow",
-    title: "Closed Channel Flow Monitoring",
-    short: "Closed Channel Flow",
-    icon: "cylinder",
-    summary: "Magnetic, ultrasonic and contacting technologies to measure and totalise flow in full pipes.",
-    intro: [
-      "In closed channel flow monitoring there are several products and technologies that can be used to measure flow.",
-      "The options include magnetic and ultrasonic flow meters, pressure transmitters and contacting technologies such as capacitance, TDR (time domain reflectometry) and paddle wheel, to measure and totalise the flow. Each technology has its pluses and minuses.",
-      "EDS staff would welcome the opportunity to discuss the options and services available.",
-    ],
-    blocks: [],
-    related: ["auditing-calibration", "equipment-rental", "real-time-monitoring"],
-    products: ["dynaflox", "eds"],
-  },
-  {
     slug: "equipment-rental",
     title: "Equipment Rental",
     icon: "package-check",
+    group: "field",
     summary: "Long and short term hire of monitoring and analytical equipment built for the harshest applications.",
     intro: [
       "EDS offers an extensive range of monitoring and analytical equipment as part of our hire fleet. Our equipment is designed for the harshest and most demanding applications.",
@@ -329,6 +697,7 @@ export const services = [
     slug: "facility-management",
     title: "Facility Management",
     icon: "building-2",
+    group: "field",
     summary: "Integrated, technology-driven facility management for major corporate and government organisations.",
     intro: [
       "With more than 30 years of experience, EDS is a trusted leader in facility management solutions for major corporate and government organisations across Australia.",
@@ -349,8 +718,35 @@ export const services = [
     quote: {
       text: "Motivated people, delivering multiple services together as one team, and a continual focus on processes, results in cost-reductions from synergies and integration.",
     },
-    related: ["real-time-monitoring", "auditing-calibration", "network-assessment"],
+    related: ["real-time-monitoring", "scada-telemetry-integration", "auditing-calibration"],
+    solutions: ["structure-performance"],
     products: ["eds"],
+  },
+  {
+    slug: "training-support",
+    title: "Training & Technical Support",
+    short: "Training & Support",
+    icon: "graduation-cap",
+    group: "field",
+    summary: "Training for your staff in monitoring and modelling practice, and support for the instruments and software we supply.",
+    intro: [
+      "EDS trains client staff in monitoring and modelling practices, so the people who own a network can understand the data it produces and get the most from it.",
+      "Our own field crews complete rigorous training in installation, maintenance and calibration, because trained people and sound QA are what keep data quality high over a long program.",
+      "We also support the instruments and software we supply. Manuals, software and drivers are on our Resources page, and EDS, Hach Flo-Ware and Dynaflox software is available on request.",
+    ],
+    blocks: [
+      {
+        heading: "How we help",
+        items: [
+          ["Monitoring and modelling practice", "Training for your staff in the practices behind network monitoring and hydraulic models."],
+          ["Software and drivers", "FSDATA Desktop and USB-serial drivers to download, with EDS (EMS2001, EMS4000), Hach Flo-Ware and Dynaflox software on request."],
+          ["Advice on equipment", "Our team has installed, serviced and calibrated the instruments we sell, and can tell you which suits your application."],
+          ["Ongoing support", "Maintenance and support so implemented solutions keep working."],
+        ],
+      },
+    ],
+    related: ["auditing-calibration", "network-assessment", "equipment-rental"],
+    products: ["eds", "hach-flow", "dynaflox"],
   },
 ];
 
@@ -799,18 +1195,21 @@ export const clients = [
 /* ------------------------------------------------------------------ */
 export const papers = [
   {
+    id: "unforeseen-benefits",
     title: "The Unforeseen Benefits of Sewer Inflow & Infiltration Monitoring",
     date: "October 2025",
     text: "How modern sewer flow monitoring programs deliver far more than I/I insights. Drawing on real projects across Australia, it shows accurate flow data helping utilities detect blockages, verify maintenance, identify cross connections, optimise pump operations and target investment.",
     href: doc("/s/EDS-White-Paper-The-Unforeseen-Benefits-of-Sewer-Inflow-and-Infiltration-Monitoring-October-2025.pdf"),
   },
   {
+    id: "measuring-the-invisible",
     title: "Inflow & Infiltration: Measuring the Invisible Problem",
     date: "July 2025",
     text: "Excess stormwater and groundwater entering sewer systems remains one of the most costly and complex challenges for councils and utilities. With asset pressures rising and budgets under strain, targeting I&I is more critical than ever.",
     href: doc("/s/EDS-White-Paper-Inflow-Infiltration-Measuring-the-Invisible-Problem-July-2025-rev13.pdf"),
   },
   {
+    id: "thermistor-strings",
     title: "Thermistor Strings with Open Channel Sewer Flow Meters to Locate Infiltration",
     date: "White paper",
     text: "How combining thermistor strings with open channel sewer flow meters gives precise detection of infiltration, with continuous real-time monitoring, non-intrusive installation and significant cost savings.",
@@ -853,7 +1252,7 @@ export const city = [
     name: "Sewer network",
     icon: "waves",
     blurb: "Under every street, flow and depth are measured at the manhole and sent in over 4G.",
-    services: ["s:sewer-flow-monitoring", "s:inflow-infiltration-studies", "s:data-as-a-service", "s:sewer-model-calibration"],
+    services: ["s:sewer-flow-monitoring", "s:inflow-infiltration-studies", "s:blockage-overflow-alarms", "s:sewer-model-calibration"],
     products: [["Detectronic MSFM flow meter", "p:detectronic"], ["LIDoTT Alarm", "lidott"], ["Hach Flo-Dar", "p:hach-flow"]],
   },
   {
@@ -861,7 +1260,7 @@ export const city = [
     name: "Pump station",
     icon: "fan",
     blurb: "Wet well levels, pump runs and alarms, watched around the clock.",
-    services: ["s:real-time-monitoring", "s:network-assessment"],
+    services: ["s:pump-station-monitoring", "s:real-time-monitoring", "s:scada-telemetry-integration", "s:network-assessment"],
     products: [["EDS Pump Station Manager", "p:eds"], ["EMS data loggers", "p:eds"], ["LIDoTT R level sensor", "p:detectronic"]],
   },
   {
@@ -869,7 +1268,7 @@ export const city = [
     name: "Treatment plant",
     icon: "flask-conical",
     blurb: "Flow, quality and sampling through every stage of treatment.",
-    services: ["o:wastewater-monitoring", "o:automatic-sampling", "s:auditing-calibration", "s:closed-channel-flow"],
+    services: ["s:water-quality-monitoring", "o:wastewater-monitoring", "s:closed-channel-flow", "s:auditing-calibration"],
     products: [["Aquamonitrix nitrate analyser", "p:aquamonitrix"], ["ORI samplers", "p:ori"], ["Dynaflox ultrasonic meters", "p:dynaflox"]],
   },
   {
@@ -877,7 +1276,7 @@ export const city = [
     name: "Industrial estate",
     icon: "factory",
     blurb: "Discharge measured and sampled, so trade waste stays compliant.",
-    services: ["s:trade-waste", "s:equipment-rental", "s:auditing-calibration"],
+    services: ["s:trade-waste", "s:sampling-programs", "s:equipment-rental", "s:auditing-calibration"],
     products: [["ORI ATEX samplers", "p:ori"], ["MicroLevel MICROSAMPLER", "p:microlevel"], ["Dynaflox flow meters", "p:dynaflox"]],
   },
   {
@@ -885,7 +1284,7 @@ export const city = [
     name: "River & catchment",
     icon: "trees",
     blurb: "Water quality, rainfall and temperature, from baseline to compliance.",
-    services: ["o:environmental-monitoring", "o:network-thermal-monitoring", "o:automatic-sampling"],
+    services: ["o:environmental-monitoring", "s:water-quality-monitoring", "s:rainfall-monitoring", "o:network-thermal-monitoring"],
     products: [["iLab multi-parameter sonde", "p:eds"], ["Beadedstream thermistor strings", "p:beadedstream"], ["EDS pH, EC and turbidity sensors", "p:eds"]],
   },
   {
@@ -901,7 +1300,7 @@ export const city = [
     name: "Operations centre",
     icon: "monitor-dot",
     blurb: "Every reading arrives in one place: EDS FlowSense.",
-    services: ["flowsense", "s:real-time-monitoring", "s:data-as-a-service"],
+    services: ["flowsense", "s:data-analysis-reporting", "s:real-time-monitoring", "s:data-as-a-service"],
     products: [["EDS FlowSense platform", "flowsense"], ["SCADA connection", "flowsense"], ["Alarms by SMS and email", "flowsense"]],
   },
 ];

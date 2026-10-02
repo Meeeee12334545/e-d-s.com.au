@@ -17,8 +17,8 @@ Every push to `main` publishes a preview copy to GitHub Pages (`.github/workflow
 
 | Path | What |
 |---|---|
-| `src/data/content.mjs` | Every word on the site, the product lists and the city districts. Edit copy here. |
-| `build.mjs` | Page templates. Generates 36 pages, including `404.html`. |
+| `src/data/content.mjs` | Every word on the site, the services and their groups, the product lists and the city districts. Edit copy here. |
+| `build.mjs` | Page templates. Generates 46 pages, including `404.html`. |
 | `src/css/site.css` | All styles and design tokens. |
 | `src/js/site.js` | Navigation, scroll reveals, counters, pointer effects, the flow-field background. |
 | `src/js/city.js` | The interactive isometric city on the home page. |
