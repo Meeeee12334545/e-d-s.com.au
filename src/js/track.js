@@ -65,6 +65,9 @@
   /* ---- forms ---- */
   document.addEventListener("submit", (e) => {
     const f = e.target;
+    // The enquiry form is novalidate, so it fires submit while incomplete;
+    // site.js stops those, and so do we.
+    if (f.checkValidity && !f.checkValidity()) return;
     const subject = f.elements?.subject?.value;
     send({ type: "form", label: `${f.dataset.track || "Form"}${subject ? ` · ${subject}` : ""}` });
   }, true);
