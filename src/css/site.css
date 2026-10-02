@@ -618,6 +618,9 @@ input[type="range"]::-moz-range-thumb { width: 16px; height: 16px; border-radius
 .doc-list a:hover { border-color: var(--brand); translate: 4px 0; }
 .doc-list .card-icon { width: 40px; height: 40px; font-size: 19px; border-radius: 12px; }
 .doc-list a > .icon { color: var(--brand); }
+.doc-list small { display: block; margin-top: 2px; font-size: .85rem; font-weight: 500; color: var(--muted); }
+.doc-list.grid { row-gap: 8px; }
+.doc-list.grid li + li { margin-top: 0; }
 
 /* LIDoTT demo + EAS gauge */
 .demo { display: grid; grid-template-columns: minmax(0, 1fr) minmax(260px, .8fr); gap: 18px; align-items: stretch; }

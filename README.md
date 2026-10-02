@@ -29,6 +29,7 @@ The build stops with an error if a page repeats an element id, since product lin
 | `src/js/lab.js` | The storm and hydrograph simulator. |
 | `src/js/widgets.js` | Office map, LIDoTT Alarm demo, EDS Asset Score dial. |
 | `src/assets/img/` | Product photos and logos. Reference one with `img("file-name.png")` in `content.mjs`. Also the favicon and touch icon (cut from the EDS mark in the logo) and `og-card.jpg`, the 1200 × 630 image shown when a page is shared. |
+| `src/assets/docs/` | Datasheets, brochures and manuals. Reference one with `localDoc("file-name.pdf")` in `content.mjs`. |
 | `content/privacy.txt` | Privacy policy text, carried over from the old site. |
 
 ## Links that carry context
@@ -47,7 +48,7 @@ The build stops with an error if a page repeats an element id, since product lin
 
 ## Before this replaces www.e-d-s.com.au
 
-1. **Documents still load from the old Squarespace site.** Datasheets, white papers and software downloads link to `www.e-d-s.com.au/s/...`, so they break as soon as the domain points at this site. Copy them into the project and change `doc()` at the top of `src/data/content.mjs`. (Images are already local, in `src/assets/img`.)
+1. **Some documents still load from the old Squarespace site.** Everything passed to `doc()` in `src/data/content.mjs` (the older datasheets, the white papers and the software downloads) links to `www.e-d-s.com.au/s/...`, so it breaks as soon as the domain points at this site. Copy each file into `src/assets/docs` and switch it to `localDoc()`. (Images are already local, in `src/assets/img`.)
 2. **Forms open the visitor's email program.** For a form that submits on the page, connect a form service (most static hosts include one) in `site.js`.
 3. Set up redirects from the old page addresses to the new ones.
 4. The favicon and touch icon are cut from the logo PNG. A vector EDS mark from the brand files would give a sharper favicon.

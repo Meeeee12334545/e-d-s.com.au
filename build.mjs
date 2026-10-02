@@ -933,10 +933,16 @@ for (const b of C.brands) {
   const cover = range.find((p) => p.image === b.cover) || range[0];
   const pricing = { topic: "Product pricing", product: b.title };
   // Brand-wide documents first, then each product's, named after the product.
-  const docs = [
+  // A file shared by several products is listed once, under all their names.
+  const docs = [];
+  for (const d of [
     ...(b.docs || []).map((d) => ({ title: d.label, meta: docType(d.href), href: d.href })),
     ...range.flatMap((p) => (p.docs || []).map((d) => ({ title: p.name, meta: `${d.label} · ${docType(d.href)}`, href: d.href }))),
-  ];
+  ]) {
+    const seen = docs.find((x) => x.href === d.href);
+    if (seen) seen.title += `, ${d.title}`;
+    else docs.push(d);
+  }
   add({
     file: `products/${b.slug}.html`,
     title: `${b.title} | EDS Products`,
@@ -1019,6 +1025,12 @@ ${pageHero(r, { crumbs: [["FlowSense"]], iconName: "waves", eyebrow: "EDS FlowSe
     ${C.flowsense.features.map(([ic, t, d], n) => `<div class="card hoverable holder" data-reveal style="--i:${n % 3}"><span class="card-icon">${icon(ic)}</span><h3>${esc(t)}</h3><p>${esc(d)}</p></div>`).join("")}
   </div>
 </div></section>
+<section class="section alt"><div class="wrap">
+  <div class="section-head"><p class="eyebrow">Documents</p><h2 class="h-lg" data-reveal>Read more about FlowSense.</h2></div>
+  <ul class="doc-list grid c2">
+    ${C.flowsense.docs.map((d, n) => `<li data-reveal style="--i:${n}"><a href="${d.href}" rel="noopener"><span class="card-icon">${icon("file-text")}</span><span>${esc(d.label)}<small>${esc(d.note)} ${docType(d.href)}.</small></span>${icon("download")}</a></li>`).join("")}
+  </ul>
+</div></section>
 ${ctaSection(r, { title: "See FlowSense on your own network.", lede: "FlowSense comes with EDS monitoring. Ask us for a walkthrough using your sites.", topic: "EDS FlowSense" })}`,
 });
 
@@ -1076,9 +1088,9 @@ ${pageHero(r, { crumbs: [["Resources"]], eyebrow: "Resources", title: "White pap
   <div class="section-head"><p class="eyebrow">Downloads and manuals</p><h2 class="h-lg" data-reveal>Software, drivers and datasheets</h2></div>
   <div class="grid c2">
     ${C.downloads.map((g) => `
-    <div data-reveal>
+    <div data-reveal${g.wide ? ' style="grid-column:1/-1;margin-top:28px"' : ""}>
       <h3 class="h-md" style="font-size:1.3rem;margin-bottom:16px">${g.group}</h3>
-      <ul class="doc-list">${g.items.map(([label, href]) => `<li><a href="${href}" rel="noopener"><span class="card-icon">${icon(g.icon)}</span><span>${esc(label)}</span>${icon("download")}</a></li>`).join("")}</ul>
+      <ul class="doc-list${g.wide ? " grid c2" : ""}">${g.items.map(([label, href]) => `<li><a href="${href}" rel="noopener"><span class="card-icon">${icon(g.icon)}</span><span>${esc(label)}</span>${icon("download")}</a></li>`).join("")}</ul>
       ${g.note ? `<p class="note" style="margin-top:14px;font-size:.9rem">${g.note}</p>` : ""}
     </div>`).join("")}
   </div>
@@ -1212,10 +1224,10 @@ function searchIndex() {
   put("Pages", "Home", site.tagline, "index.html", { i: "house" });
   put("Pages", "Privacy policy", "How EDS handles personal information.", "privacy.html", { i: "lock" });
   for (const p of C.papers) put("Documents", p.title, `White paper · ${p.date}`, p.href, { i: "file-text", x: 1, b: p.text });
-  for (const g of C.downloads) for (const [label, href] of g.items) put("Documents", label, g.group, href, { i: g.icon, x: 1, b: g.note });
+  for (const g of C.downloads) for (const [label, href] of g.items) put("Documents", label, g.group, plain(href), { i: g.icon, x: 1, b: g.note });
   for (const p of products) {
     for (const d of p.docs || []) {
-      if (!items.some((e) => e.h === d.href)) put("Documents", `${p.name}: ${d.label}`, `${p.brand.name} · ${docType(d.href)}`, d.href, { i: "file-text", x: 1, b: text(p.brand.title, p.note) });
+      if (!items.some((e) => e.h === plain(d.href))) put("Documents", `${p.name}: ${d.label}`, `${p.brand.name} · ${docType(d.href)}`, plain(d.href), { i: "file-text", x: 1, b: text(p.brand.title, p.note) });
     }
   }
   put("Contact", `Call ${site.phone}`, `${site.hours}, from anywhere in Australia`, site.phoneHref, { i: "phone", b: "phone ring telephone call" });
@@ -1240,6 +1252,7 @@ await mkdir(path.join(DIST, "assets/fonts"), { recursive: true });
 await cp(path.join(ROOT, "src/css"), path.join(DIST, "assets/css"), { recursive: true });
 await cp(path.join(ROOT, "src/js"), path.join(DIST, "assets/js"), { recursive: true });
 await cp(path.join(ROOT, "src/assets/img"), path.join(DIST, "assets/img"), { recursive: true });
+await cp(path.join(ROOT, "src/assets/docs"), path.join(DIST, "assets/docs"), { recursive: true });
 for (const [pkg, f] of [["inter", "inter-latin-wght-normal.woff2"], ["inter-tight", "inter-tight-latin-wght-normal.woff2"]]) {
   await cp(path.join(ROOT, `node_modules/@fontsource-variable/${pkg}/files/${f}`), path.join(DIST, "assets/fonts", f));
 }
