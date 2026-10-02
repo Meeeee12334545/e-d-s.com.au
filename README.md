@@ -1,12 +1,15 @@
 # EDS website
 
-The marketing site for Environmental Data Services. A static site: no framework
-and no server code. `dist/` can be uploaded to any web host.
+The marketing site for Environmental Data Services. The pages are static (no
+framework), so `dist/` can be uploaded to any web host. A small optional Node
+server in `server/` serves the same pages and adds a private visit-analytics
+dashboard at `/admin`.
 
 ```bash
 npm install
-npm run dev      # builds, then serves http://localhost:4173
+npm run dev      # builds, then runs the server on http://localhost:4173
 npm run build    # writes dist/
+npm start        # runs the server on an existing dist/
 ```
 
 `PREVIEW=1 npm run build` adds a no-index tag, for copies that are not the live site.
@@ -26,6 +29,35 @@ Every push to `main` publishes a preview copy to GitHub Pages (`.github/workflow
 | `src/js/widgets.js` | Office map, LIDoTT Alarm demo, EDS Asset Score dial. |
 | `src/assets/img/` | Product photos and logos. Reference one with `img("file-name.png")` in `content.mjs`. |
 | `content/privacy.txt` | Privacy policy text, carried over from the old site. |
+| `src/js/track.js` | Counts visits for the analytics dashboard. No cookies. |
+| `server/index.mjs` | The site server: serves `dist/`, takes visits at `/api/collect`, hosts `/admin`. |
+| `server/store.mjs` | The SQLite database (`data/analytics.db`) and the dashboard's queries. |
+| `server/collect.mjs` | Checks each visit, filters bots, works out source, device and location. |
+| `server/admin.mjs`, `server/admin/` | The sign-in and the dashboard page, styles and charts. |
+
+## Analytics dashboard
+
+Sign in at `/admin` to see visitors, visits, page views, bounce rate and time on
+page for any period against the period before, plus top pages, entry pages,
+sources and campaigns (`utm_*` tags), locations (Australian states from the time
+zone), devices, document downloads, email and phone clicks, form submissions,
+links to other sites, pages not found, and each recent visit page by page.
+Everything exports to CSV.
+
+- **Turn it on** by setting `ADMIN_PASSWORD`. Locally, copy `.env.example` to `.env`
+  (git ignores it). Without a password `/admin` explains how to set one.
+- **Privacy.** No cookies, and no IP addresses are stored. A visitor is a hash of IP
+  and browser with a salt that is replaced daily, so people cannot be followed from
+  one day to the next. Bots are filtered out. On the dashboard, tick "Don't count my
+  own visits" to leave your browser out.
+- **Hosting.** The dashboard needs the server, which runs on any host with Node 22.13
+  or later and a persistent disk for `data/` (a VPS, Render, Railway, Fly.io). Run
+  `npm ci && npm run build && npm start` behind HTTPS. To keep the pages on a static
+  host instead, run the server somewhere else and build the pages with
+  `ANALYTICS_ENDPOINT=https://<that server>/api/collect`.
+- GitHub Pages preview copies leave the tracker out, since nothing there can receive visits.
+
+Other settings (`PORT`, `DATA_DIR`, `ANALYTICS_TZ`, `SESSION_SECRET`) are described in `.env.example`.
 
 ## Design rules (shared with EDS FlowSense)
 

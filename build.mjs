@@ -1,7 +1,7 @@
 // Static site generator for the EDS website. No framework: content comes from
 // src/data/content.mjs, pages are template strings, output goes to dist/.
 //   npm run build   -> writes dist/
-//   npm run dev     -> builds, then serves dist/ on http://localhost:4173
+//   npm run dev     -> builds, then runs the site server (server/) on http://localhost:4173
 import { mkdir, readFile, writeFile, rm, cp } from "node:fs/promises";
 import { readFileSync, existsSync } from "node:fs";
 import path from "node:path";
@@ -147,7 +147,7 @@ function footer(r) {
           <h4>Head office</h4>
           <address>${site.address.join("<br>")}</address>
           <p style="margin-top:10px">${site.hours}</p>
-          <form class="signup" data-mailto="${site.email}" data-subject="Register for EDS updates">
+          <form class="signup" data-mailto="${site.email}" data-subject="Register for EDS updates" data-track="Updates sign-up">
             <label for="f-email">Register for updates on projects, equipment and servicing</label>
             <input id="f-email" name="Email" type="email" placeholder="Your email" autocomplete="email" required>
             <button class="btn btn-primary" type="submit" aria-label="Register for updates">${icon("send")}</button>
@@ -160,6 +160,13 @@ function footer(r) {
     </div>
   </footer>`;
 }
+
+// Visit counting for the admin dashboard (server/). Preview copies on GitHub
+// Pages leave it out, since there is no server there to receive visits,
+// unless ANALYTICS_ENDPOINT points at one.
+const ENDPOINT = process.env.ANALYTICS_ENDPOINT || "";
+const tracker = (r, file) =>
+  process.env.PREVIEW && !ENDPOINT ? "" : `\n<script src="${r}assets/js/track.js" defer${ENDPOINT ? ` data-endpoint="${esc(ENDPOINT)}"` : ""}${file === "404.html" ? ' data-status="404"' : ""}></script>`;
 
 function layout({ file, title, description, current, body, scripts = [] }) {
   const depth = file.split("/").length - 1;
@@ -190,7 +197,7 @@ ${html}
 </main>
 ${footer(r)}
 <script src="${r}assets/js/site.js" defer></script>
-${scripts.map((s) => `<script src="${r}assets/js/${s}" defer></script>`).join("\n")}
+${scripts.map((s) => `<script src="${r}assets/js/${s}" defer></script>`).join("\n")}${tracker(r, file)}
 </body>
 </html>
 `.replaceAll("@root/", r);
@@ -898,7 +905,7 @@ ${pageHero(r, { crumbs: [["Contact"]], eyebrow: "Contact", title: "Call or visit
     <a class="contact-card" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent("13/20-22 Ellerslie Road, Meadowbrook QLD 4131")}" rel="noopener" data-reveal><span class="card-icon">${icon("map-pin")}</span><span><b>Head office</b><span>${site.address.join(", ")}</span></span></a>
     <div class="contact-card" data-reveal><span class="card-icon">${icon("clock", false)}</span><span><b>Opening hours</b><span>${site.hours}. Closed Saturday and Sunday.</span></span></div>
   </div>
-  <form class="form" data-mailto="${site.email}" data-reveal="right">
+  <form class="form" data-mailto="${site.email}" data-track="Enquiry form" data-reveal="right">
     <h2>Send an enquiry</h2>
     <div class="field-row">
       <label class="field">Name<input name="Name" autocomplete="name" required></label>
