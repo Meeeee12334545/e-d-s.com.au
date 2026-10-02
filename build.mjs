@@ -23,7 +23,7 @@ const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replac
 const ANIM = {
   waves: "flow", "cloud-rain": "rain", fan: "spin", radar: "sweep", gauge: "needle",
   bell: "ring", "bell-ring": "ring", siren: "ring", phone: "ring", "map-pin": "hop",
-  "arrow-right": "nudge-x", "arrow-up-right": "nudge-xy", send: "nudge-xy", download: "nudge-y",
+  "arrow-right": "nudge-x", "arrow-up-right": "nudge-xy", "arrow-down": "nudge-y", send: "nudge-xy", download: "nudge-y",
   "hard-drive-download": "nudge-y", activity: "draw", "audio-waveform": "draw", "external-link": "nudge-xy",
 };
 const iconCache = new Map();
@@ -42,6 +42,28 @@ const svc = (slug) => C.services.find((s) => s.slug === slug);
 const sol = (slug) => C.solutions.find((s) => s.slug === slug);
 const brand = (slug) => C.brands.find((s) => s.slug === slug);
 const year = new Date().getFullYear();
+// The address pages are published at. Preview builds set SITE_URL so their
+// share cards and canonical links point at the preview copy.
+const SITE_URL = (process.env.SITE_URL || site.url).replace(/\/+$/, "");
+const pageUrl = (file) => `${SITE_URL}/${file === "index.html" ? "" : file}`;
+
+const slugify = (s) => String(s).toLowerCase().replace(/&/g, " and ").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+const typeOf = (id) => C.productTypes.find((t) => t.id === id);
+// Every product, flattened, with the brand and range it belongs to. A few
+// groups are headed with a prompt ("Select your technology") rather than a
+// name, so those products have no `range` to show.
+const NAMELESS = new Set(["Select your technology", "Product range", "The analyser"]);
+const products = C.brands.flatMap((b) => b.groups.flatMap((g) => g.items.map((p) => ({ ...p, id: slugify(p.name), brand: b, group: g.name, range: NAMELESS.has(g.name) ? "" : g.name }))));
+
+// Links to the contact form with the topic (and product) already chosen.
+// contact.html reads ?topic= and ?product= in site.js.
+const contactHref = (r, { topic, product } = {}) => {
+  const q = new URLSearchParams();
+  if (topic) q.set("topic", topic);
+  if (product) q.set("product", product);
+  const qs = q.toString();
+  return `${r}contact.html${qs ? `?${esc(qs)}` : ""}`;
+};
 
 /* ------------------------------------------------------------------ */
 /* layout                                                              */
@@ -79,6 +101,7 @@ function header(r, current) {
         ${link("resources.html", "Resources", "resources")}
       </nav>
       <div class="header-cta">
+        <button class="header-search" type="button" data-search-open aria-label="Search the site" aria-keyshortcuts="Control+K Meta+K /">${icon("search")}<kbd data-kbd>Ctrl K</kbd></button>
         <a class="header-phone" href="${site.phoneHref}" aria-label="Call EDS on ${site.phone}">${icon("phone")}<span>${site.phone}</span></a>
         <a class="btn btn-primary" href="${r}contact.html">Contact us</a>
       </div>
@@ -92,6 +115,7 @@ function header(r, current) {
         <a class="logo" href="${r}index.html"><img src="${site.logoWhite}" alt="EDS" width="126" height="40"></a>
         <button class="burger drawer-close" style="display:inline-flex" aria-label="Close menu">${icon("x", false)}</button>
       </div>
+      <button class="drawer-search" type="button" data-search-open>${icon("search", false)}<span>Search products, services, documents</span></button>
       ${dGroup("Services", sItems, "services/index.html")}
       ${dGroup("Solutions", oItems, "solutions/index.html")}
       ${dGroup("Products", pItems, "products/index.html")}
@@ -141,10 +165,12 @@ function footer(r) {
           <h4>Head office</h4>
           <address>${site.address.join("<br>")}</address>
           <p style="margin-top:10px">${site.hours}</p>
+          ${openStatus()}
           <form class="signup" data-mailto="${site.email}" data-subject="Register for EDS updates">
             <label for="f-email">Register for updates on projects, equipment and servicing</label>
             <input id="f-email" name="Email" type="email" placeholder="Your email" autocomplete="email" required>
             <button class="btn btn-primary" type="submit" aria-label="Register for updates">${icon("send")}</button>
+            <p class="signup-done" role="status" hidden>${icon("check", false)} Your email program has opened with the request. Press send there to register.</p>
           </form>
         </div>
       </div>
@@ -155,27 +181,104 @@ function footer(r) {
   </footer>`;
 }
 
+// "Open now" or "Closed" for head office, worked out in the browser by site.js.
+const openStatus = () => `<span class="open-status" data-open-status='${JSON.stringify(site.openingHours)}' hidden><i></i><span></span></span>`;
+
+// The search palette (search.js). Its index is loaded the first time it opens.
+const searchDialog = () => `
+<dialog class="search" aria-label="Search the site">
+  <div class="search-bar">
+    ${icon("search", false)}
+    <input type="search" placeholder="Search products, services and documents" autocomplete="off" spellcheck="false" enterkeyhint="go" aria-label="Search" role="combobox" aria-expanded="true" aria-controls="search-results" aria-autocomplete="list">
+    <button class="search-close" type="button" data-search-close aria-label="Close search"><kbd>Esc</kbd>${icon("x", false)}</button>
+  </div>
+  <div class="search-results" id="search-results" role="listbox" aria-label="Search results"></div>
+  <div class="search-foot" aria-hidden="true"><span><kbd>↑</kbd><kbd>↓</kbd> move</span><span><kbd>↵</kbd> open</span><span><kbd>Esc</kbd> close</span></div>
+</dialog>`;
+
+// Call and enquire, always to hand on a phone (shown below 700px by site.css).
+const actionBar = (r, current) => `
+<nav class="actionbar" aria-label="Quick actions">
+  <a href="${site.phoneHref}" data-open-dot>${icon("phone", false)}<span>Call</span></a>
+  <button type="button" data-search-open>${icon("search", false)}<span>Search</span></button>
+  ${current === "contact" ? `<a class="primary" href="mailto:${site.email}">${icon("mail", false)}<span>Email</span></a>` : `<a class="primary" href="${r}contact.html">${icon("send", false)}<span>Enquire</span></a>`}
+</nav>`;
+
+// Structured data for search engines: the organisation on the home and
+// contact pages, and a breadcrumb trail on every page that has one.
+function jsonLd(file, crumbs) {
+  const blocks = [];
+  if (file === "index.html" || file === "contact.html") {
+    const [street, locality] = site.address;
+    const [, suburb, state, postcode] = locality.match(/^(.*) ([A-Z]{2,3}) (\d{4})$/) || [];
+    blocks.push({
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      name: site.name,
+      alternateName: site.short,
+      legalName: site.legal,
+      url: `${SITE_URL}/`,
+      logo: `${SITE_URL}/assets/img/apple-touch-icon.png`,
+      email: site.email,
+      telephone: site.phone,
+      foundingDate: String(site.founded),
+      address: { "@type": "PostalAddress", streetAddress: street, addressLocality: suburb, addressRegion: state, postalCode: postcode, addressCountry: "AU" },
+      contactPoint: [
+        { "@type": "ContactPoint", contactType: "customer service", telephone: site.phone, email: site.email, areaServed: "AU", availableLanguage: "en" },
+        { "@type": "ContactPoint", contactType: "sales", email: site.sales, areaServed: "AU" },
+        { "@type": "ContactPoint", contactType: "technical support", email: site.service, areaServed: "AU" },
+      ],
+    });
+  }
+  if (crumbs?.length) {
+    const trail = [["Home", "index.html"], ...crumbs.map(([label, href]) => [label, href || file])];
+    blocks.push({
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: trail.map(([name, href], i) => ({ "@type": "ListItem", position: i + 1, name, item: pageUrl(href) })),
+    });
+  }
+  return blocks.map((b) => `<script type="application/ld+json">${JSON.stringify(b).replace(/</g, "\\u003c")}</script>`).join("\n");
+}
+
+// pageHero() notes the breadcrumb trail here so layout() can describe it in
+// structured data without every page passing it twice.
+let heroCrumbs = null;
+
 function layout({ file, title, description, current, body, scripts = [] }) {
   const depth = file.split("/").length - 1;
   // The not-found page can be served at any depth, so it links from the root.
   const r = file === "404.html" ? "/" : "../".repeat(depth);
+  heroCrumbs = null;
   const html = typeof body === "function" ? body(r) : body;
-  return `<!doctype html>
-<html lang="en-AU">
+  const crumbs = heroCrumbs;
+  const url = pageUrl(file);
+  const out = `<!doctype html>
+<html lang="en-AU" data-root="${r}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(description)}">
-<meta name="theme-color" content="#041513">${process.env.PREVIEW ? '\n<meta name="robots" content="noindex, nofollow">' : ""}
+<meta name="theme-color" content="#041513">${process.env.PREVIEW ? '\n<meta name="robots" content="noindex, nofollow">' : ""}${file === "404.html" ? "" : `\n<link rel="canonical" href="${url}">`}
+<meta property="og:site_name" content="EDS, Environmental Data Services">
+<meta property="og:locale" content="en_AU">
+<meta property="og:type" content="website">
 <meta property="og:title" content="${esc(title)}">
 <meta property="og:description" content="${esc(description)}">
-<meta property="og:type" content="website">
-<link rel="icon" type="image/svg+xml" href="${r}assets/favicon.svg">
+<meta property="og:url" content="${url}">
+<meta property="og:image" content="${SITE_URL}/assets/img/og-card.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="EDS. Every drop, measured. Water, wastewater and environmental monitoring since 1991.">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/png" sizes="32x32" href="${r}assets/img/favicon-32.png">
+<link rel="apple-touch-icon" href="${r}assets/img/apple-touch-icon.png">
 <link rel="preload" href="${r}assets/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="${r}assets/fonts/inter-tight-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <script>document.documentElement.classList.add("js")</script>
 <link rel="stylesheet" href="${r}assets/css/site.css">
+${jsonLd(file, crumbs)}
 </head>
 <body>
 ${header(r, current)}
@@ -183,37 +286,64 @@ ${header(r, current)}
 ${html}
 </main>
 ${footer(r)}
+${actionBar(r, current)}
+${searchDialog()}
 <script src="${r}assets/js/site.js" defer></script>
+<script src="${r}assets/js/search.js" defer></script>
 ${scripts.map((s) => `<script src="${r}assets/js/${s}" defer></script>`).join("\n")}
 </body>
 </html>
 `.replaceAll("@root/", r);
+  // In-page links, product deep links and form labels all rely on ids being unique.
+  const ids = [...out.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]);
+  const dupes = ids.filter((id, i) => ids.indexOf(id) !== i);
+  if (dupes.length) throw new Error(`${file} repeats the id(s): ${[...new Set(dupes)].join(", ")}`);
+  return out;
 }
 
 /* ------------------------------------------------------------------ */
 /* shared sections                                                     */
 /* ------------------------------------------------------------------ */
-const pageHero = (r, { crumbs = [], iconName, eyebrow, title, lede, actions = "" }) => `
-<section class="page-hero dark">
-  <canvas data-flowfield aria-hidden="true"></canvas>
-  <div class="wrap">
-    <nav class="crumbs" aria-label="Breadcrumb"><a href="${r}index.html">Home</a>${crumbs.map(([label, href]) => `${icon("chevron-down", false)}${href ? `<a href="${r}${href}">${esc(label)}</a>` : `<span>${esc(label)}</span>`}`).join("")}</nav>
+// `visual` fills the right of the hero on wide screens: a product photo on
+// brand pages, an "On this page" list on longer service pages.
+const pageHero = (r, { crumbs = [], iconName, eyebrow, title, lede, actions = "", visual = "" }) => {
+  heroCrumbs = crumbs;
+  const copy = `
+    <nav class="crumbs" aria-label="Breadcrumb"><a href="${r}index.html">Home</a>${crumbs.map(([label, href]) => `${icon("chevron-down", false)}${href ? `<a href="${r}${href}">${esc(label)}</a>` : `<span aria-current="page">${esc(label)}</span>`}`).join("")}</nav>
     ${iconName ? `<div class="hero-icon holder" data-reveal="scale">${icon(iconName)}</div>` : ""}
     ${eyebrow ? `<p class="eyebrow">${esc(eyebrow)}</p>` : ""}
     <h1 class="h-lg" data-reveal>${esc(title)}</h1>
     ${lede ? `<p class="lede" data-reveal style="--i:1">${esc(lede)}</p>` : ""}
-    ${actions ? `<div class="hero-actions" data-reveal style="--i:2">${actions}</div>` : ""}
-  </div>
+    ${actions ? `<div class="hero-actions" data-reveal style="--i:2">${actions}</div>` : ""}`;
+  return `
+<section class="page-hero dark${visual ? " has-visual" : ""}">
+  <canvas data-flowfield aria-hidden="true"></canvas>
+  <div class="wrap">${visual ? `<div class="hero-copy">${copy}</div>${visual}` : copy}</div>
 </section>`;
+};
 
-const ctaSection = (r, { title = "Talk to the people who measure it.", lede = "Tell us about your network, site or project. A real person from our team will come back to you." } = {}) => `
+// A product photograph on a white plate, captioned with what it shows.
+const heroProduct = (src, name) => `
+<figure class="hero-product" data-reveal="scale" style="--i:2">
+  <div class="hero-product-shot"><img src="${src}" alt="${esc(name)}" fetchpriority="high"></div>
+  <figcaption>Pictured: ${esc(name)}</figcaption>
+</figure>`;
+
+// Jump links to the sections of a longer page. `sections` is [[id, label]].
+const heroToc = (sections) => `
+<nav class="hero-toc" aria-label="On this page" data-reveal="right" style="--i:2">
+  <p>On this page</p>
+  <ol>${sections.map(([id, label], i) => `<li><a href="#${id}"><span>${String(i + 1).padStart(2, "0")}</span>${esc(label)}${icon("arrow-down")}</a></li>`).join("")}</ol>
+</nav>`;
+
+const ctaSection = (r, { title = "Talk to the people who measure it.", lede = "Tell us about your network, site or project. A real person from our team will come back to you.", topic, product } = {}) => `
 <section class="section dark cta">
   <canvas data-flowfield aria-hidden="true"></canvas>
   <div class="wrap">
     <h2 class="h-lg" data-reveal>${title}</h2>
     <p class="lede" data-reveal style="--i:1">${lede}</p>
     <div class="hero-actions" data-reveal style="--i:2">
-      <a class="btn btn-primary btn-lg" data-magnetic href="${r}contact.html">Contact EDS ${icon("arrow-right")}</a>
+      <a class="btn btn-primary btn-lg" data-magnetic href="${contactHref(r, { topic, product })}">Contact EDS ${icon("arrow-right")}</a>
       <a class="btn btn-ghost btn-lg" href="${site.phoneHref}">${icon("phone")} ${site.phone}</a>
     </div>
   </div>
@@ -384,6 +514,50 @@ function fsScreen() {
     <span class="fs-caption">Illustration</span>
   </div>`;
 }
+
+// One product. The whole card opens the quick view (products.js), and the
+// details the quick view shows travel with the card as JSON.
+const productCard = (r, p, { id = p.id, showBrand = false, n = 0 } = {}) => {
+  const t = typeOf(p.type);
+  const data = { name: p.name, note: p.note || "", image: p.image, brand: p.brand.name, brandHref: `${r}products/${p.brand.slug}.html`, range: p.range, type: t.label, page: p.href ? `${r}${p.href}` : "", docs: p.brand.docs || [] };
+  return `
+<article class="card prod" id="${id}" data-type="${p.type}" data-search="${esc([p.name, p.note, p.brand.name, p.brand.title, p.brand.tag, p.group, t.label].join(" ").toLowerCase())}" data-product="${esc(JSON.stringify(data))}" data-reveal style="--i:${n % 5}">
+  <div class="brand-shot"><img src="${p.image}" alt="${esc(p.name)}" loading="lazy"></div>
+  <div class="prod-body">${showBrand ? `<span class="tag">${esc(p.brand.name)}</span>` : ""}<h3>${esc(p.name)}</h3>${p.note ? `<p>${esc(p.note)}</p>` : ""}</div>
+  <button class="prod-open" type="button" aria-haspopup="dialog" aria-label="Quick view: ${esc(p.name)}${showBrand ? `, ${esc(p.brand.name)}` : ""}"><span>${icon("zoom-in", false)}Quick view</span></button>
+</article>`;
+};
+
+// The product quick view. products.js fills it from the card that opened it.
+const quickView = () => `
+<dialog class="qv" aria-labelledby="qv-name">
+  <div class="qv-bar">
+    <button class="qv-btn" type="button" data-qv-step="-1" aria-label="Previous product">${icon("chevron-left", false)}</button>
+    <span class="qv-count" data-qv="count"></span>
+    <button class="qv-btn" type="button" data-qv-step="1" aria-label="Next product">${icon("chevron-right", false)}</button>
+    <button class="qv-copy" type="button" data-qv-copy>${icon("link", false)}<span>Copy link</span></button>
+    <button class="qv-btn" type="button" data-qv-close aria-label="Close">${icon("x", false)}</button>
+  </div>
+  <div class="qv-shot"><img data-qv="image" alt=""></div>
+  <div class="qv-body">
+    <p class="tag" data-qv="brand"></p>
+    <h2 id="qv-name" data-qv="name"></h2>
+    <p class="qv-note" data-qv="note"></p>
+    <dl class="qv-facts">
+      <div><dt>Type</dt><dd data-qv="type"></dd></div>
+      <div><dt>Range</dt><dd data-qv="range"></dd></div>
+      <div><dt>Brand</dt><dd><a data-qv="brandLink"></a></dd></div>
+    </dl>
+    <div class="qv-actions">
+      <a class="btn btn-brand btn-lg" data-qv="enquire">Request pricing ${icon("arrow-right")}</a>
+      <a class="btn btn-outline btn-lg" href="${site.phoneHref}">${icon("phone")} ${site.phone}</a>
+    </div>
+    <a class="link-arrow qv-page" data-qv="page" hidden>See how it works ${icon("arrow-right")}</a>
+    <div class="qv-docs" data-qv="docs" hidden><h3>Documents</h3><ul class="aside-links"></ul></div>
+    <p class="note">Sales, hire and service from EDS, Australia wide.</p>
+  </div>
+  <template data-qv="docIcon">${icon("download")}</template>
+</dialog>`;
 
 /* ------------------------------------------------------------------ */
 /* pages                                                               */
@@ -599,18 +773,28 @@ ${ctaSection(r)}`,
 });
 
 const blockHtml = (b) => `
-<div class="block" data-reveal>
+<div class="block" id="${slugify(b.heading)}" data-reveal>
   <h2 class="h-md">${esc(b.heading)}</h2>
   ${b.items ? `<div class="feature-list">${b.items.map(([t, d]) => `<div class="feature holder">${icon("circle-check")}<div><b>${esc(t)}</b><span>${esc(d)}</span></div></div>`).join("")}</div>` : ""}
   ${b.list ? (b.heading.includes("approach") ? `<ol class="steps">${b.list.map((l) => `<li>${esc(l)}</li>`).join("")}</ol>` : `<ul class="checks">${b.list.map((l) => `<li>${icon("check", false)}<span>${esc(l)}</span></li>`).join("")}</ul>`) : ""}
 </div>`;
 
-const asideHtml = (r, { related = [], relatedKind = "services", products = [] }) => `
+// The jump list for a service or solution page: its blocks, plus any
+// comparison table or demo below them. Short pages do not need one.
+function sectionsOf(s) {
+  const list = [...(s.blocks || []).map((b) => [slugify(b.heading), b.heading])];
+  if (s.compare) list.push([slugify(s.compare.heading), s.compare.heading]);
+  if (s.widget === "lab") list.push(["flow-lab", "Try the flow lab"]);
+  if (s.widget === "eas") list.push(["asset-score", "Try the EDS Asset Score"]);
+  return list.length >= 2 ? heroToc([["overview", "Overview"], ...list]) : "";
+}
+
+const asideHtml = (r, { related = [], relatedKind = "services", products = [], topic }) => `
 <aside class="aside">
   <div class="aside-card brand" data-reveal="right">
     <h3>Talk to our team</h3>
     <p>We would welcome the opportunity to discuss your requirements.</p>
-    <a class="btn btn-primary" href="${r}contact.html">Enquire now ${icon("arrow-right")}</a>
+    <a class="btn btn-primary" href="${contactHref(r, { topic })}">Enquire now ${icon("arrow-right")}</a>
     <a class="btn btn-ghost" href="${site.phoneHref}" style="margin-left:6px">${icon("phone")} ${site.phone}</a>
   </div>
   ${related.length ? `<div class="aside-card" data-reveal="right" style="--i:1"><h3>Related ${relatedKind}</h3><ul class="aside-links">${related.map((slug) => { const it = relatedKind === "services" ? svc(slug) : sol(slug); return `<li><a href="${r}${relatedKind}/${slug}.html">${esc(it.short || it.title)}${icon("arrow-right")}</a></li>`; }).join("")}</ul></div>` : ""}
@@ -625,18 +809,18 @@ for (const s of C.services) {
     current: "services",
     scripts: s.widget === "lab" ? ["lab.js"] : [],
     body: (r) => `
-${pageHero(r, { crumbs: [["Services", "services/index.html"], [s.short || s.title]], iconName: s.icon, title: s.title, lede: s.summary, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${r}contact.html">Enquire now ${icon("arrow-right")}</a>${s.widget === "lab" ? `<a class="btn btn-ghost btn-lg" href="#flow-lab">${icon("cloud-rain")} Try the flow lab</a>` : ""}` })}
-<section class="section"><div class="wrap split">
+${pageHero(r, { crumbs: [["Services", "services/index.html"], [s.short || s.title]], iconName: s.icon, title: s.title, lede: s.summary, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${contactHref(r, { topic: s.title })}">Enquire now ${icon("arrow-right")}</a>${s.widget === "lab" ? `<a class="btn btn-ghost btn-lg" href="#flow-lab">${icon("cloud-rain")} Try the flow lab</a>` : ""}`, visual: sectionsOf(s) })}
+<section class="section" id="overview"><div class="wrap split">
   <div>
     <div class="prose" data-reveal>${s.intro.map((p) => `<p>${esc(p)}</p>`).join("")}</div>
     ${s.blocks.length ? `<div style="margin-top:clamp(40px,5vw,64px)">${s.blocks.map(blockHtml).join("")}</div>` : ""}
-    ${s.compare ? `<div class="block" data-reveal><h2 class="h-md">${s.compare.heading}</h2><table class="compare"><thead><tr><th></th><th>${s.compare.left}</th><th>${s.compare.right}</th></tr></thead><tbody>${s.compare.rows.map((row) => `<tr>${row.map((c) => `<td>${esc(c)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>` : ""}
+    ${s.compare ? `<div class="block" id="${slugify(s.compare.heading)}" data-reveal><h2 class="h-md">${s.compare.heading}</h2><div class="table-scroll"><table class="compare"><thead><tr><th></th><th>${s.compare.left}</th><th>${s.compare.right}</th></tr></thead><tbody>${s.compare.rows.map((row) => `<tr>${row.map((c) => `<td>${esc(c)}</td>`).join("")}</tr>`).join("")}</tbody></table></div></div>` : ""}
     ${s.quote ? `<figure class="quote" data-reveal style="margin:clamp(40px,5vw,64px) 0 0">${icon("quote", false)}<blockquote>${esc(s.quote.text)}</blockquote></figure>` : ""}
   </div>
-  ${asideHtml(r, { related: s.related, products: s.products })}
+  ${asideHtml(r, { related: s.related, products: s.products, topic: s.title })}
 </div></section>
 ${s.widget === "lab" ? labSection({ eyebrow: "Try it", title: s.slug.startsWith("inflow") ? "Watch inflow and infiltration happen." : "What the flow meter sees in a storm." }) : ""}
-${ctaSection(r)}`,
+${ctaSection(r, { topic: s.title })}`,
   });
 }
 
@@ -661,16 +845,16 @@ for (const s of C.solutions) {
     current: "solutions",
     scripts: s.widget === "eas" ? ["widgets.js"] : [],
     body: (r) => `
-${pageHero(r, { crumbs: [["Solutions", "solutions/index.html"], [s.title]], iconName: s.icon, title: s.title, lede: s.summary, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${r}contact.html">Enquire now ${icon("arrow-right")}</a>` })}
-<section class="section"><div class="wrap split">
+${pageHero(r, { crumbs: [["Solutions", "solutions/index.html"], [s.title]], iconName: s.icon, title: s.title, lede: s.summary, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${contactHref(r, { topic: s.title })}">Enquire now ${icon("arrow-right")}</a>`, visual: sectionsOf(s) })}
+<section class="section" id="overview"><div class="wrap split">
   <div>
     <div class="prose" data-reveal>${s.intro.map((p) => `<p>${esc(p)}</p>`).join("")}</div>
     ${(s.blocks || []).length ? `<div style="margin-top:clamp(40px,5vw,64px)">${s.blocks.map(blockHtml).join("")}</div>` : ""}
   </div>
-  ${asideHtml(r, { related: s.related, relatedKind: "solutions", products: s.productLinks || [] })}
+  ${asideHtml(r, { related: s.related, relatedKind: "solutions", products: s.productLinks || [], topic: s.title })}
 </div></section>
-${s.widget === "eas" ? `<section class="section dark"><div class="wrap"><div class="section-head"><p class="eyebrow">EDS Asset Score</p><h2 class="h-lg" data-reveal>One score, watched around the clock.</h2></div>${easDemo()}</div></section>` : ""}
-${ctaSection(r)}`,
+${s.widget === "eas" ? `<section class="section dark" id="asset-score"><div class="wrap"><div class="section-head"><p class="eyebrow">EDS Asset Score</p><h2 class="h-lg" data-reveal>One score, watched around the clock.</h2></div>${easDemo()}</div></section>` : ""}
+${ctaSection(r, { topic: s.title })}`,
   });
 }
 
@@ -680,8 +864,9 @@ add({
   title: "Products | EDS",
   description: "EDS manufactures and represents leading instruments for water supply, wastewater, flow monitoring and process control: EDS, Detectronic, ORI, Hach Flow, Beadedstream, MicroLevel, Aquamonitrix and Dynaflox.",
   current: "products",
+  scripts: ["products.js"],
   body: (r) => `
-${pageHero(r, { crumbs: [["Products"]], eyebrow: "Products", title: "Industry leading instruments, backed by people who use them.", lede: "EDS is a manufacturer, and represents leading manufacturers, in water supply and management, wastewater management, flow monitoring and process control." })}
+${pageHero(r, { crumbs: [["Products"]], eyebrow: "Products", title: "Industry leading instruments, backed by people who use them.", lede: "EDS is a manufacturer, and represents leading manufacturers, in water supply and management, wastewater management, flow monitoring and process control.", actions: `<a class="btn btn-primary btn-lg" data-magnetic href="#finder">${icon("package-search")} Find an instrument</a><a class="btn btn-ghost btn-lg" href="${contactHref(r, { topic: "Product pricing" })}">Request pricing</a>` })}
 <section class="section"><div class="wrap"><div class="grid c4">
   ${C.brands.map((b, n) => `
   <a class="card brand-card tilt" href="${r}products/${b.slug}.html" data-reveal style="width:auto;--i:${n % 4}">
@@ -689,40 +874,66 @@ ${pageHero(r, { crumbs: [["Products"]], eyebrow: "Products", title: "Industry le
     <div class="brand-body"><span class="tag">${esc(b.tag)}</span><h3>${esc(b.title)}</h3><p>${esc(b.summary)}</p><span class="link-arrow">View range ${icon("arrow-right")}</span></div>
   </a>`).join("")}
 </div></div></section>
-<section class="section alt"><div class="wrap split" style="align-items:center">
+<section class="section alt" id="finder"><div class="wrap">
+  <div class="section-head"><p class="eyebrow">Instrument finder</p><h2 class="h-lg" data-reveal>Find the right instrument.</h2>
+  <p class="lede" data-reveal style="--i:1">All ${products.length} instruments from every range, in one place. Filter by what you need to measure, or search by name.</p></div>
+  <div class="finder">
+    <div class="finder-bar" data-reveal>
+      <label class="finder-search">${icon("search", false)}<input type="search" placeholder="Search by name, brand or use" aria-label="Search instruments" autocomplete="off" spellcheck="false"></label>
+      <div class="finder-chips" role="group" aria-label="Filter by type">
+        <button type="button" class="fchip" data-type="" aria-pressed="true">All<span>${products.length}</span></button>
+        ${C.productTypes.map((t) => `<button type="button" class="fchip" data-type="${t.id}" aria-pressed="false">${icon(t.icon)}${t.label}<span>${products.filter((p) => p.type === t.id).length}</span></button>`).join("")}
+      </div>
+    </div>
+    <p class="finder-count" role="status">Showing all ${products.length} instruments</p>
+    <div class="prod-grid">${products.map((p, n) => productCard(r, p, { id: `${p.brand.slug}-${p.id}`, showBrand: true, n })).join("")}</div>
+    <div class="finder-empty" hidden>
+      <span class="card-icon">${icon("search-x")}</span>
+      <h3>No instruments match</h3>
+      <p>Try another word or type, or ask our team which instrument suits your application.</p>
+      <div class="hero-actions"><button class="btn btn-outline" type="button" data-finder-reset>Show all instruments</button><a class="btn btn-brand" href="${contactHref(r, { topic: "Product pricing" })}">Ask our team ${icon("arrow-right")}</a></div>
+    </div>
+  </div>
+</div></section>
+${quickView()}
+<section class="section"><div class="wrap split" style="align-items:center">
   <div><p class="eyebrow">Featured</p><h2 class="h-lg" data-reveal>LIDoTT Alarm</h2><p class="lede" data-reveal style="--i:1;margin-top:16px">${C.lidott.lede} Radar level sensor, battery, modem and aerial in one compact, Zone 0 certified device.</p>
   <div class="hero-actions"><a class="btn btn-brand btn-lg" href="${r}products/lidott-alarm.html">See how it works ${icon("arrow-right")}</a></div></div>
   <div class="brand-shot" style="border:1px solid var(--border);border-radius:24px;aspect-ratio:1" data-reveal="right"><img src="${C.lidott.image}" alt="LIDoTT Alarm" loading="lazy"></div>
 </div></section>
-${ctaSection(r, { title: "Need help choosing an instrument?", lede: "Our team has installed, serviced and calibrated all of them. Ask us which suits your application." })}`,
+${ctaSection(r, { title: "Need help choosing an instrument?", lede: "Our team has installed, serviced and calibrated all of them. Ask us which suits your application.", topic: "Product pricing" })}`,
 });
 
 for (const b of C.brands) {
+  const range = products.filter((p) => p.brand === b);
+  const cover = range.find((p) => p.image === b.cover) || range[0];
+  const pricing = { topic: "Product pricing", product: b.title };
   add({
     file: `products/${b.slug}.html`,
     title: `${b.title} | EDS Products`,
     description: b.summary,
     current: "products",
+    scripts: ["products.js"],
     body: (r) => `
-${pageHero(r, { crumbs: [["Products", "products/index.html"], [b.name]], iconName: b.icon, eyebrow: b.tag, title: b.title, lede: b.summary, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${r}contact.html">Request pricing ${icon("arrow-right")}</a>` })}
+${pageHero(r, { crumbs: [["Products", "products/index.html"], [b.name]], iconName: b.icon, eyebrow: b.tag, title: b.title, lede: b.summary, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${contactHref(r, pricing)}">Request pricing ${icon("arrow-right")}</a><a class="btn btn-ghost btn-lg" href="#range">${icon("layout-grid")} View the range</a>`, visual: heroProduct(cover.image, cover.name) })}
 <section class="section"><div class="wrap split">
   <div class="prose" data-reveal>${b.intro.map((p) => `<p>${esc(p)}</p>`).join("")}</div>
   <aside class="aside">
-    ${b.logo ? `<div class="aside-card" data-reveal="right" style="display:grid;place-items:center;padding:32px"><img src="${b.logo}" alt="${esc(b.name)} logo" style="max-height:70px" loading="lazy"></div>` : ""}
-    <div class="aside-card brand" data-reveal="right"><h3>Request pricing</h3><p>Sales, hire and service from EDS, Australia wide.</p><a class="btn btn-primary" href="${r}contact.html">Enquire now ${icon("arrow-right")}</a></div>
+    ${b.logo ? `<div class="aside-card" data-reveal="right" style="display:grid;place-items:center;padding:32px"><img src="${b.logo}" alt="${esc(b.name)} logo" style="max-height:70px;width:auto" loading="lazy"></div>` : ""}
+    <div class="aside-card brand" data-reveal="right"><h3>Request pricing</h3><p>Sales, hire and service from EDS, Australia wide.</p><a class="btn btn-primary" href="${contactHref(r, pricing)}">Enquire now ${icon("arrow-right")}</a></div>
     ${b.docs ? `<div class="aside-card" data-reveal="right"><h3>Documents</h3><ul class="aside-links">${b.docs.map((d) => `<li><a href="${d.href}" rel="noopener">${esc(d.label)}${icon("download")}</a></li>`).join("")}</ul></div>` : ""}
   </aside>
 </div></section>
-<section class="section alt"><div class="wrap">
+<section class="section alt" id="range"><div class="wrap">
   ${b.groups.map((g) => `
   <div class="block">
-    <h2 class="h-md" data-reveal>${esc(g.name)}</h2>
-    <div class="prod-grid">
-      ${g.items.map((p, n) => { const inner = `<div class="brand-shot"><img src="${p.image}" alt="${esc(p.name)}" loading="lazy"></div><div class="prod-body"><h3>${esc(p.name)}</h3>${p.note ? `<p>${esc(p.note)}</p>` : ""}</div>`; return p.href ? `<a class="card prod" href="${r}${p.href}" data-reveal style="--i:${n % 5}">${inner}</a>` : `<div class="card prod hoverable" data-reveal style="--i:${n % 5}">${inner}</div>`; }).join("")}
-    </div>
+    <h2 class="h-md range-head" data-reveal>${esc(g.name)}<span>${g.items.length} ${g.items.length === 1 ? "product" : "products"}</span></h2>
+    <div class="prod-grid">${range.filter((p) => p.group === g.name).map((p, n) => productCard(r, p, { n })).join("")}</div>
   </div>`).join("")}
+  <p class="range-hint" data-reveal>${icon("zoom-in", false)} Select any product for a closer look and to request pricing.</p>
 </div></section>
-${ctaSection(r, { title: `Ask us about ${b.name}.`, lede: "Pricing, availability, hire and technical advice from the EDS team." })}`,
+${quickView()}
+${ctaSection(r, { title: `Ask us about ${b.name}.`, lede: "Pricing, availability, hire and technical advice from the EDS team.", ...pricing })}`,
   });
 }
 
@@ -733,7 +944,7 @@ add({
   current: "products",
   scripts: ["widgets.js"],
   body: (r) => `
-${pageHero(r, { crumbs: [["Products", "products/index.html"], ["Detectronic", "products/detectronic.html"], ["LIDoTT Alarm"]], iconName: "bell", eyebrow: "Detectronic", title: "LIDoTT Alarm", lede: C.lidott.lede, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${r}contact.html">Request pricing ${icon("arrow-right")}</a><a class="btn btn-ghost btn-lg" href="${C.lidott.datasheet}" rel="noopener">${icon("download")} Datasheet</a>` })}
+${pageHero(r, { crumbs: [["Products", "products/index.html"], ["Detectronic", "products/detectronic.html"], ["LIDoTT Alarm"]], iconName: "bell", eyebrow: "Detectronic", title: "LIDoTT Alarm", lede: C.lidott.lede, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${contactHref(r, { topic: "Product pricing", product: "LIDoTT Alarm (Detectronic)" })}">Request pricing ${icon("arrow-right")}</a><a class="btn btn-ghost btn-lg" href="${C.lidott.datasheet}" rel="noopener">${icon("download")} Datasheet</a>`, visual: heroProduct(C.lidott.image, "LIDoTT Alarm") })}
 <section class="section dark" style="padding-top:0"><div class="wrap">
   <div class="hl-grid" style="margin-bottom:clamp(40px,5vw,64px)">${C.lidott.highlights.map(([ic, t, d], i) => `<div class="hl holder" data-reveal style="--i:${i % 3}">${icon(ic)}<b>${t}</b><span>${d}</span></div>`).join("")}</div>
   <div class="section-head"><p class="eyebrow">See it work</p><h2 class="h-lg" data-reveal>Raise the water. Watch the alarm.</h2></div>
@@ -745,11 +956,11 @@ ${pageHero(r, { crumbs: [["Products", "products/index.html"], ["Detectronic", "p
     <div class="feature-list" style="margin-top:40px">${C.lidott.sections.map(([t, d]) => `<div class="feature holder" data-reveal>${icon("circle-check")}<div><b>${esc(t)}</b><span>${esc(d)}</span></div></div>`).join("")}</div>
   </div>
   <aside class="aside">
-    <div class="aside-card" data-reveal="right" style="padding:20px"><img src="${C.lidott.image}" alt="LIDoTT Alarm device" loading="lazy" style="margin-inline:auto;max-height:300px"></div>
+    <figure class="aside-card aside-figure" data-reveal="right"><img src="${C.lidott.image2}" alt="Drawing of LIDoTT Alarm in section" loading="lazy"><figcaption>LIDoTT Alarm, in section</figcaption></figure>
     <div class="aside-card" data-reveal="right"><h3>Specifications</h3><table class="specs"><tbody>${C.lidott.specs.map(([k, v]) => `<tr><th>${k}</th><td>${v}</td></tr>`).join("")}</tbody></table></div>
   </aside>
 </div></section>
-${ctaSection(r, { title: "Deploy LIDoTT Alarm across your network.", lede: "Simple to install and zero maintenance by design. Ask EDS for pricing and a deployment plan." })}`,
+${ctaSection(r, { title: "Deploy LIDoTT Alarm across your network.", lede: "Simple to install and zero maintenance by design. Ask EDS for pricing and a deployment plan.", topic: "Product pricing", product: "LIDoTT Alarm (Detectronic)" })}`,
 });
 
 /* ---- FlowSense ---- */
@@ -759,7 +970,7 @@ add({
   description: "EDS FlowSense: sewer network monitoring, flow analytics and engineering intelligence by Environmental Data Services.",
   current: "flowsense",
   body: (r) => `
-${pageHero(r, { crumbs: [["FlowSense"]], iconName: "waves", eyebrow: "EDS FlowSense", title: "Sewer network intelligence.", lede: C.flowsense.lede, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${site.flowsenseUrl}" rel="noopener">Open FlowSense ${icon("arrow-up-right")}</a><a class="btn btn-ghost btn-lg" href="${r}contact.html">Request a walkthrough</a>` })}
+${pageHero(r, { crumbs: [["FlowSense"]], iconName: "waves", eyebrow: "EDS FlowSense", title: "Sewer network intelligence.", lede: C.flowsense.lede, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${site.flowsenseUrl}" rel="noopener">Open FlowSense ${icon("arrow-up-right")}</a><a class="btn btn-ghost btn-lg" href="${contactHref(r, { topic: "EDS FlowSense" })}">Request a walkthrough</a>` })}
 <section class="section fs-band"><div class="wrap fs-grid">
   <div>
     <p class="eyebrow">Inside the platform</p>
@@ -777,7 +988,7 @@ ${pageHero(r, { crumbs: [["FlowSense"]], iconName: "waves", eyebrow: "EDS FlowSe
     ${C.flowsense.features.map(([ic, t, d], n) => `<div class="card hoverable holder" data-reveal style="--i:${n % 3}"><span class="card-icon">${icon(ic)}</span><h3>${esc(t)}</h3><p>${esc(d)}</p></div>`).join("")}
   </div>
 </div></section>
-${ctaSection(r, { title: "See FlowSense on your own network.", lede: "FlowSense comes with EDS monitoring. Ask us for a walkthrough using your sites." })}`,
+${ctaSection(r, { title: "See FlowSense on your own network.", lede: "FlowSense comes with EDS monitoring. Ask us for a walkthrough using your sites.", topic: "EDS FlowSense" })}`,
 });
 
 /* ---- about ---- */
@@ -865,25 +1076,49 @@ ${pageHero(r, { crumbs: [["Contact"]], eyebrow: "Contact", title: "Call or visit
     <a class="contact-card" href="mailto:${site.sales}" data-reveal><span class="card-icon">${icon("mail")}</span><span><b>${site.sales}</b><span>Sales</span></span></a>
     <a class="contact-card" href="mailto:${site.service}" data-reveal><span class="card-icon">${icon("mail")}</span><span><b>${site.service}</b><span>Service</span></span></a>
     <a class="contact-card" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent("13/20-22 Ellerslie Road, Meadowbrook QLD 4131")}" rel="noopener" data-reveal><span class="card-icon">${icon("map-pin")}</span><span><b>Head office</b><span>${site.address.join(", ")}</span></span></a>
-    <div class="contact-card" data-reveal><span class="card-icon">${icon("clock", false)}</span><span><b>Opening hours</b><span>${site.hours}. Closed Saturday and Sunday.</span></span></div>
+    <div class="contact-card" data-reveal><span class="card-icon">${icon("clock", false)}</span><span><b>Opening hours</b><span>${site.hours}. Closed Saturday and Sunday.</span>${openStatus()}</span></div>
   </div>
-  <form class="form" data-mailto="${site.email}" data-reveal="right">
-    <h2>Send an enquiry</h2>
-    <div class="field-row">
-      <label class="field">Name<input name="Name" autocomplete="name" required></label>
-      <label class="field">Organisation<input name="Organisation" autocomplete="organization"></label>
+  <form class="form" id="enquiry" data-mailto="${site.email}" data-reveal="right" novalidate>
+    <div class="form-fields">
+      <h2>Send an enquiry</h2>
+      <div class="form-context" hidden>
+        <span class="card-icon">${icon("package", false)}</span>
+        <div><small>Enquiring about</small><b></b></div>
+        <button type="button" data-context-clear aria-label="Remove this product from the enquiry">${icon("x", false)}</button>
+        <input type="hidden" name="Product">
+      </div>
+      <div class="field-row">
+        <label class="field">Name<input name="Name" autocomplete="name" required></label>
+        <label class="field"><span>Organisation <i>Optional</i></span><input name="Organisation" autocomplete="organization"></label>
+      </div>
+      <div class="field-row">
+        <label class="field">Email<input name="Email" type="email" autocomplete="email" required></label>
+        <label class="field"><span>Phone <i>Optional</i></span><input name="Phone" type="tel" autocomplete="tel"></label>
+      </div>
+      <label class="field">I am interested in<select name="subject">
+        <option>General enquiry</option>
+        <optgroup label="Services">${C.services.map((s) => `<option>${esc(s.title)}</option>`).join("")}</optgroup>
+        <optgroup label="Solutions">${C.solutions.map((s) => `<option>${esc(s.title)}</option>`).join("")}</optgroup>
+        <optgroup label="Products and support"><option>Product pricing</option><option>Equipment service or calibration</option><option>EDS FlowSense</option></optgroup>
+      </select></label>
+      <label class="field">Message<textarea name="Message" required placeholder="Tell us about your site, network or project"></textarea></label>
+      <button class="btn btn-primary btn-lg" type="submit" style="justify-self:start">${icon("send")} Open email to send</button>
+      <p class="note">This opens your email program with the enquiry filled in, addressed to ${site.email}.</p>
     </div>
-    <div class="field-row">
-      <label class="field">Email<input name="Email" type="email" autocomplete="email" required></label>
-      <label class="field">Phone<input name="Phone" type="tel" autocomplete="tel"></label>
+    <div class="form-done" hidden tabindex="-1" role="status">
+      <span class="card-icon">${icon("mail-check", false)}</span>
+      <h2>Your enquiry is ready to send</h2>
+      <p>It has opened in your email program, addressed to ${site.email}. Press send there and our team will come back to you.</p>
+      <p class="note">Nothing opened? Copy the enquiry into any email to ${site.email}, or call ${site.phone}.</p>
+      <div class="btn-row">
+        <button class="btn btn-primary" type="button" data-copy="enquiry">${icon("copy", false)}<span>Copy enquiry</span></button>
+        <button class="btn btn-ghost" type="button" data-copy="address">${icon("mail", false)}<span>Copy email address</span></button>
+        <button class="btn btn-ghost" type="button" data-form-edit>${icon("pencil-line", false)}Edit enquiry</button>
+      </div>
     </div>
-    <label class="field">I am interested in<select name="subject"><option>General enquiry</option>${C.services.map((s) => `<option>${esc(s.title)}</option>`).join("")}<option>Product pricing</option><option>Equipment service or calibration</option><option>EDS FlowSense</option></select></label>
-    <label class="field">Message<textarea name="Message" required></textarea></label>
-    <button class="btn btn-primary btn-lg" type="submit" style="justify-self:start">${icon("send")} Open email to send</button>
-    <p class="note">This opens your email program with the enquiry filled in, addressed to ${site.email}.</p>
   </form>
 </div></section>
-<section class="section dark"><div class="wrap aus">
+<section class="section dark" id="offices"><div class="wrap aus">
   <svg id="ausmap" data-offices='${JSON.stringify(C.offices)}' role="group" aria-label="Map of Australia showing EDS offices" data-reveal="scale"></svg>
   <div><p class="eyebrow">Office locations</p><h2 class="h-lg" data-reveal>Find us in five states.</h2>
   <div class="office-list" style="margin-top:26px">${C.offices.map((o) => `<button class="office"><span class="card-icon">${icon("map-pin")}</span><span><b>${o.city}</b><span>${o.note}</span></span><em>${o.state}</em></button>`).join("")}</div></div>
@@ -915,6 +1150,53 @@ ${pageHero(r, { crumbs: [["Privacy policy"]], title: "EDS Privacy Policy & State
 });
 
 /* ------------------------------------------------------------------ */
+/* search index                                                        */
+/* ------------------------------------------------------------------ */
+// Everything the search palette (search.js) can find, grouped by `g`. Links
+// are relative to the site root, and search.js adds each page's way back to
+// it. `b` is extra text to match on that is never shown; `x` marks links that
+// leave the site.
+function searchIndex() {
+  const items = [];
+  const text = (...parts) => parts.flat(Infinity).filter(Boolean).join(" ");
+  const blockText = (blocks = []) => blocks.map((b) => [b.heading, b.items || [], b.list || []]);
+  const plain = (src) => src.replace("@root/", "");
+  const put = (g, t, s, h, more = {}) => items.push({ g, t, s, h, ...more });
+
+  for (const s of C.services) put("Services", s.title, s.summary, `services/${s.slug}.html`, { i: s.icon, b: text(s.short, s.intro, blockText(s.blocks), s.compare?.rows || []) });
+  for (const s of C.solutions) put("Solutions", s.title, s.summary, `solutions/${s.slug}.html`, { i: s.icon, b: text(s.intro, blockText(s.blocks)) });
+  put("Products", "LIDoTT Alarm", `Detectronic · ${C.lidott.lede}`, "products/lidott-alarm.html", { img: plain(C.lidott.image), b: text("level radar alarm", C.lidott.description, C.lidott.sections, C.lidott.specs) });
+  for (const p of products) {
+    if (p.href) continue; // has a page of its own, listed above
+    put("Products", p.name, `${p.brand.name} · ${p.note || p.range || typeOf(p.type).label}`, `products/${p.brand.slug}.html#${p.id}`, { img: plain(p.image), b: text(typeOf(p.type).label, p.brand.title, p.brand.tag, p.group) });
+  }
+  for (const b of C.brands) put("Product ranges", b.title, b.tag, `products/${b.slug}.html`, { i: b.icon, b: text(b.name, b.summary, b.intro, b.groups.map((g) => g.name)) });
+  put("Pages", "Instrument finder", `All ${products.length} instruments, filtered by type or searched by name.`, "products/index.html#finder", { i: "package-search", b: "products catalogue range brands" });
+  put("Pages", "EDS FlowSense", "Sewer network intelligence: flow analytics and engineering insight.", "flowsense.html", { i: "waves", b: text(C.flowsense.lede, C.flowsense.features.map(([, t, d]) => [t, d])) });
+  put("Pages", "About EDS", "Australian owned and operated since 1991.", "about.html", { i: "building-2", b: text(C.about.intro, C.about.mission, C.about.timeline, "history founders story") });
+  put("Pages", "Resources", "White papers, downloads and support.", "resources.html", { i: "book-open", b: "manuals software drivers datasheets passwords rma" });
+  put("Pages", "Contact EDS", `${site.hours}. ${site.phone} from anywhere in Australia.`, "contact.html", { i: "messages-square", b: text(site.address, "enquiry form quote") });
+  put("Pages", "All services", "Specialised services for water and wastewater networks.", "services/index.html", { i: "layout-grid" });
+  put("Pages", "All solutions", "Monitoring applied to the problem in front of you.", "solutions/index.html", { i: "layout-grid" });
+  put("Pages", "Home", site.tagline, "index.html", { i: "house" });
+  put("Pages", "Privacy policy", "How EDS handles personal information.", "privacy.html", { i: "lock" });
+  for (const p of C.papers) put("Documents", p.title, `White paper · ${p.date}`, p.href, { i: "file-text", x: 1, b: p.text });
+  for (const g of C.downloads) for (const [label, href] of g.items) put("Documents", label, g.group, href, { i: g.icon, x: 1, b: g.note });
+  put("Contact", `Call ${site.phone}`, `${site.hours}, from anywhere in Australia`, site.phoneHref, { i: "phone", b: "phone ring telephone call" });
+  put("Contact", "Send an enquiry", "The enquiry form, with the topic of your choice", "contact.html#enquiry", { i: "send", b: "quote pricing message" });
+  for (const [addr, what] of [[site.email, "General enquiries"], [site.sales, "Sales"], [site.service, "Service department"]]) put("Contact", `Email ${addr}`, what, `mailto:${addr}`, { i: "mail", b: "email" });
+  for (const o of C.offices) put("Offices", `${o.city}, ${o.state}`, o.note, "contact.html#offices", { i: "map-pin", b: "office location address branch" });
+  put("Sign in", "Sign in to EDS FlowSense", "edsflowsense.au", site.flowsenseUrl, { i: "log-in", x: 1, b: "login platform" });
+  put("Sign in", "Remote data access", "DetectData, for Detectronic instruments", site.remoteDataUrl, { i: "globe", x: 1, b: "login detecdata" });
+  put("Sign in", "Staff login", "For EDS staff", site.staffUrl, { i: "lock", x: 1, b: "login forms" });
+
+  const icons = {};
+  for (const name of new Set(items.map((e) => e.i).filter(Boolean).concat("arrow-right", "arrow-up-right", "search-x"))) { icon(name); icons[name] = iconCache.get(name); }
+  const suggested = ["services/sewer-flow-monitoring.html", "services/inflow-infiltration-studies.html", "services/data-as-a-service.html", "products/lidott-alarm.html", "flowsense.html", "products/index.html#finder", site.phoneHref];
+  return { items, icons, suggested };
+}
+
+/* ------------------------------------------------------------------ */
 /* write                                                               */
 /* ------------------------------------------------------------------ */
 icon("fan"); // fsScreen() reuses the fan glyph, so make sure it is cached
@@ -926,13 +1208,18 @@ await cp(path.join(ROOT, "src/assets/img"), path.join(DIST, "assets/img"), { rec
 for (const [pkg, f] of [["inter", "inter-latin-wght-normal.woff2"], ["inter-tight", "inter-tight-latin-wght-normal.woff2"]]) {
   await cp(path.join(ROOT, `node_modules/@fontsource-variable/${pkg}/files/${f}`), path.join(DIST, "assets/fonts", f));
 }
-await writeFile(
-  path.join(DIST, "assets/favicon.svg"),
-  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#0c5f59"/><g fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round"><path d="M12 24q6.7 6 13.3 0t13.4 0 13.3 0"/><path d="M12 40q6.7 6 13.3 0t13.4 0 13.3 0"/></g></svg>`
-);
 for (const p of pages) {
   const out = path.join(DIST, p.file);
   await mkdir(path.dirname(out), { recursive: true });
   await writeFile(out, layout(p));
 }
+await writeFile(path.join(DIST, "assets/js/search-index.js"), `// Generated by build.mjs from src/data/content.mjs. Do not edit.\nwindow.EDS_SEARCH = ${JSON.stringify(searchIndex())};\n`);
+await writeFile(
+  path.join(DIST, "sitemap.xml"),
+  `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${pages
+    .filter((p) => p.file !== "404.html")
+    .map((p) => `  <url><loc>${pageUrl(p.file)}</loc></url>`)
+    .join("\n")}\n</urlset>\n`
+);
+await writeFile(path.join(DIST, "robots.txt"), process.env.PREVIEW ? "User-agent: *\nDisallow: /\n" : `User-agent: *\nAllow: /\n\nSitemap: ${SITE_URL}/sitemap.xml\n`);
 console.log(`Built ${pages.length} pages into dist/`);

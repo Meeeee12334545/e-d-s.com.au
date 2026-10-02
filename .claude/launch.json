@@ -1,6 +1,6 @@
 {
   "version": "0.0.1",
   "configurations": [
-    { "name": "eds-website", "runtimeExecutable": "node", "runtimeArgs": ["serve.mjs"], "port": 4173 }
+    { "name": "eds-website", "runtimeExecutable": "node", "runtimeArgs": ["serve.mjs"], "port": 4173, "autoPort": true }
   ]
 }

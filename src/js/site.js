@@ -36,17 +36,38 @@
   document.addEventListener("click", (e) => { if (!e.target.closest(".nav-item")) closeAll(); });
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") { closeAll(); setDrawer(false); } });
 
+  // While the drawer is open the page behind it is inert, so keyboard focus
+  // stays in the menu; closing it hands focus back to the menu button.
   const drawer = $(".drawer");
   const burger = $(".burger");
   function setDrawer(open) {
-    if (!drawer) return;
+    if (!drawer || drawer.classList.contains("open") === open) return;
     drawer.classList.toggle("open", open);
     burger?.setAttribute("aria-expanded", String(open));
     document.body.style.overflow = open ? "hidden" : "";
+    $$("body > :not(.drawer, dialog, script)").forEach((el) => (el.inert = open));
     if (open) $(".drawer-close", drawer)?.focus();
+    else burger?.focus();
   }
   burger?.addEventListener("click", () => setDrawer(true));
   $$(".drawer-close, .drawer-scrim").forEach((b) => b.addEventListener("click", () => setDrawer(false)));
+  // Search opens over the drawer, so close the drawer first.
+  if (drawer) $$("[data-search-open]", drawer).forEach((b) => b.addEventListener("click", () => setDrawer(false)));
+
+  /* ---- tabs: arrow keys move between tabs, as in any tab list ---- */
+  $$('[role="tablist"]').forEach((list) => {
+    list.addEventListener("keydown", (e) => {
+      const tabs = $$('[role="tab"]', list);
+      const i = tabs.indexOf(document.activeElement);
+      if (i < 0) return;
+      const next = { ArrowRight: i + 1, ArrowDown: i + 1, ArrowLeft: i - 1, ArrowUp: i - 1, Home: 0, End: tabs.length - 1 }[e.key];
+      if (next === undefined) return;
+      e.preventDefault();
+      const tab = tabs[(next + tabs.length) % tabs.length];
+      tab.focus();
+      tab.click();
+    });
+  });
 
   /* ---- reveal on scroll ---- */
   const io = new IntersectionObserver(
@@ -150,17 +171,170 @@
     setInterval(() => { if (auto && !document.hidden) show((i + 1) % fsItems.length); }, 4200);
   }
 
+  /* ---- copying to the clipboard, shared with products.js ---- */
+  // The Clipboard API is refused in some browsers and embedded views, so fall
+  // back to selecting a hidden text box and copying that.
+  async function copyText(text) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      const box = Object.assign(document.createElement("textarea"), { value: text, readOnly: true });
+      box.style.cssText = "position:fixed;opacity:0;pointer-events:none";
+      (document.querySelector("dialog[open]") || document.body).appendChild(box);
+      box.select();
+      let ok = false;
+      try { ok = document.execCommand("copy"); } catch { /* nothing more to try */ }
+      box.remove();
+      return ok;
+    }
+  }
+  window.EDS = { copyText };
+
   /* ---- contact + register forms: compose an email (no server needed) ---- */
+  // A mailto link only works where an email program is set up, so the
+  // enquiry form also offers to copy the enquiry for any webmail.
+  const compose = (form) => {
+    const data = new FormData(form);
+    const lines = [];
+    data.forEach((v, k) => { if (k !== "subject" && String(v).trim()) lines.push(`${k}: ${v}`); });
+    const product = data.get("Product");
+    const subject = [data.get("subject") || form.dataset.subject || "Website enquiry", product].filter(Boolean).join(": ");
+    return { to: form.dataset.mailto, subject, body: lines.join("\n") };
+  };
+  const ERRORS = { Name: "Please tell us your name.", Email: "Please enter an email address we can reply to.", Message: "Please add a short message." };
+  function check(field) {
+    const ok = field.checkValidity();
+    field.setAttribute("aria-invalid", String(!ok));
+    let msg = field.parentElement.querySelector(".field-error");
+    if (ok) { msg?.remove(); return true; }
+    if (!msg) {
+      msg = document.createElement("small");
+      msg.className = "field-error";
+      msg.id = `err-${field.name}`;
+      field.after(msg);
+      field.setAttribute("aria-describedby", msg.id);
+    }
+    msg.textContent = field.validity.typeMismatch ? "That email address does not look quite right." : ERRORS[field.name] || "Please fill this in.";
+    return false;
+  }
+
   $$("form[data-mailto]").forEach((form) => {
+    const fields = $$("[required]", form);
+    // Once a field has been flagged, re-check it as the visitor fixes it.
+    fields.forEach((f) => f.addEventListener("input", () => f.hasAttribute("aria-invalid") && check(f)));
     form.addEventListener("submit", (e) => {
       e.preventDefault();
-      const data = new FormData(form);
-      const lines = [];
-      data.forEach((v, k) => { if (k !== "subject" && String(v).trim()) lines.push(`${k}: ${v}`); });
-      const subject = data.get("subject") || form.dataset.subject || "Website enquiry";
-      window.location.href = `mailto:${form.dataset.mailto}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(lines.join("\n"))}`;
+      if (form.classList.contains("form")) {
+        const bad = fields.filter((f) => !check(f));
+        if (bad.length) {
+          bad[0].focus({ preventScroll: true });
+          bad[0].scrollIntoView({ block: "center" });
+          return;
+        }
+      }
+      const m = compose(form);
+      window.location.href = `mailto:${m.to}?subject=${encodeURIComponent(m.subject)}&body=${encodeURIComponent(m.body)}`;
+      const done = $(".form-done, .signup-done", form);
+      if (!done) return;
+      done.hidden = false;
+      const fieldset = $(".form-fields", form);
+      if (fieldset) { fieldset.hidden = true; done.focus(); }
     });
   });
+
+  const enquiry = $("form.form[data-mailto]");
+  if (enquiry) {
+    $("[data-form-edit]", enquiry)?.addEventListener("click", () => {
+      $(".form-done", enquiry).hidden = true;
+      $(".form-fields", enquiry).hidden = false;
+      $("textarea", enquiry).focus();
+    });
+    $$("[data-copy]", enquiry).forEach((b) =>
+      b.addEventListener("click", async () => {
+        const m = compose(enquiry);
+        const label = $("span", b), was = label.textContent;
+        const text = b.dataset.copy === "address" ? m.to : `To: ${m.to}\nSubject: ${m.subject}\n\n${m.body}`;
+        label.textContent = (await copyText(text)) ? "Copied" : "Could not copy";
+        setTimeout(() => (label.textContent = was), 2000);
+      })
+    );
+
+    // Arriving from a "Request pricing" or "Enquire now" button: choose the
+    // topic it was about and name the product, if there was one.
+    const params = new URLSearchParams(location.search);
+    const topic = params.get("topic"), product = params.get("product");
+    const select = $("select[name=subject]", enquiry);
+    if (topic) {
+      const opt = [...select.options].find((o) => o.text.toLowerCase() === topic.toLowerCase());
+      if (opt) select.value = opt.value;
+    }
+    const ctx = $(".form-context", enquiry);
+    if (product && ctx) {
+      $("b", ctx).textContent = product;
+      $("input", ctx).value = product;
+      ctx.hidden = false;
+      $("[data-context-clear]", ctx).addEventListener("click", () => {
+        $("input", ctx).value = "";
+        ctx.hidden = true;
+        $("input[name=Name]", enquiry).focus();
+      });
+    }
+    if (topic || product) {
+      // Bring the form into view and start them typing.
+      enquiry.classList.add("in");
+      requestAnimationFrame(() => {
+        enquiry.scrollIntoView({ block: "center" });
+        $("input[name=Name]", enquiry).focus({ preventScroll: true });
+      });
+    }
+  }
+
+  /* ---- head office: open now, or when it next opens ---- */
+  // The hours come from site.openingHours in content.mjs, via the footer.
+  const hours = $("[data-open-status]");
+  if (hours) {
+    const spec = JSON.parse(hours.dataset.openStatus);
+    const mins = (hm) => { const [h, m] = hm.split(":").map(Number); return h * 60 + m; };
+    const clock = (m) => { const h = Math.floor(m / 60), mm = m % 60; return `${h % 12 || 12}${mm ? `:${String(mm).padStart(2, "0")}` : ""}${h < 12 ? "am" : "pm"}`; };
+    const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const update = () => {
+      const parts = Object.fromEntries(new Intl.DateTimeFormat("en-AU", { timeZone: spec.timeZone, weekday: "short", hour: "numeric", minute: "numeric", hourCycle: "h23" }).formatToParts(new Date()).map((p) => [p.type, p.value]));
+      const day = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(parts.weekday);
+      const now = Number(parts.hour) * 60 + Number(parts.minute);
+      const open = spec.days.includes(day) && now >= mins(spec.opens) && now < mins(spec.closes);
+      let text = `Head office open now, until ${clock(mins(spec.closes))}`;
+      if (!open) {
+        let d = day, ahead = 0;
+        if (!(spec.days.includes(day) && now < mins(spec.opens))) do { d = (d + 1) % 7; ahead++; } while (!spec.days.includes(d));
+        text = `Head office closed, opens ${clock(mins(spec.opens))} ${ahead === 0 ? "today" : ahead === 1 ? "tomorrow" : DAYS[d]}`;
+      }
+      const tz = spec.timeZone === "Australia/Brisbane" ? " (Brisbane time)" : "";
+      $$("[data-open-status]").forEach((el) => {
+        el.hidden = false;
+        el.classList.toggle("is-open", open);
+        $("span", el).textContent = text + tz;
+      });
+      $$("[data-open-dot]").forEach((el) => el.classList.toggle("is-open", open));
+    };
+    update();
+    setInterval(update, 60000);
+  }
+
+  /* ---- phone action bar: out of the way at the top and by the footer ---- */
+  const bar = $(".actionbar");
+  if (bar) {
+    let past = false, near = false;
+    const sync = () => bar.classList.toggle("show", past && !near);
+    window.addEventListener("scroll", () => { const p = window.scrollY > 320; if (p !== past) { past = p; sync(); } }, { passive: true });
+    const seen = new Set();
+    const io2 = new IntersectionObserver((entries) => {
+      entries.forEach((en) => (en.isIntersecting ? seen.add(en.target) : seen.delete(en.target)));
+      near = seen.size > 0;
+      sync();
+    });
+    $$(".footer, .cta, .contact-grid").forEach((el) => io2.observe(el));
+  }
 
   /* ---- flow field: streamlines that part around the pointer ---- */
   function flowField(canvas) {
