@@ -1156,6 +1156,7 @@ export const flowsense = {
     ["calculator", "Shows its working", "A \"How this is calculated\" note beside every derived figure: the method, constants and assumptions in plain language."],
   ],
   docs: [
+    { label: "Platform brochure", note: "The whole platform in sixteen pages: the screens, the standards it follows and the pricing.", href: localDoc("eds-flowsense-brochure.pdf") },
     { label: "Features and benefits", note: "What FlowSense does to monitor, analyse and plan a sewer network.", href: localDoc("eds-flowsense-features-and-benefits.pdf") },
     { label: "Sending data to your SCADA", note: "For engineering, control systems and IT teams.", href: localDoc("eds-flowsense-data-to-scada.pdf") },
   ],
@@ -1257,6 +1258,7 @@ export const downloads = [
     group: "EDS FlowSense",
     icon: "waves",
     items: [
+      ["FlowSense platform brochure", localDoc("eds-flowsense-brochure.pdf")],
       ["FlowSense features and benefits", localDoc("eds-flowsense-features-and-benefits.pdf")],
       ["Sending FlowSense data to your SCADA", localDoc("eds-flowsense-data-to-scada.pdf")],
     ],
