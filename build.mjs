@@ -141,7 +141,6 @@ function footer(r) {
             <li><a href="${r}resources.html">Resources</a></li>
             <li><a href="${r}contact.html">Contact</a></li>
             <li><a href="${site.remoteDataUrl}" rel="noopener">Remote data access</a></li>
-            <li><a href="${site.staffUrl}" rel="noopener">Staff login</a></li>
           </ul>
         </div>
         <div>
