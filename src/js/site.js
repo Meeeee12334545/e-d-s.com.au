@@ -4,9 +4,9 @@
   const root = document.documentElement;
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
-  // Visitors who ask their system for less motion get still pictures: no
-  // counting, tilting, touring or streaming. site.css does the same for CSS.
-  const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  // Visitors who ask their system for less motion keep the ambient animation
+  // but lose the pointer-driven tilt and the smooth scrolling (see site.css).
+  const calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   /* ---- header ---- */
   const header = $(".header");
@@ -93,7 +93,6 @@
     const dec = parseInt(el.dataset.decimals || "0", 10);
     const from = el.dataset.from ? parseFloat(el.dataset.from) : 0;
     const fmt = (v) => (el.dataset.plain ? v.toFixed(dec) : v.toLocaleString("en-AU", { minimumFractionDigits: dec, maximumFractionDigits: dec }));
-    if (still) { el.textContent = fmt(to); return; }
     const t0 = performance.now(), dur = 1700;
     const tick = (now) => {
       const p = Math.min(1, (now - t0) / dur);
@@ -106,7 +105,7 @@
 
   /* ---- pointer effects: spotlight, tilt, magnetic buttons ---- */
   const fine = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
-  if (fine && !still) {
+  if (fine && !calm) {
     $$(".card").forEach((card) => {
       card.addEventListener("pointermove", (e) => {
         const r = card.getBoundingClientRect();
@@ -142,7 +141,7 @@
     rail.addEventListener("dragstart", (e) => e.preventDefault());
     const step = () => ($(".brand-card", rail)?.offsetWidth || 320) + 18;
     $$(`[data-rail="${rail.id}"]`).forEach((b) =>
-      b.addEventListener("click", () => rail.scrollBy({ left: step() * (b.dataset.dir === "prev" ? -1 : 1), behavior: still ? "auto" : "smooth" }))
+      b.addEventListener("click", () => rail.scrollBy({ left: step() * (b.dataset.dir === "prev" ? -1 : 1), behavior: calm ? "auto" : "smooth" }))
     );
   });
 
@@ -162,7 +161,7 @@
   /* ---- FlowSense tabs ---- */
   const fsItems = $$(".fs-item");
   if (fsItems.length) {
-    let i = 0, auto = !still;
+    let i = 0, auto = true;
     const show = (n) => {
       i = n;
       fsItems.forEach((b, k) => b.setAttribute("aria-selected", String(k === n)));
@@ -216,16 +215,14 @@
       out.v.textContent = (0.32 + q / 95).toFixed(2);
     };
     draw();
-    if (!still) {
-      let seen = false;
-      new IntersectionObserver(([en]) => { seen = en.isIntersecting; }).observe(live);
-      setInterval(() => {
-        if (!seen || document.hidden) return;
-        pts.shift();
-        pts.push(next());
-        draw();
-      }, 2800);
-    }
+    let seen = false;
+    new IntersectionObserver(([en]) => { seen = en.isIntersecting; }).observe(live);
+    setInterval(() => {
+      if (!seen || document.hidden) return;
+      pts.shift();
+      pts.push(next());
+      draw();
+    }, 2800);
   }
 
   /* ---- copying to the clipboard, shared with products.js ---- */
@@ -417,8 +414,6 @@
       const n = Math.round(Math.max(160, Math.min(dense ? 1100 : 700, (w * h) / (dense ? 1300 : 2200))));
       parts = Array.from({ length: n }, () => { const p = {}; spawn(p, true); return p; });
       ctx.fillStyle = `rgb(${BG})`; ctx.fillRect(0, 0, w, h);
-      // With less motion asked for, draw the streamlines once and leave them.
-      if (still) for (let k = 0; k < 90; k++) step();
     };
     const step = () => {
       t += 1;
@@ -447,7 +442,7 @@
     const loop = () => { step(); raf = requestAnimationFrame(loop); };
     const sync = () => {
       cancelAnimationFrame(raf); raf = 0;
-      if (visible && !document.hidden && !still) raf = requestAnimationFrame(loop);
+      if (visible && !document.hidden) raf = requestAnimationFrame(loop);
     };
     new ResizeObserver(resize).observe(canvas);
     new IntersectionObserver(([en]) => { visible = en.isIntersecting; sync(); }).observe(canvas);

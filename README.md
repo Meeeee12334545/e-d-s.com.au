@@ -24,7 +24,7 @@ The build stops with an error if a page repeats an element id, since product lin
 |---|---|
 | `src/data/content.mjs` | Every word on the site, the services and their groups, the product lists (each product has a `type` from `productTypes`) and the city districts. Edit copy here. |
 | `build.mjs` | Page templates. Generates 46 pages, including `404.html`, plus `sitemap.xml`, `robots.txt` and the search index. |
-| `src/css/site.css` | All styles and design tokens. Visitors whose system asks for reduced motion get still versions of every animation (the end of the file). |
+| `src/css/site.css` | All styles and design tokens. Visitors whose system asks for reduced motion get fades instead of slides and no card tilt (the end of the file). |
 | `src/js/site.js` | Navigation, scroll reveals, counters, pointer effects, the flow-field background, the illustrative flow meter card in the home hero, sidebars that stay in view when they fit, the enquiry form, the "head office open now" status and the phone action bar. |
 | `src/js/search.js` | Site search (Ctrl K, ⌘K or `/`). Its index, `assets/js/search-index.js`, is written by `build.mjs` from `content.mjs` and loads the first time search opens. |
 | `src/js/products.js` | Product quick view and the instrument finder on the products page. |

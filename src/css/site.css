@@ -1054,19 +1054,12 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: 6
 }
 
 /* ---------- less motion ----------
-   For visitors whose system asks for reduced motion: everything arrives in
-   place, loops stop on their resting frame, and the logo band stands still
-   as a wrapped row. site.js and city.js stop their own animations too. */
+   For visitors whose system asks for reduced motion the ambient animation
+   stays, but sections fade in rather than slide, and links jump instead of
+   scrolling. site.js also leaves out the pointer-driven card tilt. */
 @media (prefers-reduced-motion: reduce) {
-  @view-transition { navigation: none; }
   html { scroll-behavior: auto; }
-  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; animation-delay: 0s !important; transition-duration: .01ms !important; transition-delay: 0s !important; }
-  .js [data-reveal] { opacity: 1; translate: none; scale: none; }
-  .js .hero h1 .w > span { translate: none; animation: none; }
-  .hero-product-shot { animation: none; }
-  .marquee { -webkit-mask-image: none; mask-image: none; }
-  .marquee-track { animation: none; width: auto; flex-wrap: wrap; justify-content: center; padding-inline: var(--gutter); row-gap: 20px; }
-  .marquee-track > [aria-hidden="true"] { display: none; }
+  .js [data-reveal] { translate: none; scale: none; }
 }
 
 /* ---------- print: specifications and contact details on paper ---------- */
