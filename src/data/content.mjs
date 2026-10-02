@@ -1142,7 +1142,7 @@ export const lidott = {
 /* FlowSense                                                           */
 /* ------------------------------------------------------------------ */
 export const flowsense = {
-  lede: "Sewer network intelligence. Monitoring, flow analytics and engineering insight for the sites EDS measures, in one platform.",
+  lede: "Monitoring, flow analytics and engineering insight for the sites EDS measures, in one platform.",
   features: [
     ["map", "Your network on one map", "Every monitored site, its status and its alarms, on a live network map with weather overlaid."],
     ["flame", "I/I heat map", "One colour per severity band, every pipe outlined, with animated arrows showing which way the water runs."],
@@ -1210,7 +1210,7 @@ export const clients = [
   ["Transurban", "client-transurban.jpg"],
   ["GHD", "client-ghd.jpg"],
   ["SMEC", "client-smec.jpg"],
-  ["EDS client", "client-eds-client.png"],
+  ["Cardno", "client-eds-client.png"],
   ["Veolia", "client-veolia.png"],
 ].map(([name, file]) => ({ name, src: img(file) }));
 

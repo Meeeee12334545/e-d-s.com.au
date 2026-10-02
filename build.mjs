@@ -182,6 +182,7 @@ function footer(r) {
       </div>
       <div class="footer-base">
         <span>© ${year} ${site.legal}. All rights reserved. <a href="${r}privacy.html" style="text-decoration:underline">Privacy policy</a></span>
+        <a class="to-top" href="#top">Back to top ${icon("arrow-up", "nudge-up")}</a>
       </div>
     </div>
   </footer>`;
@@ -293,7 +294,7 @@ function layout({ file, title, description, current, body, scripts = [] }) {
 <link rel="stylesheet" href="${r}assets/css/site.css">
 ${jsonLd(file, crumbs)}
 </head>
-<body>
+<body id="top">
 ${header(r, current)}
 <main id="main">
 ${html}
@@ -342,12 +343,27 @@ const heroProduct = (src, name) => `
   <figcaption>Pictured: ${esc(name)}</figcaption>
 </figure>`;
 
-// Jump links to the sections of a longer page. `sections` is [[id, label]].
+// Jump links to the sections of a longer page. `sections` is [[id, label]],
+// or [id, label, count] to show how many things the section holds.
 const heroToc = (sections) => `
 <nav class="hero-toc" aria-label="On this page" data-reveal="right" style="--i:2">
   <p>On this page</p>
-  <ol>${sections.map(([id, label], i) => `<li><a href="#${id}"><span>${String(i + 1).padStart(2, "0")}</span>${esc(label)}${icon("arrow-down")}</a></li>`).join("")}</ol>
+  <ol>${sections.map(([id, label, count], i) => `<li><a href="#${id}"><span>${String(i + 1).padStart(2, "0")}</span>${esc(label)}${count ? `<em>${count}</em>` : ""}${icon("arrow-down")}</a></li>`).join("")}</ol>
 </nav>`;
+
+// A titled glass card for the right of a page hero, for pages that are not
+// long enough to need a jump list.
+const heroPanel = (title, inner, cls = "") => `
+<div class="hero-panel${cls ? ` ${cls}` : ""}" data-reveal="right" style="--i:2">
+  <p>${title}</p>
+  ${inner}
+</div>`;
+
+// The headline numbers from the home page, as a two by two grid.
+const heroFacts = () => heroPanel("EDS at a glance", `<dl class="hero-facts">${C.stats.map((s) => `<div><dt>${s.label}</dt><dd>${s.value}${s.suffix ? `<small>${s.suffix}</small>` : ""}</dd></div>`).join("")}</dl>`);
+
+// Three steps, each an icon, a name and a line: [icon, name, line].
+const heroSteps = (title, steps) => heroPanel(title, `<ol class="hero-steps">${steps.map(([ic, t, d]) => `<li><span class="card-icon">${icon(ic, false)}</span><span><b>${esc(t)}</b><small>${esc(d)}</small></span></li>`).join("")}</ol>`);
 
 const ctaSection = (r, { title = "Talk to the people who measure it.", lede = "Tell us about your network, site or project. A real person from our team will come back to you.", topic, product } = {}) => `
 <section class="section dark cta">
@@ -528,6 +544,26 @@ function fsScreen() {
   </div>`;
 }
 
+// The home hero's flow meter reporting in. site.js draws the last day of
+// readings and moves it on every few seconds. Labelled as an illustration,
+// like the flow lab and the FlowSense screens.
+const liveCard = () => `
+<aside class="live" aria-label="Illustration of a flow meter reporting live" data-reveal="right" style="--i:5">
+  <div class="live-head"><span class="live-site">${icon("radio-tower", false)} Site 07 · Trunk sewer</span><span class="live-tag">Live</span></div>
+  <div class="live-value"><b data-live="q">41.8</b><span>L/s</span></div>
+  <p class="live-label">Flow over the last 24 hours</p>
+  <svg class="live-chart" viewBox="0 0 300 86" aria-hidden="true">
+    <defs><linearGradient id="live-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5fb4a6" stop-opacity=".32"/><stop offset="1" stop-color="#5fb4a6" stop-opacity="0"/></linearGradient></defs>
+    <path class="live-area" fill="url(#live-fill)"/><path class="live-dwf"/><path class="live-line"/><circle class="live-dot" r="3.5"/>
+  </svg>
+  <div class="live-read">
+    <div><span>Depth</span><b data-live="d">212</b><small>mm</small></div>
+    <div><span>Velocity</span><b data-live="v">0.76</b><small>m/s</small></div>
+    <div><span>Battery</span><b>94</b><small>%</small></div>
+  </div>
+  <div class="live-foot"><span>Illustration</span><span>${icon("signal", false)} Sent over 4G</span></div>
+</aside>`;
+
 // "PDF", "ZIP": shown in the Documents panel so people know what they will get.
 const docType = (href) => href.split(".").pop().toUpperCase();
 const prodDocs = (p) => `<ul class="prod-docs">${p.docs.map((d) => `<li><a href="${d.href}" rel="noopener">${icon("download")}<span>${esc(d.label)}</span></a></li>`).join("")}</ul>`;
@@ -610,14 +646,19 @@ add({
 <section class="hero dark">
   <canvas class="hero-canvas" data-flowfield="dense" aria-hidden="true"></canvas>
   <div class="wrap hero-body">
-    <p class="eyebrow">Water · Wastewater · Trade waste · Environment</p>
-    <h1 class="h-xl" aria-label="Every drop, measured.">${words.map((w, i) => `<span class="w" aria-hidden="true"><span style="--i:${i}">${i === 2 ? `<em>${w}</em>` : w}</span></span>`).join(" ")}</h1>
-    <p class="lede" data-reveal style="--i:4">Environmental Data Services has been a trusted leader in advanced monitoring solutions and specialised services since 1991, delivering high quality instrumentation, technical support and field proven solutions across Australia.</p>
-    <div class="hero-actions" data-reveal style="--i:5">
-      <a class="btn btn-primary btn-lg" data-magnetic href="#city-explorer">Explore the city ${icon("arrow-right")}</a>
-      <a class="btn btn-ghost btn-lg" href="${r}services/index.html">Our services</a>
+    <div class="hero-main">
+      <div>
+        <p class="eyebrow">Water · Wastewater · Trade waste · Environment</p>
+        <h1 class="h-xl" aria-label="Every drop, measured.">${words.map((w, i) => `<span class="w" aria-hidden="true"><span style="--i:${i}">${i === 2 ? `<em>${w}</em>` : w}</span></span>`).join(" ")}</h1>
+        <p class="lede" data-reveal style="--i:4">Environmental Data Services has been a trusted leader in advanced monitoring solutions and specialised services since 1991, delivering high quality instrumentation, technical support and field proven solutions across Australia.</p>
+        <div class="hero-actions" data-reveal style="--i:5">
+          <a class="btn btn-primary btn-lg" data-magnetic href="#city-explorer">Explore the city ${icon("arrow-right")}</a>
+          <a class="btn btn-ghost btn-lg" href="${r}services/index.html">Our services</a>
+        </div>
+        <p class="hero-hint" data-reveal style="--i:6">${icon("mouse-pointer-click", false)} Move your pointer through the flow</p>
+      </div>
+      ${liveCard()}
     </div>
-    <p class="hero-hint" data-reveal style="--i:6">${icon("mouse-pointer-click", false)} Move your pointer through the flow</p>
     <div class="stats">
       ${C.stats.map((s, i) => `<div class="stat" data-reveal style="--i:${i}"><div class="stat-value"><span data-count="${s.value}"${s.decimals ? ` data-decimals="${s.decimals}"` : ""}${s.plain ? ' data-plain="1" data-from="1950"' : ""}>${s.value}</span>${s.suffix ? `<small>${s.suffix}</small>` : ""}</div><div class="stat-label">${s.label}</div></div>`).join("")}
     </div>
@@ -634,11 +675,9 @@ add({
   </div>
   <div class="wrap wide">
     <div class="city-grid">
-      <div>
-        <div class="city-stage" data-reveal="scale"><svg id="city" role="group" aria-label="Interactive map of a city. Each district shows the EDS services and products used there."></svg></div>
-        <div class="city-tabs" role="tablist" aria-label="City districts">
-          ${C.city.map((z, i) => `<button class="city-tab" role="tab" data-zone="${z.id}" aria-selected="${i === 0}">${icon(z.icon)}${z.name}</button>`).join("")}
-        </div>
+      <div class="city-stage" data-reveal="scale"><svg id="city" role="group" aria-label="Interactive map of a city. Each district shows the EDS services and products used there."></svg></div>
+      <div class="city-tabs" role="tablist" aria-label="City districts">
+        ${C.city.map((z, i) => `<button class="city-tab" role="tab" data-zone="${z.id}" aria-selected="${i === 0}">${icon(z.icon)}${z.name}</button>`).join("")}
       </div>
       <div class="city-panel">
         ${C.city.map((z, i) => `
@@ -784,7 +823,7 @@ add({
   description: `${C.services.length} services from EDS: sewer flow and I&I monitoring, blockage alarms, water quality, sampling, rainfall, pump stations, SCADA integration, data analysis, calibration and more.`,
   current: "services",
   body: (r) => `
-${pageHero(r, { crumbs: [["Services"]], eyebrow: "Services", title: "Specialised services for water and wastewater networks.", lede: "From a single audit to a national monitoring program, delivered by trained crews in every state.", actions: `<div class="chips">${C.serviceGroups.map((g) => `<a class="chip" href="#${g.id}">${esc(g.title)}</a>`).join("")}</div>` })}
+${pageHero(r, { crumbs: [["Services"]], eyebrow: "Services", title: "Specialised services for water and wastewater networks.", lede: "From a single audit to a national monitoring program, delivered by trained crews in every state.", actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${r}contact.html">Talk to our team ${icon("arrow-right")}</a><a class="btn btn-ghost btn-lg" href="${site.phoneHref}">${icon("phone")} ${site.phone}</a><div class="chips">${C.serviceGroups.map((g) => `<a class="chip" href="#${g.id}">${esc(g.title)}</a>`).join("")}</div>`, visual: heroToc(C.serviceGroups.map((g) => [g.id, g.title, C.services.filter((s) => s.group === g.id).length])) })}
 ${C.serviceGroups.map((g, gi) => `
 <section class="section${gi % 2 ? " alt" : ""}" id="${g.id}"><div class="wrap">
   <div class="section-head"><p class="eyebrow">${esc(g.title)}</p><h2 class="h-lg" data-reveal>${esc(g.heading)}</h2><p class="lede" data-reveal style="--i:1">${esc(g.lede)}</p></div>
@@ -862,7 +901,7 @@ add({
   description: "Structure performance monitoring, asset and network assessment, thermal monitoring, wastewater monitoring, automatic sampling and environmental monitoring.",
   current: "solutions",
   body: (r) => `
-${pageHero(r, { crumbs: [["Solutions"]], eyebrow: "Solutions", title: "Monitoring applied to the problem in front of you.", lede: "Each solution combines EDS instruments, field crews and data into an outcome you can act on." })}
+${pageHero(r, { crumbs: [["Solutions"]], eyebrow: "Solutions", title: "Monitoring applied to the problem in front of you.", lede: "Each solution combines EDS instruments, field crews and data into an outcome you can act on.", visual: heroSteps("How a solution comes together", [["cpu", "Instruments", "Chosen from one of Australia's largest monitoring portfolios."], ["hard-hat", "Field crews", "Installed, maintained and calibrated by trained EDS crews."], ["chart-line", "Data you can act on", "Delivered to FlowSense, your SCADA system or a report."]]) })}
 <section class="section"><div class="wrap"><div class="grid c3">
   ${C.solutions.map((s, n) => cardLink(r, { href: `solutions/${s.slug}.html`, iconName: s.icon, title: s.title, text: s.summary, n })).join("")}
 </div></div></section>
@@ -897,8 +936,8 @@ add({
   current: "products",
   scripts: ["products.js"],
   body: (r) => `
-${pageHero(r, { crumbs: [["Products"]], eyebrow: "Products", title: "Industry leading instruments, backed by people who use them.", lede: "EDS is a manufacturer, and represents leading manufacturers, in water supply and management, wastewater management, flow monitoring and process control.", actions: `<a class="btn btn-primary btn-lg" data-magnetic href="#finder">${icon("package-search")} Find an instrument</a><a class="btn btn-ghost btn-lg" href="${contactHref(r, { topic: "Product pricing" })}">Request pricing</a>` })}
-<section class="section"><div class="wrap"><div class="grid c4">
+${pageHero(r, { crumbs: [["Products"]], eyebrow: "Products", title: "Industry leading instruments, backed by people who use them.", lede: "EDS is a manufacturer, and represents leading manufacturers, in water supply and management, wastewater management, flow monitoring and process control.", actions: `<a class="btn btn-primary btn-lg" data-magnetic href="#finder">${icon("package-search")} Find an instrument</a><a class="btn btn-ghost btn-lg" href="${contactHref(r, { topic: "Product pricing" })}">Request pricing</a>`, visual: heroToc([["ranges", "Product ranges", C.brands.length], ["finder", "Instrument finder", products.length], ["featured", "Featured: LIDoTT Alarm"]]) })}
+<section class="section" id="ranges"><div class="wrap"><div class="grid c4">
   ${C.brands.map((b, n) => `
   <a class="card brand-card tilt" href="${r}products/${b.slug}.html" data-reveal style="width:auto;--i:${n % 4}">
     <div class="brand-shot"><img src="${b.cover || b.groups[0].items[0].image}" alt="${esc(b.title)}" loading="lazy"></div>
@@ -927,7 +966,7 @@ ${pageHero(r, { crumbs: [["Products"]], eyebrow: "Products", title: "Industry le
   </div>
 </div></section>
 ${quickView()}
-<section class="section"><div class="wrap split" style="align-items:center">
+<section class="section" id="featured"><div class="wrap split" style="align-items:center">
   <div><p class="eyebrow">Featured</p><h2 class="h-lg" data-reveal>LIDoTT Alarm</h2><p class="lede" data-reveal style="--i:1;margin-top:16px">${C.lidott.lede} Radar level sensor, battery, modem and aerial in one compact, Zone 0 certified device.</p>
   <div class="hero-actions"><a class="btn btn-brand btn-lg" href="${r}products/lidott-alarm.html">See how it works ${icon("arrow-right")}</a></div></div>
   <div class="brand-shot" style="border:1px solid var(--border);border-radius:24px;aspect-ratio:1" data-reveal="right"><img src="${C.lidott.image}" alt="LIDoTT Alarm" loading="lazy"></div>
@@ -1014,8 +1053,8 @@ add({
   description: "EDS FlowSense: sewer network monitoring, flow analytics and engineering intelligence by Environmental Data Services.",
   current: "flowsense",
   body: (r) => `
-${pageHero(r, { crumbs: [["FlowSense"]], iconName: "waves", eyebrow: "EDS FlowSense", title: "Sewer network intelligence.", lede: C.flowsense.lede, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${site.flowsenseUrl}" rel="noopener">Open FlowSense ${icon("arrow-up-right")}</a><a class="btn btn-ghost btn-lg" href="${contactHref(r, { topic: "EDS FlowSense" })}">Request a walkthrough</a>` })}
-<section class="section fs-band"><div class="wrap fs-grid">
+${pageHero(r, { crumbs: [["FlowSense"]], iconName: "waves", eyebrow: "EDS FlowSense", title: "Sewer network intelligence.", lede: C.flowsense.lede, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${site.flowsenseUrl}" rel="noopener">Open FlowSense ${icon("arrow-up-right")}</a><a class="btn btn-ghost btn-lg" href="${contactHref(r, { topic: "EDS FlowSense" })}">Request a walkthrough</a>`, visual: heroToc([["platform", "Inside the platform"], ["capabilities", "Capabilities", C.flowsense.features.length], ["documents", "Documents", C.flowsense.docs.length]]) })}
+<section class="section fs-band" id="platform"><div class="wrap fs-grid">
   <div>
     <p class="eyebrow">Inside the platform</p>
     <h2 class="h-lg" data-reveal>From a reading in a manhole to a decision.</h2>
@@ -1026,13 +1065,13 @@ ${pageHero(r, { crumbs: [["FlowSense"]], iconName: "waves", eyebrow: "EDS FlowSe
   </div>
   ${fsScreen()}
 </div></section>
-<section class="section"><div class="wrap">
+<section class="section" id="capabilities"><div class="wrap">
   <div class="section-head"><p class="eyebrow">Capabilities</p><h2 class="h-lg" data-reveal>Everything your network is telling you.</h2></div>
   <div class="grid c3">
     ${C.flowsense.features.map(([ic, t, d], n) => `<div class="card hoverable holder" data-reveal style="--i:${n % 3}"><span class="card-icon">${icon(ic)}</span><h3>${esc(t)}</h3><p>${esc(d)}</p></div>`).join("")}
   </div>
 </div></section>
-<section class="section alt"><div class="wrap">
+<section class="section alt" id="documents"><div class="wrap">
   <div class="section-head"><p class="eyebrow">Documents</p><h2 class="h-lg" data-reveal>Read more about FlowSense.</h2></div>
   <ul class="doc-list grid c2">
     ${C.flowsense.docs.map((d, n) => `<li data-reveal style="--i:${n}"><a href="${d.href}" rel="noopener"><span class="card-icon">${icon("file-text")}</span><span>${esc(d.label)}<small>${esc(d.note)} ${docType(d.href)}.</small></span>${icon("download")}</a></li>`).join("")}
@@ -1049,7 +1088,7 @@ add({
   current: "about",
   scripts: ["widgets.js"],
   body: (r) => `
-${pageHero(r, { crumbs: [["About"]], eyebrow: "About EDS", title: "Australian owned and operated since 1991.", lede: "Scientists, engineers and technicians who excel in every facet of environmental monitoring and project delivery." })}
+${pageHero(r, { crumbs: [["About"]], eyebrow: "About EDS", title: "Australian owned and operated since 1991.", lede: "Scientists, engineers and technicians who excel in every facet of environmental monitoring and project delivery.", visual: heroFacts() })}
 <section class="section"><div class="wrap split">
   <div class="prose" data-reveal>${C.about.intro.map((p) => `<p>${esc(p)}</p>`).join("")}<h2>Our mission</h2>${C.about.mission.map((p) => `<p>${esc(p)}</p>`).join("")}</div>
   <aside class="aside">
@@ -1080,8 +1119,8 @@ add({
   description: "EDS white papers on inflow and infiltration, plus software, drivers, datasheets and selection guides.",
   current: "resources",
   body: (r) => `
-${pageHero(r, { crumbs: [["Resources"]], eyebrow: "Resources", title: "White papers, downloads and support.", lede: "What we have learned in the field, and the files you need to keep instruments running." })}
-<section class="section"><div class="wrap">
+${pageHero(r, { crumbs: [["Resources"]], eyebrow: "Resources", title: "White papers, downloads and support.", lede: "What we have learned in the field, and the files you need to keep instruments running.", visual: heroToc([["papers", "White papers", C.papers.length], ["downloads", "Software, drivers and datasheets", C.downloads.reduce((n, g) => n + g.items.length, 0)], ["support", "Passwords, RMA forms and data access"]]) })}
+<section class="section" id="papers"><div class="wrap">
   <div class="section-head"><p class="eyebrow">White papers</p><h2 class="h-lg" data-reveal>EDS publications</h2></div>
   <div class="grid c3">
     ${C.papers.map((p, n) => `
@@ -1091,7 +1130,7 @@ ${pageHero(r, { crumbs: [["Resources"]], eyebrow: "Resources", title: "White pap
     </a>`).join("")}
   </div>
 </div></section>
-<section class="section alt"><div class="wrap">
+<section class="section alt" id="downloads"><div class="wrap">
   <div class="section-head"><p class="eyebrow">Downloads and manuals</p><h2 class="h-lg" data-reveal>Software, drivers and datasheets</h2></div>
   <div class="grid c2">
     ${C.downloads.map((g) => `
@@ -1102,7 +1141,7 @@ ${pageHero(r, { crumbs: [["Resources"]], eyebrow: "Resources", title: "White pap
     </div>`).join("")}
   </div>
 </div></section>
-<section class="section"><div class="wrap"><div class="grid c3">
+<section class="section" id="support"><div class="wrap"><div class="grid c3">
   <a class="card" href="${r}contact.html" data-reveal><span class="card-icon">${icon("lock")}</span><h3>Software passwords and RMA forms</h3><p>Request a software password, an EDS or Hach Marsh RMA form, or EDS safety policies and procedures.</p><span class="link-arrow">Contact service ${icon("arrow-right")}</span></a>
   <a class="card" href="${site.remoteDataUrl}" rel="noopener" data-reveal style="--i:1"><span class="card-icon">${icon("globe")}</span><h3>Remote data access</h3><p>Sign in to DetectData to view data from your Detectronic instruments.</p><span class="link-arrow">Open DetectData ${icon("arrow-up-right")}</span></a>
   <a class="card" href="https://earth.nullschool.net/" rel="noopener" data-reveal style="--i:2"><span class="card-icon">${icon("wind")}</span><h3>Wind and ocean currents</h3><p>View real time ocean and wind currents across the world's oceans.</p><span class="link-arrow">Open the live map ${icon("arrow-up-right")}</span></a>
@@ -1118,7 +1157,14 @@ add({
   current: "contact",
   scripts: ["widgets.js"],
   body: (r) => `
-${pageHero(r, { crumbs: [["Contact"]], eyebrow: "Contact", title: "Call or visit. We would like to hear about your project.", lede: `${site.hours}. One number for every state: ${site.phone}.` })}
+${pageHero(r, { crumbs: [["Contact"]], eyebrow: "Contact", title: "Call or visit. We would like to hear about your project.", lede: `${site.hours}. One number for every state: ${site.phone.replace(/ /g, " ")}.`, visual: heroPanel("Quickest ways to reach us", `
+  <a class="hero-call" href="${site.phoneHref}">${icon("phone")}<span><small>Call from anywhere in Australia</small><b>${site.phone}</b></span></a>
+  ${openStatus()}
+  <ul class="hero-links">
+    <li><a href="mailto:${site.email}">${icon("mail")}<span>${site.email}</span></a></li>
+    <li><a href="#enquiry">${icon("send")}<span>Send an enquiry</span>${icon("arrow-down")}</a></li>
+    <li><a href="#offices">${icon("map-pin")}<span>Offices in five states</span>${icon("arrow-down")}</a></li>
+  </ul>`, "hero-contact") })}
 <section class="section"><div class="wrap contact-grid">
   <div class="contact-cards">
     <a class="contact-card" href="${site.phoneHref}" data-reveal><span class="card-icon">${icon("phone")}</span><span><b>${site.phone}</b><span>General enquiries, customer service, service department and sales</span></span></a>
@@ -1182,7 +1228,7 @@ add({
   description: "This page could not be found.",
   current: "",
   body: (r) => `
-${pageHero(r, { crumbs: [["Page not found"]], iconName: "waves", eyebrow: "Error 404", title: "This pipe leads nowhere.", lede: "The page you were looking for has moved or no longer exists. Try one of these instead.", actions: `<a class="btn btn-primary btn-lg" href="${r}index.html">Back to home ${icon("arrow-right")}</a><a class="btn btn-ghost btn-lg" href="${r}services/index.html">Services</a><a class="btn btn-ghost btn-lg" href="${r}products/index.html">Products</a><a class="btn btn-ghost btn-lg" href="${r}contact.html">Contact</a>` })}`,
+${pageHero(r, { crumbs: [["Page not found"]], iconName: "waves", eyebrow: "Error 404", title: "This pipe leads nowhere.", lede: "The page you were looking for has moved or no longer exists. Search for it, or try one of these instead.", actions: `<button class="btn btn-primary btn-lg" type="button" data-search-open>${icon("search")} Search the site</button><a class="btn btn-ghost btn-lg" href="${r}index.html">Home</a><a class="btn btn-ghost btn-lg" href="${r}services/index.html">Services</a><a class="btn btn-ghost btn-lg" href="${r}products/index.html">Products</a><a class="btn btn-ghost btn-lg" href="${r}contact.html">Contact</a>` })}`,
 });
 
 /* ---- privacy ---- */

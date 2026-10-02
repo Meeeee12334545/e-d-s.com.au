@@ -297,13 +297,16 @@
   });
   document.querySelector(".city-panel")?.addEventListener("pointerenter", () => { touched = true; });
 
-  // Until someone takes over, tour the districts so the page is never still.
+  // Until someone takes over, tour the districts so the page is never still,
+  // unless the visitor has asked their system for less motion.
+  const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (still) svg.pauseAnimations();
   const order = ["sewer", "pump", "plant", "industry", "river", "cbd", "ops"];
   let tour = 0, inView = false;
   new IntersectionObserver(([en]) => { inView = en.isIntersecting; }, { threshold: 0.3 }).observe(svg);
   setActive(order[0]);
   setInterval(() => {
-    if (touched || !inView || document.hidden) return;
+    if (still || touched || !inView || document.hidden) return;
     tour = (tour + 1) % order.length;
     setActive(order[tour]);
   }, 3400);
@@ -317,10 +320,10 @@
       a.arm.setAttribute("x1", x1.toFixed(1)); a.arm.setAttribute("y1", y1.toFixed(1));
       a.arm.setAttribute("x2", x2.toFixed(1)); a.arm.setAttribute("y2", y2.toFixed(1));
     }
-    raf = inView ? requestAnimationFrame(spin) : 0;
+    raf = inView && !still ? requestAnimationFrame(spin) : 0;
   };
   spin(0);
-  const kick = () => { if (!raf) raf = requestAnimationFrame(spin); };
+  const kick = () => { if (!raf && !still) raf = requestAnimationFrame(spin); };
   window.addEventListener("scroll", kick, { passive: true });
   kick();
 })();

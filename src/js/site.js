@@ -4,6 +4,9 @@
   const root = document.documentElement;
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+  // Visitors who ask their system for less motion get still pictures: no
+  // counting, tilting, touring or streaming. site.css does the same for CSS.
+  const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   /* ---- header ---- */
   const header = $(".header");
@@ -90,6 +93,7 @@
     const dec = parseInt(el.dataset.decimals || "0", 10);
     const from = el.dataset.from ? parseFloat(el.dataset.from) : 0;
     const fmt = (v) => (el.dataset.plain ? v.toFixed(dec) : v.toLocaleString("en-AU", { minimumFractionDigits: dec, maximumFractionDigits: dec }));
+    if (still) { el.textContent = fmt(to); return; }
     const t0 = performance.now(), dur = 1700;
     const tick = (now) => {
       const p = Math.min(1, (now - t0) / dur);
@@ -102,7 +106,7 @@
 
   /* ---- pointer effects: spotlight, tilt, magnetic buttons ---- */
   const fine = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
-  if (fine) {
+  if (fine && !still) {
     $$(".card").forEach((card) => {
       card.addEventListener("pointermove", (e) => {
         const r = card.getBoundingClientRect();
@@ -138,7 +142,7 @@
     rail.addEventListener("dragstart", (e) => e.preventDefault());
     const step = () => ($(".brand-card", rail)?.offsetWidth || 320) + 18;
     $$(`[data-rail="${rail.id}"]`).forEach((b) =>
-      b.addEventListener("click", () => rail.scrollBy({ left: step() * (b.dataset.dir === "prev" ? -1 : 1), behavior: "smooth" }))
+      b.addEventListener("click", () => rail.scrollBy({ left: step() * (b.dataset.dir === "prev" ? -1 : 1), behavior: still ? "auto" : "smooth" }))
     );
   });
 
@@ -158,7 +162,7 @@
   /* ---- FlowSense tabs ---- */
   const fsItems = $$(".fs-item");
   if (fsItems.length) {
-    let i = 0, auto = true;
+    let i = 0, auto = !still;
     const show = (n) => {
       i = n;
       fsItems.forEach((b, k) => b.setAttribute("aria-selected", String(k === n)));
@@ -169,6 +173,59 @@
       b.addEventListener("pointerenter", (e) => { if (e.pointerType === "mouse") { auto = false; show(k); } });
     });
     setInterval(() => { if (auto && !document.hidden) show((i + 1) % fsItems.length); }, 4200);
+  }
+
+  /* ---- sidebars follow the page only when they fit on screen ---- */
+  // A sticky sidebar taller than the window hides its last cards until the
+  // end of the page, so those scroll with the page instead.
+  const asides = $$(".aside");
+  if (asides.length) {
+    const fit = () => asides.forEach((a) => a.classList.toggle("fits", a.offsetHeight < window.innerHeight - 140));
+    const ro = new ResizeObserver(fit);
+    asides.forEach((a) => ro.observe(a));
+    window.addEventListener("resize", fit, { passive: true });
+  }
+
+  /* ---- home hero: an illustrative flow meter reporting in ---- */
+  // The last day of readings at half-hour steps, against the dry weather
+  // pattern, moved on by one reading every few seconds. Not live data.
+  const live = $(".live");
+  if (live) {
+    const N = 48, W = 300, H = 86;
+    const bump = (h, c, w) => Math.exp(-(((h - c + 36) % 24 - 12) ** 2) / (2 * w * w));
+    const dwf = (h) => 26 + 20 * bump(h, 7.5, 1.6) + 15 * bump(h, 19, 2.1) + 6 * bump(h, 13, 2.5);
+    let t = 0, wobble = 0;
+    const next = () => {
+      const h = (t++ / 2) % 24, base = dwf(h);
+      wobble = wobble * 0.6 + (Math.random() - 0.5) * 2.4;
+      return { base, q: Math.max(4, base + wobble) };
+    };
+    const pts = Array.from({ length: N }, next);
+    const x = (i) => (i / (N - 1)) * W, y = (q) => H - 4 - (q / 64) * (H - 10);
+    const trace = (k) => pts.map((p, i) => `${i ? "L" : "M"}${x(i).toFixed(1)} ${y(p[k]).toFixed(1)}`).join("");
+    const out = Object.fromEntries($$("[data-live]", live).map((el) => [el.dataset.live, el]));
+    const draw = () => {
+      const line = trace("q"), q = pts[N - 1].q;
+      $(".live-line", live).setAttribute("d", line);
+      $(".live-area", live).setAttribute("d", `${line}L${W} ${H}L0 ${H}Z`);
+      $(".live-dwf", live).setAttribute("d", trace("base"));
+      $(".live-dot", live).setAttribute("cx", W);
+      $(".live-dot", live).setAttribute("cy", y(q).toFixed(1));
+      out.q.textContent = q.toFixed(1);
+      out.d.textContent = Math.round(118 + q * 2.3);
+      out.v.textContent = (0.32 + q / 95).toFixed(2);
+    };
+    draw();
+    if (!still) {
+      let seen = false;
+      new IntersectionObserver(([en]) => { seen = en.isIntersecting; }).observe(live);
+      setInterval(() => {
+        if (!seen || document.hidden) return;
+        pts.shift();
+        pts.push(next());
+        draw();
+      }, 2800);
+    }
   }
 
   /* ---- copying to the clipboard, shared with products.js ---- */
@@ -360,6 +417,8 @@
       const n = Math.round(Math.max(160, Math.min(dense ? 1100 : 700, (w * h) / (dense ? 1300 : 2200))));
       parts = Array.from({ length: n }, () => { const p = {}; spawn(p, true); return p; });
       ctx.fillStyle = `rgb(${BG})`; ctx.fillRect(0, 0, w, h);
+      // With less motion asked for, draw the streamlines once and leave them.
+      if (still) for (let k = 0; k < 90; k++) step();
     };
     const step = () => {
       t += 1;
@@ -388,7 +447,7 @@
     const loop = () => { step(); raf = requestAnimationFrame(loop); };
     const sync = () => {
       cancelAnimationFrame(raf); raf = 0;
-      if (visible && !document.hidden) raf = requestAnimationFrame(loop);
+      if (visible && !document.hidden && !still) raf = requestAnimationFrame(loop);
     };
     new ResizeObserver(resize).observe(canvas);
     new IntersectionObserver(([en]) => { visible = en.isIntersecting; sync(); }).observe(canvas);
