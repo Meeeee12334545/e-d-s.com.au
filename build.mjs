@@ -98,7 +98,7 @@ function header(r, current) {
   <div class="progress" aria-hidden="true"></div>
   <header class="header">
     <div class="wrap">
-      <a class="logo" href="${r}index.html" aria-label="EDS home"><img src="${site.logoWhite}" alt="EDS, Environmental Data Services" width="148" height="56"></a>
+      <a class="logo" href="${r}index.html" aria-label="EDS home"><img src="${site.logoWhite}" alt="EDS, Environmental Data Services" width="182" height="48"></a>
       <nav class="nav" aria-label="Main">
         ${mega("Services", "services", { groups: sGroups }, { href: "services/index.html", label: "All services" })}
         ${mega("Solutions", "solutions", { items: oItems }, { href: "solutions/index.html", label: "All solutions" })}
@@ -119,7 +119,7 @@ function header(r, current) {
     <div class="drawer-scrim"></div>
     <div class="drawer-panel">
       <div class="drawer-head">
-        <a class="logo" href="${r}index.html"><img src="${site.logoWhite}" alt="EDS" width="148" height="56"></a>
+        <a class="logo" href="${r}index.html"><img src="${site.logoWhite}" alt="EDS" width="182" height="48"></a>
         <button class="burger drawer-close" style="display:inline-flex" aria-label="Close menu">${icon("x", false)}</button>
       </div>
       <button class="drawer-search" type="button" data-search-open>${icon("search", false)}<span>Search products, services, documents</span></button>
@@ -141,7 +141,7 @@ function footer(r) {
     <div class="wrap">
       <div class="footer-grid">
         <div>
-          <a class="logo" href="${r}index.html"><img src="${site.logoWhite}" alt="EDS, Environmental Data Services" width="145" height="46" loading="lazy"></a>
+          <a class="logo" href="${r}index.html"><img src="${site.logoWhite}" alt="EDS, Environmental Data Services" width="106" height="28" loading="lazy"></a>
           <p>${site.tagline}</p>
           <div class="footer-contact">
             <a href="${site.phoneHref}">${icon("phone")}${site.phone}</a>
