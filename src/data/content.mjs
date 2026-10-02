@@ -5,8 +5,11 @@
 // Images live in src/assets/img and are copied to dist/assets/img by the build.
 // "@root/" is swapped for each page's path back to the site root in layout().
 export const img = (file) => `@root/assets/img/${file}`;
-// Documents (datasheets, white papers, software) are still on the old host.
+// Documents (datasheets, white papers, software) not yet copied into the
+// project are still on the old host.
 export const doc = (path) => `https://www.e-d-s.com.au${path}`;
+// Documents copied into the project live in src/assets/docs.
+export const localDoc = (file) => `@root/assets/docs/${file}`;
 
 export const site = {
   name: "Environmental Data Services",
@@ -20,6 +23,10 @@ export const site = {
   address: ["13/20-22 Ellerslie Road", "Meadowbrook QLD 4131", "Australia"],
   hours: "Monday to Friday, 7:30am to 4:30pm",
   founded: 1991,
+  // The live address, used for canonical links, the sitemap and share cards.
+  url: "https://www.e-d-s.com.au",
+  // Head office hours, in head office time. Drives the "open now" status.
+  openingHours: { days: [1, 2, 3, 4, 5], opens: "07:30", closes: "16:30", timeZone: "Australia/Brisbane" },
   logoWhite: img("eds-logo-white-large.png"),
   flowsenseUrl: "https://edsflowsense.au/",
   remoteDataUrl: "https://www.detecdata-en.com/",
@@ -865,23 +872,23 @@ export const brands = [
       {
         name: "Data loggers",
         items: [
-          { name: "iLab Sonde", note: "Multi-parameter handheld", image: img("ilab-and-sensor.jpg") },
-          { name: "EPM-2", note: "Portable 4G pressure logger", image: img("epm-2.png") },
-          { name: "Metalog", note: "4G data logger", image: img("grt101-gprs-4g-lte-battery-supply-wireless.jpg") },
-          { name: "EMS-003", note: "Dual channel logger", image: img("003d.jpg") },
-          { name: "EMS-050D", note: "Multi-channel logger", image: img("050d.jpg") },
-          { name: "Pump Station Manager", note: "PSM, the EDS flagship since 1991", image: img("psm.jpg") },
+          { name: "iLab Sonde", type: "quality", note: "Multi-parameter handheld", image: img("ilab-and-sensor.jpg") },
+          { name: "EPM-2", type: "logger", note: "Portable 4G pressure logger", image: img("epm-2.png") },
+          { name: "Metalog", type: "logger", note: "4G data logger", image: img("grt101-gprs-4g-lte-battery-supply-wireless.jpg") },
+          { name: "EMS-003", type: "logger", note: "Dual channel logger", image: img("003d.jpg") },
+          { name: "EMS-050D", type: "logger", note: "Multi-channel logger", image: img("050d.jpg") },
+          { name: "Pump Station Manager", type: "logger", note: "PSM, the EDS flagship since 1991", image: img("psm.jpg") },
         ],
       },
       {
         name: "Sensors",
         items: [
-          { name: "E-Flow", note: "Flow sensor", image: img("eflow-4.png") },
-          { name: "iLab 901", note: "Multi-parameter analytical sensor", image: img("ilab-901-multitparameter-analytical-sensor-2.gif"), docs: [{ label: "Datasheet", href: doc("/s/iLab-901-Multitparameter-Analytical-Sensor-DS-21rs.pdf") }] },
-          { name: "Ultrasonic Level", note: "Level sensor", image: img("ultrasonic-level-sensor-image-2.png") },
-          { name: "EC", note: "Electro-conductivity sensor", image: img("cos41.jpg") },
-          { name: "pH", note: "pH sensor", image: img("eds-ph-sensor.jpg") },
-          { name: "Turbidity", note: "Turbidity sensor", image: img("turbidity-sensor.jpg") },
+          { name: "E-Flow", type: "flow", note: "Flow sensor", image: img("eflow-4.png") },
+          { name: "iLab 901", type: "quality", note: "Multi-parameter analytical sensor", image: img("ilab-901-multitparameter-analytical-sensor-2.gif"), docs: [{ label: "Datasheet", href: doc("/s/iLab-901-Multitparameter-Analytical-Sensor-DS-21rs.pdf") }] },
+          { name: "Ultrasonic Level", type: "level", note: "Level sensor", image: img("ultrasonic-level-sensor-image-2.png") },
+          { name: "EC", type: "quality", note: "Electro-conductivity sensor", image: img("cos41.jpg") },
+          { name: "pH", type: "quality", note: "pH sensor", image: img("eds-ph-sensor.jpg") },
+          { name: "Turbidity", type: "quality", note: "Turbidity sensor", image: img("turbidity-sensor.jpg") },
         ],
       },
     ],
@@ -904,11 +911,11 @@ export const brands = [
       {
         name: "Flow, level and logging",
         items: [
-          { name: "MSFM", note: "Rugged 4G area velocity flow meter", image: img("s2.5-04-small-766x1024.png") },
-          { name: "LIDoTT Smart", note: "Long life, rugged 4G patented level monitor", image: img("dete01-01.24-600x452.png") },
-          { name: "LIDoTT Alarm", note: "Self contained level measurement and alarm device", image: img("lidott-alarm-3.png"), href: "products/lidott-alarm.html", docs: [{ label: "Datasheet", href: doc("/s/MMS-D050-LIDoTT-Alarm-iss3.pdf") }] },
-          { name: "LIDoTT R", note: "High-precision radar and pressure sensor for continuous monitoring", image: img("lidott-sensor-r-1.png") },
-          { name: "Multi Channel Data Loggers", note: "Rugged remote multichannel loggers", image: img("new-2-channel-logger-1001x1024.jpg") },
+          { name: "MSFM", type: "flow", note: "Rugged 4G area velocity flow meter", image: img("s2.5-04-small-766x1024.png"), docs: [{ label: "S2.5T datasheet", href: localDoc("detectronic-msfm-s2-5t-datasheet.pdf") }] },
+          { name: "LIDoTT Smart", type: "level", note: "Long life, rugged 4G patented level monitor", image: img("dete01-01.24-600x452.png"), docs: [{ label: "LIDoTT Sensor datasheet", href: localDoc("detectronic-lidott-sensor-datasheet.pdf") }] },
+          { name: "LIDoTT Alarm", type: "level", note: "Self contained level measurement and alarm device", image: img("lidott-alarm-3.png"), href: "products/lidott-alarm.html", docs: [{ label: "Datasheet", href: doc("/s/MMS-D050-LIDoTT-Alarm-iss3.pdf") }] },
+          { name: "LIDoTT R", type: "level", note: "High-precision radar and pressure sensor for continuous monitoring", image: img("lidott-sensor-r-1.png"), docs: [{ label: "Datasheet", href: localDoc("detectronic-lidott-r-datasheet.pdf") }] },
+          { name: "Multi Channel Data Loggers", type: "logger", note: "Rugged remote multichannel loggers", image: img("new-2-channel-logger-1001x1024.jpg") },
         ],
       },
     ],
@@ -929,21 +936,22 @@ export const brands = [
       {
         name: "Mobile samplers",
         items: [
-          { name: "Aqua Mini", image: img("aquasamp-mini-teaser.png") },
-          { name: "NEMO 1 MH", image: img("nemo-1-mh.png") },
-          { name: "NEMO 1 M PP", image: img("csm-nemo1-m-pp-6a7052503d.png") },
-          { name: "NEMO 1 M V", image: img("csm-nemo1-m-vac-6a5f2d98ac.png") },
-          { name: "Basic Mobil", image: img("basic-mobil.png") },
+          { name: "Aqua Mini", type: "sampling", image: img("aquasamp-mini-teaser.png"), docs: [{ label: "Brochure", href: localDoc("ori-aquasamp-mini-brochure.pdf") }, { label: "PumpModul datasheet", href: localDoc("ori-pumpmodul-datasheet.pdf") }] },
+          // One datasheet covers all three NEMO 1 M versions.
+          { name: "NEMO 1 MH", type: "sampling", image: img("nemo-1-mh.png"), docs: [{ label: "Datasheet", href: localDoc("ori-nemo-1-m-datasheet.pdf") }] },
+          { name: "NEMO 1 M PP", type: "sampling", image: img("csm-nemo1-m-pp-6a7052503d.png"), docs: [{ label: "Datasheet", href: localDoc("ori-nemo-1-m-datasheet.pdf") }] },
+          { name: "NEMO 1 M V", type: "sampling", image: img("csm-nemo1-m-vac-6a5f2d98ac.png"), docs: [{ label: "Datasheet", href: localDoc("ori-nemo-1-m-datasheet.pdf") }] },
+          { name: "Basic Mobil", type: "sampling", image: img("basic-mobil.png") },
         ],
       },
       {
         name: "Measuring technology",
         items: [
-          { name: "Mlog", note: "Multitool logger", image: img("mlog-multitool-logger-gps-01.jpg") },
-          { name: "Mlog Z2", note: "ATEX and IECEx", image: img("atex-mlog.jpg") },
-          { name: "iLink", note: "1-wire Bluetooth", image: img("ilink.jpg") },
-          { name: "X-zone Com", note: "Gas monitoring", image: img("x-zone-com.jpg") },
-          { name: "Optical", note: "Optical sensors", image: img("ori-optical.png") },
+          { name: "Mlog", type: "logger", note: "Multitool logger", image: img("mlog-multitool-logger-gps-01.jpg") },
+          { name: "Mlog Z2", type: "logger", note: "ATEX and IECEx", image: img("atex-mlog.jpg") },
+          { name: "iLink", type: "software", note: "1-wire Bluetooth", image: img("ilink.jpg") },
+          { name: "X-zone Com", type: "gas", note: "Gas monitoring", image: img("x-zone-com.jpg") },
+          { name: "Optical", type: "quality", note: "Optical sensors", image: img("ori-optical.png") },
         ],
       },
     ],
@@ -965,21 +973,21 @@ export const brands = [
       {
         name: "Loggers",
         items: [
-          { name: "FL1500 Logger", image: img("landing-fl1500-2.jpg"), docs: [{ label: "FSDATA Desktop 32-bit", href: doc("/s/FSDATA-Desktop-32bit.zip") }, { label: "FSDATA Desktop 64-bit", href: doc("/s/FSDATA-Desktop-64bit.zip") }] },
-          { name: "FH950 Velocity Meter", image: img("landing-fh950.jpg") },
-          { name: "FL900 Portable", image: img("landing-fl900-2.jpg") },
-          { name: "SC200 Controller", image: img("landing-sc200.jpg") },
-          { name: "Flo-Station", image: img("landing-flo-station.jpg") },
+          { name: "FL1500 Logger", type: "flow", image: img("landing-fl1500-2.jpg"), docs: [{ label: "FSDATA Desktop 32-bit", href: doc("/s/FSDATA-Desktop-32bit.zip") }, { label: "FSDATA Desktop 64-bit", href: doc("/s/FSDATA-Desktop-64bit.zip") }] },
+          { name: "FH950 Velocity Meter", type: "flow", image: img("landing-fh950.jpg") },
+          { name: "FL900 Portable", type: "flow", image: img("landing-fl900-2.jpg") },
+          { name: "SC200 Controller", type: "flow", image: img("landing-sc200.jpg") },
+          { name: "Flo-Station", type: "flow", image: img("landing-flo-station.jpg") },
         ],
       },
       {
         name: "Sensors",
         items: [
-          { name: "Flo-Dar", note: "Non-contact", image: img("landing-flo-dar-1.jpg") },
-          { name: "Sub AV Sensor", image: img("landing-sigma-av.jpg") },
-          { name: "Flo-Tote 3", image: img("landing-flo-tote.jpg") },
-          { name: "AV Flow Sensor with Bubbler", image: img("landing-sigma-av-bubbler.jpg") },
-          { name: "Ultrasonic Sensors", image: img("landing-sigma-ultrasonic.jpg") },
+          { name: "Flo-Dar", type: "flow", note: "Non-contact", image: img("landing-flo-dar-1.jpg") },
+          { name: "Sub AV Sensor", type: "flow", image: img("landing-sigma-av.jpg") },
+          { name: "Flo-Tote 3", type: "flow", image: img("landing-flo-tote.jpg") },
+          { name: "AV Flow Sensor with Bubbler", type: "flow", image: img("landing-sigma-av-bubbler.jpg") },
+          { name: "Ultrasonic Sensors", type: "flow", image: img("landing-sigma-ultrasonic.jpg") },
         ],
       },
     ],
@@ -1001,12 +1009,12 @@ export const brands = [
       {
         name: "Product range",
         items: [
-          { name: "D605", note: "Logger", image: img("front-view-of-beadedstream-d605-temperature-data-logger-without-antenna.png") },
-          { name: "Spot Logger", note: "Logger", image: img("spot-logger-side-view-with-raymo-connector.png") },
-          { name: "Thermistor String", note: "Sensor", image: img("standard-dtc-bar-code-144-1.jpg"), docs: [{ label: "EDS white paper", href: doc("/s/EDS-White-Paper-Benefits-of-Using-Thermistor-Strings-in-Conjunction-with-Open-Channel-Sewer-Flow-Met-jhzm.pdf") }] },
-          { name: "Mlink", note: "Connectivity", image: img("beadedstream-mlink-temperature-data-logger-connector.png") },
-          { name: "Capture Mobile App", note: "Connectivity", image: img("beadedstream-capture-ios-app-1.png") },
-          { name: "Beadedcloud Data", note: "Connectivity", image: img("beadedcloud-dashboard-in-all-devices-1.png") },
+          { name: "D605", type: "temperature", note: "Logger", image: img("front-view-of-beadedstream-d605-temperature-data-logger-without-antenna.png"), docs: [{ label: "Datasheet", href: localDoc("beadedstream-d605-datasheet.pdf") }] },
+          { name: "Spot Logger", type: "temperature", note: "Logger", image: img("spot-logger-side-view-with-raymo-connector.png"), docs: [{ label: "Battery install and replacement guide", href: localDoc("beadedstream-spot-logger-battery-guide.pdf") }] },
+          { name: "Thermistor String", type: "temperature", note: "Sensor", image: img("standard-dtc-bar-code-144-1.jpg"), docs: [{ label: "Digital Temperature Cable spec sheet", href: localDoc("beadedstream-digital-temperature-cable-spec-sheet.pdf") }, { label: "EDS white paper", href: doc("/s/EDS-White-Paper-Benefits-of-Using-Thermistor-Strings-in-Conjunction-with-Open-Channel-Sewer-Flow-Met-jhzm.pdf") }] },
+          { name: "Mlink", type: "software", note: "Connectivity", image: img("beadedstream-mlink-temperature-data-logger-connector.png"), docs: [{ label: "Spec sheet", href: localDoc("beadedstream-mlink-spec-sheet.pdf") }] },
+          { name: "Capture Mobile App", type: "software", note: "Connectivity", image: img("beadedstream-capture-ios-app-1.png") },
+          { name: "Beadedcloud Data", type: "software", note: "Connectivity", image: img("beadedcloud-dashboard-in-all-devices-1.png") },
         ],
       },
     ],
@@ -1025,9 +1033,9 @@ export const brands = [
       {
         name: "MICROSAMPLER range",
         items: [
-          { name: "MICROSAMPLER 10P", note: "Portable composite sampler for wastewater, factory drains, manholes and water canals", image: img("6d2b2a76351a2d8f5edefdcc12c5ea49.png") },
-          { name: "MICROSAMPLER 10B", note: "Fixed composite sampling unit for industrial wastewater, manholes, streams and channels", image: img("0d15002ac7d0c03f9837eecc2143e2ce.png") },
-          { name: "MICROSAMPLER 10R", note: "Stationary refrigerated composite sampling unit", image: img("4830446c6b2ce4c663ab9e4c3a0b1c51.png") },
+          { name: "MICROSAMPLER 10P", type: "sampling", note: "Portable composite sampler for wastewater, factory drains, manholes and water canals", image: img("6d2b2a76351a2d8f5edefdcc12c5ea49.png") },
+          { name: "MICROSAMPLER 10B", type: "sampling", note: "Fixed composite sampling unit for industrial wastewater, manholes, streams and channels", image: img("0d15002ac7d0c03f9837eecc2143e2ce.png") },
+          { name: "MICROSAMPLER 10R", type: "sampling", note: "Stationary refrigerated composite sampling unit", image: img("4830446c6b2ce4c663ab9e4c3a0b1c51.png") },
         ],
       },
     ],
@@ -1048,7 +1056,7 @@ export const brands = [
       {
         name: "The analyser",
         items: [
-          { name: "Aquamonitrix", note: "Nitrate and nitrite, rugged and portable", image: img("picture-1.png"), docs: [{ label: "Performance datasheet", href: doc("/s/Aquamonitrix-Performance.pdf") }] },
+          { name: "Aquamonitrix", type: "quality", note: "Nitrate and nitrite, rugged and portable", image: img("picture-1.png"), docs: [{ label: "Performance datasheet", href: doc("/s/Aquamonitrix-Performance.pdf") }] },
         ],
       },
     ],
@@ -1068,16 +1076,29 @@ export const brands = [
       {
         name: "Select your technology",
         items: [
-          { name: "UltraD", image: img("i-ultrad.jpg") },
-          { name: "Ultra F", image: img("ultrasonicbulk-2.jpg") },
-          { name: "Insertion Flow Meter", image: img("hot-tapped.png") },
-          { name: "3 in 1", image: img("p-3in1-bulk1.jpg") },
-          { name: "UltraD Small", image: img("ultrad-small-1.png") },
-          { name: "Flow Meter", note: "Clamp-on", image: img("i-doppler-clamp.jpg") },
+          { name: "UltraD", type: "flow", image: img("i-ultrad.jpg") },
+          { name: "Ultra F", type: "flow", image: img("ultrasonicbulk-2.jpg") },
+          { name: "Insertion Flow Meter", type: "flow", image: img("hot-tapped.png") },
+          { name: "3 in 1", type: "flow", image: img("p-3in1-bulk1.jpg") },
+          { name: "UltraD Small", type: "flow", image: img("ultrad-small-1.png") },
+          { name: "Flow Meter", type: "flow", note: "Clamp-on", image: img("i-doppler-clamp.jpg") },
         ],
       },
     ],
   },
+];
+
+// What each product measures or does. Every product above carries one `type`,
+// which drives the instrument finder on the products page and search.
+export const productTypes = [
+  { id: "flow", label: "Flow", icon: "waves" },
+  { id: "level", label: "Level", icon: "ruler" },
+  { id: "quality", label: "Water quality", icon: "droplet" },
+  { id: "sampling", label: "Sampling", icon: "test-tubes" },
+  { id: "logger", label: "Data loggers", icon: "hard-drive" },
+  { id: "temperature", label: "Temperature", icon: "thermometer" },
+  { id: "software", label: "Connectivity and apps", icon: "smartphone" },
+  { id: "gas", label: "Gas detection", icon: "wind" },
 ];
 
 export const lidott = {
@@ -1133,6 +1154,10 @@ export const flowsense = {
     ["drafting-compass", "Calibration scorecards", "Every model calibration scored per storm against published industry acceptance bands."],
     ["plug-zap", "Connects to SCADA", "Five ways to connect SCADA, including a hosted SFTP folder so nothing is exposed at your end."],
     ["calculator", "Shows its working", "A \"How this is calculated\" note beside every derived figure: the method, constants and assumptions in plain language."],
+  ],
+  docs: [
+    { label: "Features and benefits", note: "What FlowSense does to monitor, analyse and plan a sewer network.", href: localDoc("eds-flowsense-features-and-benefits.pdf") },
+    { label: "Sending data to your SCADA", note: "For engineering, control systems and IT teams.", href: localDoc("eds-flowsense-data-to-scada.pdf") },
   ],
 };
 
@@ -1224,18 +1249,39 @@ export const downloads = [
       ["FSDATA Desktop for FL1500 (32-bit)", doc("/s/FSDATA-Desktop-32bit.zip")],
       ["FSDATA Desktop for FL1500 (64-bit)", doc("/s/FSDATA-Desktop-64bit.zip")],
       ["USB-Serial Adapter GXU driver", doc("/s/GXMU-1200-Drivers.zip")],
+      ["EMS-Flow software user manual", localDoc("eds-ems-flow-user-manual.pdf")],
     ],
     note: "EDS (EMS2001, EMS4000), Hach Flo-Ware and Dynaflox RS-232 software are available on request. Contact us for a password.",
   },
   {
+    group: "EDS FlowSense",
+    icon: "waves",
+    items: [
+      ["FlowSense features and benefits", localDoc("eds-flowsense-features-and-benefits.pdf")],
+      ["Sending FlowSense data to your SCADA", localDoc("eds-flowsense-data-to-scada.pdf")],
+    ],
+  },
+  // Full width, in two columns.
+  {
     group: "Datasheets and guides",
     icon: "file-text",
+    wide: true,
     items: [
-      ["LIDoTT Alarm datasheet", doc("/s/MMS-D050-LIDoTT-Alarm-iss3.pdf")],
-      ["Hach Flow selection guide", doc("/s/HachFlow_Selection_Guide-New.pdf")],
-      ["ORI water analytics catalogue", doc("/s/Catalogue_Wateranalytics_eng-lfy2.pdf")],
-      ["Aquamonitrix performance datasheet", doc("/s/Aquamonitrix-Performance.pdf")],
       ["iLab 901 multi-parameter sensor datasheet", doc("/s/iLab-901-Multitparameter-Analytical-Sensor-DS-21rs.pdf")],
+      ["Detectronic MSFM S2.5T flow meter datasheet", localDoc("detectronic-msfm-s2-5t-datasheet.pdf")],
+      ["Detectronic LIDoTT Sensor datasheet", localDoc("detectronic-lidott-sensor-datasheet.pdf")],
+      ["Detectronic LIDoTT Alarm datasheet", doc("/s/MMS-D050-LIDoTT-Alarm-iss3.pdf")],
+      ["Detectronic LIDoTT R datasheet", localDoc("detectronic-lidott-r-datasheet.pdf")],
+      ["ORI AquaSamp Mini brochure", localDoc("ori-aquasamp-mini-brochure.pdf")],
+      ["ORI PumpModul portable sampler datasheet", localDoc("ori-pumpmodul-datasheet.pdf")],
+      ["ORI NEMO 1 M sampler datasheet", localDoc("ori-nemo-1-m-datasheet.pdf")],
+      ["ORI water analytics catalogue", doc("/s/Catalogue_Wateranalytics_eng-lfy2.pdf")],
+      ["Hach Flow selection guide", doc("/s/HachFlow_Selection_Guide-New.pdf")],
+      ["Beadedstream D605 temperature logger datasheet", localDoc("beadedstream-d605-datasheet.pdf")],
+      ["Beadedstream Spot Logger battery guide", localDoc("beadedstream-spot-logger-battery-guide.pdf")],
+      ["Beadedstream Digital Temperature Cable spec sheet", localDoc("beadedstream-digital-temperature-cable-spec-sheet.pdf")],
+      ["Beadedstream Mlink spec sheet", localDoc("beadedstream-mlink-spec-sheet.pdf")],
+      ["Aquamonitrix performance datasheet", doc("/s/Aquamonitrix-Performance.pdf")],
     ],
   },
 ];
