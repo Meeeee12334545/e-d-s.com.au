@@ -379,7 +379,7 @@
           }
         }
         const nx = p.x + vx, ny = p.y + vy;
-        ctx.strokeStyle = p.hue < 0.72 ? "rgba(94, 234, 212, .55)" : p.hue < 0.93 ? "rgba(56, 189, 248, .5)" : "rgba(255, 255, 255, .6)";
+        ctx.strokeStyle = p.hue < 0.72 ? "rgba(95, 180, 166, .4)" : p.hue < 0.93 ? "rgba(56, 189, 248, .5)" : "rgba(255, 255, 255, .6)";
         ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(nx, ny); ctx.stroke();
         p.x = nx; p.y = ny;
         if (--p.life < 0 || nx > w + 10 || ny < -10 || ny > h + 10) spawn(p, Math.random() < 0.35);

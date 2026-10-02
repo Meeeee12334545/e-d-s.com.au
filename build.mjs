@@ -69,21 +69,28 @@ const contactHref = (r, { topic, product } = {}) => {
 /* layout                                                              */
 /* ------------------------------------------------------------------ */
 function header(r, current) {
-  const mega = (label, key, items, all, cols) => `
-      <div class="nav-item has-mega">
+  // A mega menu takes a flat list of links, or `groups` of them (Services),
+  // which it lays out as one titled column per group.
+  const mLink = (i) => `<a href="${r}${i.href}">${icon(i.icon)}<span>${esc(i.label)}</span></a>`;
+  const mega = (label, key, { items, groups }, all, cols) => `
+      <div class="nav-item has-mega${groups ? " wide" : ""}">
         <button class="nav-link" aria-expanded="false"${current === key ? ' aria-current="page"' : ""}>${label}${icon("chevron-down", false)}</button>
-        <div class="mega${cols ? " cols-2" : ""}">
-          ${items.map((i) => `<a href="${r}${i.href}">${icon(i.icon)}<span>${esc(i.label)}</span></a>`).join("")}
+        <div class="mega${groups ? " groups" : cols ? " cols-2" : ""}">
+          ${groups ? groups.map((g) => `<div class="mega-group"><p class="mega-head">${esc(g.label)}</p>${g.items.map(mLink).join("")}</div>`).join("") : items.map(mLink).join("")}
           <a class="mega-all" href="${r}${all.href}"><span>${all.label}</span>${icon("arrow-right")}</a>
         </div>
       </div>`;
-  const sItems = C.services.map((s) => ({ href: `services/${s.slug}.html`, icon: s.icon, label: s.short || s.title }));
+  const sGroups = C.serviceGroups.map((g) => ({
+    label: g.title,
+    items: C.services.filter((s) => s.group === g.id).map((s) => ({ href: `services/${s.slug}.html`, icon: s.icon, label: s.short || s.title })),
+  }));
   const oItems = C.solutions.map((s) => ({ href: `solutions/${s.slug}.html`, icon: s.icon, label: s.title }));
   const pItems = [...C.brands.map((b) => ({ href: `products/${b.slug}.html`, icon: b.icon, label: b.name })), { href: "products/lidott-alarm.html", icon: "bell", label: "LIDoTT Alarm" }];
   const link = (href, label, key) => `<div class="nav-item"><a class="nav-link" href="${r}${href}"${current === key ? ' aria-current="page"' : ""}>${label}</a></div>`;
-  const dGroup = (label, items, all) => `
+  const dLink = (i) => `<a href="${r}${i.href}">${icon(i.icon, false)}${esc(i.label)}</a>`;
+  const dGroup = (label, { items, groups }, all) => `
         <details><summary>${label}${icon("chevron-down", false)}</summary><div>
-          ${items.map((i) => `<a href="${r}${i.href}">${icon(i.icon, false)}${esc(i.label)}</a>`).join("")}
+          ${groups ? groups.map((g) => `<p class="drawer-sub">${esc(g.label)}</p>${g.items.map(dLink).join("")}`).join("") : items.map(dLink).join("")}
           <a href="${r}${all}">${icon("arrow-right", false)}View all</a>
         </div></details>`;
   return `
@@ -93,9 +100,9 @@ function header(r, current) {
     <div class="wrap">
       <a class="logo" href="${r}index.html" aria-label="EDS home"><img src="${site.logoWhite}" alt="EDS, Environmental Data Services" width="126" height="40"></a>
       <nav class="nav" aria-label="Main">
-        ${mega("Services", "services", sItems, { href: "services/index.html", label: "All services" }, true)}
-        ${mega("Solutions", "solutions", oItems, { href: "solutions/index.html", label: "All solutions" })}
-        ${mega("Products", "products", pItems, { href: "products/index.html", label: "All products" }, true)}
+        ${mega("Services", "services", { groups: sGroups }, { href: "services/index.html", label: "All services" })}
+        ${mega("Solutions", "solutions", { items: oItems }, { href: "solutions/index.html", label: "All solutions" })}
+        ${mega("Products", "products", { items: pItems }, { href: "products/index.html", label: "All products" }, true)}
         ${link("flowsense.html", "FlowSense", "flowsense")}
         ${link("about.html", "About", "about")}
         ${link("resources.html", "Resources", "resources")}
@@ -116,9 +123,9 @@ function header(r, current) {
         <button class="burger drawer-close" style="display:inline-flex" aria-label="Close menu">${icon("x", false)}</button>
       </div>
       <button class="drawer-search" type="button" data-search-open>${icon("search", false)}<span>Search products, services, documents</span></button>
-      ${dGroup("Services", sItems, "services/index.html")}
-      ${dGroup("Solutions", oItems, "solutions/index.html")}
-      ${dGroup("Products", pItems, "products/index.html")}
+      ${dGroup("Services", { groups: sGroups }, "services/index.html")}
+      ${dGroup("Solutions", { items: oItems }, "solutions/index.html")}
+      ${dGroup("Products", { items: pItems }, "products/index.html")}
       <a class="drawer-link" href="${r}flowsense.html">FlowSense</a>
       <a class="drawer-link" href="${r}about.html">About</a>
       <a class="drawer-link" href="${r}resources.html">Resources</a>
@@ -143,7 +150,7 @@ function footer(r) {
         </div>
         <div>
           <h4>Services</h4>
-          <ul>${C.services.slice(0, 7).map((s) => `<li><a href="${r}services/${s.slug}.html">${esc(s.short || s.title)}</a></li>`).join("")}<li><a href="${r}services/index.html">All services</a></li></ul>
+          <ul>${C.services.filter((s) => s.featured).slice(0, 7).map((s) => `<li><a href="${r}services/${s.slug}.html">${esc(s.short || s.title)}</a></li>`).join("")}<li><a href="${r}services/index.html">All services</a></li></ul>
         </div>
         <div>
           <h4>Products</h4>
@@ -383,14 +390,14 @@ const labSection = ({ eyebrow = "Flow lab", title = "See what a storm does to a 
         <svg id="lab-pipe" viewBox="0 0 200 200" role="img" aria-label="Cross-section of a sewer pipe showing the water depth">
           <defs>
             <clipPath id="lab-clip"><circle cx="100" cy="100" r="80"/></clipPath>
-            <linearGradient id="lab-wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5eead4" stop-opacity=".85"/><stop offset="1" stop-color="#0d7c72" stop-opacity=".9"/></linearGradient>
+            <linearGradient id="lab-wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5fb4a6" stop-opacity=".85"/><stop offset="1" stop-color="#0d7c72" stop-opacity=".9"/></linearGradient>
           </defs>
           <circle cx="100" cy="100" r="87" fill="#0b302d" stroke="rgba(255,255,255,.22)" stroke-width="2"/>
           <g clip-path="url(#lab-clip)">
             <rect width="200" height="200" fill="#020c0b"/>
             <rect id="lab-water" x="0" y="120" width="200" height="60" fill="url(#lab-wg)"/>
             <g id="lab-arrows" class="lab-arrows"><line x1="20" y1="92" x2="180" y2="92"/><line x1="20" y1="100" x2="180" y2="100"/><line x1="20" y1="108" x2="180" y2="108"/></g>
-            <line id="lab-surface" x1="0" x2="200" y1="120" y2="120" stroke="#d9fff8" stroke-width="2"/>
+            <line id="lab-surface" x1="0" x2="200" y1="120" y2="120" stroke="#dbf0ec" stroke-width="2"/>
           </g>
         </svg>
         <div class="readouts">
@@ -411,19 +418,19 @@ const lidottDemo = () => `
   <div class="panel">
     <div class="panel-head"><div class="panel-title">${icon("radar", false)} Drag the water level</div></div>
     <svg id="lidott-svg" viewBox="0 0 360 420" data-level="0" role="img" aria-label="Cross-section of a manhole with a LIDoTT Alarm measuring the water level by radar">
-      <defs><linearGradient id="lid-wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5eead4" stop-opacity=".8"/><stop offset="1" stop-color="#0d7c72"/></linearGradient></defs>
+      <defs><linearGradient id="lid-wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5fb4a6" stop-opacity=".8"/><stop offset="1" stop-color="#0d7c72"/></linearGradient></defs>
       <rect x="0" y="40" width="360" height="380" fill="#0b302d"/>
       <rect x="0" y="34" width="360" height="8" fill="#14605a"/>
       <rect x="100" y="42" width="160" height="340" fill="#020c0b"/>
       <rect x="0" y="330" width="100" height="50" fill="#020c0b"/><rect x="260" y="330" width="100" height="50" fill="#020c0b"/>
       <rect id="lid-water" x="0" y="300" width="360" height="80" fill="url(#lid-wg)" clip-path="url(#lid-clip)"/>
       <clipPath id="lid-clip"><rect x="100" y="42" width="160" height="340"/><rect x="0" y="330" width="100" height="50"/><rect x="260" y="330" width="100" height="50"/></clipPath>
-      <polygon id="lid-beam" points="180,96 170,300 190,300" fill="rgba(94,234,212,.22)" stroke="rgba(94,234,212,.7)" stroke-dasharray="3 4"/>
+      <polygon id="lid-beam" points="180,96 170,300 190,300" fill="rgba(95,180,166,.22)" stroke="rgba(95,180,166,.7)" stroke-dasharray="3 4"/>
       <line x1="100" x2="260" y1="225" y2="225" stroke="#f59e0b" stroke-dasharray="5 5"/><text x="268" y="229" fill="#f59e0b" font-size="11" font-weight="600">High 2.0 m</text>
       <line x1="100" x2="260" y1="147.500" y2="147.500" stroke="#ef4444" stroke-dasharray="5 5"/><text x="268" y="151" fill="#ef4444" font-size="11" font-weight="600">High-high 3.0 m</text>
       <rect x="92" y="28" width="176" height="12" rx="3" fill="#26313f" stroke="rgba(255,255,255,.3)"/>
       <rect x="168" y="42" width="24" height="10" fill="#8fa3c0"/>
-      <rect x="160" y="52" width="40" height="44" rx="8" fill="#e8f3f1" stroke="#5eead4" stroke-width="2"/>
+      <rect x="160" y="52" width="40" height="44" rx="8" fill="#e8f3f1" stroke="#5fb4a6" stroke-width="2"/>
       <circle class="lid-led" cx="180" cy="68" r="5" fill="#22c55e"/>
       <line id="lid-dim" x1="118" x2="118" y1="96" y2="300" stroke="rgba(255,255,255,.45)" stroke-dasharray="2 4"/>
       <text x="16" y="24" fill="rgba(255,255,255,.6)" font-size="11">Ground level</text>
@@ -458,7 +465,7 @@ function easDemo() {
       <line id="eas-needle" x1="200" y1="200" x2="200" y2="78" stroke="#fff" stroke-width="4" stroke-linecap="round" style="transition:transform .25s linear"/>
       <circle cx="200" cy="200" r="9" fill="#fff"/>
       <text id="eas-num" x="200" y="250" text-anchor="middle" fill="#fff" font-size="40" font-weight="650" font-family="Inter Tight, Inter, sans-serif">930</text>
-      <polyline id="eas-spark" fill="none" stroke="#5eead4" stroke-width="2" stroke-linejoin="round"/>
+      <polyline id="eas-spark" fill="none" stroke="#5fb4a6" stroke-width="2" stroke-linejoin="round"/>
       <text x="200" y="314" text-anchor="middle" fill="rgba(255,255,255,.5)" font-size="10">last 60 minutes</text>
     </svg>
   </div>
@@ -515,15 +522,21 @@ function fsScreen() {
   </div>`;
 }
 
+// "PDF", "ZIP": shown in the Documents panel so people know what they will get.
+const docType = (href) => href.split(".").pop().toUpperCase();
+const prodDocs = (p) => `<ul class="prod-docs">${p.docs.map((d) => `<li><a href="${d.href}" rel="noopener">${icon("download")}<span>${esc(d.label)}</span></a></li>`).join("")}</ul>`;
+
 // One product. The whole card opens the quick view (products.js), and the
 // details the quick view shows travel with the card as JSON.
 const productCard = (r, p, { id = p.id, showBrand = false, n = 0 } = {}) => {
   const t = typeOf(p.type);
-  const data = { name: p.name, note: p.note || "", image: p.image, brand: p.brand.name, brandHref: `${r}products/${p.brand.slug}.html`, range: p.range, type: t.label, page: p.href ? `${r}${p.href}` : "", docs: p.brand.docs || [] };
+  // The product's own documents, then the ones that cover its whole brand.
+  const docs = [...(p.docs || []), ...(p.brand.docs || [])];
+  const data = { name: p.name, note: p.note || "", image: p.image, brand: p.brand.name, brandHref: `${r}products/${p.brand.slug}.html`, range: p.range, type: t.label, page: p.href ? `${r}${p.href}` : "", docs };
   return `
 <article class="card prod" id="${id}" data-type="${p.type}" data-search="${esc([p.name, p.note, p.brand.name, p.brand.title, p.brand.tag, p.group, t.label].join(" ").toLowerCase())}" data-product="${esc(JSON.stringify(data))}" data-reveal style="--i:${n % 5}">
   <div class="brand-shot"><img src="${p.image}" alt="${esc(p.name)}" loading="lazy"></div>
-  <div class="prod-body">${showBrand ? `<span class="tag">${esc(p.brand.name)}</span>` : ""}<h3>${esc(p.name)}</h3>${p.note ? `<p>${esc(p.note)}</p>` : ""}</div>
+  <div class="prod-body">${showBrand ? `<span class="tag">${esc(p.brand.name)}</span>` : ""}<h3>${esc(p.name)}</h3>${p.note ? `<p>${esc(p.note)}</p>` : ""}${p.docs ? prodDocs(p) : ""}</div>
   <button class="prod-open" type="button" aria-haspopup="dialog" aria-label="Quick view: ${esc(p.name)}${showBrand ? `, ${esc(p.brand.name)}` : ""}"><span>${icon("zoom-in", false)}Quick view</span></button>
 </article>`;
 };
@@ -648,7 +661,7 @@ add({
       <a class="btn btn-outline" href="${r}services/index.html">All services ${icon("arrow-right")}</a>
     </div>
     <div class="grid c4">
-      ${C.services.slice(0, 8).map((s, n) => cardLink(r, { href: `services/${s.slug}.html`, iconName: s.icon, title: s.short || s.title, text: s.summary, n })).join("")}
+      ${C.services.filter((s) => s.featured).map((s, n) => cardLink(r, { href: `services/${s.slug}.html`, iconName: s.icon, title: s.short || s.title, text: s.summary, n })).join("")}
     </div>
   </div>
 </section>
@@ -762,13 +775,17 @@ ${ctaSection(r)}`;
 add({
   file: "services/index.html",
   title: "Services | EDS",
-  description: "Sewer flow monitoring, inflow and infiltration studies, data as a service, trade waste, model calibration, auditing, rental and facility management from EDS.",
+  description: `${C.services.length} services from EDS: sewer flow and I&I monitoring, blockage alarms, water quality, sampling, rainfall, pump stations, SCADA integration, data analysis, calibration and more.`,
   current: "services",
   body: (r) => `
-${pageHero(r, { crumbs: [["Services"]], eyebrow: "Services", title: "Specialised services for water and wastewater networks.", lede: "From a single audit to a national monitoring program, delivered by trained crews in every state." })}
-<section class="section"><div class="wrap"><div class="grid c3">
-  ${C.services.map((s, n) => cardLink(r, { href: `services/${s.slug}.html`, iconName: s.icon, title: s.title, text: s.summary, n })).join("")}
-</div></div></section>
+${pageHero(r, { crumbs: [["Services"]], eyebrow: "Services", title: "Specialised services for water and wastewater networks.", lede: "From a single audit to a national monitoring program, delivered by trained crews in every state.", actions: `<div class="chips">${C.serviceGroups.map((g) => `<a class="chip" href="#${g.id}">${esc(g.title)}</a>`).join("")}</div>` })}
+${C.serviceGroups.map((g, gi) => `
+<section class="section${gi % 2 ? " alt" : ""}" id="${g.id}"><div class="wrap">
+  <div class="section-head"><p class="eyebrow">${esc(g.title)}</p><h2 class="h-lg" data-reveal>${esc(g.heading)}</h2><p class="lede" data-reveal style="--i:1">${esc(g.lede)}</p></div>
+  <div class="grid c3">
+    ${C.services.filter((s) => s.group === g.id).map((s, n) => cardLink(r, { href: `services/${s.slug}.html`, iconName: s.icon, title: s.title, text: s.summary, n })).join("")}
+  </div>
+</div></section>`).join("")}
 ${ctaSection(r)}`,
 });
 
@@ -785,11 +802,15 @@ function sectionsOf(s) {
   const list = [...(s.blocks || []).map((b) => [slugify(b.heading), b.heading])];
   if (s.compare) list.push([slugify(s.compare.heading), s.compare.heading]);
   if (s.widget === "lab") list.push(["flow-lab", "Try the flow lab"]);
+  if (s.widget === "lidott") list.push(["alarm-demo", "Try the alarm"]);
   if (s.widget === "eas") list.push(["asset-score", "Try the EDS Asset Score"]);
   return list.length >= 2 ? heroToc([["overview", "Overview"], ...list]) : "";
 }
 
-const asideHtml = (r, { related = [], relatedKind = "services", products = [], topic }) => `
+// The sidebar: a contact card, then one card of links per non-empty
+// [title, links] section, where each link is [href, label, icon?, external?].
+// `topic` is the enquiry topic the contact card's button opens the form with.
+const asideHtml = (r, sections, topic) => `
 <aside class="aside">
   <div class="aside-card brand" data-reveal="right">
     <h3>Talk to our team</h3>
@@ -797,9 +818,12 @@ const asideHtml = (r, { related = [], relatedKind = "services", products = [], t
     <a class="btn btn-primary" href="${contactHref(r, { topic })}">Enquire now ${icon("arrow-right")}</a>
     <a class="btn btn-ghost" href="${site.phoneHref}" style="margin-left:6px">${icon("phone")} ${site.phone}</a>
   </div>
-  ${related.length ? `<div class="aside-card" data-reveal="right" style="--i:1"><h3>Related ${relatedKind}</h3><ul class="aside-links">${related.map((slug) => { const it = relatedKind === "services" ? svc(slug) : sol(slug); return `<li><a href="${r}${relatedKind}/${slug}.html">${esc(it.short || it.title)}${icon("arrow-right")}</a></li>`; }).join("")}</ul></div>` : ""}
-  ${products.length ? `<div class="aside-card" data-reveal="right" style="--i:2"><h3>Products we use</h3><ul class="aside-links">${products.map((slug) => `<li><a href="${r}products/${slug}.html">${esc(brand(slug).title)}${icon("arrow-right")}</a></li>`).join("")}</ul></div>` : ""}
+  ${sections.filter(([, links]) => links.length).map(([title, links], i) => `<div class="aside-card" data-reveal="right" style="--i:${i + 1}"><h3>${title}</h3><ul class="aside-links">${links.map(([href, label, ic = "arrow-right", ext]) => `<li><a href="${href}"${ext ? ' rel="noopener"' : ""}>${esc(label)}${icon(ic)}</a></li>`).join("")}</ul></div>`).join("")}
 </aside>`;
+const svcLinks = (r, slugs = []) => slugs.map((slug) => [`${r}services/${slug}.html`, svc(slug).short || svc(slug).title]);
+const solLinks = (r, slugs = []) => slugs.map((slug) => [`${r}solutions/${slug}.html`, sol(slug).title]);
+const brandLinks = (r, slugs = []) => slugs.map((slug) => [`${r}products/${slug}.html`, brand(slug).title]);
+const paperLinks = (ids = []) => ids.map((id) => { const p = C.papers.find((x) => x.id === id); return [p.href, p.title, "download", true]; });
 
 for (const s of C.services) {
   add({
@@ -807,9 +831,9 @@ for (const s of C.services) {
     title: `${s.title} | EDS`,
     description: s.summary,
     current: "services",
-    scripts: s.widget === "lab" ? ["lab.js"] : [],
+    scripts: { lab: ["lab.js"], lidott: ["widgets.js"] }[s.widget] || [],
     body: (r) => `
-${pageHero(r, { crumbs: [["Services", "services/index.html"], [s.short || s.title]], iconName: s.icon, title: s.title, lede: s.summary, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${contactHref(r, { topic: s.title })}">Enquire now ${icon("arrow-right")}</a>${s.widget === "lab" ? `<a class="btn btn-ghost btn-lg" href="#flow-lab">${icon("cloud-rain")} Try the flow lab</a>` : ""}`, visual: sectionsOf(s) })}
+${pageHero(r, { crumbs: [["Services", "services/index.html"], [s.short || s.title]], iconName: s.icon, title: s.title, lede: s.summary, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${contactHref(r, { topic: s.title })}">Enquire now ${icon("arrow-right")}</a>${s.widget === "lab" ? `<a class="btn btn-ghost btn-lg" href="#flow-lab">${icon("cloud-rain")} Try the flow lab</a>` : ""}${s.widget === "lidott" ? `<a class="btn btn-ghost btn-lg" href="#alarm-demo">${icon("bell")} Try the alarm</a>` : ""}`, visual: sectionsOf(s) })}
 <section class="section" id="overview"><div class="wrap split">
   <div>
     <div class="prose" data-reveal>${s.intro.map((p) => `<p>${esc(p)}</p>`).join("")}</div>
@@ -817,9 +841,10 @@ ${pageHero(r, { crumbs: [["Services", "services/index.html"], [s.short || s.titl
     ${s.compare ? `<div class="block" id="${slugify(s.compare.heading)}" data-reveal><h2 class="h-md">${s.compare.heading}</h2><div class="table-scroll"><table class="compare"><thead><tr><th></th><th>${s.compare.left}</th><th>${s.compare.right}</th></tr></thead><tbody>${s.compare.rows.map((row) => `<tr>${row.map((c) => `<td>${esc(c)}</td>`).join("")}</tr>`).join("")}</tbody></table></div></div>` : ""}
     ${s.quote ? `<figure class="quote" data-reveal style="margin:clamp(40px,5vw,64px) 0 0">${icon("quote", false)}<blockquote>${esc(s.quote.text)}</blockquote></figure>` : ""}
   </div>
-  ${asideHtml(r, { related: s.related, products: s.products, topic: s.title })}
+  ${asideHtml(r, [["Related services", svcLinks(r, s.related)], ["Related solutions", solLinks(r, s.solutions)], ["Products we use", brandLinks(r, s.products)], ["White papers", paperLinks(s.papers)]], s.title)}
 </div></section>
 ${s.widget === "lab" ? labSection({ eyebrow: "Try it", title: s.slug.startsWith("inflow") ? "Watch inflow and infiltration happen." : "What the flow meter sees in a storm." }) : ""}
+${s.widget === "lidott" ? `<section class="section dark" id="alarm-demo"><div class="wrap"><div class="section-head"><p class="eyebrow">Try it</p><h2 class="h-lg" data-reveal>Raise the water. Watch the alarm.</h2></div>${lidottDemo()}</div></section>` : ""}
 ${ctaSection(r, { topic: s.title })}`,
   });
 }
@@ -851,7 +876,7 @@ ${pageHero(r, { crumbs: [["Solutions", "solutions/index.html"], [s.title]], icon
     <div class="prose" data-reveal>${s.intro.map((p) => `<p>${esc(p)}</p>`).join("")}</div>
     ${(s.blocks || []).length ? `<div style="margin-top:clamp(40px,5vw,64px)">${s.blocks.map(blockHtml).join("")}</div>` : ""}
   </div>
-  ${asideHtml(r, { related: s.related, relatedKind: "solutions", products: s.productLinks || [], topic: s.title })}
+  ${asideHtml(r, [["Related solutions", solLinks(r, s.related)], ["Related services", svcLinks(r, C.services.filter((x) => x.solutions?.includes(s.slug)).map((x) => x.slug))], ["Products we use", brandLinks(r, s.productLinks)]], s.title)}
 </div></section>
 ${s.widget === "eas" ? `<section class="section dark" id="asset-score"><div class="wrap"><div class="section-head"><p class="eyebrow">EDS Asset Score</p><h2 class="h-lg" data-reveal>One score, watched around the clock.</h2></div>${easDemo()}</div></section>` : ""}
 ${ctaSection(r, { topic: s.title })}`,
@@ -908,6 +933,11 @@ for (const b of C.brands) {
   const range = products.filter((p) => p.brand === b);
   const cover = range.find((p) => p.image === b.cover) || range[0];
   const pricing = { topic: "Product pricing", product: b.title };
+  // Brand-wide documents first, then each product's, named after the product.
+  const docs = [
+    ...(b.docs || []).map((d) => ({ title: d.label, meta: docType(d.href), href: d.href })),
+    ...range.flatMap((p) => (p.docs || []).map((d) => ({ title: p.name, meta: `${d.label} · ${docType(d.href)}`, href: d.href }))),
+  ];
   add({
     file: `products/${b.slug}.html`,
     title: `${b.title} | EDS Products`,
@@ -921,7 +951,9 @@ ${pageHero(r, { crumbs: [["Products", "products/index.html"], [b.name]], iconNam
   <aside class="aside">
     ${b.logo ? `<div class="aside-card" data-reveal="right" style="display:grid;place-items:center;padding:32px"><img src="${b.logo}" alt="${esc(b.name)} logo" style="max-height:70px;width:auto" loading="lazy"></div>` : ""}
     <div class="aside-card brand" data-reveal="right"><h3>Request pricing</h3><p>Sales, hire and service from EDS, Australia wide.</p><a class="btn btn-primary" href="${contactHref(r, pricing)}">Enquire now ${icon("arrow-right")}</a></div>
-    ${b.docs ? `<div class="aside-card" data-reveal="right"><h3>Documents</h3><ul class="aside-links">${b.docs.map((d) => `<li><a href="${d.href}" rel="noopener">${esc(d.label)}${icon("download")}</a></li>`).join("")}</ul></div>` : ""}
+    ${docs.length
+      ? `<div class="aside-card" data-reveal="right"><h3>Documents</h3><ul class="aside-links docs">${docs.map((d) => `<li><a href="${d.href}" rel="noopener"><span>${esc(d.title)}<small>${esc(d.meta)}</small></span>${icon("download")}</a></li>`).join("")}</ul></div>`
+      : `<div class="aside-card" data-reveal="right"><h3>Datasheets and manuals</h3><p>Ask us for the datasheet, manual or software for any ${esc(b.name)} product.</p><a class="link-arrow" href="mailto:${site.sales}?subject=${encodeURIComponent(`${b.name} datasheet request`)}">Request a datasheet ${icon("arrow-right")}</a></div>`}
   </aside>
 </div></section>
 <section class="section alt" id="range"><div class="wrap">
@@ -1097,7 +1129,7 @@ ${pageHero(r, { crumbs: [["Contact"]], eyebrow: "Contact", title: "Call or visit
       </div>
       <label class="field">I am interested in<select name="subject">
         <option>General enquiry</option>
-        <optgroup label="Services">${C.services.map((s) => `<option>${esc(s.title)}</option>`).join("")}</optgroup>
+        ${C.serviceGroups.map((g) => `<optgroup label="${esc(g.title)}">${C.services.filter((s) => s.group === g.id).map((s) => `<option>${esc(s.title)}</option>`).join("")}</optgroup>`).join("")}
         <optgroup label="Solutions">${C.solutions.map((s) => `<option>${esc(s.title)}</option>`).join("")}</optgroup>
         <optgroup label="Products and support"><option>Product pricing</option><option>Equipment service or calibration</option><option>EDS FlowSense</option></optgroup>
       </select></label>
@@ -1163,7 +1195,7 @@ function searchIndex() {
   const plain = (src) => src.replace("@root/", "");
   const put = (g, t, s, h, more = {}) => items.push({ g, t, s, h, ...more });
 
-  for (const s of C.services) put("Services", s.title, s.summary, `services/${s.slug}.html`, { i: s.icon, b: text(s.short, s.intro, blockText(s.blocks), s.compare?.rows || []) });
+  for (const s of C.services) put("Services", s.title, s.summary, `services/${s.slug}.html`, { i: s.icon, b: text(s.short, C.serviceGroups.find((g) => g.id === s.group)?.title, s.intro, blockText(s.blocks), s.compare?.rows || []) });
   for (const s of C.solutions) put("Solutions", s.title, s.summary, `solutions/${s.slug}.html`, { i: s.icon, b: text(s.intro, blockText(s.blocks)) });
   put("Products", "LIDoTT Alarm", `Detectronic · ${C.lidott.lede}`, "products/lidott-alarm.html", { img: plain(C.lidott.image), b: text("level radar alarm", C.lidott.description, C.lidott.sections, C.lidott.specs) });
   for (const p of products) {
@@ -1182,6 +1214,11 @@ function searchIndex() {
   put("Pages", "Privacy policy", "How EDS handles personal information.", "privacy.html", { i: "lock" });
   for (const p of C.papers) put("Documents", p.title, `White paper · ${p.date}`, p.href, { i: "file-text", x: 1, b: p.text });
   for (const g of C.downloads) for (const [label, href] of g.items) put("Documents", label, g.group, href, { i: g.icon, x: 1, b: g.note });
+  for (const p of products) {
+    for (const d of p.docs || []) {
+      if (!items.some((e) => e.h === d.href)) put("Documents", `${p.name}: ${d.label}`, `${p.brand.name} · ${docType(d.href)}`, d.href, { i: "file-text", x: 1, b: text(p.brand.title, p.note) });
+    }
+  }
   put("Contact", `Call ${site.phone}`, `${site.hours}, from anywhere in Australia`, site.phoneHref, { i: "phone", b: "phone ring telephone call" });
   put("Contact", "Send an enquiry", "The enquiry form, with the topic of your choice", "contact.html#enquiry", { i: "send", b: "quote pricing message" });
   for (const [addr, what] of [[site.email, "General enquiries"], [site.sales, "Sales"], [site.service, "Service department"]]) put("Contact", `Email ${addr}`, what, `mailto:${addr}`, { i: "mail", b: "email" });
