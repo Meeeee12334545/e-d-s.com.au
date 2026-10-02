@@ -47,21 +47,28 @@ const year = new Date().getFullYear();
 /* layout                                                              */
 /* ------------------------------------------------------------------ */
 function header(r, current) {
-  const mega = (label, key, items, all, cols) => `
-      <div class="nav-item has-mega">
+  // A mega menu takes a flat list of links, or `groups` of them (Services),
+  // which it lays out as one titled column per group.
+  const mLink = (i) => `<a href="${r}${i.href}">${icon(i.icon)}<span>${esc(i.label)}</span></a>`;
+  const mega = (label, key, { items, groups }, all, cols) => `
+      <div class="nav-item has-mega${groups ? " wide" : ""}">
         <button class="nav-link" aria-expanded="false"${current === key ? ' aria-current="page"' : ""}>${label}${icon("chevron-down", false)}</button>
-        <div class="mega${cols ? " cols-2" : ""}">
-          ${items.map((i) => `<a href="${r}${i.href}">${icon(i.icon)}<span>${esc(i.label)}</span></a>`).join("")}
+        <div class="mega${groups ? " groups" : cols ? " cols-2" : ""}">
+          ${groups ? groups.map((g) => `<div class="mega-group"><p class="mega-head">${esc(g.label)}</p>${g.items.map(mLink).join("")}</div>`).join("") : items.map(mLink).join("")}
           <a class="mega-all" href="${r}${all.href}"><span>${all.label}</span>${icon("arrow-right")}</a>
         </div>
       </div>`;
-  const sItems = C.services.map((s) => ({ href: `services/${s.slug}.html`, icon: s.icon, label: s.short || s.title }));
+  const sGroups = C.serviceGroups.map((g) => ({
+    label: g.title,
+    items: C.services.filter((s) => s.group === g.id).map((s) => ({ href: `services/${s.slug}.html`, icon: s.icon, label: s.short || s.title })),
+  }));
   const oItems = C.solutions.map((s) => ({ href: `solutions/${s.slug}.html`, icon: s.icon, label: s.title }));
   const pItems = [...C.brands.map((b) => ({ href: `products/${b.slug}.html`, icon: b.icon, label: b.name })), { href: "products/lidott-alarm.html", icon: "bell", label: "LIDoTT Alarm" }];
   const link = (href, label, key) => `<div class="nav-item"><a class="nav-link" href="${r}${href}"${current === key ? ' aria-current="page"' : ""}>${label}</a></div>`;
-  const dGroup = (label, items, all) => `
+  const dLink = (i) => `<a href="${r}${i.href}">${icon(i.icon, false)}${esc(i.label)}</a>`;
+  const dGroup = (label, { items, groups }, all) => `
         <details><summary>${label}${icon("chevron-down", false)}</summary><div>
-          ${items.map((i) => `<a href="${r}${i.href}">${icon(i.icon, false)}${esc(i.label)}</a>`).join("")}
+          ${groups ? groups.map((g) => `<p class="drawer-sub">${esc(g.label)}</p>${g.items.map(dLink).join("")}`).join("") : items.map(dLink).join("")}
           <a href="${r}${all}">${icon("arrow-right", false)}View all</a>
         </div></details>`;
   return `
@@ -71,9 +78,9 @@ function header(r, current) {
     <div class="wrap">
       <a class="logo" href="${r}index.html" aria-label="EDS home"><img src="${site.logoWhite}" alt="EDS, Environmental Data Services" width="126" height="40"></a>
       <nav class="nav" aria-label="Main">
-        ${mega("Services", "services", sItems, { href: "services/index.html", label: "All services" }, true)}
-        ${mega("Solutions", "solutions", oItems, { href: "solutions/index.html", label: "All solutions" })}
-        ${mega("Products", "products", pItems, { href: "products/index.html", label: "All products" }, true)}
+        ${mega("Services", "services", { groups: sGroups }, { href: "services/index.html", label: "All services" })}
+        ${mega("Solutions", "solutions", { items: oItems }, { href: "solutions/index.html", label: "All solutions" })}
+        ${mega("Products", "products", { items: pItems }, { href: "products/index.html", label: "All products" }, true)}
         ${link("flowsense.html", "FlowSense", "flowsense")}
         ${link("about.html", "About", "about")}
         ${link("resources.html", "Resources", "resources")}
@@ -92,9 +99,9 @@ function header(r, current) {
         <a class="logo" href="${r}index.html"><img src="${site.logoWhite}" alt="EDS" width="126" height="40"></a>
         <button class="burger drawer-close" style="display:inline-flex" aria-label="Close menu">${icon("x", false)}</button>
       </div>
-      ${dGroup("Services", sItems, "services/index.html")}
-      ${dGroup("Solutions", oItems, "solutions/index.html")}
-      ${dGroup("Products", pItems, "products/index.html")}
+      ${dGroup("Services", { groups: sGroups }, "services/index.html")}
+      ${dGroup("Solutions", { items: oItems }, "solutions/index.html")}
+      ${dGroup("Products", { items: pItems }, "products/index.html")}
       <a class="drawer-link" href="${r}flowsense.html">FlowSense</a>
       <a class="drawer-link" href="${r}about.html">About</a>
       <a class="drawer-link" href="${r}resources.html">Resources</a>
@@ -119,7 +126,7 @@ function footer(r) {
         </div>
         <div>
           <h4>Services</h4>
-          <ul>${C.services.slice(0, 7).map((s) => `<li><a href="${r}services/${s.slug}.html">${esc(s.short || s.title)}</a></li>`).join("")}<li><a href="${r}services/index.html">All services</a></li></ul>
+          <ul>${C.services.filter((s) => s.featured).slice(0, 7).map((s) => `<li><a href="${r}services/${s.slug}.html">${esc(s.short || s.title)}</a></li>`).join("")}<li><a href="${r}services/index.html">All services</a></li></ul>
         </div>
         <div>
           <h4>Products</h4>
@@ -474,7 +481,7 @@ add({
       <a class="btn btn-outline" href="${r}services/index.html">All services ${icon("arrow-right")}</a>
     </div>
     <div class="grid c4">
-      ${C.services.slice(0, 8).map((s, n) => cardLink(r, { href: `services/${s.slug}.html`, iconName: s.icon, title: s.short || s.title, text: s.summary, n })).join("")}
+      ${C.services.filter((s) => s.featured).map((s, n) => cardLink(r, { href: `services/${s.slug}.html`, iconName: s.icon, title: s.short || s.title, text: s.summary, n })).join("")}
     </div>
   </div>
 </section>
@@ -588,13 +595,17 @@ ${ctaSection(r)}`;
 add({
   file: "services/index.html",
   title: "Services | EDS",
-  description: "Sewer flow monitoring, inflow and infiltration studies, data as a service, trade waste, model calibration, auditing, rental and facility management from EDS.",
+  description: `${C.services.length} services from EDS: sewer flow and I&I monitoring, blockage alarms, water quality, sampling, rainfall, pump stations, SCADA integration, data analysis, calibration and more.`,
   current: "services",
   body: (r) => `
-${pageHero(r, { crumbs: [["Services"]], eyebrow: "Services", title: "Specialised services for water and wastewater networks.", lede: "From a single audit to a national monitoring program, delivered by trained crews in every state." })}
-<section class="section"><div class="wrap"><div class="grid c3">
-  ${C.services.map((s, n) => cardLink(r, { href: `services/${s.slug}.html`, iconName: s.icon, title: s.title, text: s.summary, n })).join("")}
-</div></div></section>
+${pageHero(r, { crumbs: [["Services"]], eyebrow: "Services", title: "Specialised services for water and wastewater networks.", lede: "From a single audit to a national monitoring program, delivered by trained crews in every state.", actions: `<div class="chips">${C.serviceGroups.map((g) => `<a class="chip" href="#${g.id}">${esc(g.title)}</a>`).join("")}</div>` })}
+${C.serviceGroups.map((g, gi) => `
+<section class="section${gi % 2 ? " alt" : ""}" id="${g.id}"><div class="wrap">
+  <div class="section-head"><p class="eyebrow">${esc(g.title)}</p><h2 class="h-lg" data-reveal>${esc(g.heading)}</h2><p class="lede" data-reveal style="--i:1">${esc(g.lede)}</p></div>
+  <div class="grid c3">
+    ${C.services.filter((s) => s.group === g.id).map((s, n) => cardLink(r, { href: `services/${s.slug}.html`, iconName: s.icon, title: s.title, text: s.summary, n })).join("")}
+  </div>
+</div></section>`).join("")}
 ${ctaSection(r)}`,
 });
 
@@ -605,7 +616,9 @@ const blockHtml = (b) => `
   ${b.list ? (b.heading.includes("approach") ? `<ol class="steps">${b.list.map((l) => `<li>${esc(l)}</li>`).join("")}</ol>` : `<ul class="checks">${b.list.map((l) => `<li>${icon("check", false)}<span>${esc(l)}</span></li>`).join("")}</ul>`) : ""}
 </div>`;
 
-const asideHtml = (r, { related = [], relatedKind = "services", products = [] }) => `
+// The sidebar: a contact card, then one card of links per non-empty
+// [title, links] section, where each link is [href, label, icon?, external?].
+const asideHtml = (r, sections) => `
 <aside class="aside">
   <div class="aside-card brand" data-reveal="right">
     <h3>Talk to our team</h3>
@@ -613,9 +626,12 @@ const asideHtml = (r, { related = [], relatedKind = "services", products = [] })
     <a class="btn btn-primary" href="${r}contact.html">Enquire now ${icon("arrow-right")}</a>
     <a class="btn btn-ghost" href="${site.phoneHref}" style="margin-left:6px">${icon("phone")} ${site.phone}</a>
   </div>
-  ${related.length ? `<div class="aside-card" data-reveal="right" style="--i:1"><h3>Related ${relatedKind}</h3><ul class="aside-links">${related.map((slug) => { const it = relatedKind === "services" ? svc(slug) : sol(slug); return `<li><a href="${r}${relatedKind}/${slug}.html">${esc(it.short || it.title)}${icon("arrow-right")}</a></li>`; }).join("")}</ul></div>` : ""}
-  ${products.length ? `<div class="aside-card" data-reveal="right" style="--i:2"><h3>Products we use</h3><ul class="aside-links">${products.map((slug) => `<li><a href="${r}products/${slug}.html">${esc(brand(slug).title)}${icon("arrow-right")}</a></li>`).join("")}</ul></div>` : ""}
+  ${sections.filter(([, links]) => links.length).map(([title, links], i) => `<div class="aside-card" data-reveal="right" style="--i:${i + 1}"><h3>${title}</h3><ul class="aside-links">${links.map(([href, label, ic = "arrow-right", ext]) => `<li><a href="${href}"${ext ? ' rel="noopener"' : ""}>${esc(label)}${icon(ic)}</a></li>`).join("")}</ul></div>`).join("")}
 </aside>`;
+const svcLinks = (r, slugs = []) => slugs.map((slug) => [`${r}services/${slug}.html`, svc(slug).short || svc(slug).title]);
+const solLinks = (r, slugs = []) => slugs.map((slug) => [`${r}solutions/${slug}.html`, sol(slug).title]);
+const brandLinks = (r, slugs = []) => slugs.map((slug) => [`${r}products/${slug}.html`, brand(slug).title]);
+const paperLinks = (ids = []) => ids.map((id) => { const p = C.papers.find((x) => x.id === id); return [p.href, p.title, "download", true]; });
 
 for (const s of C.services) {
   add({
@@ -623,9 +639,9 @@ for (const s of C.services) {
     title: `${s.title} | EDS`,
     description: s.summary,
     current: "services",
-    scripts: s.widget === "lab" ? ["lab.js"] : [],
+    scripts: { lab: ["lab.js"], lidott: ["widgets.js"] }[s.widget] || [],
     body: (r) => `
-${pageHero(r, { crumbs: [["Services", "services/index.html"], [s.short || s.title]], iconName: s.icon, title: s.title, lede: s.summary, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${r}contact.html">Enquire now ${icon("arrow-right")}</a>${s.widget === "lab" ? `<a class="btn btn-ghost btn-lg" href="#flow-lab">${icon("cloud-rain")} Try the flow lab</a>` : ""}` })}
+${pageHero(r, { crumbs: [["Services", "services/index.html"], [s.short || s.title]], iconName: s.icon, title: s.title, lede: s.summary, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${r}contact.html">Enquire now ${icon("arrow-right")}</a>${s.widget === "lab" ? `<a class="btn btn-ghost btn-lg" href="#flow-lab">${icon("cloud-rain")} Try the flow lab</a>` : ""}${s.widget === "lidott" ? `<a class="btn btn-ghost btn-lg" href="#alarm-demo">${icon("bell")} Try the alarm</a>` : ""}` })}
 <section class="section"><div class="wrap split">
   <div>
     <div class="prose" data-reveal>${s.intro.map((p) => `<p>${esc(p)}</p>`).join("")}</div>
@@ -633,9 +649,10 @@ ${pageHero(r, { crumbs: [["Services", "services/index.html"], [s.short || s.titl
     ${s.compare ? `<div class="block" data-reveal><h2 class="h-md">${s.compare.heading}</h2><table class="compare"><thead><tr><th></th><th>${s.compare.left}</th><th>${s.compare.right}</th></tr></thead><tbody>${s.compare.rows.map((row) => `<tr>${row.map((c) => `<td>${esc(c)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>` : ""}
     ${s.quote ? `<figure class="quote" data-reveal style="margin:clamp(40px,5vw,64px) 0 0">${icon("quote", false)}<blockquote>${esc(s.quote.text)}</blockquote></figure>` : ""}
   </div>
-  ${asideHtml(r, { related: s.related, products: s.products })}
+  ${asideHtml(r, [["Related services", svcLinks(r, s.related)], ["Related solutions", solLinks(r, s.solutions)], ["Products we use", brandLinks(r, s.products)], ["White papers", paperLinks(s.papers)]])}
 </div></section>
 ${s.widget === "lab" ? labSection({ eyebrow: "Try it", title: s.slug.startsWith("inflow") ? "Watch inflow and infiltration happen." : "What the flow meter sees in a storm." }) : ""}
+${s.widget === "lidott" ? `<section class="section dark" id="alarm-demo"><div class="wrap"><div class="section-head"><p class="eyebrow">Try it</p><h2 class="h-lg" data-reveal>Raise the water. Watch the alarm.</h2></div>${lidottDemo()}</div></section>` : ""}
 ${ctaSection(r)}`,
   });
 }
@@ -667,7 +684,7 @@ ${pageHero(r, { crumbs: [["Solutions", "solutions/index.html"], [s.title]], icon
     <div class="prose" data-reveal>${s.intro.map((p) => `<p>${esc(p)}</p>`).join("")}</div>
     ${(s.blocks || []).length ? `<div style="margin-top:clamp(40px,5vw,64px)">${s.blocks.map(blockHtml).join("")}</div>` : ""}
   </div>
-  ${asideHtml(r, { related: s.related, relatedKind: "solutions", products: s.productLinks || [] })}
+  ${asideHtml(r, [["Related solutions", solLinks(r, s.related)], ["Related services", svcLinks(r, C.services.filter((x) => x.solutions?.includes(s.slug)).map((x) => x.slug))], ["Products we use", brandLinks(r, s.productLinks)]])}
 </div></section>
 ${s.widget === "eas" ? `<section class="section dark"><div class="wrap"><div class="section-head"><p class="eyebrow">EDS Asset Score</p><h2 class="h-lg" data-reveal>One score, watched around the clock.</h2></div>${easDemo()}</div></section>` : ""}
 ${ctaSection(r)}`,
