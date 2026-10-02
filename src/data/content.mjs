@@ -452,6 +452,8 @@ export const solutions = [
 /* ------------------------------------------------------------------ */
 /* Products                                                            */
 /* ------------------------------------------------------------------ */
+// `docs` on a product is downloadable from its card; the brand page's
+// Documents panel lists those plus any brand-wide `docs`.
 export const brands = [
   {
     slug: "eds",
@@ -480,7 +482,7 @@ export const brands = [
         name: "Sensors",
         items: [
           { name: "E-Flow", note: "Flow sensor", image: img("eflow-4.png") },
-          { name: "iLab 901", note: "Multi-parameter analytical sensor", image: img("ilab-901-multitparameter-analytical-sensor-2.gif") },
+          { name: "iLab 901", note: "Multi-parameter analytical sensor", image: img("ilab-901-multitparameter-analytical-sensor-2.gif"), docs: [{ label: "Datasheet", href: doc("/s/iLab-901-Multitparameter-Analytical-Sensor-DS-21rs.pdf") }] },
           { name: "Ultrasonic Level", note: "Level sensor", image: img("ultrasonic-level-sensor-image-2.png") },
           { name: "EC", note: "Electro-conductivity sensor", image: img("cos41.jpg") },
           { name: "pH", note: "pH sensor", image: img("eds-ph-sensor.jpg") },
@@ -488,7 +490,6 @@ export const brands = [
         ],
       },
     ],
-    docs: [{ label: "iLab 901 datasheet", href: doc("/s/iLab-901-Multitparameter-Analytical-Sensor-DS-21rs.pdf") }],
   },
   {
     slug: "detectronic",
@@ -510,7 +511,7 @@ export const brands = [
         items: [
           { name: "MSFM", note: "Rugged 4G area velocity flow meter", image: img("s2.5-04-small-766x1024.png") },
           { name: "LIDoTT Smart", note: "Long life, rugged 4G patented level monitor", image: img("dete01-01.24-600x452.png") },
-          { name: "LIDoTT Alarm", note: "Self contained level measurement and alarm device", image: img("lidott-alarm-3.png"), href: "products/lidott-alarm.html" },
+          { name: "LIDoTT Alarm", note: "Self contained level measurement and alarm device", image: img("lidott-alarm-3.png"), href: "products/lidott-alarm.html", docs: [{ label: "Datasheet", href: doc("/s/MMS-D050-LIDoTT-Alarm-iss3.pdf") }] },
           { name: "LIDoTT R", note: "High-precision radar and pressure sensor for continuous monitoring", image: img("lidott-sensor-r-1.png") },
           { name: "Multi Channel Data Loggers", note: "Rugged remote multichannel loggers", image: img("new-2-channel-logger-1001x1024.jpg") },
         ],
@@ -569,7 +570,7 @@ export const brands = [
       {
         name: "Loggers",
         items: [
-          { name: "FL1500 Logger", image: img("landing-fl1500-2.jpg") },
+          { name: "FL1500 Logger", image: img("landing-fl1500-2.jpg"), docs: [{ label: "FSDATA Desktop 32-bit", href: doc("/s/FSDATA-Desktop-32bit.zip") }, { label: "FSDATA Desktop 64-bit", href: doc("/s/FSDATA-Desktop-64bit.zip") }] },
           { name: "FH950 Velocity Meter", image: img("landing-fh950.jpg") },
           { name: "FL900 Portable", image: img("landing-fl900-2.jpg") },
           { name: "SC200 Controller", image: img("landing-sc200.jpg") },
@@ -607,7 +608,7 @@ export const brands = [
         items: [
           { name: "D605", note: "Logger", image: img("front-view-of-beadedstream-d605-temperature-data-logger-without-antenna.png") },
           { name: "Spot Logger", note: "Logger", image: img("spot-logger-side-view-with-raymo-connector.png") },
-          { name: "Thermistor String", note: "Sensor", image: img("standard-dtc-bar-code-144-1.jpg") },
+          { name: "Thermistor String", note: "Sensor", image: img("standard-dtc-bar-code-144-1.jpg"), docs: [{ label: "EDS white paper", href: doc("/s/EDS-White-Paper-Benefits-of-Using-Thermistor-Strings-in-Conjunction-with-Open-Channel-Sewer-Flow-Met-jhzm.pdf") }] },
           { name: "Mlink", note: "Connectivity", image: img("beadedstream-mlink-temperature-data-logger-connector.png") },
           { name: "Capture Mobile App", note: "Connectivity", image: img("beadedstream-capture-ios-app-1.png") },
           { name: "Beadedcloud Data", note: "Connectivity", image: img("beadedcloud-dashboard-in-all-devices-1.png") },
@@ -652,11 +653,10 @@ export const brands = [
       {
         name: "The analyser",
         items: [
-          { name: "Aquamonitrix", note: "Nitrate and nitrite, rugged and portable", image: img("picture-1.png") },
+          { name: "Aquamonitrix", note: "Nitrate and nitrite, rugged and portable", image: img("picture-1.png"), docs: [{ label: "Performance datasheet", href: doc("/s/Aquamonitrix-Performance.pdf") }] },
         ],
       },
     ],
-    docs: [{ label: "Aquamonitrix performance datasheet", href: doc("/s/Aquamonitrix-Performance.pdf") }],
   },
   {
     slug: "dynaflox",

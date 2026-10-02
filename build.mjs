@@ -697,7 +697,16 @@ ${pageHero(r, { crumbs: [["Products"]], eyebrow: "Products", title: "Industry le
 ${ctaSection(r, { title: "Need help choosing an instrument?", lede: "Our team has installed, serviced and calibrated all of them. Ask us which suits your application." })}`,
 });
 
+// "PDF", "ZIP": shown in the Documents panel so people know what they will get.
+const docType = (href) => href.split(".").pop().toUpperCase();
+const prodDocs = (p) => `<ul class="prod-docs">${p.docs.map((d) => `<li><a href="${d.href}" rel="noopener">${icon("download")}<span>${esc(d.label)}</span></a></li>`).join("")}</ul>`;
+
 for (const b of C.brands) {
+  // Brand-wide documents first, then each product's, named after the product.
+  const docs = [
+    ...(b.docs || []).map((d) => ({ title: d.label, meta: docType(d.href), href: d.href })),
+    ...b.groups.flatMap((g) => g.items.flatMap((p) => (p.docs || []).map((d) => ({ title: p.name, meta: `${d.label} · ${docType(d.href)}`, href: d.href })))),
+  ];
   add({
     file: `products/${b.slug}.html`,
     title: `${b.title} | EDS Products`,
@@ -710,7 +719,9 @@ ${pageHero(r, { crumbs: [["Products", "products/index.html"], [b.name]], iconNam
   <aside class="aside">
     ${b.logo ? `<div class="aside-card" data-reveal="right" style="display:grid;place-items:center;padding:32px"><img src="${b.logo}" alt="${esc(b.name)} logo" style="max-height:70px" loading="lazy"></div>` : ""}
     <div class="aside-card brand" data-reveal="right"><h3>Request pricing</h3><p>Sales, hire and service from EDS, Australia wide.</p><a class="btn btn-primary" href="${r}contact.html">Enquire now ${icon("arrow-right")}</a></div>
-    ${b.docs ? `<div class="aside-card" data-reveal="right"><h3>Documents</h3><ul class="aside-links">${b.docs.map((d) => `<li><a href="${d.href}" rel="noopener">${esc(d.label)}${icon("download")}</a></li>`).join("")}</ul></div>` : ""}
+    ${docs.length
+      ? `<div class="aside-card" data-reveal="right"><h3>Documents</h3><ul class="aside-links docs">${docs.map((d) => `<li><a href="${d.href}" rel="noopener"><span>${esc(d.title)}<small>${esc(d.meta)}</small></span>${icon("download")}</a></li>`).join("")}</ul></div>`
+      : `<div class="aside-card" data-reveal="right"><h3>Datasheets and manuals</h3><p>Ask us for the datasheet, manual or software for any ${esc(b.name)} product.</p><a class="link-arrow" href="mailto:${site.sales}?subject=${encodeURIComponent(`${b.name} datasheet request`)}">Request a datasheet ${icon("arrow-right")}</a></div>`}
   </aside>
 </div></section>
 <section class="section alt"><div class="wrap">
@@ -718,7 +729,11 @@ ${pageHero(r, { crumbs: [["Products", "products/index.html"], [b.name]], iconNam
   <div class="block">
     <h2 class="h-md" data-reveal>${esc(g.name)}</h2>
     <div class="prod-grid">
-      ${g.items.map((p, n) => { const inner = `<div class="brand-shot"><img src="${p.image}" alt="${esc(p.name)}" loading="lazy"></div><div class="prod-body"><h3>${esc(p.name)}</h3>${p.note ? `<p>${esc(p.note)}</p>` : ""}</div>`; return p.href ? `<a class="card prod" href="${r}${p.href}" data-reveal style="--i:${n % 5}">${inner}</a>` : `<div class="card prod hoverable" data-reveal style="--i:${n % 5}">${inner}</div>`; }).join("")}
+      ${g.items.map((p, n) => {
+        // A card that links to its own page carries its documents there, since links cannot nest.
+        const inner = `<div class="brand-shot"><img src="${p.image}" alt="${esc(p.name)}" loading="lazy"></div><div class="prod-body"><h3>${esc(p.name)}</h3>${p.note ? `<p>${esc(p.note)}</p>` : ""}${p.docs && !p.href ? prodDocs(p) : ""}</div>`;
+        return p.href ? `<a class="card prod" href="${r}${p.href}" data-reveal style="--i:${n % 5}">${inner}</a>` : `<div class="card prod hoverable" data-reveal style="--i:${n % 5}">${inner}</div>`;
+      }).join("")}
     </div>
   </div>`).join("")}
 </div></section>
