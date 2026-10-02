@@ -11,6 +11,8 @@ npm run build    # writes dist/
 
 `PREVIEW=1 npm run build` adds a no-index tag, for copies that are not the live site.
 
+Every push to `main` publishes a preview copy to GitHub Pages (`.github/workflows/preview.yml` builds with `PREVIEW=1` and pushes `dist/` to the `gh-pages` branch).
+
 ## Where things are
 
 | Path | What |
@@ -22,6 +24,7 @@ npm run build    # writes dist/
 | `src/js/city.js` | The interactive isometric city on the home page. |
 | `src/js/lab.js` | The storm and hydrograph simulator. |
 | `src/js/widgets.js` | Office map, LIDoTT Alarm demo, EDS Asset Score dial. |
+| `src/assets/img/` | Product photos and logos. Reference one with `img("file-name.png")` in `content.mjs`. |
 | `content/privacy.txt` | Privacy policy text, carried over from the old site. |
 
 ## Design rules (shared with EDS FlowSense)
@@ -34,7 +37,7 @@ npm run build    # writes dist/
 
 ## Before this replaces www.e-d-s.com.au
 
-1. **Images and documents still load from the old Squarespace site.** Copy them into the project and change `img()` and `doc()` at the top of `src/data/content.mjs`, or they will break when Squarespace is cancelled.
+1. **Documents still load from the old Squarespace site.** Datasheets, white papers and software downloads link to `www.e-d-s.com.au/s/...`, so they break as soon as the domain points at this site. Copy them into the project and change `doc()` at the top of `src/data/content.mjs`. (Images are already local, in `src/assets/img`.)
 2. **Forms open the visitor's email program.** For a form that submits on the page, connect a form service (most static hosts include one) in `site.js`.
 3. Set up redirects from the old page addresses to the new ones.
 4. Replace `assets/favicon.svg` (a placeholder wave) with the EDS mark.

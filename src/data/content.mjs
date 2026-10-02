@@ -2,11 +2,10 @@
 // de-duplicated and set in Australian English), so nothing on the new site
 // claims more than the old one did.
 
-// Images are still served from the current site's CDN. Before the old site is
-// retired, copy them into src/assets and change this one function.
-const CDN = "https://images.squarespace-cdn.com/content/v1/56fb56208a65e2ecc1316d3b/";
-export const img = (path, w = 750) => `${CDN}${path}?format=${w}w`;
-// Documents (datasheets, white papers, software) are also still on the old host.
+// Images live in src/assets/img and are copied to dist/assets/img by the build.
+// "@root/" is swapped for each page's path back to the site root in layout().
+export const img = (file) => `@root/assets/img/${file}`;
+// Documents (datasheets, white papers, software) are still on the old host.
 export const doc = (path) => `https://www.e-d-s.com.au${path}`;
 
 export const site = {
@@ -21,7 +20,7 @@ export const site = {
   address: ["13/20-22 Ellerslie Road", "Meadowbrook QLD 4131", "Australia"],
   hours: "Monday to Friday, 7:30am to 4:30pm",
   founded: 1991,
-  logoWhite: img("1541719159534-WUTH05HTM3L0P7FTSN4C/EDS+Logo+WHITE+Large.png", 500),
+  logoWhite: img("eds-logo-white-large.png"),
   flowsenseUrl: "https://edsflowsense.au/",
   remoteDataUrl: "https://www.detecdata-en.com/",
   staffUrl: "https://www.e-d-s.com.au/edsforms",
@@ -469,23 +468,23 @@ export const brands = [
       {
         name: "Data loggers",
         items: [
-          { name: "iLab Sonde", note: "Multi-parameter handheld", image: img("1646985839293-JEU2J0L39QDZ6EU3D8BY/ilab+and+sensor.jpg", 500) },
-          { name: "EPM-2", note: "Portable 4G pressure logger", image: img("1628560763342-C4I2TR79RPS5S9DQUD7B/EPM-2.png", 500) },
-          { name: "Metalog", note: "4G data logger", image: img("1578638030236-W8APTFUS6T4ICOK4TXV0/GRT101-GPRS-4G-LTE-battery-supply-wireless.jpg", 500) },
-          { name: "EMS-003", note: "Dual channel logger", image: img("1459902365327-0S0DDP76MO9SOW6S43GY/003d.jpg", 500) },
-          { name: "EMS-050D", note: "Multi-channel logger", image: img("1459902365353-OUP3XD107ZFV7F0VMN5O/050d.jpg", 500) },
-          { name: "Pump Station Manager", note: "PSM, the EDS flagship since 1991", image: img("1459902365961-X1BQKAYQB8ZHHEZ4S1YQ/psm.jpg", 500) },
+          { name: "iLab Sonde", note: "Multi-parameter handheld", image: img("ilab-and-sensor.jpg") },
+          { name: "EPM-2", note: "Portable 4G pressure logger", image: img("epm-2.png") },
+          { name: "Metalog", note: "4G data logger", image: img("grt101-gprs-4g-lte-battery-supply-wireless.jpg") },
+          { name: "EMS-003", note: "Dual channel logger", image: img("003d.jpg") },
+          { name: "EMS-050D", note: "Multi-channel logger", image: img("050d.jpg") },
+          { name: "Pump Station Manager", note: "PSM, the EDS flagship since 1991", image: img("psm.jpg") },
         ],
       },
       {
         name: "Sensors",
         items: [
-          { name: "E-Flow", note: "Flow sensor", image: img("1633475831028-32OYSE3EMEZP9G5TBJVV/eflow+4.png", 500) },
-          { name: "iLab 901", note: "Multi-parameter analytical sensor", image: img("1646985965707-0J4J0HVIEJ8QIFUOG66G/iLab+901+Multitparameter+Analytical+Sensor+2.gif", 500) },
-          { name: "Ultrasonic Level", note: "Level sensor", image: img("1591155447513-JW3JL7LYYBIX1A6KARE8/Ultrasonic+Level+Sensor+Image+2.jpg", 500) },
-          { name: "EC", note: "Electro-conductivity sensor", image: img("1591155516050-OBVEFOWS9WSO4OLN239G/COS41.jpg", 500) },
-          { name: "pH", note: "pH sensor", image: img("1591155547498-08MKOZGIN4YE7GLA6F9D/EDS+pH+sensor.jpg", 500) },
-          { name: "Turbidity", note: "Turbidity sensor", image: img("1591155665886-1T1I1DHQP256S236CCW0/Turbidity+Sensor.jpg", 500) },
+          { name: "E-Flow", note: "Flow sensor", image: img("eflow-4.png") },
+          { name: "iLab 901", note: "Multi-parameter analytical sensor", image: img("ilab-901-multitparameter-analytical-sensor-2.gif") },
+          { name: "Ultrasonic Level", note: "Level sensor", image: img("ultrasonic-level-sensor-image-2.png") },
+          { name: "EC", note: "Electro-conductivity sensor", image: img("cos41.jpg") },
+          { name: "pH", note: "pH sensor", image: img("eds-ph-sensor.jpg") },
+          { name: "Turbidity", note: "Turbidity sensor", image: img("turbidity-sensor.jpg") },
         ],
       },
     ],
@@ -498,8 +497,8 @@ export const brands = [
     icon: "radar",
     tag: "Sewer and wastewater network monitoring",
     summary: "Ultrasonic flow, level and water quality instruments engineered for sewer networks.",
-    logo: img("457f03c9-ffbb-4c6f-84e4-d6a07b2fdfd1/detectronic_logocolour.png", 300),
-    cover: img("9794253a-54c8-4800-97bf-e5211acfeb06/LIDoTT-Sensor-R_1.png", 500),
+    logo: img("detectronic-logocolour.png"),
+    cover: img("lidott-sensor-r-1.png"),
     intro: [
       "Detectronic is a specialist in sewer and wastewater network monitoring and management, focused on measuring, recording, reporting and reacting to wastewater depths and flow rates.",
       "Detectronic designs and manufactures a comprehensive range of advanced ultrasonic flow, level and water quality monitoring instruments, engineered for the accurate monitoring of sewerage networks, wastewater systems and trade effluent.",
@@ -509,11 +508,11 @@ export const brands = [
       {
         name: "Flow, level and logging",
         items: [
-          { name: "MSFM", note: "Rugged 4G area velocity flow meter", image: img("1637461222364-EM8WNH5SOZQ1KFP2O5ON/S2.5_04-small-766x1024.png", 500) },
-          { name: "LIDoTT Smart", note: "Long life, rugged 4G patented level monitor", image: img("1637461233536-O767AA60D0DN7IN1LW28/DETE01-01.24-600x452.png", 500) },
-          { name: "LIDoTT Alarm", note: "Self contained level measurement and alarm device", image: img("7c2fa6df-85fb-47c0-9b25-4b63bb4f46a3/lidott+alarm+3.png", 500), href: "products/lidott-alarm.html" },
-          { name: "LIDoTT R", note: "High-precision radar and pressure sensor for continuous monitoring", image: img("9794253a-54c8-4800-97bf-e5211acfeb06/LIDoTT-Sensor-R_1.png", 500) },
-          { name: "Multi Channel Data Loggers", note: "Rugged remote multichannel loggers", image: img("8f65a079-e6dd-480a-b84a-29b791bda564/new-2-channel-logger-1001x1024.jpg", 500) },
+          { name: "MSFM", note: "Rugged 4G area velocity flow meter", image: img("s2.5-04-small-766x1024.png") },
+          { name: "LIDoTT Smart", note: "Long life, rugged 4G patented level monitor", image: img("dete01-01.24-600x452.png") },
+          { name: "LIDoTT Alarm", note: "Self contained level measurement and alarm device", image: img("lidott-alarm-3.png"), href: "products/lidott-alarm.html" },
+          { name: "LIDoTT R", note: "High-precision radar and pressure sensor for continuous monitoring", image: img("lidott-sensor-r-1.png") },
+          { name: "Multi Channel Data Loggers", note: "Rugged remote multichannel loggers", image: img("new-2-channel-logger-1001x1024.jpg") },
         ],
       },
     ],
@@ -525,7 +524,7 @@ export const brands = [
     icon: "flask-conical",
     tag: "ATEX and IECEx certified sampling",
     summary: "Rugged mobile and stationary samplers from the world's leading maker of certified sampling systems.",
-    logo: img("1508197238481-M5WR7IKS1Y6BT0OW4BV3/ori-logo.gif", 300),
+    logo: img("ori-logo.png"),
     intro: [
       "EDS is proud to offer the trusted ORI product range across Australia, in an established partnership that continues to deliver exceptional results in the field. Together, EDS and ORI provide some of the most rugged, reliable and high-performance equipment available.",
       "For over 60 years, ORI has been a global leader in manufacturing sampling, measuring and laboratory equipment. A 100% family-owned company, ORI is recognised as the world's leading manufacturer of ATEX and IECEx certified sampling systems.",
@@ -534,21 +533,21 @@ export const brands = [
       {
         name: "Mobile samplers",
         items: [
-          { name: "Aqua Mini", image: img("1743720930492-KKHKNM4FYZQNJFQWRSIU/aquasamp-mini-teaser.png", 500) },
-          { name: "NEMO 1 MH", image: img("1747794112970-KJX4HI0NDADYCLLG7UY7/NEMO-1-MH.png", 500) },
-          { name: "NEMO 1 M PP", image: img("1747794128834-FKPNTECLQTGVHAYNDX3Z/csm_nemo1-m-pp_6a7052503d.png", 500) },
-          { name: "NEMO 1 M V", image: img("1747794301625-U5Y68202X2TOG2E8X8AZ/csm_nemo1-m-vac_6a5f2d98ac.png", 500) },
-          { name: "Basic Mobil", image: img("1747794357485-PZDN55N5TNETJHES6NFC/Basic-mobil.png", 500) },
+          { name: "Aqua Mini", image: img("aquasamp-mini-teaser.png") },
+          { name: "NEMO 1 MH", image: img("nemo-1-mh.png") },
+          { name: "NEMO 1 M PP", image: img("csm-nemo1-m-pp-6a7052503d.png") },
+          { name: "NEMO 1 M V", image: img("csm-nemo1-m-vac-6a5f2d98ac.png") },
+          { name: "Basic Mobil", image: img("basic-mobil.png") },
         ],
       },
       {
         name: "Measuring technology",
         items: [
-          { name: "Mlog", note: "Multitool logger", image: img("1508203074153-M0S1MLGEAF0BF8IKEFM3/mlog-Multitool_Logger_GPS_01.jpg", 500) },
-          { name: "Mlog Z2", note: "ATEX and IECEx", image: img("1508217893453-IKWI1LSLDUUM3YAKQKQ8/ATEX+Mlog.jpg", 500) },
-          { name: "iLink", note: "1-wire Bluetooth", image: img("1508219217308-IEJERDINK4F3CF45F4DL/iLink.jpg", 500) },
-          { name: "X-zone Com", note: "Gas monitoring", image: img("1508219642822-QDBF9I00NG71NRC64SR1/X-zone+Com.jpg", 500) },
-          { name: "Optical", note: "Optical sensors", image: img("1508220599227-VEZAM8TJ90OQDHOYKWLM/Ori+Optical.png", 500) },
+          { name: "Mlog", note: "Multitool logger", image: img("mlog-multitool-logger-gps-01.jpg") },
+          { name: "Mlog Z2", note: "ATEX and IECEx", image: img("atex-mlog.jpg") },
+          { name: "iLink", note: "1-wire Bluetooth", image: img("ilink.jpg") },
+          { name: "X-zone Com", note: "Gas monitoring", image: img("x-zone-com.jpg") },
+          { name: "Optical", note: "Optical sensors", image: img("ori-optical.png") },
         ],
       },
     ],
@@ -570,21 +569,21 @@ export const brands = [
       {
         name: "Loggers",
         items: [
-          { name: "FL1500 Logger", image: img("1504665035031-N45TK6R8GIK3ZG4IYFAM/landing-fl1500-2.jpg", 500) },
-          { name: "FH950 Velocity Meter", image: img("1459728196179-JV31WIIBWXFJS1YQRC7T/landing-fh950.jpg", 500) },
-          { name: "FL900 Portable", image: img("1459728165986-JBZBQ4XMIO480AKLFCDA/landing-fl900+2.jpg", 500) },
-          { name: "SC200 Controller", image: img("1459728232605-7FJ5R74O435O38QF7O4E/landing-sc200.jpg", 500) },
-          { name: "Flo-Station", image: img("1459728045937-5QQHTMOPEHMBV9453P6R/landing-flo-station.jpg", 500) },
+          { name: "FL1500 Logger", image: img("landing-fl1500-2.jpg") },
+          { name: "FH950 Velocity Meter", image: img("landing-fh950.jpg") },
+          { name: "FL900 Portable", image: img("landing-fl900-2.jpg") },
+          { name: "SC200 Controller", image: img("landing-sc200.jpg") },
+          { name: "Flo-Station", image: img("landing-flo-station.jpg") },
         ],
       },
       {
         name: "Sensors",
         items: [
-          { name: "Flo-Dar", note: "Non-contact", image: img("1459730127768-S03YDB1P5ZN68JKJPOC2/landing-flo-dar-1.jpg", 500) },
-          { name: "Sub AV Sensor", image: img("1459730157101-JPWWCA702LLWUTWFSHH1/landing-sigma-av.jpg", 500) },
-          { name: "Flo-Tote 3", image: img("1459730184309-64L1SFIOQHAEV6SXOUUA/landing-flo-tote.jpg", 500) },
-          { name: "AV Flow Sensor with Bubbler", image: img("1459730202341-EI2UDYKJX5R0U0FMCOB3/landing-sigma-av-bubbler.jpg", 500) },
-          { name: "Ultrasonic Sensors", image: img("1459730210914-I35NIYM61J8BDCO6KAG8/landing-sigma-ultrasonic.jpg", 500) },
+          { name: "Flo-Dar", note: "Non-contact", image: img("landing-flo-dar-1.jpg") },
+          { name: "Sub AV Sensor", image: img("landing-sigma-av.jpg") },
+          { name: "Flo-Tote 3", image: img("landing-flo-tote.jpg") },
+          { name: "AV Flow Sensor with Bubbler", image: img("landing-sigma-av-bubbler.jpg") },
+          { name: "Ultrasonic Sensors", image: img("landing-sigma-ultrasonic.jpg") },
         ],
       },
     ],
@@ -597,7 +596,7 @@ export const brands = [
     icon: "thermometer",
     tag: "Temperature data logging",
     summary: "Temperature loggers, thermistor strings and cloud data, proven in the extremes of Alaska.",
-    logo: img("e61b03fd-912c-418f-b249-63f32215a896/logo-dark.png", 300),
+    logo: img("logo-dark.png"),
     intro: [
       "EDS is proud to represent Beadedstream, a leader in temperature data logging and monitoring. The partnership lets us offer loggers, sensors and data monitoring systems designed to measure air, soil and water temperatures in the most challenging environments.",
       "Beadedstream's products are renowned for their reliability, having been tested and proven in the extreme conditions of Alaska. They provide accurate, dependable temperature data for scientific research, industrial process monitoring and remote locations.",
@@ -606,12 +605,12 @@ export const brands = [
       {
         name: "Product range",
         items: [
-          { name: "D605", note: "Logger", image: img("1719801753047-UNQTO3EP1WJU03NPXNAW/front-view-of-beadedstream-D605-temperature-data-logger-without-antenna.png", 500) },
-          { name: "Spot Logger", note: "Logger", image: img("1719801790428-CFSQELCLH9WZW8IONY6O/Spot-Logger-side-view-with-Raymo-connector.png", 500) },
-          { name: "Thermistor String", note: "Sensor", image: img("1719801904192-PQV2GU64K5OJKAB8E7QE/standard-dtc-bar-code-144+%281%29.jpg", 500) },
-          { name: "Mlink", note: "Connectivity", image: img("1719801965788-EAMER3P1KEN7G5GFQXGA/beadedstream-Mlink-temperature-data-logger-connector.png", 500) },
-          { name: "Capture Mobile App", note: "Connectivity", image: img("1723010672539-UFUORHNMFG6SW12EUMAQ/beadedstream-Capture-iOS-App+%281%29.png", 500) },
-          { name: "Beadedcloud Data", note: "Connectivity", image: img("1723010600072-F6TJC1TRL0ZEPFVCFVS7/beadedcloud-dashboard-in-all-devices+%281%29.png", 500) },
+          { name: "D605", note: "Logger", image: img("front-view-of-beadedstream-d605-temperature-data-logger-without-antenna.png") },
+          { name: "Spot Logger", note: "Logger", image: img("spot-logger-side-view-with-raymo-connector.png") },
+          { name: "Thermistor String", note: "Sensor", image: img("standard-dtc-bar-code-144-1.jpg") },
+          { name: "Mlink", note: "Connectivity", image: img("beadedstream-mlink-temperature-data-logger-connector.png") },
+          { name: "Capture Mobile App", note: "Connectivity", image: img("beadedstream-capture-ios-app-1.png") },
+          { name: "Beadedcloud Data", note: "Connectivity", image: img("beadedcloud-dashboard-in-all-devices-1.png") },
         ],
       },
     ],
@@ -630,9 +629,9 @@ export const brands = [
       {
         name: "MICROSAMPLER range",
         items: [
-          { name: "MICROSAMPLER 10P", note: "Portable composite sampler for wastewater, factory drains, manholes and water canals", image: img("7b92c2e4-3011-429d-8f01-2939c64ba455/6d2b2a76351a2d8f5edefdcc12c5ea49.png", 500) },
-          { name: "MICROSAMPLER 10B", note: "Fixed composite sampling unit for industrial wastewater, manholes, streams and channels", image: img("b3d038f7-4ca5-4df7-b505-0dc581917ffb/0d15002ac7d0c03f9837eecc2143e2ce.png", 500) },
-          { name: "MICROSAMPLER 10R", note: "Stationary refrigerated composite sampling unit", image: img("5789d9a2-b1d8-4410-a18a-fe8f1f0d0981/4830446c6b2ce4c663ab9e4c3a0b1c51.png", 500) },
+          { name: "MICROSAMPLER 10P", note: "Portable composite sampler for wastewater, factory drains, manholes and water canals", image: img("6d2b2a76351a2d8f5edefdcc12c5ea49.png") },
+          { name: "MICROSAMPLER 10B", note: "Fixed composite sampling unit for industrial wastewater, manholes, streams and channels", image: img("0d15002ac7d0c03f9837eecc2143e2ce.png") },
+          { name: "MICROSAMPLER 10R", note: "Stationary refrigerated composite sampling unit", image: img("4830446c6b2ce4c663ab9e4c3a0b1c51.png") },
         ],
       },
     ],
@@ -653,7 +652,7 @@ export const brands = [
       {
         name: "The analyser",
         items: [
-          { name: "Aquamonitrix", note: "Nitrate and nitrite, rugged and portable", image: img("1629683865136-I4FFA28JMOIZP8FR8OVL/Picture+1.png", 500) },
+          { name: "Aquamonitrix", note: "Nitrate and nitrite, rugged and portable", image: img("picture-1.png") },
         ],
       },
     ],
@@ -674,12 +673,12 @@ export const brands = [
       {
         name: "Select your technology",
         items: [
-          { name: "UltraD", image: img("1538529779994-8ZJWJWK3EU2KOYRATC5K/i_ultrad.jpg", 500) },
-          { name: "Ultra F", image: img("1537924846348-53YJTS0RRG6V4ICC7KNX/ultrasonicBulk_2.jpg", 500) },
-          { name: "Insertion Flow Meter", image: img("1537924834377-23GU6LJ5NLUURH9TAEGC/hot-tapped.png", 500) },
-          { name: "3 in 1", image: img("1537924841702-PYQRADZ4QMDL8P2YX3T0/p_3in1_bulk1.jpg", 500) },
-          { name: "UltraD Small", image: img("1537924845642-PA41J33P02IX8MCW67DG/ultraD_small_1.png", 500) },
-          { name: "Flow Meter", note: "Clamp-on", image: img("1538529705505-Q0B2T4478BW2QU9YZN7C/i_doppler_clamp.jpg", 500) },
+          { name: "UltraD", image: img("i-ultrad.jpg") },
+          { name: "Ultra F", image: img("ultrasonicbulk-2.jpg") },
+          { name: "Insertion Flow Meter", image: img("hot-tapped.png") },
+          { name: "3 in 1", image: img("p-3in1-bulk1.jpg") },
+          { name: "UltraD Small", image: img("ultrad-small-1.png") },
+          { name: "Flow Meter", note: "Clamp-on", image: img("i-doppler-clamp.jpg") },
         ],
       },
     ],
@@ -690,8 +689,8 @@ export const lidott = {
   title: "LIDoTT Alarm",
   maker: "Detectronic",
   lede: "Self contained water level measurement and alarm device.",
-  image: img("7c2fa6df-85fb-47c0-9b25-4b63bb4f46a3/lidott+alarm+3.png", 750),
-  image2: img("eeef91b6-8aec-4df0-9b89-36efc230b12e/LIDoTT-Alarm-interior-drawing-web.jpg", 750),
+  image: img("lidott-alarm-3.png"),
+  image2: img("lidott-alarm-interior-drawing-web.jpg"),
   datasheet: doc("/s/MMS-D050-LIDoTT-Alarm-iss3.pdf"),
   highlights: [
     ["radar", "Radar sensor", "5° beam angle"],
@@ -777,23 +776,23 @@ export const industries = [
 ];
 
 export const clients = [
-  ["Downer", "1504664732157-8NP27O8B3579GOS4KPDI/downer-logo+%281%29.jpg"],
-  ["Ventia", "1504167896343-ESI004TWVE7F1714U3TK/ventia_700x474.jpg"],
-  ["Bureau of Meteorology", "1471147991602-04VYSB1Y8FAT9ETOZZMM/BOM+logo.jpg"],
-  ["Yarra Valley Water", "1504167953430-SJQXFX3F55PFJWPZTVCO/ca34899d3c8b2ded21aa822515a7cc4a-bpfull.jpg"],
-  ["Spotless", "1504167848064-LWBNOWOR6U2UI93NR2UJ/spotless_logo_rgbD31062CF1BDC.jpg"],
-  ["Urban Utilities", "1504167980612-PX71C5JRJBL8ORZ1A7ME/image_gallery.jpeg"],
-  ["Aurecon", "1504167998940-QF8AF8T6JS7VIN368AOG/download+%281%29.png"],
-  ["Stantec", "1551927332081-RDI0EZSFJJFK85GZJ9R2/images.png"],
-  ["Blue Siren", "1504168016563-091IOZO5T440BYSJ8V6Y/products_sensors_logo.png"],
-  ["Water Corporation", "1504168045760-RPJWASALU4425L83DLA5/pdf-footer-logo.png"],
-  ["Hach", "1504168059953-JE76267KJVPYNFKJUCKO/csm_HACH_Flow_logo_NEW_BLUE__MM-Sigma_.jpg_542ca4a133.jpg"],
-  ["Transurban", "1551927472070-D78LPHJO0NSJ7L7Y9VZE/TCL.png"],
-  ["GHD", "1504168153189-0ED8LSJKXDWU8JM7C9YP/Logo_Option_1.jpg"],
-  ["SMEC", "1504168095096-H02T1MMI6D0OUYJXGZ8R/2059180_162002_SMEC+%28colour+JPEG+file%29.jpg"],
-  ["EDS client", "1504168106382-E0U2G71FHUDBWDL0HVNG/CDD.png"],
-  ["Veolia", "1504168119635-YRJEMEHYFFFHMXQI31AQ/download.png"],
-].map(([name, path]) => ({ name, src: img(path, 300) }));
+  ["Downer", "client-downer.jpg"],
+  ["Ventia", "client-ventia.jpg"],
+  ["Bureau of Meteorology", "client-bureau-of-meteorology.jpg"],
+  ["Yarra Valley Water", "client-yarra-valley-water.jpg"],
+  ["Spotless", "client-spotless.jpg"],
+  ["Urban Utilities", "client-urban-utilities.jpeg"],
+  ["Aurecon", "client-aurecon.png"],
+  ["Stantec", "client-stantec.png"],
+  ["Blue Siren", "client-blue-siren.png"],
+  ["Water Corporation", "client-water-corporation.png"],
+  ["Hach", "client-hach.jpg"],
+  ["Transurban", "client-transurban.jpg"],
+  ["GHD", "client-ghd.jpg"],
+  ["SMEC", "client-smec.jpg"],
+  ["EDS client", "client-eds-client.png"],
+  ["Veolia", "client-veolia.png"],
+].map(([name, file]) => ({ name, src: img(file) }));
 
 /* ------------------------------------------------------------------ */
 /* Resources                                                           */

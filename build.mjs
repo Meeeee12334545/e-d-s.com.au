@@ -174,7 +174,6 @@ function layout({ file, title, description, current, body, scripts = [] }) {
 <link rel="icon" type="image/svg+xml" href="${r}assets/favicon.svg">
 <link rel="preload" href="${r}assets/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="${r}assets/fonts/inter-tight-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preconnect" href="https://images.squarespace-cdn.com">
 <script>document.documentElement.classList.add("js")</script>
 <link rel="stylesheet" href="${r}assets/css/site.css">
 </head>
@@ -188,7 +187,7 @@ ${footer(r)}
 ${scripts.map((s) => `<script src="${r}assets/js/${s}" defer></script>`).join("\n")}
 </body>
 </html>
-`;
+`.replaceAll("@root/", r);
 }
 
 /* ------------------------------------------------------------------ */
@@ -525,8 +524,8 @@ ${labSection()}
       ${C.industries.map(([ic, t, d]) => `<div class="holder"><span class="card-icon">${icon(ic)}</span><h3>${t}</h3><p>${d}</p></div>`).join("")}
     </div>
     <div class="certs" data-reveal>
-      <img src="${C.img("1518075483439-SRAU6TSQ7OETI96OPVL9/Ex-Logo.gif", 300)}" alt="Ex hazardous area mark" loading="lazy">
-      <img src="${C.img("1518075440932-GKTJMKCR98P0QLSCRMML/iecex_.png", 300)}" alt="IECEx" loading="lazy">
+      <img src="${C.img("ex-logo.gif")}" alt="Ex hazardous area mark" loading="lazy">
+      <img src="${C.img("iecex.png")}" alt="IECEx" loading="lazy">
       <p><strong>Certified for hazardous areas.</strong> EDS supplies intrinsically safe equipment certified under ATEX and IECEx, including Zone 0 instruments for sewer environments.</p>
     </div>
   </div>
@@ -923,6 +922,7 @@ await rm(DIST, { recursive: true, force: true });
 await mkdir(path.join(DIST, "assets/fonts"), { recursive: true });
 await cp(path.join(ROOT, "src/css"), path.join(DIST, "assets/css"), { recursive: true });
 await cp(path.join(ROOT, "src/js"), path.join(DIST, "assets/js"), { recursive: true });
+await cp(path.join(ROOT, "src/assets/img"), path.join(DIST, "assets/img"), { recursive: true });
 for (const [pkg, f] of [["inter", "inter-latin-wght-normal.woff2"], ["inter-tight", "inter-tight-latin-wght-normal.woff2"]]) {
   await cp(path.join(ROOT, `node_modules/@fontsource-variable/${pkg}/files/${f}`), path.join(DIST, "assets/fonts", f));
 }
