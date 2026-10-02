@@ -131,7 +131,7 @@ ul { margin: 0; padding: 0; list-style: none; }
   color: #fff; transition: background-color .3s var(--ease), box-shadow .3s var(--ease), backdrop-filter .3s;
 }
 .header.scrolled { background: rgba(5, 28, 26, .82); backdrop-filter: blur(16px) saturate(1.4); -webkit-backdrop-filter: blur(16px) saturate(1.4); box-shadow: 0 1px 0 var(--line-dark); }
-.header .wrap { height: 100%; display: flex; align-items: center; gap: 28px; }
+.header .wrap { position: relative; height: 100%; display: flex; align-items: center; gap: 28px; }
 .logo { display: flex; align-items: center; flex: none; }
 .logo img { height: 40px; width: auto; }
 .nav { display: flex; align-items: center; gap: 2px; margin-left: auto; }
@@ -159,6 +159,12 @@ ul { margin: 0; padding: 0; list-style: none; }
 .mega a:hover { background: rgba(255, 255, 255, .08); color: #fff; }
 .mega a .icon { font-size: 18px; color: var(--aqua); }
 .mega .mega-all { grid-column: 1 / -1; margin-top: 6px; border-top: 1px solid var(--line-dark); border-radius: 0 0 12px 12px; color: var(--aqua); }
+/* Services: one titled column per group, too wide to hang off its button, so
+   it is centred under the header instead. */
+.nav-item.wide { position: static; }
+.mega.groups { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0 6px; width: min(1040px, 100% - var(--gutter) * 2); top: calc(50% + 28px); }
+.mega.groups::before { inset: -20px 0 auto 0; height: 20px; }
+.mega-head { padding: 10px 12px 6px; font-size: .72rem; font-weight: 650; letter-spacing: .14em; text-transform: uppercase; color: var(--on-dark-faint); }
 .header-cta { display: flex; align-items: center; gap: 10px; flex: none; }
 .header-phone { display: inline-flex; align-items: center; gap: 8px; font-weight: 650; font-size: .95rem; padding: 9px 12px; border-radius: 999px; }
 .header-phone:hover { background: rgba(255, 255, 255, .1); }
@@ -186,6 +192,7 @@ ul { margin: 0; padding: 0; list-style: none; }
 .drawer details a { display: flex; gap: 12px; align-items: center; padding: 10px 4px; color: var(--on-dark-soft); font-size: 1rem; }
 .drawer details a .icon { color: var(--aqua); }
 .drawer details > div { padding-bottom: 12px; }
+.drawer-sub { padding: 14px 4px 2px; font-size: .72rem; font-weight: 650; letter-spacing: .14em; text-transform: uppercase; color: var(--on-dark-faint); }
 .drawer .btn { justify-content: center; margin-top: 14px; }
 
 .progress { position: fixed; inset: 0 0 auto 0; height: 2px; z-index: 110; background: var(--aqua); transform-origin: 0 50%; scale: 0 1; pointer-events: none; }
