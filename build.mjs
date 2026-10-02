@@ -98,7 +98,7 @@ function header(r, current) {
   <div class="progress" aria-hidden="true"></div>
   <header class="header">
     <div class="wrap">
-      <a class="logo" href="${r}index.html" aria-label="EDS home"><img src="${site.logoWhite}" alt="EDS, Environmental Data Services" width="126" height="40"></a>
+      <a class="logo" href="${r}index.html" aria-label="EDS home"><img src="${site.logoWhite}" alt="EDS, Environmental Data Services" width="148" height="56"></a>
       <nav class="nav" aria-label="Main">
         ${mega("Services", "services", { groups: sGroups }, { href: "services/index.html", label: "All services" })}
         ${mega("Solutions", "solutions", { items: oItems }, { href: "solutions/index.html", label: "All solutions" })}
@@ -119,7 +119,7 @@ function header(r, current) {
     <div class="drawer-scrim"></div>
     <div class="drawer-panel">
       <div class="drawer-head">
-        <a class="logo" href="${r}index.html"><img src="${site.logoWhite}" alt="EDS" width="126" height="40"></a>
+        <a class="logo" href="${r}index.html"><img src="${site.logoWhite}" alt="EDS" width="148" height="56"></a>
         <button class="burger drawer-close" style="display:inline-flex" aria-label="Close menu">${icon("x", false)}</button>
       </div>
       <button class="drawer-search" type="button" data-search-open>${icon("search", false)}<span>Search products, services, documents</span></button>
