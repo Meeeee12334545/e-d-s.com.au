@@ -105,14 +105,14 @@
 
     // measured flow
     const g = ctx.createLinearGradient(0, T, 0, T + ph);
-    g.addColorStop(0, "rgba(94,234,212,.42)"); g.addColorStop(1, "rgba(94,234,212,0)");
+    g.addColorStop(0, "rgba(114,202,187,.42)"); g.addColorStop(1, "rgba(114,202,187,0)");
     ctx.beginPath();
     hist.forEach((p, i) => (i ? ctx.lineTo(X(p.t), Y(p.q)) : ctx.moveTo(X(p.t), Y(p.q))));
     ctx.lineTo(X(hist[hist.length - 1].t), T + ph); ctx.lineTo(X(hist[0].t), T + ph); ctx.closePath();
     ctx.fillStyle = g; ctx.fill();
     ctx.beginPath();
     hist.forEach((p, i) => (i ? ctx.lineTo(X(p.t), Y(p.q)) : ctx.moveTo(X(p.t), Y(p.q))));
-    ctx.strokeStyle = "#5eead4"; ctx.lineWidth = 2.2; ctx.lineJoin = "round"; ctx.stroke();
+    ctx.strokeStyle = "#72cabb"; ctx.lineWidth = 2.2; ctx.lineJoin = "round"; ctx.stroke();
 
     // expected dry weather flow
     ctx.beginPath(); ctx.setLineDash([4, 4]);
@@ -121,8 +121,8 @@
 
     // now
     const last = hist[hist.length - 1];
-    ctx.fillStyle = "#5eead4"; ctx.beginPath(); ctx.arc(X(last.t), Y(last.q), 4, 0, 7); ctx.fill();
-    ctx.strokeStyle = "rgba(94,234,212,.35)"; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(X(last.t), Y(last.q), 7, 0, 7); ctx.stroke();
+    ctx.fillStyle = "#72cabb"; ctx.beginPath(); ctx.arc(X(last.t), Y(last.q), 4, 0, 7); ctx.fill();
+    ctx.strokeStyle = "rgba(114,202,187,.35)"; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(X(last.t), Y(last.q), 7, 0, 7); ctx.stroke();
   }
 
   /* ---- readouts + pipe section ---- */

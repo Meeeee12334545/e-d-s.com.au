@@ -253,14 +253,14 @@ const labSection = ({ eyebrow = "Flow lab", title = "See what a storm does to a 
         <svg id="lab-pipe" viewBox="0 0 200 200" role="img" aria-label="Cross-section of a sewer pipe showing the water depth">
           <defs>
             <clipPath id="lab-clip"><circle cx="100" cy="100" r="80"/></clipPath>
-            <linearGradient id="lab-wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5eead4" stop-opacity=".85"/><stop offset="1" stop-color="#0d7c72" stop-opacity=".9"/></linearGradient>
+            <linearGradient id="lab-wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#72cabb" stop-opacity=".85"/><stop offset="1" stop-color="#0d7c72" stop-opacity=".9"/></linearGradient>
           </defs>
           <circle cx="100" cy="100" r="87" fill="#0b302d" stroke="rgba(255,255,255,.22)" stroke-width="2"/>
           <g clip-path="url(#lab-clip)">
             <rect width="200" height="200" fill="#020c0b"/>
             <rect id="lab-water" x="0" y="120" width="200" height="60" fill="url(#lab-wg)"/>
             <g id="lab-arrows" class="lab-arrows"><line x1="20" y1="92" x2="180" y2="92"/><line x1="20" y1="100" x2="180" y2="100"/><line x1="20" y1="108" x2="180" y2="108"/></g>
-            <line id="lab-surface" x1="0" x2="200" y1="120" y2="120" stroke="#d9fff8" stroke-width="2"/>
+            <line id="lab-surface" x1="0" x2="200" y1="120" y2="120" stroke="#dff6f2" stroke-width="2"/>
           </g>
         </svg>
         <div class="readouts">
@@ -281,19 +281,19 @@ const lidottDemo = () => `
   <div class="panel">
     <div class="panel-head"><div class="panel-title">${icon("radar", false)} Drag the water level</div></div>
     <svg id="lidott-svg" viewBox="0 0 360 420" data-level="0" role="img" aria-label="Cross-section of a manhole with a LIDoTT Alarm measuring the water level by radar">
-      <defs><linearGradient id="lid-wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5eead4" stop-opacity=".8"/><stop offset="1" stop-color="#0d7c72"/></linearGradient></defs>
+      <defs><linearGradient id="lid-wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#72cabb" stop-opacity=".8"/><stop offset="1" stop-color="#0d7c72"/></linearGradient></defs>
       <rect x="0" y="40" width="360" height="380" fill="#0b302d"/>
       <rect x="0" y="34" width="360" height="8" fill="#14605a"/>
       <rect x="100" y="42" width="160" height="340" fill="#020c0b"/>
       <rect x="0" y="330" width="100" height="50" fill="#020c0b"/><rect x="260" y="330" width="100" height="50" fill="#020c0b"/>
       <rect id="lid-water" x="0" y="300" width="360" height="80" fill="url(#lid-wg)" clip-path="url(#lid-clip)"/>
       <clipPath id="lid-clip"><rect x="100" y="42" width="160" height="340"/><rect x="0" y="330" width="100" height="50"/><rect x="260" y="330" width="100" height="50"/></clipPath>
-      <polygon id="lid-beam" points="180,96 170,300 190,300" fill="rgba(94,234,212,.22)" stroke="rgba(94,234,212,.7)" stroke-dasharray="3 4"/>
+      <polygon id="lid-beam" points="180,96 170,300 190,300" fill="rgba(114,202,187,.22)" stroke="rgba(114,202,187,.7)" stroke-dasharray="3 4"/>
       <line x1="100" x2="260" y1="225" y2="225" stroke="#f59e0b" stroke-dasharray="5 5"/><text x="268" y="229" fill="#f59e0b" font-size="11" font-weight="600">High 2.0 m</text>
       <line x1="100" x2="260" y1="147.500" y2="147.500" stroke="#ef4444" stroke-dasharray="5 5"/><text x="268" y="151" fill="#ef4444" font-size="11" font-weight="600">High-high 3.0 m</text>
       <rect x="92" y="28" width="176" height="12" rx="3" fill="#26313f" stroke="rgba(255,255,255,.3)"/>
       <rect x="168" y="42" width="24" height="10" fill="#8fa3c0"/>
-      <rect x="160" y="52" width="40" height="44" rx="8" fill="#e8f3f1" stroke="#5eead4" stroke-width="2"/>
+      <rect x="160" y="52" width="40" height="44" rx="8" fill="#e8f3f1" stroke="#72cabb" stroke-width="2"/>
       <circle class="lid-led" cx="180" cy="68" r="5" fill="#22c55e"/>
       <line id="lid-dim" x1="118" x2="118" y1="96" y2="300" stroke="rgba(255,255,255,.45)" stroke-dasharray="2 4"/>
       <text x="16" y="24" fill="rgba(255,255,255,.6)" font-size="11">Ground level</text>
@@ -328,7 +328,7 @@ function easDemo() {
       <line id="eas-needle" x1="200" y1="200" x2="200" y2="78" stroke="#fff" stroke-width="4" stroke-linecap="round" style="transition:transform .25s linear"/>
       <circle cx="200" cy="200" r="9" fill="#fff"/>
       <text id="eas-num" x="200" y="250" text-anchor="middle" fill="#fff" font-size="40" font-weight="650" font-family="Inter Tight, Inter, sans-serif">930</text>
-      <polyline id="eas-spark" fill="none" stroke="#5eead4" stroke-width="2" stroke-linejoin="round"/>
+      <polyline id="eas-spark" fill="none" stroke="#72cabb" stroke-width="2" stroke-linejoin="round"/>
       <text x="200" y="314" text-anchor="middle" fill="rgba(255,255,255,.5)" font-size="10">last 60 minutes</text>
     </svg>
   </div>
