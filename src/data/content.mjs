@@ -27,7 +27,6 @@ export const site = {
   logoWhite: img("eds-logo-white-large.png"),
   flowsenseUrl: "https://edsflowsense.au/",
   remoteDataUrl: "https://www.detecdata-en.com/",
-  staffUrl: "https://www.e-d-s.com.au/edsforms",
   legal: "EDS & DAUS Pty Ltd",
 };
 

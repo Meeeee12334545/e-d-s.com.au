@@ -165,7 +165,6 @@ function footer(r) {
             <li><a href="${r}resources.html">Resources</a></li>
             <li><a href="${r}contact.html">Contact</a></li>
             <li><a href="${site.remoteDataUrl}" rel="noopener">Remote data access</a></li>
-            <li><a href="${site.staffUrl}" rel="noopener">Staff login</a></li>
           </ul>
         </div>
         <div>
@@ -1225,7 +1224,6 @@ function searchIndex() {
   for (const o of C.offices) put("Offices", `${o.city}, ${o.state}`, o.note, "contact.html#offices", { i: "map-pin", b: "office location address branch" });
   put("Sign in", "Sign in to EDS FlowSense", "edsflowsense.au", site.flowsenseUrl, { i: "log-in", x: 1, b: "login platform" });
   put("Sign in", "Remote data access", "DetectData, for Detectronic instruments", site.remoteDataUrl, { i: "globe", x: 1, b: "login detecdata" });
-  put("Sign in", "Staff login", "For EDS staff", site.staffUrl, { i: "lock", x: 1, b: "login forms" });
 
   const icons = {};
   for (const name of new Set(items.map((e) => e.i).filter(Boolean).concat("arrow-right", "arrow-up-right", "search-x"))) { icon(name); icons[name] = iconCache.get(name); }
