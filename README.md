@@ -75,6 +75,7 @@ Other settings (`PORT`, `DATA_DIR`, `ANALYTICS_TZ`, `SESSION_SECRET`) are descri
 - **Brand.** FlowSense tokens: teal `#0c5f59` / `#14706a` / `#0d7c72`, Inter for body, Inter Tight for display.
 - **Icons.** Lucide only (https://github.com/lucide-icons/lucide, ISC), inlined at build time by `icon()` in `build.mjs`. Stroke 2, round caps. If Lucide lacks a glyph, draw one in the same style; do not mix in Phosphor or Heroicons.
 - **Icon motion.** Ideas after animate-ui (https://github.com/imskyleen/animate-ui), written from scratch in CSS because its licence does not allow copying. Gestures last about a second and carry their own rest. Use the individual `rotate` / `translate` / `scale` properties, never `transform`.
+- **Surface effects.** The card edge spotlight, the beam round the hero meter card and the drawn link underline follow VengeanceUI components (https://github.com/Ashutoshx7/VengeanceUI, MIT), rewritten in plain CSS. The film grain on dark bands, teal-tinted shadows, the home services bento and the sparing use of eyebrow labels follow taste-skill (https://github.com/Leonxlnx/taste-skill, MIT).
 - **Motion is full for everyone.** By EDS's decision (2 October 2026) the site always animates and has no reduced-motion mode or switch; it does not follow a device's Reduce Motion setting.
 - **Simulations are labelled.** The flow lab, LIDoTT demo, Asset Score dial and FlowSense screens are illustrations and say so on the page. Do not present them as live data, and do not use client site names in them.
 

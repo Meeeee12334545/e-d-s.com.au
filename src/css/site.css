@@ -52,9 +52,15 @@
   --line-dark: rgba(255, 255, 255, .1);
   --line-dark-strong: rgba(255, 255, 255, .2);
 
-  --shadow: 0 2px 8px rgba(5, 9, 15, .06), 0 1px 2px rgba(5, 9, 15, .04);
-  --shadow-md: 0 4px 16px rgba(5, 9, 15, .07), 0 2px 5px rgba(5, 9, 15, .04);
-  --shadow-lg: 0 18px 50px rgba(5, 9, 15, .12), 0 4px 12px rgba(5, 9, 15, .05);
+  /* shadows are tinted with the deep teal, so they read as one light source
+     on the brand rather than grey smudges */
+  --shadow: 0 2px 8px rgba(6, 48, 44, .07), 0 1px 2px rgba(6, 48, 44, .05);
+  --shadow-md: 0 4px 16px rgba(6, 48, 44, .08), 0 2px 5px rgba(6, 48, 44, .05);
+  --shadow-lg: 0 22px 50px -8px rgba(6, 48, 44, .18), 0 4px 12px rgba(6, 48, 44, .06);
+
+  /* fine film grain for the dark surfaces, so the large flat teals and
+     near-blacks do not look sterile (ideas after taste-skill, MIT) */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .2 -.06'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 
   --ease: cubic-bezier(.4, 0, .2, 1);
   --ease-out: cubic-bezier(.16, 1, .3, 1);
@@ -121,9 +127,13 @@ ul { margin: 0; padding: 0; list-style: none; }
 .btn-outline { border: 1px solid var(--border-strong); color: var(--ink); background: #fff; }
 .btn-outline:hover { border-color: var(--brand); color: var(--brand-dark); }
 .btn-lg { font-size: 1.02rem; padding: 1em 1.5em; }
-.link-arrow { display: inline-flex; align-items: center; gap: .4em; font-weight: 600; color: var(--brand-dark); }
+.link-arrow { position: relative; display: inline-flex; align-items: center; gap: .4em; font-weight: 600; color: var(--brand-dark); }
 .dark .link-arrow { color: var(--aqua); }
-.link-arrow:hover { text-decoration: underline; text-underline-offset: 4px; }
+/* The underline draws in from the left and leaves to the right (after
+   VengeanceUI's line-hover-link, MIT). A card's link draws when the card is
+   hovered, since the whole card is the link. */
+.link-arrow::after { content: ""; position: absolute; left: 0; right: 1.3em; bottom: -3px; height: 1.5px; border-radius: 2px; background: currentColor; scale: 0 1; transform-origin: 100% 50%; transition: scale .35s cubic-bezier(.7, 0, .2, 1); }
+:is(.link-arrow, a.card):is(:hover, :focus-visible) .link-arrow::after, .link-arrow:is(:hover, :focus-visible)::after { scale: 1 1; transform-origin: 0 50%; transition-timing-function: cubic-bezier(.4, 1, .8, 1); }
 
 /* ---------- header ---------- */
 .header {
@@ -202,7 +212,7 @@ ul { margin: 0; padding: 0; list-style: none; }
 /* ---------- section scaffolding ---------- */
 .section { padding-block: clamp(72px, 9vw, 128px); position: relative; }
 .section.alt { background: var(--bg-alt); }
-.dark { background: var(--deep); color: var(--on-dark-soft); }
+.dark { background: var(--grain), var(--deep); color: var(--on-dark-soft); }
 .dark h1, .dark h2, .dark h3, .dark h4 { color: #fff; }
 .eyebrow { display: inline-flex; align-items: center; gap: 10px; font-size: .78rem; font-weight: 650; letter-spacing: .14em; text-transform: uppercase; color: var(--brand); margin-bottom: 18px; }
 .eyebrow::before { content: ""; width: 26px; height: 2px; background: currentColor; border-radius: 2px; }
@@ -230,7 +240,7 @@ ul { margin: 0; padding: 0; list-style: none; }
 .hero-canvas, .page-hero canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -2; }
 .hero::after {
   content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
-  background: radial-gradient(90% 70% at 18% 42%, rgba(4, 21, 19, .82) 0%, rgba(4, 21, 19, .35) 55%, rgba(4, 21, 19, 0) 100%),
+  background: var(--grain), radial-gradient(90% 70% at 18% 42%, rgba(4, 21, 19, .82) 0%, rgba(4, 21, 19, .35) 55%, rgba(4, 21, 19, 0) 100%),
     linear-gradient(180deg, rgba(4, 21, 19, .5) 0%, rgba(4, 21, 19, 0) 30%, rgba(4, 21, 19, 0) 70%, var(--deep) 100%);
 }
 .hero-body { padding-bottom: clamp(36px, 6vw, 72px); }
@@ -259,6 +269,18 @@ ul { margin: 0; padding: 0; list-style: none; }
   backdrop-filter: blur(14px) saturate(1.3); -webkit-backdrop-filter: blur(14px) saturate(1.3);
   box-shadow: 0 30px 80px rgba(0, 0, 0, .45), inset 0 1px 0 rgba(255, 255, 255, .08);
 }
+/* A short beam of light circles the card's edge, as if the meter were
+   sending (after VengeanceUI's border-beam, MIT). */
+@property --beam { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+.live { position: relative; isolation: isolate; }
+.live::after {
+  content: ""; position: absolute; inset: -1px; border-radius: inherit; padding: 1.5px; pointer-events: none;
+  background: conic-gradient(from var(--beam), transparent 0 70%, rgba(95, 180, 166, .15) 80%, var(--aqua) 93%, #e6fffa 97%, transparent 98%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  animation: beam 7s linear infinite;
+}
+@keyframes beam { to { --beam: 360deg; } }
 .live-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .live-site { display: inline-flex; align-items: center; gap: 8px; font-size: .82rem; font-weight: 600; color: #fff; }
 .live-site .icon { font-size: 16px; color: var(--aqua); }
@@ -401,11 +423,22 @@ a.chip:hover { background: var(--aqua-soft); border-color: rgba(95, 180, 166, .5
 .card::before { content: ""; position: absolute; inset: 0; z-index: -1; opacity: 0; transition: opacity .3s var(--ease); background: radial-gradient(340px circle at var(--mx, 50%) var(--my, 0%), rgba(13, 124, 114, .13), transparent 65%); }
 a.card:hover, .card.hoverable:hover { border-color: rgba(13, 124, 114, .45); box-shadow: var(--shadow-lg); translate: 0 -4px; }
 .card:hover::before { opacity: 1; }
+/* ...and lights the edge nearest the pointer: a 1px ring masked out of a
+   radial glow (after VengeanceUI's glow-border-card, MIT). */
+.card::after, .quote::after {
+  content: ""; position: absolute; inset: 0; z-index: 1; border-radius: inherit; padding: 1.5px; pointer-events: none;
+  background: radial-gradient(240px circle at var(--mx, 50%) var(--my, 0%), var(--edge, rgba(13, 124, 114, .75)), transparent 70%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  opacity: 0; transition: opacity .3s var(--ease);
+}
+.card:hover::after, .quote:hover::after { opacity: 1; }
+.dark .card, .quote { --edge: rgba(150, 230, 216, .8); }
 .card-icon { width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center; font-size: 24px; color: var(--brand); background: rgba(13, 124, 114, .09); transition: background-color .25s var(--ease), color .25s var(--ease); }
 a.card:hover .card-icon { background: var(--brand); color: #fff; }
 .card h3 { font-size: 1.22rem; letter-spacing: -.015em; }
 .card p { font-size: .95rem; color: var(--muted); }
-.card .link-arrow { margin-top: auto; padding-top: 8px; font-size: .9rem; }
+.card .link-arrow { align-self: flex-start; margin-top: auto; padding-top: 8px; font-size: .9rem; }
 .dark .card { background: rgba(255, 255, 255, .04); border-color: var(--line-dark); }
 .dark .card::before { background: radial-gradient(340px circle at var(--mx, 50%) var(--my, 0%), rgba(95, 180, 166, .16), transparent 65%); }
 .dark .card p { color: var(--on-dark-soft); }
@@ -413,6 +446,30 @@ a.card:hover .card-icon { background: var(--brand); color: #fff; }
 .dark a.card:hover { border-color: rgba(95, 180, 166, .5); box-shadow: 0 20px 50px rgba(0, 0, 0, .35); }
 .dark a.card:hover .card-icon { background: var(--aqua); color: #04201d; }
 .tilt { transform-style: preserve-3d; will-change: transform; }
+
+/* ---------- home services: a bento rather than eight equal tiles ----------
+   The lead service carries a photo of the meter EDS installs and spans two
+   rows; Data as a Service sits on the brand gradient. Dense flow packs the
+   rest round them with no empty cells, at every width. */
+.grid.bento { grid-template-columns: repeat(4, 1fr); grid-auto-flow: row dense; }
+.bento-lead { grid-column: span 2; grid-row: span 2; min-height: 470px; padding: clamp(28px, 3vw, 40px); background: linear-gradient(160deg, #fff 38%, #e4f1ee 100%); }
+.bento-lead h3 { font-size: clamp(1.6rem, 2.4vw, 2.15rem); letter-spacing: -.028em; max-width: 11ch; margin-top: 8px; }
+.bento-lead p { font-size: 1.02rem; max-width: 25ch; }
+.bento-lead .card-icon { width: 56px; height: 56px; font-size: 28px; border-radius: 16px; }
+/* The frame itself blends (it is its own layer), which drops the photo's
+   white background into the card's tint. */
+.bento-shot { position: absolute; right: -1%; bottom: -4%; width: 50%; height: 80%; display: flex; align-items: flex-end; justify-content: flex-end; pointer-events: none; z-index: -1; mix-blend-mode: multiply; }
+.bento-shot img { height: 100%; width: auto; object-fit: contain; transform-origin: 70% 100%; transition: scale .9s var(--ease-out), rotate .9s var(--ease-out); }
+.bento-lead:hover .bento-shot img { scale: 1.04; rotate: -2deg; }
+.bento-wide { grid-column: span 2; border-color: transparent; color: rgba(255, 255, 255, .85); --edge: rgba(201, 255, 245, .9);
+  background: var(--grain), radial-gradient(110% 140% at 100% 0%, rgba(95, 180, 166, .3), transparent 55%), var(--brand-gradient); }
+.bento-wide h3 { color: #fff; }
+.card.bento-wide p { color: rgba(255, 255, 255, .8); max-width: 46ch; }
+.bento-wide .card-icon { background: rgba(255, 255, 255, .14); color: #fff; }
+a.card.bento-wide:hover { border-color: transparent; box-shadow: 0 24px 50px -10px rgba(6, 48, 44, .45); }
+a.card.bento-wide:hover .card-icon { background: #fff; color: var(--chrome); }
+.bento-wide .link-arrow { color: #c9fff5; }
+.bento-wide::before { background: radial-gradient(340px circle at var(--mx, 50%) var(--my, 0%), rgba(255, 255, 255, .13), transparent 65%); }
 
 /* ---------- flow lab ---------- */
 .lab { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(280px, 1fr); gap: 18px; }
@@ -458,7 +515,7 @@ input[type="range"]::-moz-range-thumb { width: 16px; height: 16px; border-radius
 #lidott-svg[data-level="2"] .lid-led { fill: var(--red); }
 
 /* ---------- FlowSense band ---------- */
-.fs-band { background: var(--brand-gradient); color: rgba(255, 255, 255, .88); overflow: hidden; }
+.fs-band { background: var(--grain), var(--brand-gradient); color: rgba(255, 255, 255, .88); overflow: hidden; }
 .fs-band h2, .fs-band h3 { color: #fff; }
 .fs-band .eyebrow { color: #c9fff5; }
 .fs-grid { display: grid; grid-template-columns: 1fr 1.15fr; gap: clamp(28px, 5vw, 72px); align-items: center; }
@@ -544,7 +601,7 @@ input[type="range"]::-moz-range-thumb { width: 16px; height: 16px; border-radius
 .tl h3 { font-size: 1.15rem; margin-bottom: 4px; }
 .tl p { font-size: .96rem; color: var(--muted); max-width: 60ch; }
 
-.quote { position: relative; padding: clamp(28px, 4vw, 52px); border-radius: 24px; background: var(--brand-gradient); color: #fff; overflow: hidden; }
+.quote { position: relative; padding: clamp(28px, 4vw, 52px); border-radius: 24px; background: var(--grain), var(--brand-gradient); color: #fff; overflow: hidden; isolation: isolate; }
 .quote .icon { font-size: 40px; opacity: .4; margin-bottom: 14px; }
 .quote blockquote { margin: 0; font-family: var(--font-display); font-size: clamp(1.3rem, 2.4vw, 1.9rem); line-height: 1.3; letter-spacing: -.015em; font-weight: 550; text-wrap: balance; }
 .quote cite { display: block; margin-top: 22px; font-style: normal; font-size: .95rem; color: rgba(255, 255, 255, .8); }
@@ -580,7 +637,7 @@ input[type="range"]::-moz-range-thumb { width: 16px; height: 16px; border-radius
 .cta canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; opacity: .7; }
 .cta .lede { margin-inline: auto; margin-top: 18px; }
 .cta .hero-actions { justify-content: center; }
-.footer { background: #030f0e; color: var(--on-dark-faint); padding-block: 64px 28px; font-size: .92rem; }
+.footer { background: var(--grain), #030f0e; color: var(--on-dark-faint); padding-block: 64px 28px; font-size: .92rem; }
 .footer-grid { display: grid; grid-template-columns: 1.5fr repeat(3, 1fr) 1.3fr; gap: 36px; }
 .footer h4 { color: #fff; font-family: var(--font-body); font-size: .76rem; letter-spacing: .14em; text-transform: uppercase; margin-bottom: 16px; font-weight: 650; }
 .footer li + li { margin-top: 9px; }
@@ -945,7 +1002,8 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: 6
   .nav { display: none; }
   .burger { display: inline-flex; margin-left: 0; }
   .header-cta { margin-left: auto; }
-  .grid.c4 { grid-template-columns: repeat(2, 1fr); }
+  .grid.c4, .grid.bento { grid-template-columns: repeat(2, 1fr); }
+  .bento-lead { grid-row: auto; min-height: 400px; }
   .footer-grid { grid-template-columns: 1fr 1fr 1fr; }
 }
 @media (max-width: 980px) {
@@ -963,7 +1021,10 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: 6
 }
 @media (max-width: 700px) {
   body { font-size: 16px; }
-  .grid.c3, .grid.c2, .grid.c4, .feature-list, .hl-grid, .field-row { grid-template-columns: 1fr; }
+  .grid.c3, .grid.c2, .grid.c4, .grid.bento, .feature-list, .hl-grid, .field-row { grid-template-columns: 1fr; }
+  .bento-lead, .bento-wide { grid-column: auto; }
+  .bento-lead { min-height: 0; }
+  .bento-shot { position: relative; inset: auto; width: 100%; height: 230px; margin: 10px 0 calc(clamp(28px, 3vw, 40px) * -1 - 12px); justify-content: center; }
   .hl-grid { grid-template-columns: 1fr 1fr; }
   .stats { grid-template-columns: 1fr 1fr; }
   .stat:nth-child(3) { padding-left: 0; border-left: 0; }

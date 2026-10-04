@@ -378,12 +378,12 @@ const ctaSection = (r, { title = "Talk to the people who measure it.", lede = "T
   </div>
 </section>`;
 
-const cardLink = (r, { href, iconName, title, text, n, tilt = true }) => `
-<a class="card${tilt ? " tilt" : ""}" href="${r}${href}" data-reveal style="--i:${n % 4}">
+const cardLink = (r, { href, iconName, title, text, n, tilt = true, cls = "", media = "" }) => `
+<a class="card${tilt ? " tilt" : ""}${cls ? ` ${cls}` : ""}" href="${r}${href}" data-reveal style="--i:${n % 4}">
   <span class="card-icon">${icon(iconName)}</span>
   <h3>${esc(title)}</h3>
   <p>${esc(text)}</p>
-  <span class="link-arrow">Learn more ${icon("arrow-right")}</span>
+  <span class="link-arrow">Learn more ${icon("arrow-right")}</span>${media}
 </a>`;
 
 const labSection = ({ eyebrow = "Flow lab", title = "See what a storm does to a sewer.", lede = "Send a storm through a model catchment and watch the hydrograph respond. The gap between measured flow and the dry weather pattern is inflow and infiltration: water that should never have reached the sewer." } = {}) => `
@@ -668,7 +668,6 @@ add({
 <section class="section dark city-section" id="city-explorer">
   <div class="wrap">
     <div class="section-head">
-      <p class="eyebrow">One city, every measurement</p>
       <h2 class="h-lg" data-reveal>Where does EDS fit in your network?</h2>
       <p class="lede" data-reveal style="--i:1">Hover over a district to lift it out of the city and see the services and products EDS brings to it.</p>
     </div>
@@ -702,11 +701,17 @@ add({
 <section class="section" id="services">
   <div class="wrap">
     <div class="section-head split">
-      <div><p class="eyebrow">Services</p><h2 class="h-lg" data-reveal>Specialised services, delivered Australia wide.</h2></div>
+      <h2 class="h-lg" data-reveal>Specialised services, delivered Australia wide.</h2>
       <a class="btn btn-outline" href="${r}services/index.html">All services ${icon("arrow-right")}</a>
     </div>
-    <div class="grid c4">
-      ${C.services.filter((s) => s.featured).map((s, n) => cardLink(r, { href: `services/${s.slug}.html`, iconName: s.icon, title: s.short || s.title, text: s.summary, n })).join("")}
+    <div class="grid bento">
+      ${C.services.filter((s) => s.featured).map((s, n) => cardLink(r, {
+        href: `services/${s.slug}.html`, iconName: s.icon, title: s.short || s.title, text: s.summary, n,
+        // The first service leads with a photo of the meter EDS installs; the
+        // third sits on the brand gradient, so the grid is not all white tiles.
+        ...(n === 0 && { tilt: false, cls: "bento-lead", media: `<span class="bento-shot"><img src="${C.img("s2.5-04-small-766x1024.png")}" alt="" loading="lazy"></span>` }),
+        ...(n === 2 && { tilt: false, cls: "bento-wide" }),
+      })).join("")}
     </div>
   </div>
 </section>
@@ -735,7 +740,7 @@ ${labSection()}
 <section class="section alt" id="products">
   <div class="wrap">
     <div class="section-head split">
-      <div><p class="eyebrow">Products</p><h2 class="h-lg" data-reveal>One of Australia's largest portfolios of monitoring instruments.</h2></div>
+      <h2 class="h-lg" data-reveal>One of Australia's largest portfolios of monitoring instruments.</h2>
       <div class="rail-nav"><button class="rail-btn" data-rail="brand-rail" data-dir="prev" aria-label="Previous products">${icon("arrow-right")}</button><button class="rail-btn" data-rail="brand-rail" data-dir="next" aria-label="Next products">${icon("arrow-right")}</button></div>
     </div>
     <div class="rail" id="brand-rail">
@@ -750,7 +755,7 @@ ${labSection()}
 
 <section class="section" id="industries">
   <div class="wrap">
-    <div class="section-head"><p class="eyebrow">Industries</p><h2 class="h-lg" data-reveal>Built for critical infrastructure.</h2>
+    <div class="section-head"><h2 class="h-lg" data-reveal>Built for critical infrastructure.</h2>
     <p class="lede" data-reveal style="--i:1">EDS provides the capability, experience and service that clients rely on for critical infrastructure and operational monitoring.</p></div>
     <div class="ind" data-reveal>
       ${C.industries.map(([ic, t, d]) => `<div class="holder"><span class="card-icon">${icon(ic)}</span><h3>${t}</h3><p>${d}</p></div>`).join("")}
@@ -786,7 +791,6 @@ ${labSection()}
   <div class="wrap aus">
     <svg id="ausmap" data-offices='${JSON.stringify(C.offices)}' role="group" aria-label="Map of Australia showing EDS offices" data-reveal="scale"></svg>
     <div>
-      <p class="eyebrow">Nationwide</p>
       <h2 class="h-lg" data-reveal>Five offices. One number.</h2>
       <p class="lede" data-reveal style="--i:1;margin-bottom:26px">Crews and support across the country. Call <a href="${site.phoneHref}" style="color:var(--aqua);font-weight:600;white-space:nowrap">${site.phone}</a> from anywhere in Australia.</p>
       <div class="office-list">
