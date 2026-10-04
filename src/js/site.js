@@ -104,21 +104,24 @@
   }
 
   /* ---- pointer effects: spotlight, tilt, magnetic buttons ---- */
+  // The spotlight (on the card and along its edge) only lights what is under
+  // the pointer, so it stays for everyone; tilt and magnetic pull move things
+  // and are left out for visitors who ask for less motion.
   const fine = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
-  if (fine && !calm) {
-    $$(".card").forEach((card) => {
+  if (fine) {
+    $$(".card, .quote").forEach((card) => {
       card.addEventListener("pointermove", (e) => {
         const r = card.getBoundingClientRect();
         card.style.setProperty("--mx", `${e.clientX - r.left}px`);
         card.style.setProperty("--my", `${e.clientY - r.top}px`);
-        if (card.classList.contains("tilt")) {
+        if (!calm && card.classList.contains("tilt")) {
           const x = (e.clientX - r.left) / r.width - 0.5, y = (e.clientY - r.top) / r.height - 0.5;
           card.style.transform = `perspective(900px) rotateX(${(-y * 5).toFixed(2)}deg) rotateY(${(x * 6).toFixed(2)}deg)`;
         }
       });
       card.addEventListener("pointerleave", () => { card.style.transform = ""; });
     });
-    $$("[data-magnetic]").forEach((b) => {
+    if (!calm) $$("[data-magnetic]").forEach((b) => {
       b.addEventListener("pointermove", (e) => {
         const r = b.getBoundingClientRect();
         b.style.translate = `${((e.clientX - r.left) / r.width - 0.5) * 10}px ${((e.clientY - r.top) / r.height - 0.5) * 8}px`;
