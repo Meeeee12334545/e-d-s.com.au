@@ -1397,7 +1397,6 @@ export const clients = [
   ["Urban Utilities", "client-urban-utilities.jpeg"],
   ["Aurecon", "client-aurecon.png"],
   ["Stantec", "client-stantec.png"],
-  ["Blue Siren", "client-blue-siren.png"],
   ["Water Corporation", "client-water-corporation.png"],
   ["Hach", "client-hach.jpg"],
   ["Transurban", "client-transurban.jpg"],
