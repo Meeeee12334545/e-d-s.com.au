@@ -774,7 +774,7 @@ ${labSection()}
       <h2 class="h-lg" data-reveal>Australian owned. Family founded. Still measuring.</h2>
       <div class="timeline">
         <span class="timeline-fill"></span>
-        ${C.about.timeline.filter((_, i) => [2, 3, 5, 7].includes(i)).map(([when, t, d]) => `<div class="tl" data-reveal><time>${when}</time><i></i><div><h3>${t}</h3><p>${d}</p></div></div>`).join("")}
+        ${C.about.timeline.filter((_, i, a) => [2, 3, 5, a.length - 1].includes(i)).map(([when, t, d]) => `<div class="tl" data-reveal><time>${when}</time><i></i><div><h3>${t}</h3><p>${d}</p></div></div>`).join("")}
       </div>
       <a class="link-arrow" href="${r}about.html" style="margin-top:18px">The EDS story ${icon("arrow-right")}</a>
     </div>
@@ -790,7 +790,7 @@ ${labSection()}
   <div class="wrap aus">
     <svg id="ausmap" data-offices='${JSON.stringify(C.offices)}' role="group" aria-label="Map of Australia showing EDS offices" data-reveal="scale"></svg>
     <div>
-      <h2 class="h-lg" data-reveal>Five offices. One number.</h2>
+      <h2 class="h-lg" data-reveal>Four offices. One number.</h2>
       <p class="lede" data-reveal style="--i:1;margin-bottom:26px">Crews and support across the country. Call <a href="${site.phoneHref}" style="color:var(--aqua);font-weight:600;white-space:nowrap">${site.phone}</a> from anywhere in Australia.</p>
       <div class="office-list">
         ${C.offices.map((o) => `<button class="office"><span class="card-icon">${icon("map-pin")}</span><span><b>${o.city}</b><span>${o.note}</span></span><em>${o.state}</em></button>`).join("")}
@@ -1109,7 +1109,7 @@ ${pageHero(r, { crumbs: [["About"]], eyebrow: "About EDS", title: "Australian ow
 </div></section>
 <section class="section dark"><div class="wrap aus">
   <svg id="ausmap" data-offices='${JSON.stringify(C.offices)}' role="group" aria-label="Map of Australia showing EDS offices" data-reveal="scale"></svg>
-  <div><p class="eyebrow">Nationwide</p><h2 class="h-lg" data-reveal>Five offices across Australia.</h2>
+  <div><p class="eyebrow">Nationwide</p><h2 class="h-lg" data-reveal>Four offices across Australia.</h2>
   <div class="office-list" style="margin-top:26px">${C.offices.map((o) => `<button class="office"><span class="card-icon">${icon("map-pin")}</span><span><b>${o.city}</b><span>${o.note}</span></span><em>${o.state}</em></button>`).join("")}</div></div>
 </div></section>
 ${ctaSection(r)}`,
@@ -1156,7 +1156,7 @@ ${ctaSection(r, { title: "Cannot find a manual or driver?", lede: "Our service d
 add({
   file: "contact.html",
   title: "Contact EDS | 1300 721 683",
-  description: "Contact Environmental Data Services. Head office at Meadowbrook, Queensland, with offices in New South Wales, Victoria, South Australia and Western Australia.",
+  description: "Contact Environmental Data Services. Head office at Meadowbrook, Queensland, with offices in New South Wales, Victoria and South Australia.",
   current: "contact",
   scripts: ["widgets.js"],
   body: (r) => `
@@ -1166,7 +1166,7 @@ ${pageHero(r, { crumbs: [["Contact"]], eyebrow: "Contact", title: "Call or visit
   <ul class="hero-links">
     <li><a href="mailto:${site.email}">${icon("mail")}<span>${site.email}</span></a></li>
     <li><a href="#enquiry">${icon("send")}<span>Send an enquiry</span>${icon("arrow-down")}</a></li>
-    <li><a href="#offices">${icon("map-pin")}<span>Offices in five states</span>${icon("arrow-down")}</a></li>
+    <li><a href="#offices">${icon("map-pin")}<span>Offices in four states</span>${icon("arrow-down")}</a></li>
   </ul>`, "hero-contact") })}
 <section class="section"><div class="wrap contact-grid">
   <div class="contact-cards">
@@ -1219,7 +1219,7 @@ ${pageHero(r, { crumbs: [["Contact"]], eyebrow: "Contact", title: "Call or visit
 </div></section>
 <section class="section dark" id="offices"><div class="wrap aus">
   <svg id="ausmap" data-offices='${JSON.stringify(C.offices)}' role="group" aria-label="Map of Australia showing EDS offices" data-reveal="scale"></svg>
-  <div><p class="eyebrow">Office locations</p><h2 class="h-lg" data-reveal>Find us in five states.</h2>
+  <div><p class="eyebrow">Office locations</p><h2 class="h-lg" data-reveal>Find us in four states.</h2>
   <div class="office-list" style="margin-top:26px">${C.offices.map((o) => `<button class="office"><span class="card-icon">${icon("map-pin")}</span><span><b>${o.city}</b><span>${o.note}</span></span><em>${o.state}</em></button>`).join("")}</div></div>
 </div></section>`,
 });
