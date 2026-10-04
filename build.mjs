@@ -774,7 +774,7 @@ ${labSection()}
       <h2 class="h-lg" data-reveal>Australian owned. Family founded. Still measuring.</h2>
       <div class="timeline">
         <span class="timeline-fill"></span>
-        ${C.about.timeline.filter(([, t]) => ["EDS is founded", "Defence facility contract", "Sydney Water panel contract", "Cairns Regional Council monitoring stations", "Wingecarribee Shire Council", "Australia's largest supplier"].includes(t)).map(([when, t, d]) => `<div class="tl" data-reveal><time>${when}</time><i></i><div><h3>${t}</h3><p>${d}</p></div></div>`).join("")}
+        ${C.about.timeline.filter(([, t]) => ["EDS is founded", "Defence facility contract", "Sydney Water panel provider", "Wingecarribee Shire Council", "Australia's largest supplier"].includes(t)).map(([when, t, d]) => `<div class="tl" data-reveal><time>${when}</time><i></i><div><h3>${t}</h3><p>${d}</p></div></div>`).join("")}
       </div>
       <a class="link-arrow" href="${r}about.html" style="margin-top:18px">The EDS story ${icon("arrow-right")}</a>
     </div>

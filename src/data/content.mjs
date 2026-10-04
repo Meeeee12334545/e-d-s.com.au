@@ -1370,7 +1370,7 @@ export const about = {
     ["2003", "Defence facility contract", "EDS begins servicing and monitoring the Australian Defence facility, under a contract still in place."],
     ["2005", "A founder's legacy", "Graham sadly passes. Under Cynthia's stewardship, EDS continues to thrive and grow."],
     ["2022–23", "Goulburn Valley Water, Kilmore", "EDS provided sewer flow monitoring at 10 sites in Kilmore, supporting Goulburn Valley Water's infrastructure management and planning."],
-    ["2023", "Sydney Water panel contract", "EDS was awarded a five year panel provider contract to supply sewer flow and level instrumentation to Sydney Water."],
+    ["2023", "Sydney Water panel provider", "EDS was awarded a five year panel provider contract to supply sewer flow and level instrumentation to Sydney Water."],
     ["2023", "North East Water", "EDS ran sewer and rainfall monitoring across 15 sites over eight weeks, giving North East Water high resolution data for infrastructure planning and management."],
     ["2023", "Townsville City Council, Wulguru & Pallarenda", "EDS installed and operated sewer monitoring equipment at 34 sites over 12 weeks to inform the council's infrastructure planning and management."],
     ["2023–24", "Yarra Valley Water gauge calibrations", "EDS calibrated long term sewer flow gauges across multiple Yarra Valley Water sites, so the data stays reliable for hydraulic modelling and infrastructure planning."],
