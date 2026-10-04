@@ -519,7 +519,7 @@ input[type="range"]::-moz-range-thumb { width: 16px; height: 16px; border-radius
 .fs-item .card-icon { width: 40px; height: 40px; font-size: 20px; border-radius: 12px; background: rgba(255, 255, 255, .12); color: #fff; }
 .fs-item[aria-selected="true"] .card-icon { background: #fff; color: var(--chrome); }
 .fs-item b { display: block; color: #fff; font-family: var(--font-display); font-size: 1.05rem; font-weight: 620; }
-.fs-item span { font-size: .9rem; color: rgba(255, 255, 255, .78); display: block; }
+.fs-item b + span { font-size: .9rem; color: rgba(255, 255, 255, .78); display: block; }
 .fs-screen { position: relative; border-radius: 20px; background: #f4f7fa; box-shadow: 0 40px 90px rgba(3, 30, 27, .5), 0 0 0 1px rgba(255, 255, 255, .25); overflow: hidden; aspect-ratio: 16 / 11; color: var(--ink-2); }
 .fs-chrome { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--chrome); color: #fff; font-size: .78rem; font-weight: 600; }
 .fs-chrome img { height: 11px; }
