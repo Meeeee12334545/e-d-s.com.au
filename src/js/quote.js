@@ -12,12 +12,14 @@
   // Storage can be blocked (private windows, embedded views), so fall back to
   // a list that lasts as long as the page.
   let memory = [];
+  let storageUnavailable = false;
   const load = () => {
-    try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch { return memory; }
+    if (storageUnavailable) return memory;
+    try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch { storageUnavailable = true; return memory; }
   };
   const save = (list) => {
     memory = list;
-    try { localStorage.setItem(KEY, JSON.stringify(list)); } catch { /* memory only */ }
+    try { localStorage.setItem(KEY, JSON.stringify(list)); } catch { storageUnavailable = true; }
     refresh();
   };
   const has = (id) => load().some((x) => x.id === id);
@@ -133,6 +135,8 @@
       if (!item) return;
       item.qty = Math.min(999, Math.max(1, Math.round(Number(qty)) || 1));
       save(list);
+      const input = $(`li[data-id="${CSS.escape(id)}"] input`, box);
+      if (input) input.value = item.qty;
     };
     box.addEventListener("click", (e) => {
       const li = e.target.closest("li[data-id]");
