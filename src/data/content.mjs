@@ -1394,6 +1394,8 @@ export const clients = [
   ["Ventia", "client-ventia.jpg"],
   ["Bureau of Meteorology", "client-bureau-of-meteorology.jpg"],
   ["Yarra Valley Water", "client-yarra-valley-water.jpg"],
+  ["Sydney Water", "client-sydney-water.png"],
+  ["Hunter Water", "client-hunter-water.jpg"],
   ["Urban Utilities", "client-urban-utilities.jpeg"],
   ["Aurecon", "client-aurecon.png"],
   ["Stantec", "client-stantec.png"],
