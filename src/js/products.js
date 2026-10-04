@@ -34,6 +34,8 @@
     $("brandLink").href = d.brandHref;
     const label = d.name === d.brand ? d.name : `${d.name} (${d.brand})`;
     $("enquire").href = `${root}contact.html?${new URLSearchParams({ topic: "Product pricing", product: label })}`;
+    $("quote").dataset.quote = JSON.stringify(d.quote);
+    window.EDS?.quote?.refresh();
     $("page").hidden = !d.page;
     if (d.page) $("page").href = d.page;
     $("docs").hidden = !d.docs.length;

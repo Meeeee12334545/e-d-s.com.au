@@ -67,6 +67,7 @@ export const services = [
     title: "Sewer Flow Monitoring",
     icon: "waves",
     group: "sewer",
+    process: true,
     featured: true,
     summary: "Temporary and permanent flow monitoring for councils and water authorities, installed by trained crews Australia wide.",
     intro: [
@@ -116,6 +117,7 @@ export const services = [
     title: "Inflow & Infiltration Studies",
     icon: "cloud-rain",
     group: "sewer",
+    process: true,
     featured: true,
     summary: "Find where stormwater and groundwater enter the sewer, and how much, so investment goes where it counts.",
     intro: [
@@ -214,6 +216,7 @@ export const services = [
     short: "Model Calibration",
     icon: "drafting-compass",
     group: "sewer",
+    process: true,
     featured: true,
     summary: "Monitoring programs designed to calibrate and enhance hydraulic and sewer network models.",
     intro: [
@@ -231,6 +234,7 @@ export const services = [
     title: "Thermal Infiltration Surveys",
     icon: "thermometer",
     group: "sewer",
+    process: true,
     summary: "Thermistor strings and open channel flow meters used together to pinpoint where groundwater is getting into a sewer.",
     intro: [
       "Flow monitoring shows how much infiltration a catchment has. Temperature shows where it is getting in. Groundwater and surface water usually enter a sewer at a different temperature from the wastewater already in the pipe, so a string of temperature sensors laid along the pipe registers the change at the point of entry.",
@@ -308,6 +312,7 @@ export const services = [
     short: "Works Verification",
     icon: "badge-check",
     group: "sewer",
+    process: true,
     summary: "Before and after flow monitoring that shows whether relining, cleaning and repair works delivered what was paid for.",
     intro: [
       "Rehabilitation is a large investment, and flow data is the most direct way to show it worked. EDS monitors before and after relining, cleaning and repair programs, so the change in the network is measured rather than assumed.",
@@ -467,6 +472,7 @@ export const services = [
     title: "Rainfall Monitoring",
     icon: "cloud-drizzle",
     group: "water",
+    process: true,
     summary: "Tipping bucket rain gauges installed alongside flow meters, so every change in the network can be read against the rain that caused it.",
     intro: [
       "Flow data shows that something changed. Rainfall data shows why. EDS integrates data from RIMCO 7499 tipping bucket rain gauges sited in the catchments we monitor, so the network's wet weather response can be measured against the rain that produced it.",
@@ -1381,6 +1387,70 @@ export const about = {
   founder: { name: "Cynthia Harper", role: "Co-founder, Environmental Data Services", text: "EDS continues to strive to deliver the level of service and professionalism that was part of Graham's founding ethos." },
   quote: { text: "EDS helped us design and implement a user friendly and rugged sewer monitoring program that was completely remote. The level of service and professionalism received by EDS is always leading the industry.", who: "Tony Cockrel", org: "DERM" },
 };
+
+/* ------------------------------------------------------------------ */
+/* Selling points shared across pages                                  */
+/* ------------------------------------------------------------------ */
+// The three ways to work with EDS, shown on the home, services and products
+// pages. `topic` and `mode` pre-fill the enquiry form (see contactHref()).
+export const ways = {
+  heading: "Buy it, hire it, or let EDS run it.",
+  lede: "However your program is funded, the same instruments, crews and data platform sit behind it.",
+  items: [
+    {
+      mode: "buy", icon: "package", title: "Buy", line: "Own the instruments",
+      text: "Choose from one of Australia's largest portfolios of monitoring instruments, made by EDS or by the leading manufacturers we represent.",
+      points: ["Supply, installation and commissioning", "In situ audits and calibration", "Training for your staff"],
+      link: ["products/index.html", "Browse products"], topic: "Product pricing", cta: "Ask about pricing",
+    },
+    {
+      mode: "hire", icon: "calendar-clock", title: "Hire", line: "For a study or a season",
+      text: "Short and long term hire from the EDS fleet, built for the harshest and most demanding applications.",
+      points: ["Flow meters, samplers and loggers", "Bespoke packages for difficult sites", "Expert advice on the right setup"],
+      link: ["services/equipment-rental.html", "Equipment rental"], topic: "Equipment Rental", cta: "Ask about hire",
+    },
+    {
+      mode: "managed", icon: "database-zap", title: "Data as a Service", line: "No capital outlay",
+      text: "EDS selects the sites, installs and maintains the equipment, validates the data continuously and delivers insights you can act on.",
+      points: ["99.95% data availability", "Continuous QA/QC and calibration", "Real-time alerts in FlowSense"],
+      link: ["services/data-as-a-service.html", "How DaaS works"], topic: "Sewer Flow Data as a Service", cta: "Ask about DaaS",
+    },
+  ],
+};
+
+// Outcomes from EDS projects, each told elsewhere on the site (the data
+// analysis and works verification pages, and the about timeline). Shown on
+// the home page and on the service pages listed in `services`.
+export const results = [
+  {
+    stat: "$6M", label: "treatment plant expansion avoided", who: "Regional council",
+    text: "Twenty short term flow meters and on-site rain gauges showed three subcatchments carried 65% of the I&I. Capital went into relining and inflow reduction instead, and peak wet weather flows fell 35% within two years.",
+    services: ["inflow-infiltration-studies", "sewer-flow-monitoring", "rainfall-monitoring"],
+  },
+  {
+    stat: "34", label: "sites installed and operated in 12 weeks", who: "Townsville City Council",
+    text: "Sewer monitoring across the Wulguru and Pallarenda catchments, to inform the council's infrastructure planning and management.",
+    services: ["sewer-flow-monitoring"],
+  },
+  {
+    stat: "24 h", label: "for the network to return to baseline", who: "Coastal network",
+    text: "After a cleaning and relining program, flow profiles recorded by EDS showed the network back to its baseline hydraulic behaviour within a day, confirming the works had restored full capacity.",
+    services: ["data-analysis-reporting"],
+  },
+  {
+    stat: "15", label: "sites of sewer and rainfall data in eight weeks", who: "North East Water",
+    text: "High resolution sewer flow and rainfall monitoring, giving the utility the data it needed for infrastructure planning and management.",
+    services: ["rainfall-monitoring", "sewer-flow-monitoring"],
+  },
+];
+
+// How a monitoring program runs, on the service pages marked `process: true`.
+export const programSteps = [
+  ["map", "Scope and site selection", "Agree what the data has to answer, then choose sites by their hydraulics, not their convenience."],
+  ["hard-hat", "Install and commission", "Trained EDS crews install intrinsically safe instruments, Australia wide, and check every site before it goes live."],
+  ["activity", "Monitor and validate", "Readings arrive over 4G into FlowSense, with continuous QA/QC and alarms when something changes."],
+  ["file-chart-column", "Report and recommend", "Validated data and a report that shows where the problems are and what to fix first, or a feed into your model by API."],
+];
 
 export const industries = [
   ["droplets", "Water & Wastewater", "Councils, utilities and water authorities."],
