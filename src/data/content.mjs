@@ -863,6 +863,7 @@ export const brands = [
     icon: "cpu",
     tag: "Designed and built by EDS",
     summary: "Data loggers, sensors and the Pump Station Manager, manufactured by EDS.",
+    cover: img("e-flow-3.png"),
     intro: [
       "Environmental Data Services is a manufacturer, and represents leading manufacturers, in water supply and management, wastewater management, flow monitoring equipment and process control equipment.",
       "EDS manufactures the popular EMS \"D\" Series data loggers and the Pump Station Manager, and contractually manufactures and supplies data loggers to the Australian Bureau of Meteorology.",
@@ -871,6 +872,7 @@ export const brands = [
       {
         name: "Data loggers",
         items: [
+          { name: "Hawk", type: "logger", note: "Battery powered 4G sewer logger", image: img("hawk.png"), href: "products/hawk.html", docs: [{ label: "Datasheet", href: localDoc("eds-hawk-datasheet.pdf") }, { label: "Brochure", href: localDoc("eds-hawk-brochure.pdf") }] },
           { name: "iLab Sonde", type: "quality", note: "Multi-parameter handheld", image: img("ilab-and-sensor.jpg") },
           { name: "EPM-2", type: "logger", note: "Portable 4G pressure logger", image: img("epm-2.png") },
           { name: "Metalog", type: "logger", note: "4G data logger", image: img("grt101-gprs-4g-lte-battery-supply-wireless.jpg") },
@@ -882,7 +884,7 @@ export const brands = [
       {
         name: "Sensors",
         items: [
-          { name: "E-Flow", type: "flow", note: "Flow sensor", image: img("eflow-4.png") },
+          { name: "E-Flow 3", type: "flow", note: "Dual mode sewer flowmeter", image: img("e-flow-3.png"), href: "products/e-flow-3.html", docs: [{ label: "Datasheet", href: localDoc("eds-e-flow-3-datasheet.pdf") }, { label: "Brochure", href: localDoc("eds-e-flow-3-brochure.pdf") }] },
           { name: "iLab 901", type: "quality", note: "Multi-parameter analytical sensor", image: img("ilab-901-multitparameter-analytical-sensor-2.gif"), docs: [{ label: "Datasheet", href: doc("/s/iLab-901-Multitparameter-Analytical-Sensor-DS-21rs.pdf") }] },
           { name: "Ultrasonic Level", type: "level", note: "Level sensor", image: img("ultrasonic-level-sensor-image-2.png") },
           { name: "EC", type: "quality", note: "Electro-conductivity sensor", image: img("cos41.jpg") },
@@ -1138,6 +1140,191 @@ export const lidott = {
 };
 
 /* ------------------------------------------------------------------ */
+/* EDS instruments with a page of their own                            */
+/* ------------------------------------------------------------------ */
+// Each is built at products/<slug>.html. `name` matches the product card in
+// the EDS range, which links here. `specs` is [[group, [[label, value]]]],
+// and `worksWith` is [[href, title, line]].
+export const productPages = [
+  {
+    slug: "e-flow-3",
+    name: "E-Flow 3",
+    icon: "radar",
+    tag: "Dual mode sewer flowmeter",
+    title: "E-Flow 3 dual mode sewer flowmeter | EDS",
+    lede: "Contactless radar measures velocity and depth in normal flow. When the sewer surcharges, ultrasonic and sealed pressure sensors take over, with no gap in the record.",
+    description: "EDS E-Flow 3: a four sensor area velocity flowmeter for sewer maintenance holes. Dual radar in normal flow, dual 1 MHz ultrasonic and sealed pressure in surcharge, RS485 Modbus RTU.",
+    image: img("e-flow-3.png"),
+    figure: { src: img("e-flow-3-installation.jpg"), alt: "Cutaway of a sewer with E-Flow 3 mounted at the pipe obvert and cabled to a data logger near the top of the maintenance hole", caption: "E-Flow 3 at the pipe obvert, cabled to a logger in the shaft" },
+    docs: [
+      { label: "Datasheet", note: "Principle of operation, full specifications, installation and wiring.", href: localDoc("eds-e-flow-3-datasheet.pdf") },
+      { label: "Brochure", note: "How E-Flow 3 measures, and where it fits.", href: localDoc("eds-e-flow-3-brochure.pdf") },
+    ],
+    highlights: [
+      ["radar", "Dual radar", "24 GHz velocity and 120 GHz depth, from above the flow"],
+      ["waves", "Surcharge ready", "Dual 1 MHz ultrasonic and sealed 316 stainless pressure"],
+      ["arrow-left-right", "Seamless changeover", "No blind zone and no gap in the record"],
+      ["gauge", "0.05 to 20 m/s", "Velocity range, with depth from 0 to 10 m"],
+      ["shield-check", "Fully potted", "Corrosion, impact and water resistant housing"],
+      ["cable", "RS485 Modbus RTU", "8 to 15 VDC, 150 mA at 12 VDC"],
+    ],
+    intro: [
+      "E-Flow 3 is an area velocity flowmeter built for harsh, demanding sewer environments. Four sensors share one body at the pipe obvert. In normal flow a pair of contactless radars measures velocity and depth from above the water, so there is nothing in the flow for grease, rag and silt to foul.",
+      "When the sewer surcharges and the free surface is lost, a dual 1 MHz ultrasonic Doppler velocity sensor and a sealed 316 stainless steel pressure transducer take over seamlessly. One sensor body, one record, from dry weather flow through to full surcharge.",
+      "Peak wet weather flow, overflow volumes and surcharge duration drive inflow and infiltration programs, capacity assessments and regulatory reporting. They are also exactly when a conventional wetted sensor is most likely to be fouled. E-Flow 3 keeps measuring through the whole event.",
+    ],
+    features: [
+      ["Normal flow: dual radar", "A 24 GHz Doppler radar reads surface velocity, corrected to mean channel velocity, and a 120 GHz FMCW radar reads depth. Neither touches the flow."],
+      ["Surcharge: ultrasonic and pressure", "Dual 1 MHz ultrasonic Doppler transducers measure velocity through the water column, and the sealed pressure transducer reads depth to 10 m, compensated for dynamic pressure."],
+      ["Seamless changeover", "The sensor checks all four elements every cycle and picks the right pair as the pipe fills and drains. The other pair stays available and cross checked, so there is no blind zone."],
+      ["Obvert mounting sheds debris", "Fixed to the pipe crown on an EDS bracket, out of the flow path, so material cannot build up on the sensor face. Site visits become verification, not cleaning."],
+      ["No confined space entry", "Installed and retrieved from the maintenance hole opening, then commissioned and verified from the surface with EMS-Flow through the EDS logger."],
+      ["Diagnostics you can trust", "Composite velocity, depth and flow come with each sensor's own value and status over Modbus, so you can see which pair is active, and why, from the office."],
+    ],
+    specs: [
+      ["Velocity", [
+        ["Method", "Contactless 24 GHz radar in normal flow, dual 1 MHz contact ultrasonic in surcharge"],
+        ["Range", "0.05 to 20 m/s, recommended above 0.2 m/s"],
+        ["Accuracy", "Ultrasonic 1 % of reading ± 0.005 m/s; radar 2 % of reading ± 0.01 m/s"],
+        ["Resolution", "0.001 m/s"],
+        ["Dead zone", "Ultrasonic unidirectional 0 to 0.002 m/s, bidirectional ± 0.03 m/s; radar ± 0.05 m/s"],
+        ["Velocity radar", "24 GHz continuous wave Doppler, 24° × 12° antenna"],
+        ["Ultrasonic", "Dual 1 MHz Doppler, 5° beam"],
+      ]],
+      ["Depth", [
+        ["Method", "120 GHz FMCW radar in normal flow, sealed pressure transducer in surcharge"],
+        ["Range", "0 to 10 m"],
+        ["Accuracy", "0.2 % of full scale ± 0.001 m"],
+        ["Resolution", "0.001 m"],
+        ["Depth radar", "120 GHz FMCW, 14° × 10° antenna"],
+        ["Pressure transducer", "316 stainless steel, sealed, with dynamic pressure compensation"],
+      ]],
+      ["Electrical and communications", [
+        ["Supply", "8 to 15 VDC, 12 VDC nominal"],
+        ["Current", "150 mA at 12 VDC"],
+        ["Interface", "RS485, two wire"],
+        ["Protocol", "Modbus RTU slave, register map supplied"],
+        ["Response time", "10 s, with configurable damping"],
+        ["Firmware", "Remote update over RS485 with an EDS logger"],
+        ["Configuration", "EMS-Flow, from the surface through an EDS logger"],
+      ]],
+      ["Mechanical and environmental", [
+        ["Housing", "Alloy and engineering plastic composite"],
+        ["Sealing", "Electronics fully potted, unaffected by temperature cycling"],
+        ["Cable", "Integral, length to suit the maintenance hole"],
+        ["Mounting", "Pipe obvert on an EDS bracket, sensor face upstream"],
+        ["Water temperature", "0 to 60 °C, accurate to 0.5 °C"],
+        ["Service", "Sewage, trade waste and combined flows, permanent or temporary"],
+      ]],
+      ["Ordering", [
+        ["E-Flow 3 U", "Unidirectional. Ultrasonic mode reports absolute velocity."],
+        ["E-Flow 3 B", "Bidirectional. Signed velocity and flow; identifies reverse flow and backing up."],
+        ["Bracket", "Obvert mounting bracket, sized to the pipe diameter"],
+        ["Cable", "Integral, length specified at order"],
+      ]],
+    ],
+    specNote: "Accuracy is stated under reference conditions. Radar velocity needs a free surface with enough texture to return a signal; below 0.2 m/s the sensor prefers ultrasonic velocity where it is available. Specifications may change without notice.",
+    worksWith: [
+      ["products/hawk.html", "Hawk 4G logger", "Powers and polls E-Flow 3 over RS485 and reports over 4G."],
+      ["flowsense.html", "EDS FlowSense", "Hydrographs, surcharge and reverse flow alarms, and export to hydraulic models."],
+    ],
+    cta: { title: "Put E-Flow 3 in your network.", lede: "Tell us the pipe size, the depth and what you need from the data. We will size the bracket and cable, recommend the logger and telemetry, and can install and commission for you." },
+  },
+  {
+    slug: "hawk",
+    name: "Hawk",
+    icon: "radio-tower",
+    tag: "Battery powered 4G logger",
+    title: "Hawk battery powered 4G sewer logger | EDS",
+    lede: "The 4G logger built for Australian sewer networks. It lives inside the maintenance hole, with no cabinet to build and no power to bring to site.",
+    description: "EDS Hawk: a battery powered 4G LTE data logger for sewer maintenance holes. IP68 submersible, three RS485 sensor ports, logging from every second, internal battery up to 152 Ah.",
+    image: img("hawk.png"),
+    figure: { src: img("hawk-bracket.png"), alt: "The Hawk logger hanging from its stainless steel wall bracket", caption: "Hawk on its stainless wall bracket" },
+    docs: [
+      { label: "Datasheet", note: "Design, installation, full specifications, wiring and ordering.", href: localDoc("eds-hawk-datasheet.pdf") },
+      { label: "Brochure", note: "The Hawk at a glance.", href: localDoc("eds-hawk-brochure.pdf") },
+    ],
+    highlights: [
+      ["signal", "4G LTE", "Reports every 1 minute to 24 hours"],
+      ["timer", "Logs every second", "32 MB on board holds 10 years of data"],
+      ["cable", "3 × RS485", "Modbus RTU sensors, 15 kV ESD protected"],
+      ["battery-full", "Up to 152 Ah", "Internal battery and a 40 µA sleep current"],
+      ["droplets", "IP68", "Submersible; keeps logging when surcharged"],
+      ["magnet", "Set up from the surface", "Magnet wake and EMS-Flow over Bluetooth"],
+    ],
+    intro: [
+      "The Hawk installs inside the maintenance hole. It powers and reads your flow, level and quality sensors over RS485, logs as often as every second, stores every reading on board, and reports over 4G LTE to FlowSense and to your own systems.",
+      "There is no cabinet to build, no power to bring to site, and no need to enter the chamber to commission or reconfigure it. Nothing is mounted at the surface, so there is nothing to damage, vandalise or maintain in the road reserve.",
+      "Hawk connects directly to E-Flow 3 and any other Modbus RTU sensor, and reports to FlowSense: one team for the sensor, logger, telemetry and data.",
+    ],
+    features: [
+      ["Sealed for surcharge", "Canister, lid and connectors are sealed to IP68, so the record continues while the chamber is underwater."],
+      ["Built for the sewer atmosphere", "A V0 flame retardant, corrosion resistant ABS canister, sealed connectors and a stainless wall bracket."],
+      ["No power at site", "72 to 152 Ah on board, and each sensor is powered only while it is read. No mains, no solar panel, no roadside cabinet."],
+      ["Set up from the surface", "A magnet wakes the Hawk and EMS-Flow sets it up over Bluetooth from the road. Configuration and firmware follow over 4G."],
+      ["Every reading kept", "32 MB on board holds 10 years of data, so a missed report in patchy coverage does not mean lost data."],
+      ["Two destinations at once", "Up to four data centres. Send the same data to FlowSense and to your SCADA or historian, or run them as primary and standby."],
+    ],
+    specs: [
+      ["Telemetry", [
+        ["Cellular", "4G LTE"],
+        ["Logging interval", "1 second to 24 hours"],
+        ["Reporting interval", "1 minute to 24 hours"],
+        ["Data centres", "Up to 4, each with primary and standby addressing"],
+        ["Configuration", "EMS-Flow: Bluetooth on site, remote over 4G"],
+        ["Firmware", "Remote update over 4G"],
+        ["Operating modes", "Low power and debug, switchable"],
+      ]],
+      ["Sensor interface", [
+        ["Ports", "3 × RS485, independent channels"],
+        ["Sensors", "Modbus RTU sensors, including E-Flow 3"],
+        ["Serial settings", "Baud rate, parity and stop bits set per channel"],
+        ["Protection", "15 kV ESD on every RS485 port"],
+        ["Sensor power", "2 × switched 12 V outputs, 500 mA (6 W) each"],
+        ["Warm up", "Power on delay up to 255 s before each reading"],
+        ["Scheduling", "Logging interval, warm up and retries set per channel"],
+      ]],
+      ["Data and power", [
+        ["On board memory", "32 MB, 10 years of data retention"],
+        ["Battery", "Internal: 72, 80 or 100 Ah rechargeable, or 152 Ah primary"],
+        ["Operating current", "Under 65 mA average at 7.2 VDC"],
+        ["Sleep current", "40 µA or less at 7.2 VDC"],
+        ["External supply", "None required"],
+      ]],
+      ["Enclosure and environment", [
+        ["Protection", "IP68, submersible"],
+        ["Material", "V0 flame retardant, corrosion resistant ABS"],
+        ["Lid", "Bolted, O ring sealed; SIM and battery inside"],
+        ["Controls", "Magnetic wake point and status indicators; no switches"],
+        ["Dimensions", "Ø165 × 243 mm, excluding handle and antenna"],
+        ["Mounting", "Stainless wall bracket, expansion bolts"],
+        ["Operating temperature", "−40 to 60 °C, 95 % humidity non condensing"],
+        ["Storage temperature", "−40 to 85 °C"],
+      ]],
+      ["Sensor connector wiring", [
+        ["Red", "12 V switched sensor supply"],
+        ["Black", "0 V power ground"],
+        ["Green or blue", "RS485 A"],
+        ["Yellow", "RS485 B"],
+      ]],
+      ["Ordering", [
+        ["Hawk 72", "72 Ah rechargeable. Short surveys and sites visited regularly."],
+        ["Hawk 80", "80 Ah rechargeable. General network monitoring with scheduled visits."],
+        ["Hawk 100", "100 Ah rechargeable. Long intervals and several sensors on one logger."],
+        ["Hawk 152", "152 Ah primary. The longest unattended service, for permanent and remote sites."],
+        ["Chamber sensing", "Option for any model: methane, temperature and humidity, and tilt to flag a disturbed unit."],
+      ]],
+    ],
+    specNote: "Typical values. Battery life depends on the logging and reporting intervals, the connected sensors and the site temperature, so EDS sizes the battery for each deployment.",
+    worksWith: [
+      ["products/e-flow-3.html", "E-Flow 3 flowmeter", "Dual mode sewer flowmeter, radar with surcharge backup."],
+      ["flowsense.html", "EDS FlowSense", "Hosted data, hydrographs, alarms, quality auditing and export."],
+    ],
+    cta: { title: "Put a Hawk in the maintenance hole.", lede: "Tell us the network, the sites and the data you need. EDS will size the battery, supply the bracket and sensors, install and commission from the surface, and deliver the data through FlowSense. Also available in EDS rental fleets for temporary flow surveys." },
+  },
+];
+
+/* ------------------------------------------------------------------ */
 /* FlowSense                                                           */
 /* ------------------------------------------------------------------ */
 export const flowsense = {
@@ -1273,6 +1460,10 @@ export const downloads = [
     icon: "file-text",
     wide: true,
     items: [
+      ["EDS E-Flow 3 sewer flowmeter datasheet", localDoc("eds-e-flow-3-datasheet.pdf")],
+      ["EDS E-Flow 3 sewer flowmeter brochure", localDoc("eds-e-flow-3-brochure.pdf")],
+      ["EDS Hawk 4G logger datasheet", localDoc("eds-hawk-datasheet.pdf")],
+      ["EDS Hawk 4G logger brochure", localDoc("eds-hawk-brochure.pdf")],
       ["iLab 901 multi-parameter sensor datasheet", doc("/s/iLab-901-Multitparameter-Analytical-Sensor-DS-21rs.pdf")],
       ["Detectronic MSFM S2.5T flow meter datasheet", localDoc("detectronic-msfm-s2-5t-datasheet.pdf")],
       ["Detectronic LIDoTT Sensor datasheet", localDoc("detectronic-lidott-sensor-datasheet.pdf")],

@@ -85,7 +85,7 @@ function header(r, current) {
     items: C.services.filter((s) => s.group === g.id).map((s) => ({ href: `services/${s.slug}.html`, icon: s.icon, label: s.short || s.title })),
   }));
   const oItems = C.solutions.map((s) => ({ href: `solutions/${s.slug}.html`, icon: s.icon, label: s.title }));
-  const pItems = [...C.brands.map((b) => ({ href: `products/${b.slug}.html`, icon: b.icon, label: b.name })), { href: "products/lidott-alarm.html", icon: "bell", label: "LIDoTT Alarm" }];
+  const pItems = [...C.brands.map((b) => ({ href: `products/${b.slug}.html`, icon: b.icon, label: b.name })), ...C.productPages.map((pg) => ({ href: `products/${pg.slug}.html`, icon: pg.icon, label: pg.name })), { href: "products/lidott-alarm.html", icon: "bell", label: "LIDoTT Alarm" }];
   const link = (href, label, key) => `<div class="nav-item"><a class="nav-link" href="${r}${href}"${current === key ? ' aria-current="page"' : ""}>${label}</a></div>`;
   const dLink = (i) => `<a href="${r}${i.href}">${icon(i.icon, false)}${esc(i.label)}</a>`;
   const dGroup = (label, { items, groups }, all) => `
@@ -1049,6 +1049,41 @@ ${pageHero(r, { crumbs: [["Products", "products/index.html"], ["Detectronic", "p
 ${ctaSection(r, { title: "Deploy LIDoTT Alarm across your network.", lede: "Simple to install and zero maintenance by design. Ask EDS for pricing and a deployment plan.", topic: "Product pricing", product: "LIDoTT Alarm (Detectronic)" })}`,
 });
 
+/* ---- EDS instruments with a page of their own ---- */
+for (const pg of C.productPages) {
+  const b = brand("eds");
+  const pricing = { topic: "Product pricing", product: `${pg.name} (${b.name})` };
+  const datasheet = pg.docs.find((d) => d.label === "Datasheet");
+  add({
+    file: `products/${pg.slug}.html`,
+    title: pg.title,
+    description: pg.description,
+    current: "products",
+    body: (r) => `
+${pageHero(r, { crumbs: [["Products", "products/index.html"], [b.name, `products/${b.slug}.html`], [pg.name]], iconName: pg.icon, eyebrow: `${b.name} · ${pg.tag}`, title: pg.name, lede: pg.lede, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${contactHref(r, pricing)}">Request pricing ${icon("arrow-right")}</a><a class="btn btn-ghost btn-lg" href="${datasheet.href}" rel="noopener">${icon("download")} Datasheet</a>`, visual: heroProduct(pg.image, pg.name) })}
+<section class="section dark" style="padding-top:0"><div class="wrap">
+  <div class="hl-grid">${pg.highlights.map(([ic, t, d], i) => `<div class="hl holder" data-reveal style="--i:${i % 3}">${icon(ic)}<b>${esc(t)}</b><span>${esc(d)}</span></div>`).join("")}</div>
+</div></section>
+<section class="section"><div class="wrap split">
+  <div>
+    <div class="prose" data-reveal>${pg.intro.map((p) => `<p>${esc(p)}</p>`).join("")}</div>
+    <div class="feature-list" style="margin-top:40px">${pg.features.map(([t, d]) => `<div class="feature holder" data-reveal>${icon("circle-check")}<div><b>${esc(t)}</b><span>${esc(d)}</span></div></div>`).join("")}</div>
+  </div>
+  <aside class="aside">
+    <figure class="aside-card aside-figure" data-reveal="right"><img src="${pg.figure.src}" alt="${esc(pg.figure.alt)}" loading="lazy"><figcaption>${esc(pg.figure.caption)}</figcaption></figure>
+    <div class="aside-card" data-reveal="right"><h3>Documents</h3><ul class="aside-links docs">${pg.docs.map((d) => `<li><a href="${d.href}" rel="noopener"><span>${esc(`${pg.name} ${d.label.toLowerCase()}`)}<small>${docType(d.href)} · ${esc(d.note)}</small></span>${icon("download")}</a></li>`).join("")}</ul></div>
+    <div class="aside-card" data-reveal="right"><h3>Works with</h3><ul class="aside-links docs">${pg.worksWith.map(([href, t, d]) => `<li><a href="${r}${href}"><span>${esc(t)}<small>${esc(d)}</small></span>${icon("arrow-right")}</a></li>`).join("")}</ul></div>
+  </aside>
+</div></section>
+<section class="section alt" id="specifications"><div class="wrap">
+  <div class="section-head"><p class="eyebrow">Specifications</p><h2 class="h-lg" data-reveal>${esc(pg.name)} in detail.</h2></div>
+  <div class="spec-groups">${pg.specs.map(([group, rows], i) => `<div class="aside-card" data-reveal style="--i:${i % 3}"><h3>${esc(group)}</h3><table class="specs"><tbody>${rows.map(([k, v]) => `<tr><th>${esc(k)}</th><td>${esc(v)}</td></tr>`).join("")}</tbody></table></div>`).join("")}</div>
+  <p class="note spec-note" data-reveal>${esc(pg.specNote)} Full details are in the <a href="${datasheet.href}" rel="noopener">${esc(pg.name)} datasheet</a>.</p>
+</div></section>
+${ctaSection(r, { ...pg.cta, ...pricing })}`,
+  });
+}
+
 /* ---- FlowSense ---- */
 add({
   file: "flowsense.html",
@@ -1265,6 +1300,7 @@ function searchIndex() {
   for (const s of C.services) put("Services", s.title, s.summary, `services/${s.slug}.html`, { i: s.icon, b: text(s.short, C.serviceGroups.find((g) => g.id === s.group)?.title, s.intro, blockText(s.blocks), s.compare?.rows || []) });
   for (const s of C.solutions) put("Solutions", s.title, s.summary, `solutions/${s.slug}.html`, { i: s.icon, b: text(s.intro, blockText(s.blocks)) });
   put("Products", "LIDoTT Alarm", `Detectronic · ${C.lidott.lede}`, "products/lidott-alarm.html", { img: plain(C.lidott.image), b: text("level radar alarm", C.lidott.description, C.lidott.sections, C.lidott.specs) });
+  for (const pg of C.productPages) put("Products", pg.name, `EDS · ${pg.tag}`, `products/${pg.slug}.html`, { img: plain(pg.image), b: text(pg.lede, pg.intro, pg.features, pg.specs.map(([g, rows]) => [g, rows])) });
   for (const p of products) {
     if (p.href) continue; // has a page of its own, listed above
     put("Products", p.name, `${p.brand.name} · ${p.note || p.range || typeOf(p.type).label}`, `products/${p.brand.slug}.html#${p.id}`, { img: plain(p.image), b: text(typeOf(p.type).label, p.brand.title, p.brand.tag, p.group) });
