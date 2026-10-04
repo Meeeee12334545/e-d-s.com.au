@@ -1382,6 +1382,7 @@ export const about = {
     ["2023–24", "Yarra Valley Water gauge calibrations", "EDS calibrated long term sewer flow gauges across multiple Yarra Valley Water sites, so the data stays reliable for hydraulic modelling and infrastructure planning."],
     ["2023–24", "Cairns Regional Council monitoring stations", "EDS installed and maintains long term sewer monitoring stations, giving the council continuous sewer flow and water quality data to improve wastewater management and environmental sustainability."],
     ["2024", "Wingecarribee Shire Council", "EDS installed 15 short term sewer flow gauges across the Mittagong and Robertson catchments."],
+    ["2026", "Transurban service provider", "EDS was awarded a service provider contract with Transurban to service and maintain key tunnel infrastructure."],
     ["Today", "Australia's largest supplier", "EDS has grown to be Australia's largest supplier of equipment for the water and wastewater industry, and was awarded the largest sewer monitoring project in Australia in recent years."],
   ],
   founder: { name: "Cynthia Harper", role: "Co-founder, Environmental Data Services", text: "EDS continues to strive to deliver the level of service and professionalism that was part of Graham's founding ethos." },
