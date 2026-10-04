@@ -326,6 +326,10 @@
       const opt = [...select.options].find((o) => o.text.toLowerCase() === topic.toLowerCase());
       if (opt) select.value = opt.value;
     }
+    // From a "Buy, hire or Data as a Service" card: tick that way of working.
+    const mode = params.get("mode");
+    const modeInput = mode && $$("input[data-mode]", enquiry).find((i) => i.dataset.mode === mode);
+    if (modeInput) modeInput.checked = true;
     const ctx = $(".form-context", enquiry);
     if (product && ctx) {
       $("b", ctx).textContent = product;
@@ -337,7 +341,7 @@
         $("input[name=Name]", enquiry).focus();
       });
     }
-    if (topic || product) {
+    if (topic || product || modeInput) {
       // Bring the form into view and start them typing.
       enquiry.classList.add("in");
       requestAnimationFrame(() => {

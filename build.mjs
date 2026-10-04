@@ -55,12 +55,13 @@ const typeOf = (id) => C.productTypes.find((t) => t.id === id);
 const NAMELESS = new Set(["Select your technology", "Product range", "The analyser"]);
 const products = C.brands.flatMap((b) => b.groups.flatMap((g) => g.items.map((p) => ({ ...p, id: slugify(p.name), brand: b, group: g.name, range: NAMELESS.has(g.name) ? "" : g.name }))));
 
-// Links to the contact form with the topic (and product) already chosen.
-// contact.html reads ?topic= and ?product= in site.js.
-const contactHref = (r, { topic, product } = {}) => {
+// Links to the contact form with the topic (and product, and way of working)
+// already chosen. contact.html reads ?topic=, ?product= and ?mode= in site.js.
+const contactHref = (r, { topic, product, mode } = {}) => {
   const q = new URLSearchParams();
   if (topic) q.set("topic", topic);
   if (product) q.set("product", product);
+  if (mode) q.set("mode", mode);
   const qs = q.toString();
   return `${r}contact.html${qs ? `?${esc(qs)}` : ""}`;
 };
@@ -110,6 +111,7 @@ function header(r, current) {
       <div class="header-cta">
         <button class="header-search" type="button" data-search-open aria-label="Search the site" aria-keyshortcuts="Control+K Meta+K /">${icon("search")}<kbd data-kbd>Ctrl K</kbd></button>
         <a class="header-phone" href="${site.phoneHref}" aria-label="Call EDS on ${site.phone}">${icon("phone")}<span>${site.phone}</span></a>
+        <a class="header-quote" href="${r}contact.html#enquiry" data-quote-link hidden>${icon("clipboard-list")}<span class="sr-only">Quote list, </span><b data-quote-count>0</b><span class="sr-only"> items</span></a>
         <a class="btn btn-primary" href="${r}contact.html">Contact us</a>
       </div>
       <button class="burger" aria-label="Open menu" aria-expanded="false">${icon("menu", false)}</button>
@@ -129,6 +131,7 @@ function header(r, current) {
       <a class="drawer-link" href="${r}flowsense.html">FlowSense</a>
       <a class="drawer-link" href="${r}about.html">About</a>
       <a class="drawer-link" href="${r}resources.html">Resources</a>
+      <a class="drawer-link" href="${r}contact.html#enquiry" data-quote-link hidden>Your quote list <b class="count" data-quote-count>0</b></a>
       <a class="btn btn-primary btn-lg" href="${r}contact.html">Contact us</a>
       <a class="btn btn-ghost btn-lg" href="${site.phoneHref}">${icon("phone", false)}${site.phone}</a>
     </div>
@@ -208,7 +211,7 @@ const actionBar = (r, current) => `
 <nav class="actionbar" aria-label="Quick actions">
   <a href="${site.phoneHref}" data-open-dot>${icon("phone", false)}<span>Call</span></a>
   <button type="button" data-search-open>${icon("search", false)}<span>Search</span></button>
-  ${current === "contact" ? `<a class="primary" href="mailto:${site.email}">${icon("mail", false)}<span>Email</span></a>` : `<a class="primary" href="${r}contact.html">${icon("send", false)}<span>Enquire</span></a>`}
+  ${current === "contact" ? `<a class="primary" href="mailto:${site.email}">${icon("mail", false)}<span>Email</span></a>` : `<a class="primary" href="${r}contact.html#enquiry">${icon("send", false)}<span>Enquire</span><b class="count" data-quote-count hidden>0</b></a>`}
 </nav>`;
 
 // Structured data for search engines: the organisation on the home and
@@ -303,6 +306,7 @@ ${actionBar(r, current)}
 ${searchDialog()}
 <script src="${r}assets/js/site.js" defer></script>
 <script src="${r}assets/js/search.js" defer></script>
+<script src="${r}assets/js/quote.js" defer></script>
 ${scripts.map((s) => `<script src="${r}assets/js/${s}" defer></script>`).join("\n")}${tracker(r, file)}
 </body>
 </html>
@@ -563,6 +567,54 @@ const liveCard = () => `
   <div class="live-foot"><span>Illustration</span><span>${icon("signal", false)} Sent over 4G</span></div>
 </aside>`;
 
+// "Add to quote": collects products into one enquiry (quote.js). The item
+// carries paths from the site root, since the list is shown on other pages.
+const plainPath = (src) => src.replace("@root/", "");
+const quoteItem = (p) => ({ id: `${p.brand.slug}-${p.id}`, name: p.name, brand: p.brand.name, image: plainPath(p.image), href: p.href || `products/${p.brand.slug}.html#${p.id}` });
+const quoteBtn = (item, cls = "") => `<button class="quote-add${cls ? ` ${cls}` : ""}" type="button" data-quote="${esc(JSON.stringify(item))}">${icon("list-plus", false)}${icon("check", false)}<span>Add to quote</span></button>`;
+
+// Buy, hire or Data as a Service: one card each, with the enquiry form
+// opened on the right topic and way of working.
+const waysSection = (r, { cls = "" } = {}) => `
+<section class="section${cls ? ` ${cls}` : ""}" id="ways"><div class="wrap">
+  <div class="section-head"><p class="eyebrow">Ways to work with EDS</p><h2 class="h-lg" data-reveal>${esc(C.ways.heading)}</h2><p class="lede" data-reveal style="--i:1">${esc(C.ways.lede)}</p></div>
+  <div class="ways">
+    ${C.ways.items.map((w, n) => `
+    <article class="way${w.mode === "managed" ? " way-feature" : ""}" data-reveal style="--i:${n}">
+      <div class="way-head"><span class="card-icon">${icon(w.icon)}</span><div><h3>${esc(w.title)}</h3><p class="way-line">${esc(w.line)}</p></div></div>
+      <p>${esc(w.text)}</p>
+      <ul class="way-points">${w.points.map((pt) => `<li>${icon("check", false)}<span>${esc(pt)}</span></li>`).join("")}</ul>
+      <div class="way-actions">
+        <a class="btn ${w.mode === "managed" ? "btn-primary" : "btn-brand"}" href="${contactHref(r, { topic: w.topic, mode: w.mode })}">${esc(w.cta)} ${icon("arrow-right")}</a>
+        <a class="link-arrow" href="${r}${w.link[0]}">${esc(w.link[1])}</a>
+      </div>
+    </article>`).join("")}
+  </div>
+</div></section>`;
+
+// Outcomes from EDS projects as stat cards. `list` defaults to all of them.
+const resultCards = (list = C.results) => `
+  <div class="results">
+    ${list.map((x, n) => `
+    <figure class="result" data-reveal style="--i:${n}">
+      <b class="result-stat">${esc(x.stat)}</b>
+      <span class="result-label">${esc(x.label)}</span>
+      <p>${esc(x.text)}</p>
+      <figcaption>${icon("map-pin", false)}${esc(x.who)}</figcaption>
+    </figure>`).join("")}
+  </div>`;
+// Two at most beside a service page's sidebar, so the pair fills the column.
+const resultsFor = (slug) => C.results.filter((x) => x.services.includes(slug)).slice(0, 2);
+
+// How a monitoring program runs, as four numbered steps.
+const processSection = () => `
+<section class="section alt" id="how-it-runs"><div class="wrap">
+  <div class="section-head"><p class="eyebrow">How a program runs</p><h2 class="h-lg" data-reveal>From the first call to data you can act on.</h2></div>
+  <ol class="process">
+    ${C.programSteps.map(([ic, t, d], n) => `<li class="holder" data-reveal style="--i:${n}"><span class="process-n">${String(n + 1).padStart(2, "0")}</span><span class="card-icon">${icon(ic)}</span><h3>${esc(t)}</h3><p>${esc(d)}</p></li>`).join("")}
+  </ol>
+</div></section>`;
+
 // "PDF", "ZIP": shown in the Documents panel so people know what they will get.
 const docType = (href) => href.split(".").pop().toUpperCase();
 const prodDocs = (p) => `<ul class="prod-docs">${p.docs.map((d) => `<li><a href="${d.href}" rel="noopener">${icon("download")}<span>${esc(d.label)}</span></a></li>`).join("")}</ul>`;
@@ -573,11 +625,11 @@ const productCard = (r, p, { id = p.id, showBrand = false, n = 0 } = {}) => {
   const t = typeOf(p.type);
   // The product's own documents, then the ones that cover its whole brand.
   const docs = [...(p.docs || []), ...(p.brand.docs || [])];
-  const data = { name: p.name, note: p.note || "", image: p.image, brand: p.brand.name, brandHref: `${r}products/${p.brand.slug}.html`, range: p.range, type: t.label, page: p.href ? `${r}${p.href}` : "", docs };
+  const data = { name: p.name, note: p.note || "", image: p.image, brand: p.brand.name, brandHref: `${r}products/${p.brand.slug}.html`, range: p.range, type: t.label, page: p.href ? `${r}${p.href}` : "", docs, quote: quoteItem(p) };
   return `
 <article class="card prod" id="${id}" data-type="${p.type}" data-search="${esc([p.name, p.note, p.brand.name, p.brand.title, p.brand.tag, p.group, t.label].join(" ").toLowerCase())}" data-product="${esc(JSON.stringify(data))}" data-reveal style="--i:${n % 5}">
   <div class="brand-shot"><img src="${p.image}" alt="${esc(p.name)}" loading="lazy"></div>
-  <div class="prod-body">${showBrand ? `<span class="tag">${esc(p.brand.name)}</span>` : ""}<h3>${esc(p.name)}</h3>${p.note ? `<p>${esc(p.note)}</p>` : ""}${p.docs ? prodDocs(p) : ""}</div>
+  <div class="prod-body">${showBrand ? `<span class="tag">${esc(p.brand.name)}</span>` : ""}<h3>${esc(p.name)}</h3>${p.note ? `<p>${esc(p.note)}</p>` : ""}<div class="prod-foot">${p.docs ? prodDocs(p) : ""}${quoteBtn(quoteItem(p), "sm")}</div></div>
   <button class="prod-open" type="button" aria-haspopup="dialog" aria-label="Quick view: ${esc(p.name)}${showBrand ? `, ${esc(p.brand.name)}` : ""}"><span>${icon("zoom-in", false)}Quick view</span></button>
 </article>`;
 };
@@ -604,8 +656,9 @@ const quickView = () => `
     </dl>
     <div class="qv-actions">
       <a class="btn btn-brand btn-lg" data-qv="enquire">Request pricing ${icon("arrow-right")}</a>
-      <a class="btn btn-outline btn-lg" href="${site.phoneHref}">${icon("phone")} ${site.phone}</a>
+      <button class="quote-add btn-lg" type="button" data-qv="quote">${icon("list-plus", false)}${icon("check", false)}<span>Add to quote</span></button>
     </div>
+    <a class="qv-call" href="${site.phoneHref}">${icon("phone", false)} Or call ${site.phone}</a>
     <a class="link-arrow qv-page" data-qv="page" hidden>See how it works ${icon("arrow-right")}</a>
     <div class="qv-docs" data-qv="docs" hidden><h3>Documents</h3><ul class="aside-links"></ul></div>
     <p class="note">Sales, hire and service from EDS, Australia wide.</p>
@@ -715,6 +768,16 @@ add({
   </div>
 </section>
 
+<section class="section alt" id="results">
+  <div class="wrap">
+    <div class="section-head split">
+      <div><p class="eyebrow">Results from the field</p><h2 class="h-lg" data-reveal>Data that changed the decision.</h2></div>
+      <a class="btn btn-outline" href="${r}about.html#projects">Recent projects ${icon("arrow-right")}</a>
+    </div>
+    ${resultCards()}
+  </div>
+</section>
+
 ${labSection()}
 
 <section class="section fs-band" id="flowsense">
@@ -752,7 +815,9 @@ ${labSection()}
   </div>
 </section>
 
-<section class="section" id="industries">
+${waysSection(r)}
+
+<section class="section alt" id="industries">
   <div class="wrap">
     <div class="section-head"><h2 class="h-lg" data-reveal>Built for critical infrastructure.</h2>
     <p class="lede" data-reveal style="--i:1">EDS provides the capability, experience and service that clients rely on for critical infrastructure and operational monitoring.</p></div>
@@ -767,7 +832,7 @@ ${labSection()}
   </div>
 </section>
 
-<section class="section alt" id="about">
+<section class="section" id="about">
   <div class="wrap split">
     <div>
       <p class="eyebrow">Since 1991</p>
@@ -834,6 +899,7 @@ ${C.serviceGroups.map((g, gi) => `
     ${C.services.filter((s) => s.group === g.id).map((s, n) => cardLink(r, { href: `services/${s.slug}.html`, iconName: s.icon, title: s.title, text: s.summary, n })).join("")}
   </div>
 </div></section>`).join("")}
+${waysSection(r)}
 ${ctaSection(r)}`,
 });
 
@@ -849,6 +915,8 @@ const blockHtml = (b) => `
 function sectionsOf(s) {
   const list = [...(s.blocks || []).map((b) => [slugify(b.heading), b.heading])];
   if (s.compare) list.push([slugify(s.compare.heading), s.compare.heading]);
+  if (resultsFor(s.slug).length) list.push(["results", "Results from the field"]);
+  if (s.process) list.push(["how-it-runs", "How a program runs"]);
   if (s.widget === "lab") list.push(["flow-lab", "Try the flow lab"]);
   if (s.widget === "lidott") list.push(["alarm-demo", "Try the alarm"]);
   if (s.widget === "eas") list.push(["asset-score", "Try the EDS Asset Score"]);
@@ -888,9 +956,11 @@ ${pageHero(r, { crumbs: [["Services", "services/index.html"], [s.short || s.titl
     ${s.blocks.length ? `<div style="margin-top:clamp(40px,5vw,64px)">${s.blocks.map(blockHtml).join("")}</div>` : ""}
     ${s.compare ? `<div class="block" id="${slugify(s.compare.heading)}" data-reveal><h2 class="h-md">${s.compare.heading}</h2><div class="table-scroll"><table class="compare"><thead><tr><th></th><th>${s.compare.left}</th><th>${s.compare.right}</th></tr></thead><tbody>${s.compare.rows.map((row) => `<tr>${row.map((c) => `<td>${esc(c)}</td>`).join("")}</tr>`).join("")}</tbody></table></div></div>` : ""}
     ${s.quote ? `<figure class="quote" data-reveal style="margin:clamp(40px,5vw,64px) 0 0">${icon("quote", false)}<blockquote>${esc(s.quote.text)}</blockquote></figure>` : ""}
+    ${resultsFor(s.slug).length ? `<div class="block results-block" id="results" data-reveal><h2 class="h-md">Results from the field</h2>${resultCards(resultsFor(s.slug))}</div>` : ""}
   </div>
   ${asideHtml(r, [["Related services", svcLinks(r, s.related)], ["Related solutions", solLinks(r, s.solutions)], ["Products we use", brandLinks(r, s.products)], ["White papers", paperLinks(s.papers)]], s.title)}
 </div></section>
+${s.process ? processSection() : ""}
 ${s.widget === "lab" ? labSection({ eyebrow: "Try it", title: s.slug.startsWith("inflow") ? "Watch inflow and infiltration happen." : "What the flow meter sees in a storm." }) : ""}
 ${s.widget === "lidott" ? `<section class="section dark" id="alarm-demo"><div class="wrap"><div class="section-head"><p class="eyebrow">Try it</p><h2 class="h-lg" data-reveal>Raise the water. Watch the alarm.</h2></div>${lidottDemo()}</div></section>` : ""}
 ${ctaSection(r, { topic: s.title })}`,
@@ -939,7 +1009,7 @@ add({
   current: "products",
   scripts: ["products.js"],
   body: (r) => `
-${pageHero(r, { crumbs: [["Products"]], eyebrow: "Products", title: "Industry leading instruments, backed by people who use them.", lede: "EDS is a manufacturer, and represents leading manufacturers, in water supply and management, wastewater management, flow monitoring and process control.", actions: `<a class="btn btn-primary btn-lg" data-magnetic href="#finder">${icon("package-search")} Find an instrument</a><a class="btn btn-ghost btn-lg" href="${contactHref(r, { topic: "Product pricing" })}">Request pricing</a>`, visual: heroToc([["ranges", "Product ranges", C.brands.length], ["finder", "Instrument finder", products.length], ["featured", "Featured: LIDoTT Alarm"]]) })}
+${pageHero(r, { crumbs: [["Products"]], eyebrow: "Products", title: "Industry leading instruments, backed by people who use them.", lede: "EDS is a manufacturer, and represents leading manufacturers, in water supply and management, wastewater management, flow monitoring and process control.", actions: `<a class="btn btn-primary btn-lg" data-magnetic href="#finder">${icon("package-search")} Find an instrument</a><a class="btn btn-ghost btn-lg" href="${contactHref(r, { topic: "Product pricing" })}">Request pricing</a>`, visual: heroToc([["ranges", "Product ranges", C.brands.length], ["finder", "Instrument finder", products.length], ["featured", "Featured: LIDoTT Alarm"], ["ways", "Buy, hire or Data as a Service"]]) })}
 <section class="section" id="ranges"><div class="wrap"><div class="grid c4">
   ${C.brands.map((b, n) => `
   <a class="card brand-card tilt" href="${r}products/${b.slug}.html" data-reveal style="width:auto;--i:${n % 4}">
@@ -974,6 +1044,7 @@ ${quickView()}
   <div class="hero-actions"><a class="btn btn-brand btn-lg" href="${r}products/lidott-alarm.html">See how it works ${icon("arrow-right")}</a></div></div>
   <div class="brand-shot" style="border:1px solid var(--border);border-radius:24px;aspect-ratio:1" data-reveal="right"><img src="${C.lidott.image}" alt="LIDoTT Alarm" loading="lazy"></div>
 </div></section>
+${waysSection(r, { cls: "alt" })}
 ${ctaSection(r, { title: "Need help choosing an instrument?", lede: "Our team has installed, serviced and calibrated all of them. Ask us which suits your application.", topic: "Product pricing" })}`,
 });
 
@@ -1030,7 +1101,7 @@ add({
   current: "products",
   scripts: ["widgets.js"],
   body: (r) => `
-${pageHero(r, { crumbs: [["Products", "products/index.html"], ["Detectronic", "products/detectronic.html"], ["LIDoTT Alarm"]], iconName: "bell", eyebrow: "Detectronic", title: "LIDoTT Alarm", lede: C.lidott.lede, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${contactHref(r, { topic: "Product pricing", product: "LIDoTT Alarm (Detectronic)" })}">Request pricing ${icon("arrow-right")}</a><a class="btn btn-ghost btn-lg" href="${C.lidott.datasheet}" rel="noopener">${icon("download")} Datasheet</a>`, visual: heroProduct(C.lidott.image, "LIDoTT Alarm") })}
+${pageHero(r, { crumbs: [["Products", "products/index.html"], ["Detectronic", "products/detectronic.html"], ["LIDoTT Alarm"]], iconName: "bell", eyebrow: "Detectronic", title: "LIDoTT Alarm", lede: C.lidott.lede, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${contactHref(r, { topic: "Product pricing", product: "LIDoTT Alarm (Detectronic)" })}">Request pricing ${icon("arrow-right")}</a>${quoteBtn(quoteItem(products.find((p) => p.href === "products/lidott-alarm.html")), "btn-lg on-dark")}<a class="btn btn-ghost btn-lg" href="${C.lidott.datasheet}" rel="noopener">${icon("download")} Datasheet</a>`, visual: heroProduct(C.lidott.image, "LIDoTT Alarm") })}
 <section class="section dark" style="padding-top:0"><div class="wrap">
   <div class="hl-grid" style="margin-bottom:clamp(40px,5vw,64px)">${C.lidott.highlights.map(([ic, t, d], i) => `<div class="hl holder" data-reveal style="--i:${i % 3}">${icon(ic)}<b>${t}</b><span>${d}</span></div>`).join("")}</div>
   <div class="section-head"><p class="eyebrow">See it work</p><h2 class="h-lg" data-reveal>Raise the water. Watch the alarm.</h2></div>
@@ -1060,7 +1131,7 @@ for (const pg of C.productPages) {
     description: pg.description,
     current: "products",
     body: (r) => `
-${pageHero(r, { crumbs: [["Products", "products/index.html"], [b.name, `products/${b.slug}.html`], [pg.name]], iconName: pg.icon, eyebrow: `${b.name} · ${pg.tag}`, title: pg.name, lede: pg.lede, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${contactHref(r, pricing)}">Request pricing ${icon("arrow-right")}</a><a class="btn btn-ghost btn-lg" href="${datasheet.href}" rel="noopener">${icon("download")} Datasheet</a>`, visual: heroProduct(pg.image, pg.name) })}
+${pageHero(r, { crumbs: [["Products", "products/index.html"], [b.name, `products/${b.slug}.html`], [pg.name]], iconName: pg.icon, eyebrow: `${b.name} · ${pg.tag}`, title: pg.name, lede: pg.lede, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${contactHref(r, pricing)}">Request pricing ${icon("arrow-right")}</a>${quoteBtn(quoteItem(products.find((p) => p.href === `products/${pg.slug}.html`)), "btn-lg on-dark")}<a class="btn btn-ghost btn-lg" href="${datasheet.href}" rel="noopener">${icon("download")} Datasheet</a>`, visual: heroProduct(pg.image, pg.name) })}
 <section class="section dark" style="padding-top:0"><div class="wrap">
   <div class="hl-grid">${pg.highlights.map(([ic, t, d], i) => `<div class="hl holder" data-reveal style="--i:${i % 3}">${icon(ic)}<b>${esc(t)}</b><span>${esc(d)}</span></div>`).join("")}</div>
 </div></section>
@@ -1138,7 +1209,7 @@ ${pageHero(r, { crumbs: [["About"]], eyebrow: "About EDS", title: "Australian ow
   <p class="lede" data-reveal style="--i:1">EDS began in Queensland in 1991, following Graham's success with Elpro, and alongside the release of the Pump Station Manager.</p></div>
   <div class="timeline">
     <span class="timeline-fill"></span>
-    ${C.about.timeline.map(([when, t, d]) => `<div class="tl" data-reveal><time>${when}</time><i></i><div><h3>${t}</h3><p>${d}</p></div></div>`).join("")}
+    ${C.about.timeline.map(([when, t, d], i) => `<div class="tl"${i === C.about.timeline.findIndex(([w]) => w.startsWith("2022")) ? ' id="projects"' : ""} data-reveal><time>${when}</time><i></i><div><h3>${t}</h3><p>${d}</p></div></div>`).join("")}
   </div>
   <figure class="quote" data-reveal style="margin:48px 0 0">${icon("quote", false)}<blockquote>${C.about.founder.text}</blockquote><cite><b>${C.about.founder.name}</b>, ${C.about.founder.role}</cite></figure>
 </div></section>
@@ -1221,6 +1292,23 @@ ${pageHero(r, { crumbs: [["Contact"]], eyebrow: "Contact", title: "Call or visit
         <button type="button" data-context-clear aria-label="Remove this product from the enquiry">${icon("x", false)}</button>
         <input type="hidden" name="Product">
       </div>
+      <div class="quote-box" data-quote-box hidden>
+        <div class="quote-box-head">
+          <span class="card-icon">${icon("clipboard-list", false)}</span>
+          <div><small>Your quote list</small><b data-quote-summary></b></div>
+          <button type="button" class="quote-clear" data-quote-clear>${icon("trash-2", false)}<span>Clear</span></button>
+        </div>
+        <ul class="quote-items" data-quote-items></ul>
+        <a class="quote-more" href="${r}products/index.html#finder">${icon("plus", false)} Add more products</a>
+      </div>
+      <template data-quote-row>
+        <li>
+          <img alt="" width="48" height="48" loading="lazy">
+          <span><a></a><small></small></span>
+          <span class="qty"><button type="button" data-step="-1">${icon("minus", false)}</button><input type="number" min="1" max="999" value="1" inputmode="numeric"><button type="button" data-step="1">${icon("plus", false)}</button></span>
+          <button type="button" class="quote-remove" aria-label="Remove">${icon("x", false)}</button>
+        </li>
+      </template>
       <div class="field-row">
         <label class="field">Name<input name="Name" autocomplete="name" required></label>
         <label class="field"><span>Organisation <i>Optional</i></span><input name="Organisation" autocomplete="organization"></label>
@@ -1235,7 +1323,14 @@ ${pageHero(r, { crumbs: [["Contact"]], eyebrow: "Contact", title: "Call or visit
         <optgroup label="Solutions">${C.solutions.map((s) => `<option>${esc(s.title)}</option>`).join("")}</optgroup>
         <optgroup label="Products and support"><option>Product pricing</option><option>Equipment service or calibration</option><option>EDS FlowSense</option></optgroup>
       </select></label>
+      <fieldset class="field modes">
+        <legend><span>How would you like to work? <i>Optional</i></span></legend>
+        <div class="mode-chips">
+          ${[...C.ways.items.map((w) => [w.mode, w.title === "Data as a Service" ? "Managed by EDS (DaaS)" : w.title]), ["unsure", "Not sure yet"]].map(([m, label]) => `<label class="mode-chip"><input type="radio" name="Way of working" value="${esc(label)}" data-mode="${m}"><span>${esc(label)}</span></label>`).join("")}
+        </div>
+      </fieldset>
       <label class="field">Message<textarea name="Message" required placeholder="Tell us about your site, network or project"></textarea></label>
+      <textarea name="Products" hidden disabled></textarea>
       <button class="btn btn-primary btn-lg" type="submit" style="justify-self:start">${icon("send")} Open email to send</button>
       <p class="note">This opens your email program with the enquiry filled in, addressed to ${site.email}.</p>
     </div>
@@ -1294,7 +1389,7 @@ function searchIndex() {
   const items = [];
   const text = (...parts) => parts.flat(Infinity).filter(Boolean).join(" ");
   const blockText = (blocks = []) => blocks.map((b) => [b.heading, b.items || [], b.list || []]);
-  const plain = (src) => src.replace("@root/", "");
+  const plain = plainPath;
   const put = (g, t, s, h, more = {}) => items.push({ g, t, s, h, ...more });
 
   for (const s of C.services) put("Services", s.title, s.summary, `services/${s.slug}.html`, { i: s.icon, b: text(s.short, C.serviceGroups.find((g) => g.id === s.group)?.title, s.intro, blockText(s.blocks), s.compare?.rows || []) });

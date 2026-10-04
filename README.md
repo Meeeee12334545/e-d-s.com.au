@@ -22,12 +22,13 @@ The build stops with an error if a page repeats an element id, since product lin
 
 | Path | What |
 |---|---|
-| `src/data/content.mjs` | Every word on the site, the services and their groups, the product lists (each product has a `type` from `productTypes`) and the city districts. Edit copy here. |
+| `src/data/content.mjs` | Every word on the site, the services and their groups, the product lists (each product has a `type` from `productTypes`) and the city districts. Edit copy here. Also the selling points shared across pages: `ways` (buy, hire or Data as a Service), `results` (project outcomes, each shown on the service pages it lists) and `programSteps` (how a monitoring program runs, on services marked `process: true`). |
 | `build.mjs` | Page templates. Generates 48 pages, including `404.html`, plus `sitemap.xml`, `robots.txt` and the search index. |
 | `src/css/site.css` | All styles and design tokens. Visitors whose system asks for reduced motion get fades instead of slides and no card tilt (the end of the file). |
 | `src/js/site.js` | Navigation, scroll reveals, counters, pointer effects, the flow-field background, the illustrative flow meter card in the home hero, sidebars that stay in view when they fit, the enquiry form, the "head office open now" status and the phone action bar. |
 | `src/js/search.js` | Site search (Ctrl K, ⌘K or `/`). Its index, `assets/js/search-index.js`, is written by `build.mjs` from `content.mjs` and loads the first time search opens. |
 | `src/js/products.js` | Product quick view and the instrument finder on the products page. |
+| `src/js/quote.js` | The quote list. "Add to quote" on product cards, the quick view and product pages collects products in the visitor's browser (localStorage, nothing sent); the header and phone action bar show the count, and the enquiry form lists them with quantities and adds them to the email. |
 | `src/js/city.js` | The interactive isometric city on the home page. |
 | `src/js/lab.js` | The storm and hydrograph simulator. |
 | `src/js/widgets.js` | Office map, LIDoTT Alarm demo, EDS Asset Score dial. |
@@ -66,7 +67,7 @@ Other settings (`PORT`, `DATA_DIR`, `ANALYTICS_TZ`, `SESSION_SECRET`) are descri
 
 ## Links that carry context
 
-- **Enquiries.** `contact.html?topic=...&product=...` opens the form with the topic chosen (matched against the option text) and the product named. Use `contactHref()` in `build.mjs` rather than writing these by hand.
+- **Enquiries.** `contact.html?topic=...&product=...&mode=...` opens the form with the topic chosen (matched against the option text), the product named and the way of working ticked (`buy`, `hire`, `managed` or `unsure`). Use `contactHref()` in `build.mjs` rather than writing these by hand.
 - **Products.** Every product card has an id, so `products/hach-flow.html#fl900-portable` opens that product's quick view. On the products page the id is prefixed with the brand: `#hach-flow-fl900-portable`.
 - **Instrument finder.** `products/index.html?q=flow#finder` opens the finder already filtered.
 

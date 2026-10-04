@@ -750,7 +750,7 @@ input[type="range"]::-moz-range-thumb { width: 16px; height: 16px; border-radius
 
 /* contact */
 .contact-grid { display: grid; grid-template-columns: 1fr 1.1fr; gap: clamp(28px, 5vw, 72px); }
-.contact-cards { display: grid; gap: 12px; }
+.contact-cards { display: grid; gap: 12px; align-content: start; }
 .contact-card { display: grid; grid-template-columns: 48px 1fr; gap: 16px; padding: 20px; border-radius: var(--radius); border: 1px solid var(--border); background: #fff; align-items: center; transition: border-color .2s var(--ease), translate .3s var(--ease-out), box-shadow .3s; }
 a.contact-card:hover { border-color: var(--brand); translate: 0 -3px; box-shadow: var(--shadow-md); }
 .contact-card b { display: block; font-family: var(--font-display); color: var(--ink); font-size: 1.2rem; font-weight: 640; }
@@ -1117,6 +1117,151 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: 6
   .actionbar [data-open-dot].is-open::after { content: ""; position: absolute; top: 11px; left: calc(50% - 15px); width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 2px rgba(7, 35, 33, .92); }
 }
 
+/* ---------- quote list (quote.js) ----------
+   "Add to quote" on product cards, the quick view and product pages; the
+   count in the header; the list inside the enquiry form. */
+.quote-add {
+  display: inline-flex; align-items: center; justify-content: center; gap: .5em;
+  padding: .82em 1.25em; border-radius: 999px; border: 1px solid var(--border-strong); background: #fff;
+  color: var(--ink); font-weight: 600; font-size: .95rem; line-height: 1; white-space: nowrap;
+  transition: background-color .2s var(--ease), border-color .2s var(--ease), color .2s var(--ease), scale .15s var(--ease);
+}
+.quote-add:hover { border-color: var(--brand); color: var(--brand-dark); }
+.quote-add:active { scale: .97; }
+.quote-add .icon { font-size: 1.12em; color: var(--brand); }
+.quote-add > .icon:nth-of-type(2), .quote-add.added > .icon:first-of-type { display: none; }
+.quote-add.added > .icon:nth-of-type(2) { display: block; animation: quote-pop .45s var(--ease-spring); }
+.quote-add.added { background: rgba(13, 124, 114, .08); border-color: rgba(13, 124, 114, .4); color: var(--brand-dark); }
+.quote-add.btn-lg { font-size: 1.02rem; padding: 1em 1.5em; }
+.quote-add.sm { width: 100%; padding: .66em .9em; font-size: .84rem; }
+.quote-add.on-dark { border-color: var(--line-dark-strong); background: rgba(255, 255, 255, .04); color: #fff; }
+.quote-add.on-dark:hover { background: rgba(255, 255, 255, .12); border-color: rgba(255, 255, 255, .4); }
+.quote-add.on-dark .icon { color: var(--aqua); }
+.quote-add.on-dark.added { background: var(--aqua-soft); border-color: rgba(95, 180, 166, .55); }
+@keyframes quote-pop { 0% { scale: .3; } 100% { scale: 1; } }
+
+.prod-foot { position: relative; z-index: 3; margin-top: auto; padding-top: 14px; display: grid; gap: 10px; }
+.prod-foot .prod-docs { margin-top: 0; padding-top: 0; }
+.qv-call { display: inline-flex; align-items: center; gap: 8px; font-size: .9rem; font-weight: 600; color: var(--brand-dark); }
+.qv-call .icon { color: var(--brand); }
+.qv-call:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+.header-quote { display: inline-flex; align-items: center; gap: 7px; height: 40px; padding: 0 13px 0 12px; border-radius: 999px; border: 1px solid rgba(95, 180, 166, .5); background: var(--aqua-soft); color: #fff; font-size: 17px; transition: background-color .2s var(--ease); }
+.header-quote:hover { background: rgba(95, 180, 166, .26); }
+.header-quote .icon { color: var(--aqua); }
+.header-quote b { font-size: .88rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.header-quote.bump { animation: quote-bump .5s var(--ease-spring); }
+@keyframes quote-bump { 40% { scale: 1.14; } 100% { scale: 1; } }
+.drawer-link .count, .actionbar .count { display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; background: var(--aqua); color: #04201d; font-family: var(--font-body); font-size: .76rem; font-weight: 700; }
+.actionbar .count { position: absolute; top: -6px; right: -4px; box-shadow: 0 0 0 2px rgba(7, 35, 33, .92); }
+
+.quote-toast {
+  position: fixed; z-index: 130; left: 50%; bottom: 24px; translate: -50% 18px; opacity: 0; pointer-events: none;
+  display: flex; align-items: center; gap: 16px; width: max-content; max-width: calc(100% - 32px); padding: 10px 10px 10px 18px;
+  border-radius: 16px; border: 1px solid var(--line-dark-strong); background: rgba(7, 35, 33, .96); color: #fff; font-size: .92rem;
+  box-shadow: 0 20px 44px rgba(0, 0, 0, .32); transition: opacity .25s var(--ease), translate .4s var(--ease-out);
+}
+.quote-toast.show { opacity: 1; translate: -50% 0; pointer-events: auto; }
+.quote-toast a { flex: none; padding: 9px 15px; border-radius: 999px; background: var(--aqua); color: #04201d; font-weight: 650; }
+.quote-toast a:hover { background: #7bc1b5; }
+
+/* the list inside the enquiry form, on the dark form surface */
+.quote-box { display: grid; gap: 10px; padding: 12px; border-radius: 16px; border: 1px solid rgba(95, 180, 166, .35); background: rgba(95, 180, 166, .07); }
+.quote-box-head { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 2px 2px 2px 4px; }
+.quote-box-head .card-icon { width: 44px; height: 44px; font-size: 20px; }
+.quote-box-head small { display: block; font-size: .7rem; font-weight: 650; letter-spacing: .12em; text-transform: uppercase; color: var(--on-dark-faint); }
+.quote-box-head b { color: #fff; font-weight: 600; }
+.quote-clear { display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 999px; font-size: .82rem; font-weight: 600; color: var(--on-dark-soft); }
+.quote-clear:hover { background: rgba(255, 255, 255, .1); color: #fff; }
+.quote-items { display: grid; gap: 6px; }
+.quote-items li { display: grid; grid-template-columns: 48px minmax(0, 1fr) auto auto; gap: 12px; align-items: center; padding: 8px; border-radius: 12px; background: rgba(255, 255, 255, .05); }
+.quote-items img { width: 48px; height: 48px; object-fit: contain; background: #fff; border-radius: 9px; padding: 4px; }
+.quote-items a { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #fff; font-weight: 600; }
+.quote-items a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.quote-items small { display: block; font-size: .78rem; color: var(--on-dark-faint); }
+.qty { display: inline-flex; align-items: center; border: 1px solid var(--line-dark-strong); border-radius: 999px; }
+.qty button { width: 32px; height: 34px; display: grid; place-items: center; border-radius: 999px; color: var(--on-dark-soft); font-size: 14px; }
+.qty button:hover { background: rgba(255, 255, 255, .1); color: #fff; }
+.qty input { width: 36px; padding: 0; border: 0; background: none; color: #fff; font: inherit; font-size: .92rem; font-weight: 650; text-align: center; font-variant-numeric: tabular-nums; -moz-appearance: textfield; appearance: textfield; }
+.qty input::-webkit-inner-spin-button, .qty input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.qty input:focus-visible { outline: 2px solid var(--aqua); outline-offset: 0; border-radius: 6px; }
+.quote-remove { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; color: var(--on-dark-soft); font-size: 17px; }
+.quote-remove:hover { background: rgba(255, 255, 255, .1); color: #fff; }
+.quote-more { justify-self: start; display: inline-flex; align-items: center; gap: 6px; padding: 4px; font-size: .86rem; font-weight: 600; color: var(--aqua); }
+.quote-more:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+/* "How would you like to work?" in the enquiry form */
+.modes { border: 0; padding: 0; margin: 0; min-width: 0; }
+.modes legend { padding: 0; margin-bottom: 8px; }
+.mode-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.mode-chip { position: relative; cursor: pointer; }
+.mode-chip input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+.mode-chip span { display: inline-flex; padding: 9px 14px; border-radius: 999px; border: 1px solid var(--line-dark-strong); background: rgba(255, 255, 255, .04); font-size: .86rem; font-weight: 550; color: var(--on-dark-soft); transition: background-color .2s var(--ease), border-color .2s var(--ease), color .2s var(--ease); }
+.mode-chip:hover span { border-color: rgba(255, 255, 255, .4); color: #fff; }
+.mode-chip input:checked + span { background: var(--aqua); border-color: var(--aqua); color: #04201d; font-weight: 650; }
+.mode-chip input:focus-visible + span { outline: 2px solid var(--aqua); outline-offset: 2px; }
+
+/* ---------- ways to work, results, how a program runs ---------- */
+.ways { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+/* Each card spans four rows of the parent grid, so the intros, checklists
+   and buttons line up across the three however long each intro runs. */
+.way { display: grid; grid-row: span 4; grid-template-rows: subgrid; row-gap: 18px; padding: clamp(24px, 2.6vw, 34px); border-radius: 22px; background: #fff; border: 1px solid var(--border); box-shadow: var(--shadow); }
+.way-head { display: flex; align-items: center; gap: 14px; }
+.way h3 { font-size: 1.45rem; }
+.way-line { margin-top: 5px; font-size: .74rem; font-weight: 650; letter-spacing: .12em; text-transform: uppercase; color: var(--brand); }
+.way > p { line-height: 1.6; }
+.way-points { display: grid; align-content: start; gap: 10px; padding-top: 18px; border-top: 1px solid var(--border); }
+.way-points li { display: grid; grid-template-columns: 20px 1fr; gap: 10px; align-items: start; font-size: .95rem; font-weight: 550; color: var(--ink); }
+.way-points .icon { margin-top: 3px; color: var(--brand); }
+.way-actions { padding-top: 6px; display: flex; flex-direction: column; align-items: flex-start; gap: 16px; }
+.way-feature { position: relative; isolation: isolate; overflow: hidden; border: 0; background: var(--grain), var(--brand-gradient); color: rgba(255, 255, 255, .85); box-shadow: var(--shadow-lg); }
+.way-feature h3, .way-feature .way-points li { color: #fff; }
+.way-feature .way-line { color: #c3ebe3; }
+.way-feature .card-icon { background: rgba(255, 255, 255, .13); color: #fff; }
+.way-feature .way-points { border-top-color: rgba(255, 255, 255, .18); }
+.way-feature .way-points .icon { color: #a8e0d6; }
+.way-feature .link-arrow { color: #fff; }
+
+.results { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.results-block { margin-top: clamp(40px, 5vw, 64px); }
+.block .results { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.result { margin: 0; display: flex; flex-direction: column; gap: 8px; padding: 26px; border-radius: var(--radius); background: #fff; border: 1px solid var(--border); }
+.result-stat { font-family: var(--font-display); font-size: clamp(2.4rem, 4vw, 3.1rem); font-weight: 650; line-height: 1; letter-spacing: -.035em; color: var(--brand); }
+.result-label { font-family: var(--font-display); font-size: 1.04rem; font-weight: 620; line-height: 1.3; color: var(--ink); }
+.result p { font-size: .9rem; line-height: 1.55; color: var(--muted); }
+.result figcaption { margin-top: auto; padding-top: 14px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 8px; font-size: .84rem; font-weight: 650; color: var(--ink-2); }
+.result figcaption .icon { color: var(--brand); }
+
+.process { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin: 0; padding: 0; list-style: none; }
+.process li { position: relative; display: flex; flex-direction: column; gap: 12px; padding: 26px; border-radius: var(--radius); background: #fff; border: 1px solid var(--border); }
+.process li:not(:last-child)::after { content: ""; position: absolute; top: 49px; right: -17px; width: 18px; height: 2px; background: var(--brand); opacity: .35; }
+.process-n { position: absolute; top: 24px; right: 24px; font-family: var(--font-display); font-size: .9rem; font-weight: 650; letter-spacing: .06em; color: var(--muted); }
+.process h3 { font-size: 1.12rem; }
+.process p { font-size: .92rem; line-height: 1.55; color: var(--muted); }
+
+@media (max-width: 1180px) {
+  .results, .process { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .process li::after { display: none; }
+}
+@media (max-width: 980px) {
+  .ways { grid-template-columns: 1fr; }
+}
+@media (max-width: 700px) {
+  .results, .block .results, .process { grid-template-columns: 1fr; }
+  /* the action bar's Enquire button carries the count on a phone */
+  .header-quote { display: none; }
+  .quote-toast { bottom: calc(86px + env(safe-area-inset-bottom)); }
+  .qv-actions .quote-add { width: 100%; }
+  .prod-foot { padding-top: 10px; }
+  .quote-add.sm { padding: .6em .5em; font-size: .78rem; gap: .35em; }
+}
+@media (max-width: 560px) {
+  .quote-items li { grid-template-columns: 44px minmax(0, 1fr) auto; row-gap: 8px; }
+  .quote-items img { grid-row: span 2; width: 44px; height: 44px; }
+  .quote-items .qty { grid-column: 2; justify-self: start; }
+  .quote-items .quote-remove { grid-row: 1; grid-column: 3; }
+}
+
 /* ---------- less motion ----------
    For visitors whose system asks for reduced motion the ambient animation
    stays, but sections fade in rather than slide, and links jump instead of
@@ -1128,7 +1273,7 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: 6
 
 /* ---------- print: specifications and contact details on paper ---------- */
 @media print {
-  .header, .drawer, .progress, .actionbar, dialog, .skip, canvas, .hero-actions, .hero-hint, .hero-toc, .hero-panel, .live, .to-top, .cta, .city-section, .lab, .demo, .rail-nav, .signup, .prod-open, .range-hint, .finder-bar, .form { display: none !important; }
+  .header, .drawer, .progress, .actionbar, dialog, .skip, canvas, .hero-actions, .hero-hint, .hero-toc, .hero-panel, .live, .to-top, .cta, .city-section, .lab, .demo, .rail-nav, .signup, .prod-open, .range-hint, .finder-bar, .form, .quote-add, .header-quote, .quote-toast, .way-actions { display: none !important; }
   body { background: #fff; color: #000; font-size: 11pt; }
   .dark, .fs-band, .page-hero, .section.alt { background: #fff !important; color: #000 !important; }
   :is(.dark, .page-hero, .fs-band) :is(h1, h2, h3, h4, p, .lede, .eyebrow, .crumbs) { color: #000 !important; }
