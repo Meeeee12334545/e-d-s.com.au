@@ -38,12 +38,11 @@ export const offices = [
   { city: "Richmond", state: "NSW", note: "New South Wales and ACT", lon: 150.75, lat: -33.6 },
   { city: "Boronia", state: "VIC", note: "Victoria", lon: 145.28, lat: -37.86 },
   { city: "Adelaide", state: "SA", note: "South Australia", lon: 138.6, lat: -34.93 },
-  { city: "Canning Vale", state: "WA", note: "Western Australia", lon: 115.92, lat: -32.06 },
 ];
 
 export const stats = [
   { value: 1991, label: "Founded in Queensland. Australian owned ever since.", plain: true },
-  { value: 5, label: "Offices across Australia" },
+  { value: 4, label: "Offices across Australia" },
   { value: 99.95, suffix: "%", decimals: 2, label: "Data availability under EDS DaaS" },
   { value: 24, suffix: "/7", label: "Real-time monitoring and alarms" },
 ];
@@ -59,7 +58,7 @@ export const serviceGroups = [
   { id: "sewer", title: "Sewer networks", heading: "Know what is in the pipe, and what should not be.", lede: "Measuring what flows through the network, finding where water gets in, and proving the fixes worked." },
   { id: "water", title: "Water & environment", heading: "Quality, sampling and rainfall, measured properly.", lede: "For utilities, industry and environmental projects, with full pipe flow alongside." },
   { id: "data", title: "Real-time data & analysis", heading: "From a reading to a decision.", lede: "Data that arrives as it happens, reaches the systems you already run, and ends in a report you can act on." },
-  { id: "field", title: "Field services & support", heading: "The people and equipment behind every program.", lede: "Calibration, hire, facility management and training, from five offices across Australia." },
+  { id: "field", title: "Field services & support", heading: "The people and equipment behind every program.", lede: "Calibration, hire, facility management and training, from four offices across Australia." },
 ];
 
 export const services = [
@@ -1183,6 +1182,13 @@ export const about = {
     ["2001–02", "Amberley Fire Training Facility", "EDS builds the facility under Graham's leadership."],
     ["2003", "Defence facility contract", "EDS begins servicing and monitoring the Australian Defence facility, under a contract still in place."],
     ["2005", "A founder's legacy", "Graham sadly passes. Under Cynthia's stewardship, EDS continues to thrive and grow."],
+    ["2022–23", "Goulburn Valley Water, Kilmore", "EDS provided sewer flow monitoring at 10 sites in Kilmore, supporting Goulburn Valley Water's infrastructure management and planning."],
+    ["2023", "Sydney Water panel contract", "EDS was awarded a five year panel provider contract to supply sewer flow and level instrumentation to Sydney Water."],
+    ["2023", "North East Water", "EDS ran sewer and rainfall monitoring across 15 sites over eight weeks, giving North East Water high resolution data for infrastructure planning and management."],
+    ["2023", "Townsville City Council, Wulguru & Pallarenda", "EDS installed and operated sewer monitoring equipment at 34 sites over 12 weeks to inform the council's infrastructure planning and management."],
+    ["2023–24", "Yarra Valley Water gauge calibrations", "EDS calibrated long term sewer flow gauges across multiple Yarra Valley Water sites, so the data stays reliable for hydraulic modelling and infrastructure planning."],
+    ["2023–24", "Cairns Regional Council monitoring stations", "EDS installed and maintains long term sewer monitoring stations, giving the council continuous sewer flow and water quality data to improve wastewater management and environmental sustainability."],
+    ["2024", "Wingecarribee Shire Council", "EDS installed 15 short term sewer flow gauges across the Mittagong and Robertson catchments."],
     ["Today", "Australia's largest supplier", "EDS has grown to be Australia's largest supplier of equipment for the water and wastewater industry, and was awarded the largest sewer monitoring project in Australia in recent years."],
   ],
   founder: { name: "Cynthia Harper", role: "Co-founder, Environmental Data Services", text: "EDS continues to strive to deliver the level of service and professionalism that was part of Graham's founding ethos." },
@@ -1201,7 +1207,6 @@ export const clients = [
   ["Ventia", "client-ventia.jpg"],
   ["Bureau of Meteorology", "client-bureau-of-meteorology.jpg"],
   ["Yarra Valley Water", "client-yarra-valley-water.jpg"],
-  ["Spotless", "client-spotless.jpg"],
   ["Urban Utilities", "client-urban-utilities.jpeg"],
   ["Aurecon", "client-aurecon.png"],
   ["Stantec", "client-stantec.png"],
@@ -1211,7 +1216,6 @@ export const clients = [
   ["Transurban", "client-transurban.jpg"],
   ["GHD", "client-ghd.jpg"],
   ["SMEC", "client-smec.jpg"],
-  ["Cardno", "client-eds-client.png"],
   ["Veolia", "client-veolia.png"],
 ].map(([name, file]) => ({ name, src: img(file) }));
 
