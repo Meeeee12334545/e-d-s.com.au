@@ -288,8 +288,7 @@ function layout({ file, title, description, current, body, scripts = [] }) {
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" type="image/png" sizes="32x32" href="${r}assets/img/favicon-32.png">
 <link rel="apple-touch-icon" href="${r}assets/img/apple-touch-icon.png">
-<link rel="preload" href="${r}assets/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="${r}assets/fonts/inter-tight-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="${r}assets/fonts/geist-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <script>document.documentElement.classList.add("js")</script>
 <link rel="stylesheet" href="${r}assets/css/site.css">
 ${jsonLd(file, crumbs)}
@@ -486,7 +485,7 @@ function easDemo() {
       ${ticks}
       <line id="eas-needle" x1="200" y1="200" x2="200" y2="78" stroke="#fff" stroke-width="4" stroke-linecap="round" style="transition:transform .25s linear"/>
       <circle cx="200" cy="200" r="9" fill="#fff"/>
-      <text id="eas-num" x="200" y="250" text-anchor="middle" fill="#fff" font-size="40" font-weight="650" font-family="Inter Tight, Inter, sans-serif">930</text>
+      <text id="eas-num" x="200" y="250" text-anchor="middle" fill="#fff" font-size="40" font-weight="650" font-family="Geist, sans-serif">930</text>
       <polyline id="eas-spark" fill="none" stroke="#5fb4a6" stroke-width="2" stroke-linejoin="round"/>
       <text x="200" y="314" text-anchor="middle" fill="rgba(255,255,255,.5)" font-size="10">last 60 minutes</text>
     </svg>
@@ -515,26 +514,26 @@ function fsScreen() {
     ${pipe("M40 60H230", "#3b82f6")}${pipe("M230 60H440", "#eab308")}${pipe("M90 60V150", "#3b82f6")}${pipe("M230 60V150", "#f97316", 6)}${pipe("M370 60V150", "#eab308")}
     ${pipe("M40 150H230", "#eab308")}${pipe("M230 150H440", "#ef4444", 7)}${pipe("M230 150V230", "#ef4444", 7)}${pipe("M90 230H230", "#f97316", 6)}${pipe("M230 230H420", "#3b82f6")}
     <g fill="#fff" stroke="#0c5f59" stroke-width="2"><circle cx="230" cy="60" r="5"/><circle cx="230" cy="150" r="5"/><circle cx="90" cy="150" r="5"/><circle cx="370" cy="150" r="5"/><circle cx="230" cy="230" r="5"/></g>
-    <g font-size="10" font-family="Inter, sans-serif" fill="#26313f"><rect x="330" y="186" width="136" height="72" rx="8" fill="#fff" stroke="#dfe5ec"/><text x="342" y="204" font-weight="600">I/I severity</text>
+    <g font-size="10" font-family="Geist, sans-serif" fill="#26313f"><rect x="330" y="186" width="136" height="72" rx="8" fill="#fff" stroke="#dfe5ec"/><text x="342" y="204" font-weight="600">I/I severity</text>
     <rect x="342" y="212" width="14" height="6" rx="3" fill="#3b82f6"/><text x="362" y="218">Low</text><rect x="402" y="212" width="14" height="6" rx="3" fill="#eab308"/><text x="422" y="218">Moderate</text>
     <rect x="342" y="232" width="14" height="6" rx="3" fill="#f97316"/><text x="362" y="238">High</text><rect x="402" y="232" width="14" height="6" rx="3" fill="#ef4444"/><text x="422" y="238">Severe</text></g></svg>`;
   const blockage = `<svg viewBox="0 0 480 270" preserveAspectRatio="xMidYMid meet">
     <g stroke="#eef2f6"><path d="M40 50H460M40 100H460M40 150H460M40 200H460"/></g>
     <path class="fs-draw" pathLength="100" d="M40 190 C90 186 120 188 160 180 S230 168 270 150 S350 110 390 86 S440 62 460 54" fill="none" stroke="#dc2626" stroke-width="3" stroke-linecap="round"/>
     <path class="fs-draw" pathLength="100" d="M40 120 C80 114 110 126 150 120 S220 114 260 122 S340 116 380 121 S440 118 460 120" fill="none" stroke="#0d7c72" stroke-width="3" stroke-linecap="round"/>
-    <g font-size="11" font-family="Inter, sans-serif"><text x="46" y="210" fill="#b91c1c" font-weight="600">Depth, creeping upward</text><text x="46" y="108" fill="#095f57" font-weight="600">Flow, unchanged</text>
+    <g font-size="11" font-family="Geist, sans-serif"><text x="46" y="210" fill="#b91c1c" font-weight="600">Depth, creeping upward</text><text x="46" y="108" fill="#095f57" font-weight="600">Flow, unchanged</text>
     <rect x="296" y="22" width="164" height="26" rx="13" fill="#fef2f2" stroke="#fecaca"/><text x="310" y="39" fill="#b91c1c" font-weight="600">Likely obstruction building</text></g></svg>`;
   const psm = `<svg viewBox="0 0 480 270" preserveAspectRatio="xMidYMid meet">
     <rect x="150" y="30" width="180" height="210" rx="6" fill="#f4f7fa" stroke="#c8d2dc" stroke-width="2"/>
     <rect class="fs-well" x="152" y="130" width="176" height="108" fill="#5cc2b6" opacity=".85"/>
-    <g font-size="10" font-family="Inter, sans-serif" stroke-dasharray="5 4">
+    <g font-size="10" font-family="Geist, sans-serif" stroke-dasharray="5 4">
       <path d="M130 60H350" stroke="#dc2626"/><path d="M130 92H350" stroke="#d97706"/><path d="M130 130H350" stroke="#0d7c72"/><path d="M130 200H350" stroke="#5b6878"/></g>
-    <g font-size="10.5" font-family="Inter, sans-serif" fill="#26313f"><text x="358" y="63">Overflow</text><text x="358" y="95">Surcharge</text><text x="358" y="133">Pump start</text><text x="358" y="203">Pump stop</text></g>
+    <g font-size="10.5" font-family="Geist, sans-serif" fill="#26313f"><text x="358" y="63">Overflow</text><text x="358" y="95">Surcharge</text><text x="358" y="133">Pump start</text><text x="358" y="203">Pump stop</text></g>
     <g transform="translate(46 118) scale(2.4)" fill="none" stroke="#0c5f59" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g class="fs-fan">${iconCache.get("fan") || ""}</g></g>
-    <text x="34" y="200" font-size="10.5" font-family="Inter, sans-serif" fill="#26313f" font-weight="600">Pump 1 running</text></svg>`;
+    <text x="34" y="200" font-size="10.5" font-family="Geist, sans-serif" fill="#26313f" font-weight="600">Pump 1 running</text></svg>`;
   const alarms = `<svg viewBox="0 0 480 270" preserveAspectRatio="xMidYMid meet">
     ${[["#dc2626", "#fef2f2", "High-high level", "Site 07 · 2 min ago · SMS sent to duty officer", 26], ["#d97706", "#fffbeb", "Blockage Watch: depth drifting", "Site 14 · dry weather only · ranked 1 of 38", 104], ["#16a34a", "#f0fdf4", "Returned to normal", "Site 22 · acknowledged by the duty officer", 182]]
-      .map(([c, bg, t, s, y], i) => `<g class="fs-toast" style="--i:${i}"><rect x="30" y="${y}" width="420" height="62" rx="12" fill="${bg}" stroke="${c}" stroke-opacity=".35"/><circle cx="60" cy="${y + 31}" r="9" fill="${c}"/><text x="84" y="${y + 27}" font-size="13" font-weight="650" font-family="Inter, sans-serif" fill="#05090f">${t}</text><text x="84" y="${y + 45}" font-size="10.5" font-family="Inter, sans-serif" fill="#5b6878">${s}</text></g>`).join("")}</svg>`;
+      .map(([c, bg, t, s, y], i) => `<g class="fs-toast" style="--i:${i}"><rect x="30" y="${y}" width="420" height="62" rx="12" fill="${bg}" stroke="${c}" stroke-opacity=".35"/><circle cx="60" cy="${y + 31}" r="9" fill="${c}"/><text x="84" y="${y + 27}" font-size="13" font-weight="650" font-family="Geist, sans-serif" fill="#05090f">${t}</text><text x="84" y="${y + 45}" font-size="10.5" font-family="Geist, sans-serif" fill="#5b6878">${s}</text></g>`).join("")}</svg>`;
   const views = [["I/I heat map", "Severity by pipe", heat], ["Blockage Watch", "Dry days only", blockage], ["Pump Station Manager", "Wet well, to scale", psm], ["Alarms", "Sent to people, not addresses", alarms]];
   return `
   <div class="fs-screen" data-reveal="right">
@@ -1310,7 +1309,7 @@ await cp(path.join(ROOT, "src/css"), path.join(DIST, "assets/css"), { recursive:
 await cp(path.join(ROOT, "src/js"), path.join(DIST, "assets/js"), { recursive: true });
 await cp(path.join(ROOT, "src/assets/img"), path.join(DIST, "assets/img"), { recursive: true });
 await cp(path.join(ROOT, "src/assets/docs"), path.join(DIST, "assets/docs"), { recursive: true });
-for (const [pkg, f] of [["inter", "inter-latin-wght-normal.woff2"], ["inter-tight", "inter-tight-latin-wght-normal.woff2"]]) {
+for (const [pkg, f] of [["geist", "geist-latin-wght-normal.woff2"], ["geist-mono", "geist-mono-latin-wght-normal.woff2"]]) {
   await cp(path.join(ROOT, `node_modules/@fontsource-variable/${pkg}/files/${f}`), path.join(DIST, "assets/fonts", f));
 }
 for (const p of pages) {

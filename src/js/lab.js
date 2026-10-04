@@ -68,7 +68,7 @@
     const X = (min) => L + ((min - (t - WINDOW)) / WINDOW) * pw;
     const Y = (q) => T + ph - (Math.min(q, Q_MAX) / Q_MAX) * ph;
     ctx.clearRect(0, 0, w, h);
-    ctx.font = "500 11px Inter, sans-serif";
+    ctx.font = "500 11px Geist, sans-serif";
     ctx.textBaseline = "middle";
 
     // grid + axes
