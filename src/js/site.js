@@ -321,13 +321,25 @@
         btn.disabled = false;
         if (label) label.textContent = was;
       }
+      const mailto = `mailto:${m.to}?subject=${encodeURIComponent(m.subject)}&body=${encodeURIComponent(m.body)}`;
       if (sent) {
-        // Clear what was sent, keeping name and contact details for another.
-        const msg = $("textarea[name=Message]", form);
-        if (msg) msg.value = "";
-        if (form.classList.contains("signup")) form.reset();
+        // Clear everything that was sent (topic, product, way of working, quote
+        // list, message), keeping name and contact details for another.
+        const keep = ["Name", "Organisation", "Email", "Phone"].map((k) => [k, form.elements[k]?.value]);
+        form.reset();
+        if (form.classList.contains("form")) {
+          keep.forEach(([k, v]) => form.elements[k] && (form.elements[k].value = v));
+          const ctx = $(".form-context", form);
+          if (ctx) { ctx.hidden = true; $("input", ctx).value = ""; } // hidden inputs keep their value through reset()
+          window.EDS?.quote?.clear();
+        }
+      } else if (form.dataset.key) {
+        // Sending took a while, so the click no longer counts as the visitor's
+        // own and browsers may block opening the email program. They open it
+        // from the link in the message instead.
+        $$("[data-mail-link]", form).forEach((a) => (a.href = mailto));
       } else {
-        window.location.href = `mailto:${m.to}?subject=${encodeURIComponent(m.subject)}&body=${encodeURIComponent(m.body)}`;
+        window.location.href = mailto;
       }
       $$("[data-done]", form).forEach((d) => (d.hidden = true));
       const done = $(`[data-done=${sent ? "sent" : "mail"}]`, form);

@@ -181,7 +181,7 @@ function footer(r) {
             ${botcheck}
             <button class="btn btn-primary" type="submit" aria-label="Register for updates">${icon("send")}</button>
             ${SEND ? `<p class="signup-done" role="status" data-done="sent" hidden>${icon("check", false)} Thanks, you are registered for EDS updates.</p>` : ""}
-            <p class="signup-done" role="status" data-done="mail" hidden>${icon("check", false)} Your email program has opened with the request. Press send there to register.</p>
+            <p class="signup-done" role="status" data-done="mail" hidden>${SEND ? `${icon("mail", false)} Could not register from this page just now. <a data-mail-link href="mailto:${site.email}">Email us to register</a>.` : `${icon("check", false)} Your email program has opened with the request. Press send there to register.`}</p>
           </form>
         </div>
       </div>
@@ -1355,10 +1355,11 @@ ${pageHero(r, { crumbs: [["Contact"]], eyebrow: "Contact", title: "Call or visit
     <div class="form-done" data-done="mail" hidden tabindex="-1" role="status">
       <span class="card-icon">${icon("mail-check", false)}</span>
       <h2>Your enquiry is ready to send</h2>
-      <p>${SEND ? "It could not be sent from this page just now, so it" : "It"} has opened in your email program, addressed to ${site.email}. Press send there and our team will come back to you.</p>
+      <p>${SEND ? `It could not be sent from this page just now. Open it in your email program, addressed to ${site.email}, and press send there.` : `It has opened in your email program, addressed to ${site.email}. Press send there and our team will come back to you.`}</p>
       <p class="note">Nothing opened? Copy the enquiry into any email to ${site.email}, or call ${site.phone}.</p>
       <div class="btn-row">
-        <button class="btn btn-primary" type="button" data-copy="enquiry">${icon("copy", false)}<span>Copy enquiry</span></button>
+        ${SEND ? `<a class="btn btn-primary" data-mail-link href="mailto:${site.email}">${icon("mail", false)}<span>Open email</span></a>` : ""}
+        <button class="btn ${SEND ? "btn-ghost" : "btn-primary"}" type="button" data-copy="enquiry">${icon("copy", false)}<span>Copy enquiry</span></button>
         <button class="btn btn-ghost" type="button" data-copy="address">${icon("mail", false)}<span>Copy email address</span></button>
         <button class="btn btn-ghost" type="button" data-form-edit>${icon("pencil-line", false)}Edit enquiry</button>
       </div>

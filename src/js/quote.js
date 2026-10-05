@@ -167,6 +167,6 @@
   // Another tab added or removed something.
   window.addEventListener("storage", (e) => e.key === KEY && refresh());
 
-  window.EDS = Object.assign(window.EDS || {}, { quote: { refresh } });
+  window.EDS = Object.assign(window.EDS || {}, { quote: { refresh, clear: () => save([]) } });
   refresh();
 })();
