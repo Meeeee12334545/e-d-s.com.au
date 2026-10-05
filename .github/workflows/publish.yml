@@ -27,9 +27,11 @@ jobs:
       - run: npm run build
         env:
           # No server on GitHub Pages, so visits go to the analytics server
-          # (render.yaml), which also hosts the dashboard at /admin.
+          # (render.yaml), which also hosts the dashboard at /admin. Its Render
+          # address is used because visitors never see it and it always has a
+          # working certificate.
           STATIC_HOST: "1"
-          ANALYTICS_ENDPOINT: https://analytics.e-d-s.com.au/api/collect
+          ANALYTICS_ENDPOINT: https://eds-analytics-grqh.onrender.com/api/collect
       - name: Publish dist to the gh-pages branch
         run: |
           cd dist
