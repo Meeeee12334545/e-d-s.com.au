@@ -1,6 +1,6 @@
 # Builds the site on every push to main and publishes it to the gh-pages
-# branch, which GitHub Pages serves as a preview copy (marked no-index).
-name: Preview on GitHub Pages
+# branch, which GitHub Pages serves at www.e-d-s.com.au.
+name: Publish to GitHub Pages
 
 on:
   push:
@@ -11,7 +11,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: pages-preview
+  group: pages
   cancel-in-progress: true
 
 jobs:
@@ -26,16 +26,17 @@ jobs:
       - run: npm ci
       - run: npm run build
         env:
-          PREVIEW: "1"
-          # Share cards and canonical links point at the preview copy.
-          SITE_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
+          # No server on GitHub Pages, so the visit tracker is left out.
+          STATIC_HOST: "1"
       - name: Publish dist to the gh-pages branch
         run: |
           cd dist
           touch .nojekyll
+          # Keeps the custom domain set, since each publish replaces the branch.
+          echo "www.e-d-s.com.au" > CNAME
           git init -q -b gh-pages
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
-          git commit -q -m "Preview build of ${GITHUB_SHA::7}"
+          git commit -q -m "Build of ${GITHUB_SHA::7}"
           git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" gh-pages
