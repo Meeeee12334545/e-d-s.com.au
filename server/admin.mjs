@@ -145,10 +145,11 @@ const dashboard = () => page("Site analytics | EDS admin", `
   <section class="about">
     <h2>${icon("info")}How these numbers are counted</h2>
     <ul>
-      <li><b>No cookies, nothing personal.</b> Visitors are counted with a hash of their IP address and browser that is reset every day. IP addresses are never stored, so a person who comes back tomorrow counts as a new visitor.</li>
+      <li><b>No cookies.</b> Visitors are counted with a hash of their IP address and browser that is reset every day. IP addresses are never stored, so a person who comes back tomorrow counts as a new visitor.</li>
+      <li><b>Organisations</b> are whoever holds the visitor's network in the public internet registries, so they name a business, council or university only when it has its own network. People at home, on a phone or at a business that just buys internet show under their internet provider; cloud networks are usually VPNs, iCloud Private Relay or bots that got through.</li>
       <li><b>A visit</b> ends after 30 minutes with no activity. <b>Bounce rate</b> is the share of visits that saw one page. <b>Time on page</b> counts only the time the page was on screen.</li>
       <li><b>Form submissions</b> are counted when someone presses send. The site's forms open the visitor's own email program, so this is an intent to email, not a message received.</li>
-      <li><b>Locations</b> in Australia come from the visitor's time zone, so Sydney and Canberra share one row. Bots and crawlers are left out. Times are in ${TZ.replace("_", " ")} time.</li>
+      <li><b>Locations</b> in Australia come from the visitor's time zone, so Sydney and Canberra share one row. Cities are approximate, from <a href="https://db-ip.com" target="_blank" rel="noopener">IP Geolocation by DB-IP</a>, and on mobile networks can be hundreds of kilometres out. Bots and crawlers are left out. Times are in ${TZ.replace("_", " ")} time.</li>
       <li><label class="check"><input type="checkbox" id="ignore"> Don't count my own visits from this browser</label></li>
     </ul>
   </section>
@@ -168,7 +169,7 @@ function readForm(req) {
 // CSV for spreadsheets. Cells that start like a formula are prefixed with an
 // apostrophe, because page titles and links come from visitors' browsers.
 function csv(rows) {
-  const cols = ["time", "type", "path", "title", "status", "source", "medium", "campaign", "referrer", "device", "browser", "os", "region", "country", "target", "label", "seconds_on_page", "scroll_percent", "visit"];
+  const cols = ["time", "type", "path", "title", "status", "source", "medium", "campaign", "referrer", "device", "browser", "os", "region", "country", "city", "organisation", "network_type", "target", "label", "seconds_on_page", "scroll_percent", "visit"];
   const cell = (v) => {
     let s = v == null ? "" : String(v);
     if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
@@ -176,7 +177,7 @@ function csv(rows) {
   };
   const time = new Intl.DateTimeFormat("sv-SE", { timeZone: TZ, dateStyle: "short", timeStyle: "medium" });
   const lines = rows.map((r) => [time.format(r.ts), r.type, r.path, r.title, r.status, r.source, r.medium, r.campaign, r.referrer, r.device, r.browser, r.os,
-    r.region, r.country, r.target, r.label, r.engaged == null ? "" : Math.round(r.engaged / 1000), r.scroll, r.session].map(cell).join(","));
+    r.region, r.country, r.city, r.org, r.org_kind, r.target, r.label, r.engaged == null ? "" : Math.round(r.engaged / 1000), r.scroll, r.session].map(cell).join(","));
   return `﻿${cols.join(",")}\n${lines.join("\n")}\n`;
 }
 
