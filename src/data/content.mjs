@@ -17,6 +17,11 @@ export const site = {
   email: "eds@e-d-s.com.au",
   sales: "sales@e-d-s.com.au",
   service: "service@e-d-s.com.au",
+  // Web3Forms access key (https://web3forms.com). The enquiry and sign-up
+  // forms send through it to the address the key was created for, which
+  // should be eds@e-d-s.com.au. It is safe to publish. Left empty, the forms
+  // open the visitor's email program instead.
+  formKey: "",
   address: ["13/20-22 Ellerslie Road", "Meadowbrook QLD 4131", "Australia"],
   hours: "Monday to Friday, 7:30am to 4:30pm",
   founded: 1991,

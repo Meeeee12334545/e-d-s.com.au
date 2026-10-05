@@ -175,11 +175,13 @@ function footer(r) {
           <address>${site.address.join("<br>")}</address>
           <p style="margin-top:10px">${site.hours}</p>
           ${openStatus()}
-          <form class="signup" data-mailto="${site.email}" data-subject="Register for EDS updates" data-track="Updates sign-up">
+          <form class="signup" ${formSend} data-subject="Register for EDS updates" data-track="Updates sign-up">
             <label for="f-email">Register for updates on projects, equipment and servicing</label>
             <input id="f-email" name="Email" type="email" placeholder="Your email" autocomplete="email" required>
+            ${botcheck}
             <button class="btn btn-primary" type="submit" aria-label="Register for updates">${icon("send")}</button>
-            <p class="signup-done" role="status" hidden>${icon("check", false)} Your email program has opened with the request. Press send there to register.</p>
+            ${SEND ? `<p class="signup-done" role="status" data-done="sent" hidden>${icon("check", false)} Thanks, you are registered for EDS updates.</p>` : ""}
+            <p class="signup-done" role="status" data-done="mail" hidden>${icon("check", false)} Your email program has opened with the request. Press send there to register.</p>
           </form>
         </div>
       </div>
@@ -190,6 +192,13 @@ function footer(r) {
     </div>
   </footer>`;
 }
+
+// With site.formKey set, the forms send through Web3Forms from the page
+// (site.js); without it, or if sending fails, they open an email instead.
+const SEND = Boolean(site.formKey);
+const formSend = `data-mailto="${site.email}"${SEND ? ` data-key="${esc(site.formKey)}"` : ""}`;
+// A field people leave alone and bots fill in, so Web3Forms can drop spam.
+const botcheck = SEND ? `<input type="checkbox" name="botcheck" tabindex="-1" autocomplete="off" hidden>` : "";
 
 // "Open now" or "Closed" for head office, worked out in the browser by site.js.
 const openStatus = () => `<span class="open-status" data-open-status='${JSON.stringify(site.openingHours)}' hidden><i></i><span></span></span>`;
@@ -1283,7 +1292,7 @@ ${pageHero(r, { crumbs: [["Contact"]], eyebrow: "Contact", title: "Call or visit
     <a class="contact-card" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent("13/20-22 Ellerslie Road, Meadowbrook QLD 4131")}" rel="noopener" data-reveal><span class="card-icon">${icon("map-pin")}</span><span><b>Head office</b><span>${site.address.join(", ")}</span></span></a>
     <div class="contact-card" data-reveal><span class="card-icon">${icon("clock", false)}</span><span><b>Opening hours</b><span>${site.hours}. Closed Saturday and Sunday.</span>${openStatus()}</span></div>
   </div>
-  <form class="form" id="enquiry" data-mailto="${site.email}" data-track="Enquiry form" data-reveal="right" novalidate>
+  <form class="form" id="enquiry" ${formSend} data-track="Enquiry form" data-reveal="right" novalidate>
     <div class="form-fields">
       <h2>Send an enquiry</h2>
       <div class="form-context" hidden>
@@ -1331,13 +1340,22 @@ ${pageHero(r, { crumbs: [["Contact"]], eyebrow: "Contact", title: "Call or visit
       </fieldset>
       <label class="field">Message<textarea name="Message" required placeholder="Tell us about your site, network or project"></textarea></label>
       <textarea name="Products" hidden disabled></textarea>
-      <button class="btn btn-primary btn-lg" type="submit" style="justify-self:start">${icon("send")} Open email to send</button>
-      <p class="note">This opens your email program with the enquiry filled in, addressed to ${site.email}.</p>
+      ${botcheck}
+      <button class="btn btn-primary btn-lg" type="submit" style="justify-self:start">${icon("send")} <span>${SEND ? "Send enquiry" : "Open email to send"}</span></button>
+      <p class="note">${SEND ? `Your enquiry goes straight to our team at ${site.email}.` : `This opens your email program with the enquiry filled in, addressed to ${site.email}.`}</p>
     </div>
-    <div class="form-done" hidden tabindex="-1" role="status">
+    ${SEND ? `<div class="form-done" data-done="sent" hidden tabindex="-1" role="status">
+      <span class="card-icon">${icon("mail-check", false)}</span>
+      <h2>Thanks, your enquiry has been sent</h2>
+      <p>It has gone to our team at ${site.email}, and we will reply to the email address you gave. For anything urgent, call ${site.phone}.</p>
+      <div class="btn-row">
+        <button class="btn btn-ghost" type="button" data-form-edit>${icon("pencil-line", false)}Send another enquiry</button>
+      </div>
+    </div>` : ""}
+    <div class="form-done" data-done="mail" hidden tabindex="-1" role="status">
       <span class="card-icon">${icon("mail-check", false)}</span>
       <h2>Your enquiry is ready to send</h2>
-      <p>It has opened in your email program, addressed to ${site.email}. Press send there and our team will come back to you.</p>
+      <p>${SEND ? "It could not be sent from this page just now, so it" : "It"} has opened in your email program, addressed to ${site.email}. Press send there and our team will come back to you.</p>
       <p class="note">Nothing opened? Copy the enquiry into any email to ${site.email}, or call ${site.phone}.</p>
       <div class="btn-row">
         <button class="btn btn-primary" type="button" data-copy="enquiry">${icon("copy", false)}<span>Copy enquiry</span></button>
