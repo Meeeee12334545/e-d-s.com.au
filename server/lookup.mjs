@@ -49,9 +49,23 @@ const cidr = (c) => {
   const start = (toBig(base) >> size) << size;
   return { v, start, end: start + (1n << size) - 1n };
 };
+const NON_PUBLIC_V4 = [
+  "0.0.0.0/8", "10.0.0.0/8", "100.64.0.0/10", "127.0.0.0/8", "169.254.0.0/16",
+  "172.16.0.0/12", "192.0.0.0/24", "192.0.2.0/24", "192.88.99.0/24", "192.168.0.0/16",
+  "198.18.0.0/15", "198.51.100.0/24", "203.0.113.0/24", "224.0.0.0/4", "240.0.0.0/4",
+].map(cidr);
+const GLOBAL_V6 = cidr("2000::/3");
+const NON_PUBLIC_V6 = ["2001::/23", "2001:db8::/32", "2002::/16", "3fff::/20"].map(cidr);
 // IPv4 addresses that arrive as ::ffff:1.2.3.4
 const plain = (ip) => ip.replace(/^::ffff:(?=\d+\.)/i, "");
-const isPublic = (ip) => !/^(10\.|127\.|169\.254\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|::1$|f[cd]|fe80)/i.test(ip);
+const inRange = (n, range, v) => range.v === v && range.start <= n && n <= range.end;
+const isPublic = (ip) => {
+  const v = isIP(ip);
+  if (!v) return false;
+  const n = toBig(ip);
+  if (v === 4) return !NON_PUBLIC_V4.some((range) => inRange(n, range, v));
+  return inRange(n, GLOBAL_V6, v) && !NON_PUBLIC_V6.some((range) => inRange(n, range, v));
+};
 
 /* ---- registries ---- */
 // IANA's list of which registry (APNIC, ARIN, RIPE...) answers for which addresses.
@@ -146,8 +160,10 @@ export function openLookup(store, dir) {
   const pending = new Map();
 
   const refresh = () => loadCities(dir).catch((err) => console.error("City database:", err.message));
-  refresh();
-  setInterval(refresh, 864e5).unref();
+  let citiesReady = refresh();
+  setInterval(() => { citiesReady = refresh(); }, 864e5).unref();
+  const LOOKUP_WINDOW = 60e3, MAX_LOOKUPS_PER_WINDOW = 120, MAX_CONCURRENT_LOOKUPS = 4;
+  let lookupWindow = Date.now(), lookupCount = 0, activeLookups = 0;
 
   async function network(ip, v) {
     const key = hex(toBig(ip), v);
@@ -156,7 +172,10 @@ export function openLookup(store, dir) {
     if (failed.get(key) > Date.now()) return known || null;
     try {
       const found = await whois(ip, v);
-      if (found) { store.saveNetwork({ v, ...found, fetched: Date.now() }); return found; }
+      if (found) {
+        if (found.start !== found.end) store.saveNetwork({ v, ...found, fetched: Date.now() }, known);
+        return found;
+      }
     } catch {}
     failed.set(key, Date.now() + 10 * 60e3);
     if (failed.size > 5000) failed.clear();
@@ -168,6 +187,11 @@ export function openLookup(store, dir) {
     const v = isIP(ip);
     if (!v || !isPublic(ip)) return null;
     if (pending.has(ip)) return pending.get(ip);
+    const now = Date.now();
+    if (now - lookupWindow >= LOOKUP_WINDOW) { lookupWindow = now; lookupCount = 0; }
+    if (lookupCount >= MAX_LOOKUPS_PER_WINDOW || activeLookups >= MAX_CONCURRENT_LOOKUPS) return null;
+    lookupCount++;
+    activeLookups++;
     const job = (async () => {
       const net = await network(ip, v);
       let org = net?.org || null, kind = net?.kind || null;
@@ -175,8 +199,9 @@ export function openLookup(store, dir) {
         const named = await reverseName(ip);
         if (named) { org = named; kind = "organisation"; }
       }
+      await citiesReady;
       return { org, kind, city: cityOf(ip) };
-    })().finally(() => pending.delete(ip));
+    })().finally(() => { pending.delete(ip); activeLookups--; });
     pending.set(ip, job);
     return job;
   }

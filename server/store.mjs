@@ -96,6 +96,7 @@ export function openStore(dir) {
       v INTEGER NOT NULL, start TEXT NOT NULL, "end" TEXT NOT NULL, org TEXT NOT NULL, kind TEXT NOT NULL, fetched INTEGER NOT NULL,
       PRIMARY KEY (v, start, "end")
     );
+    DELETE FROM networks WHERE start = "end";
   `);
   // Databases from before the organisation lookup get its columns.
   const have = new Set(db.prepare("PRAGMA table_info(events)").all().map((c) => c.name));
@@ -112,8 +113,9 @@ export function openStore(dir) {
     WHERE pid = ? AND visitor = ? AND type = 'pageview'`);
   const tagSt = st("UPDATE events SET org = ?, org_kind = ?, city = ? WHERE id = ?");
   // the narrowest known range holding the address
-  const networkSt = st(`SELECT org, kind, fetched FROM networks WHERE v = ? AND start <= ? AND "end" >= ? ORDER BY start DESC, "end" LIMIT 1`);
+  const networkSt = st(`SELECT v, start, "end", org, kind, fetched FROM networks WHERE v = ? AND start <= ? AND "end" >= ? ORDER BY start DESC, "end" LIMIT 1`);
   const saveNetworkSt = st(`INSERT OR REPLACE INTO networks (v, start, "end", org, kind, fetched) VALUES (:v, :start, :end, :org, :kind, :fetched)`);
+  const deleteNetworkSt = st(`DELETE FROM networks WHERE v = ? AND start = ? AND "end" = ?`);
 
   // Today's salt. Yesterday's is deleted, so hashes cannot be linked across days.
   function salt(ts) {
@@ -136,7 +138,12 @@ export function openStore(dir) {
   const engage = (pid, visitor, engaged, scroll) => engageSt.run(engaged, scroll, pid, visitor);
   const tag = (id, { org, kind, city }) => tagSt.run(org ?? null, kind ?? null, city ?? null, id);
   const network = (v, key) => networkSt.get(v, key, key);
-  const saveNetwork = (n) => saveNetworkSt.run(n);
+  const saveNetwork = (n, previous) => {
+    if (previous && (previous.start !== n.start || previous.end !== n.end)) {
+      deleteNetworkSt.run(previous.v, previous.start, previous.end);
+    }
+    return saveNetworkSt.run(n);
+  };
 
   /* ---- reporting ---- */
   const PV = "type = 'pageview' AND day BETWEEN ? AND ?";
