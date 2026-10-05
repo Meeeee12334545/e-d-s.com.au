@@ -5,10 +5,7 @@
 // Images live in src/assets/img and are copied to dist/assets/img by the build.
 // "@root/" is swapped for each page's path back to the site root in layout().
 export const img = (file) => `@root/assets/img/${file}`;
-// Documents (datasheets, white papers, software) not yet copied into the
-// project are still on the old host.
-export const doc = (path) => `https://www.e-d-s.com.au${path}`;
-// Documents copied into the project live in src/assets/docs.
+// Documents (datasheets, white papers, software) live in src/assets/docs.
 export const localDoc = (file) => `@root/assets/docs/${file}`;
 
 export const site = {
@@ -891,7 +888,7 @@ export const brands = [
         name: "Sensors",
         items: [
           { name: "E-Flow 3", type: "flow", note: "Dual mode sewer flowmeter", image: img("e-flow-3.png"), href: "products/e-flow-3.html", docs: [{ label: "Datasheet", href: localDoc("eds-e-flow-3-datasheet.pdf") }, { label: "Brochure", href: localDoc("eds-e-flow-3-brochure.pdf") }] },
-          { name: "iLab 901", type: "quality", note: "Multi-parameter analytical sensor", image: img("ilab-901-multitparameter-analytical-sensor-2.gif"), docs: [{ label: "Datasheet", href: doc("/s/iLab-901-Multitparameter-Analytical-Sensor-DS-21rs.pdf") }] },
+          { name: "iLab 901", type: "quality", note: "Multi-parameter analytical sensor", image: img("ilab-901-multitparameter-analytical-sensor-2.gif"), docs: [{ label: "Datasheet", href: localDoc("eds-ilab-901-datasheet.pdf") }] },
           { name: "Ultrasonic Level", type: "level", note: "Level sensor", image: img("ultrasonic-level-sensor-image-2.png") },
           { name: "EC", type: "quality", note: "Electro-conductivity sensor", image: img("cos41.jpg") },
           { name: "pH", type: "quality", note: "pH sensor", image: img("eds-ph-sensor.jpg") },
@@ -920,7 +917,7 @@ export const brands = [
         items: [
           { name: "MSFM", type: "flow", note: "Rugged 4G area velocity flow meter", image: img("s2.5-04-small-766x1024.png"), docs: [{ label: "S2.5T datasheet", href: localDoc("detectronic-msfm-s2-5t-datasheet.pdf") }] },
           { name: "LIDoTT Smart", type: "level", note: "Long life, rugged 4G patented level monitor", image: img("dete01-01.24-600x452.png"), docs: [{ label: "LIDoTT Sensor datasheet", href: localDoc("detectronic-lidott-sensor-datasheet.pdf") }] },
-          { name: "LIDoTT Alarm", type: "level", note: "Self contained level measurement and alarm device", image: img("lidott-alarm-3.png"), href: "products/lidott-alarm.html", docs: [{ label: "Datasheet", href: doc("/s/MMS-D050-LIDoTT-Alarm-iss3.pdf") }] },
+          { name: "LIDoTT Alarm", type: "level", note: "Self contained level measurement and alarm device", image: img("lidott-alarm-3.png"), href: "products/lidott-alarm.html", docs: [{ label: "Datasheet", href: localDoc("detectronic-lidott-alarm-datasheet.pdf") }] },
           { name: "LIDoTT R", type: "level", note: "High-precision radar and pressure sensor for continuous monitoring", image: img("lidott-sensor-r-1.png"), docs: [{ label: "Datasheet", href: localDoc("detectronic-lidott-r-datasheet.pdf") }] },
           { name: "Multi Channel Data Loggers", type: "logger", note: "Rugged remote multichannel loggers", image: img("new-2-channel-logger-1001x1024.jpg") },
         ],
@@ -962,7 +959,7 @@ export const brands = [
         ],
       },
     ],
-    docs: [{ label: "ORI water analytics catalogue", href: doc("/s/Catalogue_Wateranalytics_eng-lfy2.pdf") }],
+    docs: [{ label: "ORI water analytics catalogue", href: localDoc("ori-water-analytics-catalogue.pdf") }],
   },
   {
     slug: "hach-flow",
@@ -980,7 +977,7 @@ export const brands = [
       {
         name: "Loggers",
         items: [
-          { name: "FL1500 Logger", type: "flow", image: img("landing-fl1500-2.jpg"), docs: [{ label: "FSDATA Desktop 32-bit", href: doc("/s/FSDATA-Desktop-32bit.zip") }, { label: "FSDATA Desktop 64-bit", href: doc("/s/FSDATA-Desktop-64bit.zip") }] },
+          { name: "FL1500 Logger", type: "flow", image: img("landing-fl1500-2.jpg"), docs: [{ label: "FSDATA Desktop 32-bit", href: localDoc("hach-flow-fsdata-desktop-32bit.zip") }, { label: "FSDATA Desktop 64-bit", href: localDoc("hach-flow-fsdata-desktop-64bit.zip") }] },
           { name: "FH950 Velocity Meter", type: "flow", image: img("landing-fh950.jpg") },
           { name: "FL900 Portable", type: "flow", image: img("landing-fl900-2.jpg") },
           { name: "SC200 Controller", type: "flow", image: img("landing-sc200.jpg") },
@@ -998,7 +995,7 @@ export const brands = [
         ],
       },
     ],
-    docs: [{ label: "Hach Flow selection guide", href: doc("/s/HachFlow_Selection_Guide-New.pdf") }],
+    docs: [{ label: "Hach Flow selection guide", href: localDoc("hach-flow-selection-guide.pdf") }],
   },
   {
     slug: "beadedstream",
@@ -1018,7 +1015,7 @@ export const brands = [
         items: [
           { name: "D605", type: "temperature", note: "Logger", image: img("front-view-of-beadedstream-d605-temperature-data-logger-without-antenna.png"), docs: [{ label: "Datasheet", href: localDoc("beadedstream-d605-datasheet.pdf") }] },
           { name: "Spot Logger", type: "temperature", note: "Logger", image: img("spot-logger-side-view-with-raymo-connector.png"), docs: [{ label: "Battery install and replacement guide", href: localDoc("beadedstream-spot-logger-battery-guide.pdf") }] },
-          { name: "Thermistor String", type: "temperature", note: "Sensor", image: img("standard-dtc-bar-code-144-1.jpg"), docs: [{ label: "Digital Temperature Cable spec sheet", href: localDoc("beadedstream-digital-temperature-cable-spec-sheet.pdf") }, { label: "EDS white paper", href: doc("/s/EDS-White-Paper-Benefits-of-Using-Thermistor-Strings-in-Conjunction-with-Open-Channel-Sewer-Flow-Met-jhzm.pdf") }] },
+          { name: "Thermistor String", type: "temperature", note: "Sensor", image: img("standard-dtc-bar-code-144-1.jpg"), docs: [{ label: "Digital Temperature Cable spec sheet", href: localDoc("beadedstream-digital-temperature-cable-spec-sheet.pdf") }, { label: "EDS white paper", href: localDoc("eds-white-paper-thermistor-strings.pdf") }] },
           { name: "Mlink", type: "software", note: "Connectivity", image: img("beadedstream-mlink-temperature-data-logger-connector.png"), docs: [{ label: "Spec sheet", href: localDoc("beadedstream-mlink-spec-sheet.pdf") }] },
           { name: "Capture Mobile App", type: "software", note: "Connectivity", image: img("beadedstream-capture-ios-app-1.png") },
           { name: "Beadedcloud Data", type: "software", note: "Connectivity", image: img("beadedcloud-dashboard-in-all-devices-1.png") },
@@ -1063,7 +1060,7 @@ export const brands = [
       {
         name: "The analyser",
         items: [
-          { name: "Aquamonitrix", type: "quality", note: "Nitrate and nitrite, rugged and portable", image: img("picture-1.png"), docs: [{ label: "Performance datasheet", href: doc("/s/Aquamonitrix-Performance.pdf") }] },
+          { name: "Aquamonitrix", type: "quality", note: "Nitrate and nitrite, rugged and portable", image: img("picture-1.png"), docs: [{ label: "Performance datasheet", href: localDoc("aquamonitrix-performance-datasheet.pdf") }] },
         ],
       },
     ],
@@ -1114,7 +1111,7 @@ export const lidott = {
   lede: "Self contained water level measurement and alarm device.",
   image: img("lidott-alarm-3.png"),
   image2: img("lidott-alarm-interior-drawing-web.jpg"),
-  datasheet: doc("/s/MMS-D050-LIDoTT-Alarm-iss3.pdf"),
+  datasheet: localDoc("detectronic-lidott-alarm-datasheet.pdf"),
   highlights: [
     ["radar", "Radar sensor", "5° beam angle"],
     ["ruler", "Range", "Measures up to 8.4 m"],
@@ -1487,21 +1484,21 @@ export const papers = [
     title: "The Unforeseen Benefits of Sewer Inflow & Infiltration Monitoring",
     date: "October 2025",
     text: "How modern sewer flow monitoring programs deliver far more than I/I insights. Drawing on real projects across Australia, it shows accurate flow data helping utilities detect blockages, verify maintenance, identify cross connections, optimise pump operations and target investment.",
-    href: doc("/s/EDS-White-Paper-The-Unforeseen-Benefits-of-Sewer-Inflow-and-Infiltration-Monitoring-October-2025.pdf"),
+    href: localDoc("eds-white-paper-unforeseen-benefits-of-ii-monitoring.pdf"),
   },
   {
     id: "measuring-the-invisible",
     title: "Inflow & Infiltration: Measuring the Invisible Problem",
     date: "July 2025",
     text: "Excess stormwater and groundwater entering sewer systems remains one of the most costly and complex challenges for councils and utilities. With asset pressures rising and budgets under strain, targeting I&I is more critical than ever.",
-    href: doc("/s/EDS-White-Paper-Inflow-Infiltration-Measuring-the-Invisible-Problem-July-2025-rev13.pdf"),
+    href: localDoc("eds-white-paper-measuring-the-invisible-problem.pdf"),
   },
   {
     id: "thermistor-strings",
     title: "Thermistor Strings with Open Channel Sewer Flow Meters to Locate Infiltration",
     date: "White paper",
     text: "How combining thermistor strings with open channel sewer flow meters gives precise detection of infiltration, with continuous real-time monitoring, non-intrusive installation and significant cost savings.",
-    href: doc("/s/EDS-White-Paper-Benefits-of-Using-Thermistor-Strings-in-Conjunction-with-Open-Channel-Sewer-Flow-Met-jhzm.pdf"),
+    href: localDoc("eds-white-paper-thermistor-strings.pdf"),
   },
 ];
 
@@ -1510,9 +1507,9 @@ export const downloads = [
     group: "Software and drivers",
     icon: "hard-drive-download",
     items: [
-      ["FSDATA Desktop for FL1500 (32-bit)", doc("/s/FSDATA-Desktop-32bit.zip")],
-      ["FSDATA Desktop for FL1500 (64-bit)", doc("/s/FSDATA-Desktop-64bit.zip")],
-      ["USB-Serial Adapter GXU driver", doc("/s/GXMU-1200-Drivers.zip")],
+      ["FSDATA Desktop for FL1500 (32-bit)", localDoc("hach-flow-fsdata-desktop-32bit.zip")],
+      ["FSDATA Desktop for FL1500 (64-bit)", localDoc("hach-flow-fsdata-desktop-64bit.zip")],
+      ["USB-Serial Adapter GXU driver", localDoc("gxmu-1200-usb-serial-drivers.zip")],
       ["EMS-Flow software user manual", localDoc("eds-ems-flow-user-manual.pdf")],
     ],
     note: "EDS (EMS2001, EMS4000), Hach Flo-Ware and Dynaflox RS-232 software are available on request. Contact us for a password.",
@@ -1536,21 +1533,21 @@ export const downloads = [
       ["EDS E-Flow 3 sewer flowmeter brochure", localDoc("eds-e-flow-3-brochure.pdf")],
       ["EDS Hawk 4G logger datasheet", localDoc("eds-hawk-datasheet.pdf")],
       ["EDS Hawk 4G logger brochure", localDoc("eds-hawk-brochure.pdf")],
-      ["iLab 901 multi-parameter sensor datasheet", doc("/s/iLab-901-Multitparameter-Analytical-Sensor-DS-21rs.pdf")],
+      ["iLab 901 multi-parameter sensor datasheet", localDoc("eds-ilab-901-datasheet.pdf")],
       ["Detectronic MSFM S2.5T flow meter datasheet", localDoc("detectronic-msfm-s2-5t-datasheet.pdf")],
       ["Detectronic LIDoTT Sensor datasheet", localDoc("detectronic-lidott-sensor-datasheet.pdf")],
-      ["Detectronic LIDoTT Alarm datasheet", doc("/s/MMS-D050-LIDoTT-Alarm-iss3.pdf")],
+      ["Detectronic LIDoTT Alarm datasheet", localDoc("detectronic-lidott-alarm-datasheet.pdf")],
       ["Detectronic LIDoTT R datasheet", localDoc("detectronic-lidott-r-datasheet.pdf")],
       ["ORI AquaSamp Mini brochure", localDoc("ori-aquasamp-mini-brochure.pdf")],
       ["ORI PumpModul portable sampler datasheet", localDoc("ori-pumpmodul-datasheet.pdf")],
       ["ORI NEMO 1 M sampler datasheet", localDoc("ori-nemo-1-m-datasheet.pdf")],
-      ["ORI water analytics catalogue", doc("/s/Catalogue_Wateranalytics_eng-lfy2.pdf")],
-      ["Hach Flow selection guide", doc("/s/HachFlow_Selection_Guide-New.pdf")],
+      ["ORI water analytics catalogue", localDoc("ori-water-analytics-catalogue.pdf")],
+      ["Hach Flow selection guide", localDoc("hach-flow-selection-guide.pdf")],
       ["Beadedstream D605 temperature logger datasheet", localDoc("beadedstream-d605-datasheet.pdf")],
       ["Beadedstream Spot Logger battery guide", localDoc("beadedstream-spot-logger-battery-guide.pdf")],
       ["Beadedstream Digital Temperature Cable spec sheet", localDoc("beadedstream-digital-temperature-cable-spec-sheet.pdf")],
       ["Beadedstream Mlink spec sheet", localDoc("beadedstream-mlink-spec-sheet.pdf")],
-      ["Aquamonitrix performance datasheet", doc("/s/Aquamonitrix-Performance.pdf")],
+      ["Aquamonitrix performance datasheet", localDoc("aquamonitrix-performance-datasheet.pdf")],
     ],
   },
 ];
@@ -1618,3 +1615,87 @@ export const city = [
     products: [["EDS FlowSense platform", "flowsense"], ["SCADA connection", "flowsense"], ["Alarms by SMS and email", "flowsense"]],
   },
 ];
+
+/* ------------------------------------------------------------------ */
+/* Old page addresses                                                  */
+/* ------------------------------------------------------------------ */
+
+// Public pages on the old Squarespace site, and where each one lives now.
+// The build writes a small forwarding page for each, so bookmarks and search
+// results keep working. Old addresses that match a new page (/about,
+// /contact, /flowsense, /products) need no entry. Anything else falls through
+// to the 404 page.
+export const oldPages = {
+  home: "index.html",
+  "what-we-do": "about.html",
+  "contact-2": "contact.html",
+  "contact-eds": "contact.html",
+  enquire: "contact.html",
+  "eds-privacy-statement": "privacy.html",
+  downloads: "resources.html",
+  "download-and-support": "resources.html",
+  publications: "resources.html",
+  "wind-and": "resources.html",
+  "services-eds": "services/index.html",
+  "applications-eds": "solutions/index.html",
+  // Services
+  "sewer-network-monitoring": "services/sewer-flow-monitoring.html",
+  "flow-monitoring": "services/sewer-flow-monitoring.html",
+  "auditing-and-calibration": "services/auditing-calibration.html",
+  "closed-channel-flow-monitoring": "services/closed-channel-flow.html",
+  "eds-daas-data-as-a-service": "services/data-as-a-service.html",
+  "equipment-rental": "services/equipment-rental.html",
+  "facility-management": "services/facility-management.html",
+  "facility-management-1": "services/facility-management.html",
+  "inflow-infiltration-studies": "services/inflow-infiltration-studies.html",
+  "network-assessment-and-evaluations": "services/network-assessment.html",
+  "real-time-monitoring": "services/real-time-monitoring.html",
+  "sewer-network-model-calibrations": "services/sewer-model-calibration.html",
+  "trade-waste": "services/trade-waste.html",
+  "trade-waste-2": "services/trade-waste.html",
+  "rainfall-monitoring": "services/rainfall-monitoring.html",
+  "overflow-alarms": "services/blockage-overflow-alarms.html",
+  "water-quality": "services/water-quality-monitoring.html",
+  telemetry: "services/scada-telemetry-integration.html",
+  // Solutions
+  "waste-water-montioring": "solutions/wastewater-monitoring.html",
+  "environmental-monitoring": "solutions/environmental-monitoring.html",
+  "automatic-sampling": "solutions/automatic-sampling.html",
+  "network-thermal-monitoring": "solutions/network-thermal-monitoring.html",
+  "structure-performance-and-monitoring-1": "solutions/structure-performance.html",
+  "asset-monitoring-and-servicing": "solutions/structure-performance.html",
+  "new-page-4-1": "solutions/asset-network-assessment.html",
+  // Products
+  eds: "products/eds.html",
+  ilab: "products/eds.html",
+  "e-flow": "products/e-flow-3.html",
+  "flowsense-1": "flowsense.html",
+  detectronics: "products/detectronic.html",
+  msfm: "products/detectronic.html",
+  lidott: "products/detectronic.html",
+  "lidott-r": "products/detectronic.html",
+  "lidott-alarm": "products/lidott-alarm.html",
+  "ori-index": "products/ori.html",
+  "aqua-mini": "products/ori.html",
+  "nemo-1-m-pp": "products/ori.html",
+  "hach-flow": "products/hach-flow.html",
+  "fl1500-logger": "products/hach-flow.html",
+  "fl900-logger": "products/hach-flow.html",
+  "flodar-sensor": "products/hach-flow.html",
+  "flotote-3-sensor": "products/hach-flow.html",
+  fh950: "products/hach-flow.html",
+  "sc200-controller": "products/hach-flow.html",
+  flostation: "products/hach-flow.html",
+  "sub-av-sensor": "products/hach-flow.html",
+  "av-sensor-with-bubbler": "products/hach-flow.html",
+  beadedstream: "products/beadedstream.html",
+  d605: "products/beadedstream.html",
+  "spot-logger": "products/beadedstream.html",
+  mlink: "products/beadedstream.html",
+  "temperature-string": "products/beadedstream.html",
+  "thermistor-string-1": "products/beadedstream.html",
+  microlevel: "products/microlevel.html",
+  "microlevel-portable-sampler": "products/microlevel.html",
+  aquamonitrix: "products/aquamonitrix.html",
+  "dynaflox-2": "products/dynaflox.html",
+};
