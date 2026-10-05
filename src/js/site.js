@@ -248,9 +248,11 @@
   }
   window.EDS = { copyText };
 
-  /* ---- contact + register forms: compose an email (no server needed) ---- */
-  // A mailto link only works where an email program is set up, so the
-  // enquiry form also offers to copy the enquiry for any webmail.
+  /* ---- contact + register forms: send, or compose an email ---- */
+  // With a Web3Forms key (data-key) the form is sent from the page to
+  // site.email. Without one, or if sending fails, it opens a mailto link.
+  // That only works where an email program is set up, so the enquiry form
+  // also offers to copy the enquiry for any webmail.
   const compose = (form) => {
     const data = new FormData(form);
     const lines = [];
@@ -259,6 +261,22 @@
     const subject = [data.get("subject") || form.dataset.subject || "Website enquiry", product].filter(Boolean).join(": ");
     return { to: form.dataset.mailto, subject, body: lines.join("\n") };
   };
+  async function send(form, m) {
+    const data = new FormData(form);
+    const body = new FormData();
+    body.set("access_key", form.dataset.key);
+    body.set("subject", `Website: ${m.subject}`);
+    body.set("from_name", "EDS website");
+    if (data.get("Email")) body.set("replyto", data.get("Email"));
+    if (data.get("subject")) body.set("Interested in", data.get("subject"));
+    data.forEach((v, k) => { if (k !== "subject" && String(v).trim()) body.append(k, v); });
+    try {
+      const res = await fetch("https://api.web3forms.com/submit", { method: "POST", body, headers: { Accept: "application/json" }, signal: AbortSignal.timeout(20000) });
+      return (await res.json()).success === true;
+    } catch {
+      return false;
+    }
+  }
   const ERRORS = { Name: "Please tell us your name.", Email: "Please enter an email address we can reply to.", Message: "Please add a short message." };
   function check(field) {
     const ok = field.checkValidity();
@@ -280,8 +298,9 @@
     const fields = $$("[required]", form);
     // Once a field has been flagged, re-check it as the visitor fixes it.
     fields.forEach((f) => f.addEventListener("input", () => f.hasAttribute("aria-invalid") && check(f)));
-    form.addEventListener("submit", (e) => {
+    form.addEventListener("submit", async (e) => {
       e.preventDefault();
+      if (form.hasAttribute("aria-busy")) return;
       if (form.classList.contains("form")) {
         const bad = fields.filter((f) => !check(f));
         if (bad.length) {
@@ -291,8 +310,39 @@
         }
       }
       const m = compose(form);
-      window.location.href = `mailto:${m.to}?subject=${encodeURIComponent(m.subject)}&body=${encodeURIComponent(m.body)}`;
-      const done = $(".form-done, .signup-done", form);
+      let sent = false;
+      if (form.dataset.key) {
+        const btn = $("button[type=submit]", form), label = $("span", btn), was = label?.textContent;
+        form.setAttribute("aria-busy", "true");
+        btn.disabled = true;
+        if (label) label.textContent = "Sending…";
+        sent = await send(form, m);
+        form.removeAttribute("aria-busy");
+        btn.disabled = false;
+        if (label) label.textContent = was;
+      }
+      const mailto = `mailto:${m.to}?subject=${encodeURIComponent(m.subject)}&body=${encodeURIComponent(m.body)}`;
+      if (sent) {
+        // Clear everything that was sent (topic, product, way of working, quote
+        // list, message), keeping name and contact details for another.
+        const keep = ["Name", "Organisation", "Email", "Phone"].map((k) => [k, form.elements[k]?.value]);
+        form.reset();
+        if (form.classList.contains("form")) {
+          keep.forEach(([k, v]) => form.elements[k] && (form.elements[k].value = v));
+          const ctx = $(".form-context", form);
+          if (ctx) { ctx.hidden = true; $("input", ctx).value = ""; } // hidden inputs keep their value through reset()
+          window.EDS?.quote?.clear();
+        }
+      } else if (form.dataset.key) {
+        // Sending took a while, so the click no longer counts as the visitor's
+        // own and browsers may block opening the email program. They open it
+        // from the link in the message instead.
+        $$("[data-mail-link]", form).forEach((a) => (a.href = mailto));
+      } else {
+        window.location.href = mailto;
+      }
+      $$("[data-done]", form).forEach((d) => (d.hidden = true));
+      const done = $(`[data-done=${sent ? "sent" : "mail"}]`, form);
       if (!done) return;
       done.hidden = false;
       const fieldset = $(".form-fields", form);
@@ -302,11 +352,11 @@
 
   const enquiry = $("form.form[data-mailto]");
   if (enquiry) {
-    $("[data-form-edit]", enquiry)?.addEventListener("click", () => {
-      $(".form-done", enquiry).hidden = true;
+    $$("[data-form-edit]", enquiry).forEach((b) => b.addEventListener("click", () => {
+      $$(".form-done", enquiry).forEach((d) => (d.hidden = true));
       $(".form-fields", enquiry).hidden = false;
-      $("textarea", enquiry).focus();
-    });
+      $("textarea[name=Message]", enquiry).focus();
+    }));
     $$("[data-copy]", enquiry).forEach((b) =>
       b.addEventListener("click", async () => {
         const m = compose(enquiry);
