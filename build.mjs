@@ -1463,7 +1463,7 @@ for (const [from, to] of Object.entries(C.oldPages)) {
 <meta name="robots" content="noindex">
 <link rel="canonical" href="${pageUrl(to)}">
 <meta http-equiv="refresh" content="0; url=${to}">
-<script>location.replace("${to}" + location.hash)</script>
+<script>location.replace("${to}" + location.search + location.hash)</script>
 </head>
 <body><p>This page has moved to <a href="${to}">${pageUrl(to)}</a>.</p></body>
 </html>
