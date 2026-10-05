@@ -72,7 +72,7 @@ Everything exports to CSV.
   https://analytics.e-d-s.com.au/admin. `PAGES_URL` sends any page request there back to www.
 - GitHub Pages preview copies leave the tracker out, since nothing there can receive visits.
 
-Other settings (`PORT`, `DATA_DIR`, `ANALYTICS_TZ`, `SESSION_SECRET`, `PAGES_URL`) are described in `.env.example`.
+Other settings (`PORT`, `DATA_DIR`, `ANALYTICS_TZ`, `SESSION_SECRET`, `TRUSTED_PROXIES`, `PAGES_URL`) are described in `.env.example`.
 
 ## Links that carry context
 
