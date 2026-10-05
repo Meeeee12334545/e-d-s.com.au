@@ -9,11 +9,14 @@ import { fileURLToPath } from "node:url";
 import { openStore } from "./store.mjs";
 import { collect } from "./collect.mjs";
 import { admin } from "./admin.mjs";
+import { openLookup } from "./lookup.mjs";
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const DIST = path.join(ROOT, "dist");
 const PORT = Number(process.env.PORT) || 4173;
-const store = openStore(path.resolve(ROOT, process.env.DATA_DIR || "data"));
+const DATA = path.resolve(ROOT, process.env.DATA_DIR || "data");
+const store = openStore(DATA);
+const lookup = openLookup(store, DATA);
 // When the pages live on another host (GitHub Pages) and this server only runs
 // analytics, page requests here are sent there so the site has one address.
 const PAGES_URL = (process.env.PAGES_URL || "").replace(/\/+$/, "");
@@ -45,7 +48,7 @@ async function serveStatic(req, res, pathname) {
 const server = http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url, "http://localhost");
-    if (url.pathname === "/api/collect") return await collect(req, res, store);
+    if (url.pathname === "/api/collect") return await collect(req, res, store, lookup);
     if (url.pathname === "/admin" || url.pathname.startsWith("/admin/")) return await admin(req, res, url, store);
     if (PAGES_URL) { res.writeHead(301, { Location: PAGES_URL + url.pathname + url.search }); return res.end(); }
     await serveStatic(req, res, url.pathname);

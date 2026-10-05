@@ -56,7 +56,11 @@ Everything exports to CSV.
   (git ignores it). Without a password `/admin` explains how to set one.
 - **Privacy.** No cookies, and no IP addresses are stored. A visitor is a hash of IP
   and browser with a salt that is replaced daily, so people cannot be followed from
-  one day to the next. Bots are filtered out. On the dashboard, tick "Don't count my
+  one day to the next.
+- **Organisations and cities.** After each page view the server looks up who holds the
+  visitor's network in the internet registries (RDAP, cached per network range) and the
+  nearest city in DB-IP's free City Lite database, which it downloads monthly into
+  `DATA_DIR`. Then the IP is dropped (`server/lookup.mjs`). `ANALYTICS_LOOKUP=off` turns this off. Bots are filtered out. On the dashboard, tick "Don't count my
   own visits" to leave your browser out.
 - **Hosting.** The dashboard needs the server, which runs on any host with Node 22.13
   or later and a persistent disk for `data/` (a VPS, Render, Railway, Fly.io). Run

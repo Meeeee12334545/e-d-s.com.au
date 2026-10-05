@@ -1,7 +1,9 @@
 // POST /api/collect: receives what assets/js/track.js reports from each page.
 // No cookies and no IP addresses are kept. A visitor is a hash of IP, browser
 // and a salt that is replaced every day, which is enough to count unique
-// visitors without being able to follow anyone from one day to the next.
+// visitors without being able to follow anyone from one day to the next. Page
+// views are then tagged with the organisation and city behind the address
+// (lookup.mjs), and the address itself is dropped.
 import { createHash } from "node:crypto";
 
 const TYPES = new Set(["pageview", "engagement", "download", "contact", "outbound", "form"]);
@@ -99,7 +101,7 @@ function readBody(req, max) {
   });
 }
 
-export async function collect(req, res, store) {
+export async function collect(req, res, store, lookup) {
   if (req.method !== "POST") { res.writeHead(405, { Allow: "POST" }); return res.end(); }
   const ip = clientIp(req);
   const ua = String(req.headers["user-agent"] || "");
@@ -147,6 +149,9 @@ export async function collect(req, res, store) {
   } else {
     Object.assign(event, { target: clean(body.target, 500), label: clean(body.label, 120) });
   }
-  store.record(event);
+  const id = store.record(event);
   reply(204);
+  if (body.type === "pageview" && lookup) {
+    try { const who = await lookup.lookup(ip); if (who) store.tag(id, who); } catch (err) { console.error("Lookup failed:", err.message); }
+  }
 }

@@ -297,8 +297,13 @@
       { label: "Referrers", key: "sources", head: "Where the visit came from", name: (r) => r.name, cols: [["visits", "Visits", num]] },
       { label: "Campaigns", key: "campaigns", head: "Campaign (utm_campaign)", name: (r) => r.name, sub: (r) => join(r.source, r.medium), cols: [["visits", "Visits", num]] },
     ] },
-    { id: "locations", title: "Locations", note: "Australian states from the visitor's time zone", tabs: [
+    { id: "orgs", title: "Organisations", note: "Who holds the network each visit came from", tabs: [
+      { label: "Organisations", key: "orgs", head: "Organisation", name: (r) => r.name, sub: (r) => `last visit ${ago(r.last)}`, cols: [["visitors", "Visitors", num], ["views", "Views", num]] },
+      { label: "Internet providers", key: "providers", head: "Home, mobile or cloud network", name: (r) => r.name, cols: visitors },
+    ] },
+    { id: "locations", title: "Locations", note: "States from the visitor's time zone, cities from their address", tabs: [
       { label: "Region", key: "regions", head: "Region", name: (r) => r.name, cols: visitors },
+      { label: "City", key: "cities", head: "City (approximate)", name: (r) => r.name, cols: visitors },
     ] },
     { id: "devices", title: "Devices", tabs: [
       { label: "Device", key: "devices", head: "Device", name: (r) => r.name || "Unknown", cols: visitors },
@@ -419,7 +424,9 @@
       const li = h("li", "visit");
       const head = h("div", "visit-head");
       const pages = v.steps.filter((x) => x.type === "pageview").length;
-      head.append(icon(DEVICE[v.device] || "monitor"), h("b", null, v.region), h("span", null, join(v.browser && v.os && `${v.browser} on ${v.os}`, `from ${v.source}`, `${pages} ${pages === 1 ? "page" : "pages"}`, v.end - v.start >= 1000 && dur(v.end - v.start))));
+      const who = v.orgKind === "organisation" ? v.org : v.city || v.region;
+      const via = v.orgKind === "organisation" ? v.city || v.region : v.org && `via ${v.org}`;
+      head.append(icon(DEVICE[v.device] || "monitor"), h("b", null, who), h("span", null, join(via, v.browser && v.os && `${v.browser} on ${v.os}`, `from ${v.source}`, `${pages} ${pages === 1 ? "page" : "pages"}`, v.end - v.start >= 1000 && dur(v.end - v.start))));
       const when = h("time", null, ago(v.start));
       when.dateTime = new Date(v.start).toISOString();
       when.title = fWhen.format(v.start);
