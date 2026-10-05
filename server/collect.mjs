@@ -5,6 +5,7 @@
 // views are then tagged with the organisation and city behind the address
 // (lookup.mjs), and the address itself is dropped.
 import { createHash } from "node:crypto";
+import { isIP } from "node:net";
 
 const TYPES = new Set(["pageview", "engagement", "download", "contact", "outbound", "form"]);
 const BOT = /bot|crawl|spider|slurp|scrape|headless|lighthouse|pagespeed|gtmetrix|pingdom|uptime|preview|facebookexternalhit|embedly|whatsapp|curl|wget|python|axios|node-fetch|go-http|java\//i;
@@ -89,7 +90,12 @@ const hits = new Map();
 setInterval(() => hits.clear(), 60e3).unref();
 const limited = (ip) => { const n = (hits.get(ip) || 0) + 1; hits.set(ip, n); return n > 120; };
 
-export const clientIp = (req) => (String(req.headers["x-forwarded-for"] || "").split(",")[0].trim() || req.socket.remoteAddress || "");
+export const clientIp = (req) => {
+  const forwarded = process.env.TRUST_PROXY === "true"
+    ? String(req.headers["x-forwarded-for"] || "").split(",").at(-1).trim()
+    : "";
+  return (isIP(forwarded) ? forwarded : "") || req.socket.remoteAddress || "";
+};
 
 function readBody(req, max) {
   return new Promise((resolve) => {

@@ -70,6 +70,9 @@ Everything exports to CSV.
 - **Live setup.** The pages are on GitHub Pages at www.e-d-s.com.au. The server runs on
   Render from `render.yaml` at analytics.e-d-s.com.au, so the dashboard is at
   https://analytics.e-d-s.com.au/admin. `PAGES_URL` sends any page request there back to www.
+- **Reverse proxies.** `TRUST_PROXY=true` is set for Render, whose proxy supplies the client
+  address. Leave it unset on a directly exposed server so caller-supplied forwarding headers
+  cannot spoof client addresses.
 - GitHub Pages preview copies leave the tracker out, since nothing there can receive visits.
 
 Other settings (`PORT`, `DATA_DIR`, `ANALYTICS_TZ`, `SESSION_SECRET`, `PAGES_URL`) are described in `.env.example`.
