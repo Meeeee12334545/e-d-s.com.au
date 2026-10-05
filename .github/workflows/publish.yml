@@ -26,8 +26,10 @@ jobs:
       - run: npm ci
       - run: npm run build
         env:
-          # No server on GitHub Pages, so the visit tracker is left out.
+          # No server on GitHub Pages, so visits go to the analytics server
+          # (render.yaml), which also hosts the dashboard at /admin.
           STATIC_HOST: "1"
+          ANALYTICS_ENDPOINT: https://analytics.e-d-s.com.au/api/collect
       - name: Publish dist to the gh-pages branch
         run: |
           cd dist

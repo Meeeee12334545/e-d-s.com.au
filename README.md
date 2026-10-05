@@ -63,9 +63,12 @@ Everything exports to CSV.
   `npm ci && npm run build && npm start` behind HTTPS. To keep the pages on a static
   host instead, run the server somewhere else and build the pages with
   `ANALYTICS_ENDPOINT=https://<that server>/api/collect`.
+- **Live setup.** The pages are on GitHub Pages at www.e-d-s.com.au. The server runs on
+  Render from `render.yaml` at analytics.e-d-s.com.au, so the dashboard is at
+  https://analytics.e-d-s.com.au/admin. `PAGES_URL` sends any page request there back to www.
 - GitHub Pages preview copies leave the tracker out, since nothing there can receive visits.
 
-Other settings (`PORT`, `DATA_DIR`, `ANALYTICS_TZ`, `SESSION_SECRET`) are described in `.env.example`.
+Other settings (`PORT`, `DATA_DIR`, `ANALYTICS_TZ`, `SESSION_SECRET`, `PAGES_URL`) are described in `.env.example`.
 
 ## Links that carry context
 

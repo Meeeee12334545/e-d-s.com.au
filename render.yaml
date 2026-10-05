@@ -1,0 +1,28 @@
+# Render Blueprint for the analytics server. The pages are on GitHub Pages at
+# www.e-d-s.com.au; this runs /api/collect and the /admin dashboard at
+# analytics.e-d-s.com.au. In Render: New > Blueprint, pick this repo, enter
+# ADMIN_PASSWORD when asked, then add analytics.e-d-s.com.au as a custom domain.
+services:
+  - type: web
+    name: eds-analytics
+    runtime: node
+    plan: starter # disks need a paid plan; the free plan would lose the database on every restart
+    region: singapore
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /admin
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: DATA_DIR
+        value: /var/data
+      - key: ANALYTICS_TZ
+        value: Australia/Brisbane
+      - key: PAGES_URL
+        value: https://www.e-d-s.com.au
+    disk:
+      name: analytics-data
+      mountPath: /var/data
+      sizeGB: 1
