@@ -148,7 +148,7 @@ function footer(r) {
           <p>${site.tagline}</p>
           <div class="footer-contact">
             <a href="${site.phoneHref}">${icon("phone")}${site.phone}</a>
-            <a href="mailto:${site.email}">${icon("mail")}${site.email}</a>
+            <a href="${r}contact.html#enquiry">${icon("send")}Send an enquiry</a>
           </div>
         </div>
         <div>
@@ -180,8 +180,8 @@ function footer(r) {
             <input id="f-email" name="Email" type="email" placeholder="Your email" autocomplete="email" required>
             ${botcheck}
             <button class="btn btn-primary" type="submit" aria-label="Register for updates">${icon("send")}</button>
-            ${SEND ? `<p class="signup-done" role="status" data-done="sent" hidden>${icon("check", false)} Thanks, you are registered for EDS updates.</p>` : ""}
-            <p class="signup-done" role="status" data-done="mail" hidden>${SEND ? `${icon("mail", false)} Could not register from this page just now. <a data-mail-link href="mailto:${site.email}">Email us to register</a>.` : `${icon("check", false)} Your email program has opened with the request. Press send there to register.`}</p>
+            <p class="signup-done" role="status" data-done="sent" hidden>${icon("check", false)} Thanks, you are registered for EDS updates.</p>
+            <p class="signup-done form-error" role="alert" data-done="error" hidden>${icon("circle-alert", false)} That did not go through. Please try again in a moment.</p>
           </form>
         </div>
       </div>
@@ -193,12 +193,12 @@ function footer(r) {
   </footer>`;
 }
 
-// With site.formKey set, the forms send through Web3Forms from the page
-// (site.js); without it, or if sending fails, they open an email instead.
-const SEND = Boolean(site.formKey);
-const formSend = `data-mailto="${site.email}"${SEND ? ` data-key="${esc(site.formKey)}"` : ""}`;
+// The forms send through Web3Forms from the page (site.js), so the build
+// needs its access key.
+if (!site.formKey) throw new Error("Set site.formKey in content.mjs: the forms send through Web3Forms with it");
+const formSend = `data-key="${esc(site.formKey)}"`;
 // A field people leave alone and bots fill in, so Web3Forms can drop spam.
-const botcheck = SEND ? `<input type="checkbox" name="botcheck" tabindex="-1" autocomplete="off" hidden>` : "";
+const botcheck = `<input type="checkbox" name="botcheck" tabindex="-1" autocomplete="off" hidden>`;
 
 // "Open now" or "Closed" for head office, worked out in the browser by site.js.
 const openStatus = () => `<span class="open-status" data-open-status='${JSON.stringify(site.openingHours)}' hidden><i></i><span></span></span>`;
@@ -220,7 +220,7 @@ const actionBar = (r, current) => `
 <nav class="actionbar" aria-label="Quick actions">
   <a href="${site.phoneHref}" data-open-dot>${icon("phone", false)}<span>Call</span></a>
   <button type="button" data-search-open>${icon("search", false)}<span>Search</span></button>
-  ${current === "contact" ? `<a class="primary" href="mailto:${site.email}">${icon("mail", false)}<span>Email</span></a>` : `<a class="primary" href="${r}contact.html#enquiry">${icon("send", false)}<span>Enquire</span><b class="count" data-quote-count hidden>0</b></a>`}
+  <a class="primary" href="${current === "contact" ? "" : `${r}contact.html`}#enquiry">${icon("send", false)}<span>Enquire</span><b class="count" data-quote-count hidden>0</b></a>
 </nav>`;
 
 // Structured data for search engines: the organisation on the home and
@@ -1087,7 +1087,7 @@ ${pageHero(r, { crumbs: [["Products", "products/index.html"], [b.name]], iconNam
     <div class="aside-card brand" data-reveal="right"><h3>Request pricing</h3><p>Sales, hire and service from EDS, Australia wide.</p><a class="btn btn-primary" href="${contactHref(r, pricing)}">Enquire now ${icon("arrow-right")}</a></div>
     ${docs.length
       ? `<div class="aside-card" data-reveal="right"><h3>Documents</h3><ul class="aside-links docs">${docs.map((d) => `<li><a href="${d.href}" rel="noopener"><span>${esc(d.title)}<small>${esc(d.meta)}</small></span>${icon("download")}</a></li>`).join("")}</ul></div>`
-      : `<div class="aside-card" data-reveal="right"><h3>Datasheets and manuals</h3><p>Ask us for the datasheet, manual or software for any ${esc(b.name)} product.</p><a class="link-arrow" href="mailto:${site.sales}?subject=${encodeURIComponent(`${b.name} datasheet request`)}">Request a datasheet ${icon("arrow-right")}</a></div>`}
+      : `<div class="aside-card" data-reveal="right"><h3>Datasheets and manuals</h3><p>Ask us for the datasheet, manual or software for any ${esc(b.name)} product.</p><a class="link-arrow" href="${contactHref(r, { product: `${b.name} datasheet or manual` })}">Request a datasheet ${icon("arrow-right")}</a></div>`}
   </aside>
 </div></section>
 <section class="section alt" id="range"><div class="wrap">
@@ -1279,16 +1279,15 @@ ${pageHero(r, { crumbs: [["Contact"]], eyebrow: "Contact", title: "Call or visit
   <a class="hero-call" href="${site.phoneHref}">${icon("phone")}<span><small>Call from anywhere in Australia</small><b>${site.phone}</b></span></a>
   ${openStatus()}
   <ul class="hero-links">
-    <li><a href="mailto:${site.email}">${icon("mail")}<span>${site.email}</span></a></li>
     <li><a href="#enquiry">${icon("send")}<span>Send an enquiry</span>${icon("arrow-down")}</a></li>
     <li><a href="#offices">${icon("map-pin")}<span>Offices in four states</span>${icon("arrow-down")}</a></li>
   </ul>`, "hero-contact") })}
 <section class="section"><div class="wrap contact-grid">
   <div class="contact-cards">
     <a class="contact-card" href="${site.phoneHref}" data-reveal><span class="card-icon">${icon("phone")}</span><span><b>${site.phone}</b><span>General enquiries, customer service, service department and sales</span></span></a>
-    <a class="contact-card" href="mailto:${site.email}" data-reveal><span class="card-icon">${icon("mail")}</span><span><b>${site.email}</b><span>Enquiries</span></span></a>
-    <a class="contact-card" href="mailto:${site.sales}" data-reveal><span class="card-icon">${icon("mail")}</span><span><b>${site.sales}</b><span>Sales</span></span></a>
-    <a class="contact-card" href="mailto:${site.service}" data-reveal><span class="card-icon">${icon("mail")}</span><span><b>${site.service}</b><span>Service</span></span></a>
+    <a class="contact-card" href="#enquiry" data-reveal><span class="card-icon">${icon("send")}</span><span><b>Send an enquiry</b><span>Projects, monitoring programs and general questions</span></span></a>
+    <a class="contact-card" href="${contactHref(r, { topic: "Product pricing" })}" data-reveal><span class="card-icon">${icon("tag")}</span><span><b>Sales</b><span>Pricing, quotes and hire</span></span></a>
+    <a class="contact-card" href="${contactHref(r, { topic: "Equipment service or calibration" })}" data-reveal><span class="card-icon">${icon("wrench")}</span><span><b>Service</b><span>Equipment service and calibration</span></span></a>
     <a class="contact-card" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent("13/20-22 Ellerslie Road, Meadowbrook QLD 4131")}" rel="noopener" data-reveal><span class="card-icon">${icon("map-pin")}</span><span><b>Head office</b><span>${site.address.join(", ")}</span></span></a>
     <div class="contact-card" data-reveal><span class="card-icon">${icon("clock", false)}</span><span><b>Opening hours</b><span>${site.hours}. Closed Saturday and Sunday.</span>${openStatus()}</span></div>
   </div>
@@ -1341,27 +1340,16 @@ ${pageHero(r, { crumbs: [["Contact"]], eyebrow: "Contact", title: "Call or visit
       <label class="field">Message<textarea name="Message" required placeholder="Tell us about your site, network or project"></textarea></label>
       <textarea name="Products" hidden disabled></textarea>
       ${botcheck}
-      <button class="btn btn-primary btn-lg" type="submit" style="justify-self:start">${icon("send")} <span>${SEND ? "Send enquiry" : "Open email to send"}</span></button>
-      <p class="note">${SEND ? `Your enquiry goes straight to our team at ${site.email}.` : `This opens your email program with the enquiry filled in, addressed to ${site.email}.`}</p>
+      <button class="btn btn-primary btn-lg" type="submit" style="justify-self:start">${icon("send")} <span>Send enquiry</span></button>
+      <p class="form-error" role="alert" data-done="error" hidden>${icon("circle-alert", false)} Your enquiry did not go through. Please try again in a moment, or call ${site.phone}.</p>
+      <p class="note">Your enquiry goes straight to our team.</p>
     </div>
-    ${SEND ? `<div class="form-done" data-done="sent" hidden tabindex="-1" role="status">
+    <div class="form-done" data-done="sent" hidden tabindex="-1" role="status">
       <span class="card-icon">${icon("mail-check", false)}</span>
       <h2>Thanks, your enquiry has been sent</h2>
       <p>It has gone to our team at ${site.email}, and we will reply to the email address you gave. For anything urgent, call ${site.phone}.</p>
       <div class="btn-row">
         <button class="btn btn-ghost" type="button" data-form-edit>${icon("pencil-line", false)}Send another enquiry</button>
-      </div>
-    </div>` : ""}
-    <div class="form-done" data-done="mail" hidden tabindex="-1" role="status">
-      <span class="card-icon">${icon("mail-check", false)}</span>
-      <h2>Your enquiry is ready to send</h2>
-      <p>${SEND ? `It could not be sent from this page just now. Open it in your email program, addressed to ${site.email}, and press send there.` : `It has opened in your email program, addressed to ${site.email}. Press send there and our team will come back to you.`}</p>
-      <p class="note">Nothing opened? Copy the enquiry into any email to ${site.email}, or call ${site.phone}.</p>
-      <div class="btn-row">
-        ${SEND ? `<a class="btn btn-primary" data-mail-link href="mailto:${site.email}">${icon("mail", false)}<span>Open email</span></a>` : ""}
-        <button class="btn ${SEND ? "btn-ghost" : "btn-primary"}" type="button" data-copy="enquiry">${icon("copy", false)}<span>Copy enquiry</span></button>
-        <button class="btn btn-ghost" type="button" data-copy="address">${icon("mail", false)}<span>Copy email address</span></button>
-        <button class="btn btn-ghost" type="button" data-form-edit>${icon("pencil-line", false)}Edit enquiry</button>
       </div>
     </div>
   </form>
@@ -1438,7 +1426,8 @@ function searchIndex() {
   }
   put("Contact", `Call ${site.phone}`, `${site.hours}, from anywhere in Australia`, site.phoneHref, { i: "phone", b: "phone ring telephone call" });
   put("Contact", "Send an enquiry", "The enquiry form, with the topic of your choice", "contact.html#enquiry", { i: "send", b: "quote pricing message" });
-  for (const [addr, what] of [[site.email, "General enquiries"], [site.sales, "Sales"], [site.service, "Service department"]]) put("Contact", `Email ${addr}`, what, `mailto:${addr}`, { i: "mail", b: "email" });
+  put("Contact", "Sales enquiry", "Pricing, quotes and hire", contactHref("", { topic: "Product pricing" }), { i: "tag", b: "email sales quote" });
+  put("Contact", "Service enquiry", "Equipment service and calibration", contactHref("", { topic: "Equipment service or calibration" }), { i: "wrench", b: "email service repair calibration" });
   for (const o of C.offices) put("Offices", `${o.city}, ${o.state}`, o.note, "contact.html#offices", { i: "map-pin", b: "office location address branch" });
   put("Sign in", "Sign in to EDS FlowSense", "edsflowsense.au", site.flowsenseUrl, { i: "log-in", x: 1, b: "login platform" });
   put("Sign in", "Remote data access", "DetectData, for Detectronic instruments", site.remoteDataUrl, { i: "globe", x: 1, b: "login detecdata" });
