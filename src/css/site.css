@@ -638,7 +638,7 @@ input[type="range"]::-moz-range-thumb { width: 16px; height: 16px; border-radius
 .footer a:hover { color: var(--aqua); }
 .footer .logo img { height: 28px; margin: 9px 0 27px; }
 .footer address { font-style: normal; line-height: 1.7; }
-.footer-contact a { display: flex; align-items: center; gap: 10px; color: #fff; font-weight: 600; margin-top: 10px; }
+.footer-contact a, .footer-contact span { display: flex; align-items: center; gap: 10px; color: #fff; font-weight: 600; margin-top: 10px; }
 .footer-contact .icon { color: var(--aqua); }
 .footer-base { display: flex; flex-wrap: wrap; gap: 14px 28px; align-items: center; justify-content: space-between; margin-top: 52px; padding-top: 22px; border-top: 1px solid var(--line-dark); font-size: .84rem; }
 .to-top { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line-dark-strong); color: var(--on-dark-soft); font-weight: 600; transition: border-color .2s var(--ease), color .2s var(--ease), background-color .2s var(--ease); }

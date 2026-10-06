@@ -148,6 +148,7 @@ function footer(r) {
           <p>${site.tagline}</p>
           <div class="footer-contact">
             <a href="${site.phoneHref}">${icon("phone")}${site.phone}</a>
+            <span>${icon("mail", false)}${site.email}</span>
             <a href="${r}contact.html#enquiry">${icon("send")}Send an enquiry</a>
           </div>
         </div>
@@ -1285,9 +1286,9 @@ ${pageHero(r, { crumbs: [["Contact"]], eyebrow: "Contact", title: "Call or visit
 <section class="section"><div class="wrap contact-grid">
   <div class="contact-cards">
     <a class="contact-card" href="${site.phoneHref}" data-reveal><span class="card-icon">${icon("phone")}</span><span><b>${site.phone}</b><span>General enquiries, customer service, service department and sales</span></span></a>
-    <a class="contact-card" href="#enquiry" data-reveal><span class="card-icon">${icon("send")}</span><span><b>Send an enquiry</b><span>Projects, monitoring programs and general questions</span></span></a>
-    <a class="contact-card" href="${contactHref(r, { topic: "Product pricing" })}" data-reveal><span class="card-icon">${icon("tag")}</span><span><b>Sales</b><span>Pricing, quotes and hire</span></span></a>
-    <a class="contact-card" href="${contactHref(r, { topic: "Equipment service or calibration" })}" data-reveal><span class="card-icon">${icon("wrench")}</span><span><b>Service</b><span>Equipment service and calibration</span></span></a>
+    <a class="contact-card" href="#enquiry" data-reveal><span class="card-icon">${icon("send")}</span><span><b>Send an enquiry</b><span>${site.email}<br>Projects, monitoring programs and general questions</span></span></a>
+    <a class="contact-card" href="${contactHref(r, { topic: "Product pricing" })}" data-reveal><span class="card-icon">${icon("tag")}</span><span><b>Sales</b><span>${site.sales}<br>Pricing, quotes and hire</span></span></a>
+    <a class="contact-card" href="${contactHref(r, { topic: "Equipment service or calibration" })}" data-reveal><span class="card-icon">${icon("wrench")}</span><span><b>Service</b><span>${site.service}<br>Equipment service and calibration</span></span></a>
     <a class="contact-card" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent("13/20-22 Ellerslie Road, Meadowbrook QLD 4131")}" rel="noopener" data-reveal><span class="card-icon">${icon("map-pin")}</span><span><b>Head office</b><span>${site.address.join(", ")}</span></span></a>
     <div class="contact-card" data-reveal><span class="card-icon">${icon("clock", false)}</span><span><b>Opening hours</b><span>${site.hours}. Closed Saturday and Sunday.</span>${openStatus()}</span></div>
   </div>
