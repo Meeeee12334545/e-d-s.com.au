@@ -90,11 +90,14 @@ const hits = new Map();
 setInterval(() => hits.clear(), 60e3).unref();
 const limited = (ip) => { const n = (hits.get(ip) || 0) + 1; hits.set(ip, n); return n > 120; };
 
+const trustedProxies = new Set((process.env.TRUSTED_PROXIES || "").split(",").map((ip) => ip.trim()).filter(Boolean));
 export const clientIp = (req) => {
-  const forwarded = process.env.TRUST_PROXY === "true"
-    ? String(req.headers["x-forwarded-for"] || "").split(",").at(-1).trim()
-    : "";
-  return (isIP(forwarded) ? forwarded : "") || req.socket.remoteAddress || "";
+  const remote = req.socket.remoteAddress || "";
+  if (trustedProxies.has(remote)) {
+    const forwarded = String(req.headers["x-forwarded-for"] || "").split(",").map((ip) => ip.trim());
+    for (let i = forwarded.length - 1; i >= 0; i--) if (isIP(forwarded[i]) && !trustedProxies.has(forwarded[i])) return forwarded[i];
+  }
+  return remote;
 };
 
 function readBody(req, max) {

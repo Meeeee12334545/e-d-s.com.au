@@ -248,24 +248,18 @@
   }
   window.EDS = { copyText };
 
-  /* ---- contact + register forms: send, or compose an email ---- */
-  // With a Web3Forms key (data-key) the form is sent from the page to
-  // site.email. Without one, or if sending fails, it opens a mailto link.
-  // That only works where an email program is set up, so the enquiry form
-  // also offers to copy the enquiry for any webmail.
-  const compose = (form) => {
+  /* ---- contact + register forms: sent from the page ---- */
+  // Each form posts to Web3Forms with its access key (data-key, from
+  // site.formKey), which emails it to site.email. Nothing opens the
+  // visitor's email program. If sending fails, the form stays as it was
+  // with a message to try again or call.
+  async function send(form) {
     const data = new FormData(form);
-    const lines = [];
-    data.forEach((v, k) => { if (k !== "subject" && String(v).trim()) lines.push(`${k}: ${v}`); });
     const product = data.get("Product");
     const subject = [data.get("subject") || form.dataset.subject || "Website enquiry", product].filter(Boolean).join(": ");
-    return { to: form.dataset.mailto, subject, body: lines.join("\n") };
-  };
-  async function send(form, m) {
-    const data = new FormData(form);
     const body = new FormData();
     body.set("access_key", form.dataset.key);
-    body.set("subject", `Website: ${m.subject}`);
+    body.set("subject", `Website: ${subject}`);
     body.set("from_name", "EDS website");
     if (data.get("Email")) body.set("replyto", data.get("Email"));
     if (data.get("subject")) body.set("Interested in", data.get("subject"));
@@ -294,7 +288,7 @@
     return false;
   }
 
-  $$("form[data-mailto]").forEach((form) => {
+  $$("form[data-key]").forEach((form) => {
     const fields = $$("[required]", form);
     // Once a field has been flagged, re-check it as the visitor fixes it.
     fields.forEach((f) => f.addEventListener("input", () => f.hasAttribute("aria-invalid") && check(f)));
@@ -309,19 +303,15 @@
           return;
         }
       }
-      const m = compose(form);
-      let sent = false;
-      if (form.dataset.key) {
-        const btn = $("button[type=submit]", form), label = $("span", btn), was = label?.textContent;
-        form.setAttribute("aria-busy", "true");
-        btn.disabled = true;
-        if (label) label.textContent = "Sending…";
-        sent = await send(form, m);
-        form.removeAttribute("aria-busy");
-        btn.disabled = false;
-        if (label) label.textContent = was;
-      }
-      const mailto = `mailto:${m.to}?subject=${encodeURIComponent(m.subject)}&body=${encodeURIComponent(m.body)}`;
+      const btn = $("button[type=submit]", form), label = $("span", btn), was = label?.textContent;
+      $$("[data-done]", form).forEach((d) => (d.hidden = true));
+      form.setAttribute("aria-busy", "true");
+      btn.disabled = true;
+      if (label) label.textContent = "Sending…";
+      const sent = await send(form);
+      form.removeAttribute("aria-busy");
+      btn.disabled = false;
+      if (label) label.textContent = was;
       if (sent) {
         // Clear everything that was sent (topic, product, way of working, quote
         // list, message), keeping name and contact details for another.
@@ -333,39 +323,21 @@
           if (ctx) { ctx.hidden = true; $("input", ctx).value = ""; } // hidden inputs keep their value through reset()
           window.EDS?.quote?.clear();
         }
-      } else if (form.dataset.key) {
-        // Sending took a while, so the click no longer counts as the visitor's
-        // own and browsers may block opening the email program. They open it
-        // from the link in the message instead.
-        $$("[data-mail-link]", form).forEach((a) => (a.href = mailto));
-      } else {
-        window.location.href = mailto;
       }
-      $$("[data-done]", form).forEach((d) => (d.hidden = true));
-      const done = $(`[data-done=${sent ? "sent" : "mail"}]`, form);
-      if (!done) return;
+      const done = $(`[data-done=${sent ? "sent" : "error"}]`, form);
       done.hidden = false;
       const fieldset = $(".form-fields", form);
-      if (fieldset) { fieldset.hidden = true; done.focus(); }
+      if (fieldset && sent) { fieldset.hidden = true; done.focus(); }
     });
   });
 
-  const enquiry = $("form.form[data-mailto]");
+  const enquiry = $("form.form[data-key]");
   if (enquiry) {
-    $$("[data-form-edit]", enquiry).forEach((b) => b.addEventListener("click", () => {
-      $$(".form-done", enquiry).forEach((d) => (d.hidden = true));
+    $("[data-form-edit]", enquiry).addEventListener("click", () => {
+      $$("[data-done]", enquiry).forEach((d) => (d.hidden = true));
       $(".form-fields", enquiry).hidden = false;
       $("textarea[name=Message]", enquiry).focus();
-    }));
-    $$("[data-copy]", enquiry).forEach((b) =>
-      b.addEventListener("click", async () => {
-        const m = compose(enquiry);
-        const label = $("span", b), was = label.textContent;
-        const text = b.dataset.copy === "address" ? m.to : `To: ${m.to}\nSubject: ${m.subject}\n\n${m.body}`;
-        label.textContent = (await copyText(text)) ? "Copied" : "Could not copy";
-        setTimeout(() => (label.textContent = was), 2000);
-      })
-    );
+    });
 
     // Arriving from a "Request pricing" or "Enquire now" button: choose the
     // topic it was about and name the product, if there was one.

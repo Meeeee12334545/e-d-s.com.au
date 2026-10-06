@@ -27,7 +27,7 @@ The build stops with an error if a page repeats an element id, since product lin
 | `src/data/content.mjs` | Every word on the site, the services and their groups, the product lists (each product has a `type` from `productTypes`) and the city districts. Edit copy here. Also the selling points shared across pages: `ways` (buy, hire or Data as a Service), `results` (project outcomes, each shown on the service pages it lists) and `programSteps` (how a monitoring program runs, on services marked `process: true`). |
 | `build.mjs` | Page templates. Generates 48 pages, including `404.html`, plus `sitemap.xml`, `robots.txt` and the search index. |
 | `src/css/site.css` | All styles and design tokens. Visitors whose system asks for reduced motion get fades instead of slides and no card tilt (the end of the file). |
-| `src/js/site.js` | Navigation, scroll reveals, counters, pointer effects, the flow-field background, the illustrative flow meter card in the home hero, sidebars that stay in view when they fit, the enquiry form, the "head office open now" status and the phone action bar. With `formKey` set in `content.mjs`, the enquiry and updates sign-up forms send through Web3Forms (https://web3forms.com) to eds@e-d-s.com.au; without it, or if sending fails, they open the visitor's email program addressed there. |
+| `src/js/site.js` | Navigation, scroll reveals, counters, pointer effects, the flow-field background, the illustrative flow meter card in the home hero, sidebars that stay in view when they fit, the enquiry form, the "head office open now" status and the phone action bar. The enquiry and updates sign-up forms send from the page through Web3Forms (https://web3forms.com), using the access key in `formKey` in `content.mjs`; the build stops if it is empty. Nothing on the site opens the visitor's email program: the addresses are shown as plain text (footer, contact cards), the cards and other contact links go to the enquiry form, and if sending fails the form keeps what was typed and asks the visitor to try again or call. Submissions go to the email address of the Web3Forms account that owns the key (set the recipient in its dashboard). |
 | `src/js/search.js` | Site search (Ctrl K, ⌘K or `/`). Its index, `assets/js/search-index.js`, is written by `build.mjs` from `content.mjs` and loads the first time search opens. |
 | `src/js/products.js` | Product quick view and the instrument finder on the products page. |
 | `src/js/quote.js` | The quote list. "Add to quote" on product cards, the quick view and product pages collects products in the visitor's browser (localStorage, nothing sent); the header and phone action bar show the count, and the enquiry form lists them with quantities and adds them to the email. |
@@ -75,7 +75,7 @@ Everything exports to CSV.
   cannot spoof client addresses.
 - GitHub Pages preview copies leave the tracker out, since nothing there can receive visits.
 
-Other settings (`PORT`, `DATA_DIR`, `ANALYTICS_TZ`, `SESSION_SECRET`, `PAGES_URL`) are described in `.env.example`.
+Other settings (`PORT`, `DATA_DIR`, `ANALYTICS_TZ`, `SESSION_SECRET`, `TRUSTED_PROXIES`, `PAGES_URL`) are described in `.env.example`.
 
 ## Links that carry context
 
@@ -94,6 +94,5 @@ Other settings (`PORT`, `DATA_DIR`, `ANALYTICS_TZ`, `SESSION_SECRET`, `PAGES_URL
 
 ## Still to do
 
-1. **Turn on sending from the page.** Get a free access key at https://web3forms.com by entering eds@e-d-s.com.au (the key arrives in that inbox) and put it in `formKey` in `src/data/content.mjs`. Until then the forms open the visitor's email program.
-2. The favicon and touch icon are cut from the logo PNG. A vector EDS mark from the brand files would give a sharper favicon.
-3. Check `site.openingHours` in `src/data/content.mjs`. The "open now" status works from the hours alone, so it does not know about public holidays.
+1. The favicon and touch icon are cut from the logo PNG. A vector EDS mark from the brand files would give a sharper favicon.
+2. Check `site.openingHours` in `src/data/content.mjs`. The "open now" status works from the hours alone, so it does not know about public holidays.

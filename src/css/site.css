@@ -638,7 +638,7 @@ input[type="range"]::-moz-range-thumb { width: 16px; height: 16px; border-radius
 .footer a:hover { color: var(--aqua); }
 .footer .logo img { height: 28px; margin: 9px 0 27px; }
 .footer address { font-style: normal; line-height: 1.7; }
-.footer-contact a { display: flex; align-items: center; gap: 10px; color: #fff; font-weight: 600; margin-top: 10px; }
+.footer-contact a, .footer-contact span { display: flex; align-items: center; gap: 10px; color: #fff; font-weight: 600; margin-top: 10px; }
 .footer-contact .icon { color: var(--aqua); }
 .footer-base { display: flex; flex-wrap: wrap; gap: 14px 28px; align-items: center; justify-content: space-between; margin-top: 52px; padding-top: 22px; border-top: 1px solid var(--line-dark); font-size: .84rem; }
 .to-top { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line-dark-strong); color: var(--on-dark-soft); font-weight: 600; transition: border-color .2s var(--ease), color .2s var(--ease), background-color .2s var(--ease); }
@@ -947,6 +947,9 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: 6
 .form-done .btn-row { margin-top: 4px; }
 .signup-done { grid-column: 1 / -1; display: flex; gap: 8px; align-items: flex-start; font-size: .84rem; color: var(--on-dark-soft); }
 .signup-done .icon { margin-top: 3px; color: var(--aqua); }
+.form-error { display: flex; gap: 8px; align-items: flex-start; font-size: .9rem; font-weight: 550; color: #fca5a5; }
+.form-error .icon, .signup-done.form-error .icon { margin-top: 3px; color: inherit; }
+.signup-done.form-error { color: #fca5a5; }
 
 /* ---------- head office open now ---------- */
 .open-status { display: flex; align-items: center; gap: 9px; margin-top: 8px; font-size: .82rem; font-weight: 600; }

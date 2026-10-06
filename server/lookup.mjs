@@ -56,15 +56,18 @@ const NON_PUBLIC_V4 = [
 ].map(cidr);
 const GLOBAL_V6 = cidr("2000::/3");
 const NON_PUBLIC_V6 = ["2001::/23", "2001:db8::/32", "2002::/16", "3fff::/20"].map(cidr);
+const inRange = (n, v, range) => range.v === v && range.start <= n && n <= range.end;
+const MIN_NETWORK_SIZE = { 4: 1n << 8n, 6: 1n << 80n };
+const broadEnough = (network, v) => BigInt(`0x${network.end}`) - BigInt(`0x${network.start}`) + 1n >= MIN_NETWORK_SIZE[v];
 // IPv4 addresses that arrive as ::ffff:1.2.3.4
 const plain = (ip) => ip.replace(/^::ffff:(?=\d+\.)/i, "");
-const inRange = (n, range, v) => range.v === v && range.start <= n && n <= range.end;
 const isPublic = (ip) => {
   const v = isIP(ip);
   if (!v) return false;
   const n = toBig(ip);
-  if (v === 4) return !NON_PUBLIC_V4.some((range) => inRange(n, range, v));
-  return inRange(n, GLOBAL_V6, v) && !NON_PUBLIC_V6.some((range) => inRange(n, range, v));
+  return v === 4
+    ? !NON_PUBLIC_V4.some((r) => inRange(n, v, r))
+    : inRange(n, v, GLOBAL_V6) && !NON_PUBLIC_V6.some((r) => inRange(n, v, r));
 };
 
 /* ---- registries ---- */
@@ -167,13 +170,15 @@ export function openLookup(store, dir) {
 
   async function network(ip, v) {
     const key = hex(toBig(ip), v);
-    const known = store.network(v, key);
+    let known = store.network(v, key);
+    if (known && !broadEnough(known, v)) { store.deleteNetwork(known); known = null; }
     if (known && Date.now() - known.fetched < MONTH) return known;
     if (failed.get(key) > Date.now()) return known || null;
     try {
       const found = await whois(ip, v);
       if (found) {
-        if (found.start !== found.end) store.saveNetwork({ v, ...found, fetched: Date.now() }, known);
+        if (broadEnough(found, v)) store.saveNetwork({ v, ...found, fetched: Date.now() }, known);
+        else if (known) store.deleteNetwork(known);
         return found;
       }
     } catch {}

@@ -116,6 +116,12 @@ export function openStore(dir) {
   const networkSt = st(`SELECT v, start, "end", org, kind, fetched FROM networks WHERE v = ? AND start <= ? AND "end" >= ? ORDER BY start DESC, "end" LIMIT 1`);
   const saveNetworkSt = st(`INSERT OR REPLACE INTO networks (v, start, "end", org, kind, fetched) VALUES (:v, :start, :end, :org, :kind, :fetched)`);
   const deleteNetworkSt = st(`DELETE FROM networks WHERE v = ? AND start = ? AND "end" = ?`);
+  const pruneNetworksSt = st(`DELETE FROM networks WHERE rowid IN (SELECT rowid FROM networks ORDER BY fetched DESC LIMIT -1 OFFSET 5000)`);
+  for (const n of st(`SELECT v, start, "end" FROM networks`).all()) {
+    const minSize = n.v === 4 ? 1n << 8n : 1n << 80n;
+    if (BigInt(`0x${n.end}`) - BigInt(`0x${n.start}`) + 1n < minSize) deleteNetworkSt.run(n.v, n.start, n.end);
+  }
+  pruneNetworksSt.run();
 
   // Today's salt. Yesterday's is deleted, so hashes cannot be linked across days.
   function salt(ts) {
@@ -142,8 +148,11 @@ export function openStore(dir) {
     if (previous && (previous.start !== n.start || previous.end !== n.end)) {
       deleteNetworkSt.run(previous.v, previous.start, previous.end);
     }
-    return saveNetworkSt.run(n);
+    const result = saveNetworkSt.run(n);
+    pruneNetworksSt.run();
+    return result;
   };
+  const deleteNetwork = (n) => deleteNetworkSt.run(n.v, n.start, n.end);
 
   /* ---- reporting ---- */
   const PV = "type = 'pageview' AND day BETWEEN ? AND ?";
@@ -250,5 +259,5 @@ export function openStore(dir) {
       city, org, org_kind, target, label, engaged, scroll, session FROM events WHERE day BETWEEN ? AND ? ORDER BY ts`).all(from, to);
   }
 
-  return { salt, record, engage, tag, network, saveNetwork, stats, live, exportRows, close: () => db.close() };
+  return { salt, record, engage, tag, network, saveNetwork, deleteNetwork, stats, live, exportRows, close: () => db.close() };
 }
