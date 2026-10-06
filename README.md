@@ -91,6 +91,5 @@ Other settings (`PORT`, `DATA_DIR`, `ANALYTICS_TZ`, `SESSION_SECRET`, `PAGES_URL
 
 ## Still to do
 
-1. **Turn on sending from the page.** Get a free access key at https://web3forms.com by entering eds@e-d-s.com.au (the key arrives in that inbox) and put it in `formKey` in `src/data/content.mjs`. Until then the forms open the visitor's email program.
-2. The favicon and touch icon are cut from the logo PNG. A vector EDS mark from the brand files would give a sharper favicon.
-3. Check `site.openingHours` in `src/data/content.mjs`. The "open now" status works from the hours alone, so it does not know about public holidays.
+1. The favicon and touch icon are cut from the logo PNG. A vector EDS mark from the brand files would give a sharper favicon.
+2. Check `site.openingHours` in `src/data/content.mjs`. The "open now" status works from the hours alone, so it does not know about public holidays.
