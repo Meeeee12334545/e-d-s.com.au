@@ -70,9 +70,11 @@ Everything exports to CSV.
 - **Live setup.** The pages are on GitHub Pages at www.e-d-s.com.au. The server runs on
   Render from `render.yaml` at analytics.e-d-s.com.au, so the dashboard is at
   https://analytics.e-d-s.com.au/admin. `PAGES_URL` sends any page request there back to www.
+  Render's requests arrive through Cloudflare, so `CLIENT_IP_HEADER=cf-connecting-ip` gives the
+  server each visitor's own address (for the per-address limits and the organisation and city lookup).
 - GitHub Pages preview copies leave the tracker out, since nothing there can receive visits.
 
-Other settings (`PORT`, `DATA_DIR`, `ANALYTICS_TZ`, `SESSION_SECRET`, `TRUSTED_PROXIES`, `PAGES_URL`) are described in `.env.example`.
+Other settings (`PORT`, `DATA_DIR`, `ANALYTICS_TZ`, `SESSION_SECRET`, `TRUSTED_PROXIES`, `CLIENT_IP_HEADER`, `PAGES_URL`) are described in `.env.example`.
 
 ## Links that carry context
 

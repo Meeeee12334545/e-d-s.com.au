@@ -22,6 +22,9 @@ services:
         value: Australia/Brisbane
       - key: PAGES_URL
         value: https://www.e-d-s.com.au
+      # Cloudflare, in front of every Render service, sets this to the visitor's address.
+      - key: CLIENT_IP_HEADER
+        value: cf-connecting-ip
     disk:
       name: analytics-data
       mountPath: /var/data
