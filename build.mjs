@@ -359,7 +359,7 @@ const heroProduct = (src, name) => `
 // Jump links to the sections of a longer page. `sections` is [[id, label]],
 // or [id, label, count] to show how many things the section holds.
 const heroToc = (sections) => `
-<nav class="hero-toc" aria-label="On this page" data-reveal="right" style="--i:2">
+<nav class="hero-toc${sections.length > 8 ? " long" : ""}" aria-label="On this page" data-reveal="right" style="--i:2">
   <p>On this page</p>
   <ol>${sections.map(([id, label, count], i) => `<li><a href="#${id}"><span>${String(i + 1).padStart(2, "0")}</span>${esc(label)}${count ? `<em>${count}</em>` : ""}${icon("arrow-down")}</a></li>`).join("")}</ol>
 </nav>`;
@@ -602,8 +602,8 @@ const waysSection = (r, { cls = "" } = {}) => `
   </div>
 </div></section>`;
 
-// Outcomes from EDS projects as stat cards. `list` defaults to all of them.
-const resultCards = (list = C.results) => `
+// Outcomes from EDS projects as stat cards.
+const resultCards = (list) => `
   <div class="results">
     ${list.map((x, n) => `
     <figure class="result" data-reveal style="--i:${n}">
@@ -784,7 +784,7 @@ add({
       <div><p class="eyebrow">Results from the field</p><h2 class="h-lg" data-reveal>Data that changed the decision.</h2></div>
       <a class="btn btn-outline" href="${r}about.html#projects">Recent projects ${icon("arrow-right")}</a>
     </div>
-    ${resultCards()}
+    ${resultCards(C.results.filter((x) => x.home))}
   </div>
 </section>
 
@@ -913,11 +913,33 @@ ${waysSection(r)}
 ${ctaSection(r)}`,
 });
 
+// Questions and answers as an accordion, described for search engines as an
+// FAQPage. `faq` is [[question, answer]].
+const faqHtml = (faq) => `
+<div class="faq">${faq.map(([q, a]) => `<details class="faq-item"><summary>${esc(q)}${icon("chevron-down", false)}</summary><p>${esc(a)}</p></details>`).join("")}</div>
+<script type="application/ld+json">${JSON.stringify({ "@context": "https://schema.org", "@type": "FAQPage", mainEntity: faq.map(([q, a]) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: a } })) }).replace(/</g, "\\u003c")}</script>`;
+
+// A two column comparison: { left, right, rows: [[label, left, right]] }.
+// `neutral` tables weigh two options against each other; the others set a
+// common practice against the EDS way of working.
+const tableHtml = (c) => `<div class="table-scroll"><table class="compare${c.neutral ? " neutral" : ""}"><thead><tr><th></th><th>${esc(c.left)}</th><th>${esc(c.right)}</th></tr></thead><tbody>${c.rows.map((row) => `<tr>${row.map((cell) => `<td>${esc(cell)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
+const compareHtml = (c) => `
+<div class="block" id="${slugify(c.heading)}" data-reveal>
+  <h2 class="h-md">${esc(c.heading)}</h2>
+  ${tableHtml(c)}
+</div>`;
+
+// A content block: a heading with a short lede, then feature cards (`items`),
+// a checklist or numbered steps (`list`, numbered with `steps: true`), a
+// comparison (`table`) or questions and answers (`faq`).
 const blockHtml = (b) => `
 <div class="block" id="${slugify(b.heading)}" data-reveal>
   <h2 class="h-md">${esc(b.heading)}</h2>
+  ${b.lede ? `<p class="block-lede">${esc(b.lede)}</p>` : ""}
+  ${b.table ? tableHtml(b.table) : ""}
   ${b.items ? `<div class="feature-list">${b.items.map(([t, d]) => `<div class="feature holder">${icon("circle-check")}<div><b>${esc(t)}</b><span>${esc(d)}</span></div></div>`).join("")}</div>` : ""}
-  ${b.list ? (b.heading.includes("approach") ? `<ol class="steps">${b.list.map((l) => `<li>${esc(l)}</li>`).join("")}</ol>` : `<ul class="checks">${b.list.map((l) => `<li>${icon("check", false)}<span>${esc(l)}</span></li>`).join("")}</ul>`) : ""}
+  ${b.list ? (b.steps || b.heading.includes("approach") ? `<ol class="steps">${b.list.map((l) => `<li>${esc(l)}</li>`).join("")}</ol>` : `<ul class="checks">${b.list.map((l) => `<li>${icon("check", false)}<span>${esc(l)}</span></li>`).join("")}</ul>`) : ""}
+  ${b.faq ? faqHtml(b.faq) : ""}
 </div>`;
 
 // The jump list for a service or solution page: its blocks, plus any
@@ -964,7 +986,7 @@ ${pageHero(r, { crumbs: [["Services", "services/index.html"], [s.short || s.titl
   <div>
     <div class="prose" data-reveal>${s.intro.map((p) => `<p>${esc(p)}</p>`).join("")}</div>
     ${s.blocks.length ? `<div style="margin-top:clamp(40px,5vw,64px)">${s.blocks.map(blockHtml).join("")}</div>` : ""}
-    ${s.compare ? `<div class="block" id="${slugify(s.compare.heading)}" data-reveal><h2 class="h-md">${s.compare.heading}</h2><div class="table-scroll"><table class="compare"><thead><tr><th></th><th>${s.compare.left}</th><th>${s.compare.right}</th></tr></thead><tbody>${s.compare.rows.map((row) => `<tr>${row.map((c) => `<td>${esc(c)}</td>`).join("")}</tr>`).join("")}</tbody></table></div></div>` : ""}
+    ${s.compare ? compareHtml(s.compare) : ""}
     ${s.quote ? `<figure class="quote" data-reveal style="margin:clamp(40px,5vw,64px) 0 0">${icon("quote", false)}<blockquote>${esc(s.quote.text)}</blockquote></figure>` : ""}
     ${resultsFor(s.slug).length ? `<div class="block results-block" id="results" data-reveal><h2 class="h-md">Results from the field</h2>${resultCards(resultsFor(s.slug))}</div>` : ""}
   </div>
@@ -1082,7 +1104,10 @@ for (const b of C.brands) {
     body: (r) => `
 ${pageHero(r, { crumbs: [["Products", "products/index.html"], [b.name]], iconName: b.icon, eyebrow: b.tag, title: b.title, lede: b.summary, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${contactHref(r, pricing)}">Request pricing ${icon("arrow-right")}</a><a class="btn btn-ghost btn-lg" href="#range">${icon("layout-grid")} View the range</a>`, visual: heroProduct(cover.image, cover.name) })}
 <section class="section"><div class="wrap split">
-  <div class="prose" data-reveal>${b.intro.map((p) => `<p>${esc(p)}</p>`).join("")}</div>
+  <div>
+    <div class="prose" data-reveal>${b.intro.map((p) => `<p>${esc(p)}</p>`).join("")}</div>
+    ${b.blocks?.length ? `<div style="margin-top:clamp(40px,5vw,64px)">${b.blocks.map(blockHtml).join("")}</div>` : ""}
+  </div>
   <aside class="aside">
     ${b.logo ? `<div class="aside-card" data-reveal="right" style="display:grid;place-items:center;padding:32px"><img src="${b.logo}" alt="${esc(b.name)} logo" style="max-height:70px;width:auto" loading="lazy"></div>` : ""}
     <div class="aside-card brand" data-reveal="right"><h3>Request pricing</h3><p>Sales, hire and service from EDS, Australia wide.</p><a class="btn btn-primary" href="${contactHref(r, pricing)}">Enquire now ${icon("arrow-right")}</a></div>
@@ -1172,7 +1197,7 @@ add({
   description: "EDS FlowSense: sewer network monitoring, flow analytics and engineering intelligence by Environmental Data Services.",
   current: "flowsense",
   body: (r) => `
-${pageHero(r, { crumbs: [["FlowSense"]], iconName: "waves", eyebrow: "EDS FlowSense", title: "Sewer network intelligence.", lede: C.flowsense.lede, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${site.flowsenseUrl}" rel="noopener">Open FlowSense ${icon("arrow-up-right")}</a><a class="btn btn-ghost btn-lg" href="${contactHref(r, { topic: "EDS FlowSense" })}">Request a walkthrough</a>`, visual: heroToc([["platform", "Inside the platform"], ["capabilities", "Capabilities", C.flowsense.features.length], ["documents", "Documents", C.flowsense.docs.length]]) })}
+${pageHero(r, { crumbs: [["FlowSense"]], iconName: "waves", eyebrow: "EDS FlowSense", title: "Sewer network intelligence.", lede: C.flowsense.lede, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${site.flowsenseUrl}" rel="noopener">Open FlowSense ${icon("arrow-up-right")}</a><a class="btn btn-ghost btn-lg" href="${contactHref(r, { topic: "EDS FlowSense" })}">Request a walkthrough</a>`, visual: heroToc([["platform", "Inside the platform"], ["capabilities", "Capabilities", C.flowsense.features.length], ["standards", "Methods and standards"], ["questions", "Questions", C.flowsense.faq.length], ["documents", "Documents", C.flowsense.docs.length]]) })}
 <section class="section fs-band" id="platform"><div class="wrap fs-grid">
   <div>
     <p class="eyebrow">Inside the platform</p>
@@ -1189,6 +1214,17 @@ ${pageHero(r, { crumbs: [["FlowSense"]], iconName: "waves", eyebrow: "EDS FlowSe
   <div class="grid c3">
     ${C.flowsense.features.map(([ic, t, d], n) => `<div class="card hoverable holder" data-reveal style="--i:${n % 3}"><span class="card-icon">${icon(ic)}</span><h3>${esc(t)}</h3><p>${esc(d)}</p></div>`).join("")}
   </div>
+</div></section>
+<section class="section alt" id="standards"><div class="wrap">
+  <div class="section-head"><p class="eyebrow">Methods</p><h2 class="h-lg" data-reveal>${esc(C.flowsense.standards.heading)}</h2><p class="lede" data-reveal style="--i:1">${esc(C.flowsense.standards.lede)}</p></div>
+  <div class="grid c3">
+    ${C.flowsense.standards.items.map(([ic, t, d], n) => `<div class="card hoverable holder" data-reveal style="--i:${n % 3}"><span class="card-icon">${icon(ic)}</span><h3>${esc(t)}</h3><p>${esc(d)}</p></div>`).join("")}
+  </div>
+  <p class="note" data-reveal style="margin-top:22px">${esc(C.flowsense.standards.note)}</p>
+</div></section>
+<section class="section" id="questions"><div class="wrap split rev">
+  <div class="section-head" style="margin:0"><p class="eyebrow">Questions</p><h2 class="h-lg" data-reveal>What councils and utilities ask us.</h2><p class="lede" data-reveal style="--i:1">If your question is not here, our team will answer it on ${site.phone}.</p></div>
+  <div data-reveal>${faqHtml(C.flowsense.faq)}</div>
 </div></section>
 <section class="section alt" id="documents"><div class="wrap">
   <div class="section-head"><p class="eyebrow">Documents</p><h2 class="h-lg" data-reveal>Read more about FlowSense.</h2></div>
@@ -1214,7 +1250,13 @@ ${pageHero(r, { crumbs: [["About"]], eyebrow: "About EDS", title: "Australian ow
     <figure class="quote" data-reveal="right" style="margin:0">${icon("quote", false)}<blockquote style="font-size:1.25rem">${C.about.quote.text}</blockquote><cite><b>${C.about.quote.who}</b>, ${C.about.quote.org}</cite></figure>
   </aside>
 </div></section>
-<section class="section alt"><div class="wrap">
+<section class="section alt" id="how-we-work"><div class="wrap">
+  <div class="section-head"><p class="eyebrow">How we work</p><h2 class="h-lg" data-reveal>${esc(C.about.approach.heading)}</h2><p class="lede" data-reveal style="--i:1">${esc(C.about.approach.lede)}</p></div>
+  <div class="grid c3">
+    ${C.about.approach.items.map(([ic, t, d], n) => `<div class="card hoverable holder" data-reveal style="--i:${n % 3}"><span class="card-icon">${icon(ic)}</span><h3>${esc(t)}</h3><p>${esc(d)}</p></div>`).join("")}
+  </div>
+</div></section>
+<section class="section"><div class="wrap">
   <div class="section-head"><p class="eyebrow">EDS origins</p><h2 class="h-lg" data-reveal>Founded by Graham and Cynthia Harper.</h2>
   <p class="lede" data-reveal style="--i:1">EDS began in Queensland in 1991, following Graham's success with Elpro, and alongside the release of the Pump Station Manager.</p></div>
   <div class="timeline">
@@ -1396,7 +1438,7 @@ ${pageHero(r, { crumbs: [["Privacy policy"]], title: "EDS Privacy Policy & State
 function searchIndex() {
   const items = [];
   const text = (...parts) => parts.flat(Infinity).filter(Boolean).join(" ");
-  const blockText = (blocks = []) => blocks.map((b) => [b.heading, b.items || [], b.list || []]);
+  const blockText = (blocks = []) => blocks.map((b) => [b.heading, b.lede, b.items || [], b.list || [], b.table?.rows || [], b.faq || []]);
   const plain = plainPath;
   const put = (g, t, s, h, more = {}) => items.push({ g, t, s, h, ...more });
 
@@ -1408,10 +1450,10 @@ function searchIndex() {
     if (p.href) continue; // has a page of its own, listed above
     put("Products", p.name, `${p.brand.name} · ${p.note || p.range || typeOf(p.type).label}`, `products/${p.brand.slug}.html#${p.id}`, { img: plain(p.image), b: text(typeOf(p.type).label, p.brand.title, p.brand.tag, p.group) });
   }
-  for (const b of C.brands) put("Product ranges", b.title, b.tag, `products/${b.slug}.html`, { i: b.icon, b: text(b.name, b.summary, b.intro, b.groups.map((g) => g.name)) });
+  for (const b of C.brands) put("Product ranges", b.title, b.tag, `products/${b.slug}.html`, { i: b.icon, b: text(b.name, b.summary, b.intro, blockText(b.blocks), b.groups.map((g) => g.name)) });
   put("Pages", "Instrument finder", `All ${products.length} instruments, filtered by type or searched by name.`, "products/index.html#finder", { i: "package-search", b: "products catalogue range brands" });
-  put("Pages", "EDS FlowSense", "Sewer network intelligence: flow analytics and engineering insight.", "flowsense.html", { i: "waves", b: text(C.flowsense.lede, C.flowsense.features.map(([, t, d]) => [t, d])) });
-  put("Pages", "About EDS", "Australian owned and operated since 1991.", "about.html", { i: "building-2", b: text(C.about.intro, C.about.mission, C.about.timeline, "history founders story") });
+  put("Pages", "EDS FlowSense", "Sewer network intelligence: flow analytics and engineering insight.", "flowsense.html", { i: "waves", b: text(C.flowsense.lede, C.flowsense.features.map(([, t, d]) => [t, d]), C.flowsense.standards.items.map(([, t, d]) => [t, d]), C.flowsense.faq) });
+  put("Pages", "About EDS", "Australian owned and operated since 1991.", "about.html", { i: "building-2", b: text(C.about.intro, C.about.mission, C.about.approach.items.map(([, t, d]) => [t, d]), C.about.timeline, "history founders story") });
   put("Pages", "Resources", "White papers, downloads and support.", "resources.html", { i: "book-open", b: "manuals software drivers datasheets passwords rma" });
   put("Pages", "Contact EDS", `${site.hours}. ${site.phone} from anywhere in Australia.`, "contact.html", { i: "messages-square", b: text(site.address, "enquiry form quote") });
   put("Pages", "All services", "Specialised services for water and wastewater networks.", "services/index.html", { i: "layout-grid" });
