@@ -411,18 +411,41 @@ const labSection = ({ eyebrow = "Flow lab", title = "See what a storm does to a 
       <div class="panel">
         <div class="panel-head">
           <div class="panel-title">${icon("activity", false)} Sewer hydrograph</div>
-          <div class="legend"><span><i></i>Measured flow</span><span><i class="dwf"></i>Dry weather pattern</span><span><i class="rain"></i>Rainfall</span></div>
+          <div class="lab-status">
+            <span class="lab-chip" id="lab-raining" role="status">${icon("cloud-rain", false)}Raining <b id="lab-rain-out">0</b>&nbsp;mm/h</span>
+            <time class="lab-clock" id="lab-clock" aria-label="Simulated time">Day 1 · 06:00</time>
+          </div>
         </div>
-        <div class="chart-box"><canvas id="lab-chart" role="img" aria-label="Animated chart of sewer flow against the expected dry weather pattern, with rainfall shown above"></canvas></div>
+        <div class="lab-legend-row">
+          <div class="legend"><span><i></i>Measured flow</span><span><i class="dwf"></i>Dry weather pattern</span><span><i class="ii"></i>Inflow &amp; infiltration</span><span><i class="rain"></i>Rainfall</span></div>
+        </div>
+        <div class="chart-box">
+          <canvas id="lab-chart" tabindex="0" role="img" aria-label="Animated chart of sewer flow against the expected dry weather pattern, with rainfall shown above. Use the left and right arrow keys to read values." aria-describedby="lab-summary"></canvas>
+          <div class="lab-tip" id="lab-tip" aria-hidden="true">
+            <time data-tip="time"></time>
+            <dl>
+              <dt><i></i>Measured</dt><dd><span data-tip="q"></span> L/s</dd>
+              <dt><i class="dwf"></i>Dry weather</dt><dd><span data-tip="base"></span> L/s</dd>
+              <dt><i class="ii"></i>I&amp;I</dt><dd><span data-tip="extra"></span> L/s</dd>
+              <dt><i class="rain"></i>Rain</dt><dd><span data-tip="rain"></span> mm/h</dd>
+            </dl>
+          </div>
+          <p class="sr-only" id="lab-summary"></p>
+          <p class="sr-only" id="lab-cursor-sr" aria-live="polite"></p>
+        </div>
+        <p class="lab-hint">${icon("mouse-pointer-2", false)}Point at the chart to read values<span class="lab-kbd">, or focus it and press <kbd>←</kbd><kbd>→</kbd></span></p>
         <div class="lab-controls">
-          <button class="btn btn-primary" id="lab-storm" data-magnetic>${icon("cloud-rain")} Send a storm</button>
-          <label class="range"><span>Storm size <output id="lab-size-out"></output></span><input id="lab-size" type="range" min="5" max="50" step="1" value="26"></label>
-          <label class="range"><span>Network condition <output id="lab-leak-out"></output></span><input id="lab-leak" type="range" min="0.15" max="1.6" step="0.05" value="1"></label>
+          <div class="lab-actions">
+            <button class="btn btn-primary" id="lab-storm" data-magnetic>${icon("cloud-rain")} Send a storm</button>
+            <button class="lab-pause" id="lab-pause" type="button" aria-pressed="false" aria-label="Pause the simulation"><span class="when-running">${icon("pause", false)}</span><span class="when-paused" hidden>${icon("play", false)}</span></button>
+          </div>
+          <label class="range"><span>Storm size <output id="lab-size-out" for="lab-size"></output></span><input id="lab-size" type="range" min="5" max="50" step="1" value="26"><small>Rain depth of the next storm, over two hours.</small></label>
+          <label class="range"><span>Network condition <output id="lab-leak-out" for="lab-leak"></output></span><input id="lab-leak" type="range" min="0.15" max="1.6" step="0.05" value="1"><small>How much of the rain finds its way into the sewer.</small></label>
         </div>
       </div>
       <div class="panel">
         <div class="panel-head"><div class="panel-title">${icon("gauge", false)} At the flow meter</div></div>
-        <svg id="lab-pipe" viewBox="0 0 200 200" role="img" aria-label="Cross-section of a sewer pipe showing the water depth">
+        <svg id="lab-pipe" viewBox="0 0 200 200" role="img" aria-label="Cross-section of a sewer pipe showing the water depth against the high and high-high alarm levels, with the area-velocity meter at the bottom">
           <defs>
             <clipPath id="lab-clip"><circle cx="100" cy="100" r="80"/></clipPath>
             <linearGradient id="lab-wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5fb4a6" stop-opacity=".85"/><stop offset="1" stop-color="#0d7c72" stop-opacity=".9"/></linearGradient>
@@ -430,18 +453,30 @@ const labSection = ({ eyebrow = "Flow lab", title = "See what a storm does to a 
           <circle cx="100" cy="100" r="87" fill="#0b302d" stroke="rgba(255,255,255,.22)" stroke-width="2"/>
           <g clip-path="url(#lab-clip)">
             <rect width="200" height="200" fill="#020c0b"/>
-            <rect id="lab-water" x="0" y="120" width="200" height="60" fill="url(#lab-wg)"/>
+            <g id="lab-water-g">
+              <rect x="0" y="20" width="200" height="160" fill="url(#lab-wg)"/>
+              <line x1="0" x2="200" y1="20" y2="20" stroke="#dbf0ec" stroke-width="2"/>
+            </g>
             <g id="lab-arrows" class="lab-arrows"><line x1="20" y1="92" x2="180" y2="92"/><line x1="20" y1="100" x2="180" y2="100"/><line x1="20" y1="108" x2="180" y2="108"/></g>
-            <line id="lab-surface" x1="0" x2="200" y1="120" y2="120" stroke="#dbf0ec" stroke-width="2"/>
+            <g stroke-dasharray="4 4" stroke-width="1.2">
+              <line x1="0" x2="200" y1="84" y2="84" stroke="rgba(245,158,11,.75)"/>
+              <line x1="0" x2="200" y1="44" y2="44" stroke="rgba(239,68,68,.8)"/>
+            </g>
+            <text x="176" y="80" text-anchor="end" fill="rgba(245,158,11,.95)">High</text>
+            <text x="140" y="40" text-anchor="end" fill="rgba(239,68,68,.95)">High-high</text>
+            <line id="lab-beam" x1="100" y1="168" x2="100" y2="121"/>
+            <rect x="89" y="167" width="22" height="11" rx="2.5" fill="#5fb4a6" stroke="#04201d" stroke-width="1.5"/>
           </g>
         </svg>
+        <p class="lab-pipe-cap">600 mm pipe. Area-velocity meter at the invert; dashed lines are the alarm levels.</p>
         <div class="readouts">
           <div class="readout"><b id="lab-q">0</b><span>Flow L/s</span></div>
           <div class="readout"><b id="lab-d">0</b><span>Depth mm</span></div>
           <div class="readout"><b id="lab-v">0</b><span>Velocity m/s</span></div>
+          <div class="readout readout-ii"><b id="lab-dq">+0.0</b><span>I&amp;I L/s</span></div>
         </div>
         <div class="state" id="lab-state" data-level="0" aria-live="polite"><i></i><div><b>Normal</b><small>Flow is tracking the dry weather pattern.</small></div></div>
-        <div class="state" style="margin-top:10px"><div><b><span id="lab-extra">0</span> kL above dry weather flow</b><small>Extra volume in the last 30 hours: the cost of I&amp;I.</small></div></div>
+        <div class="state" style="margin-top:10px">${icon("droplets", false)}<div><b><span id="lab-extra">0</span> kL above dry weather flow</b><small>Extra volume in the last 30 hours: the cost of I&amp;I.</small></div></div>
       </div>
     </div>
     <p class="note" style="margin-top:16px">An illustrative model of a 600 mm sewer, not live data. Flow is wetted area multiplied by velocity, the way an area-velocity flow meter measures it.</p>

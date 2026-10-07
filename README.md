@@ -32,7 +32,7 @@ The build stops with an error if a page repeats an element id, since product lin
 | `src/js/products.js` | Product quick view and the instrument finder on the products page. |
 | `src/js/quote.js` | The quote list. "Add to quote" on product cards, the quick view and product pages collects products in the visitor's browser (localStorage, nothing sent); the header and phone action bar show the count, and the enquiry form lists them with quantities and adds them to the email. |
 | `src/js/city.js` | The interactive isometric city on the home page. |
-| `src/js/lab.js` | The storm and hydrograph simulator. |
+| `src/js/lab.js` | The storm and hydrograph simulator: the flow lab on the home page and the sewer flow monitoring and inflow and infiltration pages. Values can be read off the chart with the pointer or the arrow keys, the simulation can be paused, and the band between measured flow and the dry weather pattern is shaded as inflow and infiltration. |
 | `src/js/widgets.js` | Office map, LIDoTT Alarm demo, EDS Asset Score dial. |
 | `src/assets/img/` | Product photos and logos. Reference one with `img("file-name.png")` in `content.mjs`. Also the favicon and touch icon (cut from the EDS mark in the logo) and `og-card.jpg`, the 1200 × 630 image shown when a page is shared. |
 | `src/assets/docs/` | Datasheets, brochures, manuals, white papers and software downloads. Reference one with `localDoc("file-name.pdf")` in `content.mjs`. |
