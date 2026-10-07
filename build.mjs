@@ -6,6 +6,7 @@ import { mkdir, readFile, writeFile, rm, cp } from "node:fs/promises";
 import { readFileSync, existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { createHash } from "node:crypto";
 import * as C from "./src/data/content.mjs";
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
@@ -46,6 +47,18 @@ const year = new Date().getFullYear();
 // share cards and canonical links point at the preview copy.
 const SITE_URL = (process.env.SITE_URL || site.url).replace(/\/+$/, "");
 const pageUrl = (file) => `${SITE_URL}/${file === "index.html" ? "" : file}`;
+
+// Stylesheet and script addresses carry a hash of the file's content, so a
+// browser that cached the old copy fetches the new one as soon as a page
+// changes. The search index is built from content.mjs, so it takes that
+// file's hash.
+const verCache = new Map();
+const ver = (src) => {
+  if (!verCache.has(src)) verCache.set(src, createHash("md5").update(readFileSync(path.join(ROOT, src))).digest("hex").slice(0, 8));
+  return verCache.get(src);
+};
+const cssHref = (r) => `${r}assets/css/site.css?v=${ver("src/css/site.css")}`;
+const jsSrc = (r, name) => `${r}assets/js/${name}?v=${ver(`src/js/${name}`)}`;
 
 const slugify = (s) => String(s).toLowerCase().replace(/&/g, " and ").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 const typeOf = (id) => C.productTypes.find((t) => t.id === id);
@@ -270,7 +283,7 @@ let heroCrumbs = null;
 // there to receive visits, unless ANALYTICS_ENDPOINT points at one.
 const ENDPOINT = process.env.ANALYTICS_ENDPOINT || "";
 const tracker = (r, file) =>
-  (process.env.STATIC_HOST || process.env.PREVIEW) && !ENDPOINT ? "" : `\n<script src="${r}assets/js/track.js" defer${ENDPOINT ? ` data-endpoint="${esc(ENDPOINT)}"` : ""}${file === "404.html" ? ' data-status="404"' : ""}></script>`;
+  (process.env.STATIC_HOST || process.env.PREVIEW) && !ENDPOINT ? "" : `\n<script src="${jsSrc(r, "track.js")}" defer${ENDPOINT ? ` data-endpoint="${esc(ENDPOINT)}"` : ""}${file === "404.html" ? ' data-status="404"' : ""}></script>`;
 
 function layout({ file, title, description, current, body, scripts = [] }) {
   const depth = file.split("/").length - 1;
@@ -303,7 +316,7 @@ function layout({ file, title, description, current, body, scripts = [] }) {
 <link rel="apple-touch-icon" href="${r}assets/img/apple-touch-icon.png">
 <link rel="preload" href="${r}assets/fonts/geist-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <script>document.documentElement.classList.add("js")</script>
-<link rel="stylesheet" href="${r}assets/css/site.css">
+<link rel="stylesheet" href="${cssHref(r)}">
 ${jsonLd(file, crumbs)}
 </head>
 <body id="top">
@@ -314,10 +327,10 @@ ${html}
 ${footer(r)}
 ${actionBar(r, current)}
 ${searchDialog()}
-<script src="${r}assets/js/site.js" defer></script>
-<script src="${r}assets/js/search.js" defer></script>
-<script src="${r}assets/js/quote.js" defer></script>
-${scripts.map((s) => `<script src="${r}assets/js/${s}" defer></script>`).join("\n")}${tracker(r, file)}
+<script src="${jsSrc(r, "site.js")}" defer></script>
+<script src="${jsSrc(r, "search.js")}" defer data-index-v="${ver("src/data/content.mjs")}"></script>
+<script src="${jsSrc(r, "quote.js")}" defer></script>
+${scripts.map((s) => `<script src="${jsSrc(r, s)}" defer></script>`).join("\n")}${tracker(r, file)}
 </body>
 </html>
 `.replaceAll("@root/", r);
@@ -435,12 +448,15 @@ const labSection = ({ eyebrow = "Flow lab", title = "See what a storm does to a 
         </div>
         <p class="lab-hint">${icon("mouse-pointer-2", false)}Point at the chart to read values<span class="lab-kbd">, or focus it and press <kbd>←</kbd><kbd>→</kbd></span></p>
         <div class="lab-controls">
+          <label class="range"><span><em class="step" aria-hidden="true">1</em>Storm size <output id="lab-size-out" for="lab-size"></output></span><input id="lab-size" type="range" min="5" max="50" step="1" value="26" aria-label="Step 1, storm size"><small>Rain depth of the next storm, over two hours.</small></label>
+          <label class="range"><span><em class="step" aria-hidden="true">2</em>Network condition <output id="lab-leak-out" for="lab-leak"></output></span><input id="lab-leak" type="range" min="0.15" max="1.6" step="0.05" value="1" aria-label="Step 2, network condition"><small>How much of the rain finds its way into the sewer.</small></label>
           <div class="lab-actions">
-            <button class="btn btn-primary" id="lab-storm" data-magnetic>${icon("cloud-rain")} Send a storm</button>
-            <button class="lab-pause" id="lab-pause" type="button" aria-pressed="false" aria-label="Pause the simulation"><span class="when-running">${icon("pause", false)}</span><span class="when-paused" hidden>${icon("play", false)}</span></button>
+            <span class="range"><span><em class="step" aria-hidden="true">3</em>Then</span></span>
+            <div class="lab-buttons">
+              <button class="btn btn-primary" id="lab-storm" data-magnetic>${icon("cloud-rain")} Send a storm</button>
+              <button class="btn btn-ghost lab-pause" id="lab-pause" type="button" aria-pressed="false"><span class="when-running">${icon("pause", false)} Pause</span><span class="when-paused" hidden>${icon("play", false)} Resume</span></button>
+            </div>
           </div>
-          <label class="range"><span>Storm size <output id="lab-size-out" for="lab-size"></output></span><input id="lab-size" type="range" min="5" max="50" step="1" value="26"><small>Rain depth of the next storm, over two hours.</small></label>
-          <label class="range"><span>Network condition <output id="lab-leak-out" for="lab-leak"></output></span><input id="lab-leak" type="range" min="0.15" max="1.6" step="0.05" value="1"><small>How much of the rain finds its way into the sewer.</small></label>
         </div>
       </div>
       <div class="panel">

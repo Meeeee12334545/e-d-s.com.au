@@ -7,6 +7,8 @@
   const input = dialog.querySelector("input");
   const list = dialog.querySelector(".search-results");
   const root = document.documentElement.dataset.root || "";
+  // The index address carries the content version build.mjs put on this script tag.
+  const indexV = document.currentScript?.dataset.indexV || "";
   const mac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
   document.querySelectorAll("[data-kbd]").forEach((k) => (k.textContent = mac ? "⌘K" : "Ctrl K"));
 
@@ -27,7 +29,7 @@
       loading = new Promise((resolve, reject) => {
         if (window.EDS_SEARCH) return resolve();
         const s = document.createElement("script");
-        s.src = `${root}assets/js/search-index.js`;
+        s.src = `${root}assets/js/search-index.js${indexV ? `?v=${indexV}` : ""}`;
         s.onload = resolve;
         s.onerror = reject;
         document.head.appendChild(s);

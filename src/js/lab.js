@@ -258,7 +258,6 @@
     paused = p;
     lab.classList.toggle("paused", p);
     pauseBtn.setAttribute("aria-pressed", String(p));
-    pauseBtn.setAttribute("aria-label", p ? "Resume the simulation" : "Pause the simulation");
     pauseBtn.querySelector(".when-running").hidden = p;
     pauseBtn.querySelector(".when-paused").hidden = !p;
     sync();
@@ -270,7 +269,7 @@
   lastStorm = t + 9 * 60;
   advance(WINDOW);
 
-  $("lab-storm").addEventListener("click", () => { storm(20); if (paused) setPaused(false); });
+  $("lab-storm").addEventListener("click", () => { storm(20); lab.classList.add("stormed"); if (paused) setPaused(false); });
   ["lab-leak", "lab-size"].forEach((id) => {
     const input = $(id), out = $(`${id}-out`);
     const label = () => {
