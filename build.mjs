@@ -86,7 +86,7 @@ function header(r, current) {
     items: C.services.filter((s) => s.group === g.id).map((s) => ({ href: `services/${s.slug}.html`, icon: s.icon, label: s.short || s.title })),
   }));
   const oItems = C.solutions.map((s) => ({ href: `solutions/${s.slug}.html`, icon: s.icon, label: s.title }));
-  const pItems = [...C.brands.map((b) => ({ href: `products/${b.slug}.html`, icon: b.icon, label: b.name })), ...C.productPages.map((pg) => ({ href: `products/${pg.slug}.html`, icon: pg.icon, label: pg.name })), { href: "products/lidott-alarm.html", icon: "bell", label: "LIDoTT Alarm" }];
+  const pItems = [...C.brands.map((b) => ({ href: `products/${b.slug}.html`, icon: b.icon, label: b.name })), ...C.productPages.map((pg) => ({ href: `products/${pg.slug}.html`, icon: pg.icon, label: pg.name })), { href: "products/lidott-alarm.html", icon: "bell", label: "LIDoTT Alarm" }, { href: "products/alarm2.html", icon: "bell-ring", label: "Alarm2" }];
   const link = (href, label, key) => `<div class="nav-item"><a class="nav-link" href="${r}${href}"${current === key ? ' aria-current="page"' : ""}>${label}</a></div>`;
   const dLink = (i) => `<a href="${r}${i.href}">${icon(i.icon, false)}${esc(i.label)}</a>`;
   const dGroup = (label, { items, groups }, all) => `
@@ -1153,6 +1153,28 @@ ${pageHero(r, { crumbs: [["Products", "products/index.html"], ["Detectronic", "p
   </aside>
 </div></section>
 ${ctaSection(r, { title: "Deploy LIDoTT Alarm across your network.", lede: "Simple to install and zero maintenance by design. Ask EDS for pricing and a deployment plan.", topic: "Product pricing", product: "LIDoTT Alarm (Detectronic)" })}`,
+});
+
+add({
+  file: "products/alarm2.html",
+  title: "Alarm2 Radar Level Monitor by Detectronic | EDS",
+  description: "All-in-one radar level monitor with alarms, up to 20 m range with ± 5 mm accuracy. LoRaWAN or 4G connectivity, battery over 5 years.",
+  current: "products",
+  body: (r) => `
+${pageHero(r, { crumbs: [["Products", "products/index.html"], ["Detectronic", "products/detectronic.html"], ["Alarm2"]], iconName: "bell-ring", eyebrow: "Detectronic", title: "Alarm2", lede: C.alarm2.lede, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${contactHref(r, { topic: "Product pricing", product: "Alarm2 (Detectronic)" })}">Request pricing ${icon("arrow-right")}</a>${quoteBtn(quoteItem(products.find((p) => p.href === "products/alarm2.html")), "btn-lg on-dark")}<a class="btn btn-ghost btn-lg" href="${C.alarm2.datasheet}" rel="noopener">${icon("download")} Datasheet</a><a class="btn btn-ghost btn-lg" href="${C.alarm2.manual}" rel="noopener">${icon("download")} Manual</a>`, visual: heroProduct(C.alarm2.image, "Alarm2") })}
+<section class="section dark" style="padding-top:0"><div class="wrap">
+  <div class="hl-grid" style="margin-bottom:clamp(40px,5vw,64px)">${C.alarm2.highlights.map(([ic, t, d], i) => `<div class="hl holder" data-reveal style="--i:${i % 3}">${icon(ic)}<b>${t}</b><span>${d}</span></div>`).join("")}</div>
+</div></section>
+<section class="section"><div class="wrap split">
+  <div>
+    <div class="prose" data-reveal>${C.alarm2.description.map((p) => `<p>${esc(p)}</p>`).join("")}</div>
+    <div class="feature-list" style="margin-top:40px">${C.alarm2.sections.map(([t, d]) => `<div class="feature holder" data-reveal>${icon("circle-check")}<div><b>${esc(t)}</b><span>${esc(d)}</span></div></div>`).join("")}</div>
+  </div>
+  <aside class="aside">
+    <div class="aside-card" data-reveal="right"><h3>Specifications</h3><table class="specs"><tbody>${C.alarm2.specs.map(([k, v]) => `<tr><th>${k}</th><td>${v}</td></tr>`).join("")}</tbody></table></div>
+  </aside>
+</div></section>
+${ctaSection(r, { title: "Deploy Alarm2 across your network.", lede: "Complete level measurement and alarm device, ready for remote deployment. Ask EDS for pricing and support.", topic: "Product pricing", product: "Alarm2 (Detectronic)" })}`,
 });
 
 /* ---- EDS instruments with a page of their own ---- */

@@ -1384,7 +1384,7 @@ export const brands = [
           { name: "MSFM", type: "flow", note: "Rugged 4G area velocity flow meter", image: img("s2.5-04-small-766x1024.png"), docs: [{ label: "S2.5T datasheet", href: localDoc("detectronic-msfm-s2-5t-datasheet.pdf") }] },
           { name: "LIDoTT Smart", type: "level", note: "Long life, rugged 4G patented level monitor", image: img("dete01-01.24-600x452.png"), docs: [{ label: "LIDoTT Sensor datasheet", href: localDoc("detectronic-lidott-sensor-datasheet.pdf") }] },
           { name: "LIDoTT Alarm", type: "level", note: "Self contained level measurement and alarm device", image: img("lidott-alarm-3.png"), href: "products/lidott-alarm.html", docs: [{ label: "Datasheet", href: localDoc("detectronic-lidott-alarm-datasheet.pdf") }] },
-          { name: "Alarm2", type: "level", note: "All-in-one radar level monitor with alarms, up to 20 m, LoRaWAN or cellular", image: img("detectronic-alarm2.png"), docs: [{ label: "Datasheet", href: localDoc("detectronic-alarm2-datasheet.pdf") }] },
+          { name: "Alarm2", type: "level", note: "All-in-one radar level monitor with alarms, up to 20 m, LoRaWAN or cellular", image: img("detectronic-alarm2.png"), href: "products/alarm2.html", docs: [{ label: "Datasheet", href: localDoc("detectronic-alarm2-datasheet.pdf") }, { label: "4G manual", href: localDoc("detectronic-alarm2-4g-manual.pdf") }] },
           { name: "LIDoTT R", type: "level", note: "High-precision radar and pressure sensor for continuous monitoring", image: img("lidott-sensor-r-1.png"), docs: [{ label: "Datasheet", href: localDoc("detectronic-lidott-r-datasheet.pdf") }] },
           { name: "Multi Channel Data Loggers", type: "logger", note: "Rugged remote multichannel loggers", image: img("new-2-channel-logger-1001x1024.jpg") },
         ],
@@ -1658,6 +1658,43 @@ export const lidott = {
     ["Dimensions", "92 mm (w) × 196 mm (h) × 122 mm (d)"],
     ["Communications", "Internal hi-gain NB-IoT / Cat M / 2G antenna"],
     ["Approvals", "ATEX Zone 0, IECEx Zone 0"],
+  ],
+};
+
+export const alarm2 = {
+  title: "Alarm2",
+  maker: "Detectronic",
+  lede: "All-in-one radar level monitor with alarms, up to 20 m, LoRaWAN or cellular.",
+  image: img("detectronic-alarm2.png"),
+  datasheet: localDoc("detectronic-alarm2-datasheet.pdf"),
+  manual: localDoc("detectronic-alarm2-4g-manual.pdf"),
+  highlights: [
+    ["radar", "Radar sensor", "No deadband"],
+    ["ruler", "Range", "Measures up to 20 m"],
+    ["package", "All in one", "Sensor, battery, modem and antenna"],
+    ["bell-ring", "Multiple alarms", "High, low, and rate of change"],
+    ["wifi", "Connectivity", "LoRaWAN or 4G cellular"],
+    ["battery-full", "Long life", "Battery over 5 years"],
+  ],
+  description: [
+    "Alarm2 is a complete level measurement and alarm device for remote deployment. The integrated radar sensor, battery, modem and antenna fit into one compact enclosure, measuring levels up to 20 m with no deadband and ± 5 mm accuracy at range. Alarms are triggered immediately when thresholds are breached, with hourly status updates to confirm operation.",
+  ],
+  sections: [
+    ["Precise measurement across range", "Radar measurement from 0 to 20 m with no blind spot ensures consistent accuracy across changing conditions. Accuracy of ± 5 mm at 20 m guarantees reliable threshold detection and alarm delivery."],
+    ["Flexible alarm configuration", "High and low set-points, rate of change detection, and profile alarms are all configurable during installation. Alarms are sent immediately on threshold breach and hourly while the alarm condition persists."],
+    ["Robust deployment", "Fully integrated into a durable enclosure rated for outdoor and underground environments. LoRaWAN and 4G cellular connectivity options suit different network availability, with fallback to alternative modes."],
+    ["Real-time monitoring", "Status messages and data are sent immediately on detection, with hourly heartbeat messages to confirm operational status. Integration with Detectronic Cloud enables email, SMS and web-based alerting."],
+    ["Low maintenance", "Self-contained design requires no external sensors or wiring. Battery life over five years minimises site visits for maintenance."],
+  ],
+  specs: [
+    ["Sensor type", "Radar (4G LTE Cat-1)"],
+    ["Range", "0 to 20 m"],
+    ["Accuracy", "± 5 mm at 20 m"],
+    ["Deadband", "None"],
+    ["Operating temperature", "-20°C to +70°C"],
+    ["Protection", "IP65 / NEMA 4X"],
+    ["Communications", "LoRaWAN or 4G LTE Cat-1"],
+    ["Battery", "Over 5 years typical"],
   ],
 };
 
@@ -2102,6 +2139,7 @@ export const downloads = [
       ["Detectronic LIDoTT Sensor datasheet", localDoc("detectronic-lidott-sensor-datasheet.pdf")],
       ["Detectronic LIDoTT Alarm datasheet", localDoc("detectronic-lidott-alarm-datasheet.pdf")],
       ["Detectronic Alarm2 radar level monitor datasheet", localDoc("detectronic-alarm2-datasheet.pdf")],
+      ["Detectronic Alarm2 4G LTE Cat 1 manual", localDoc("detectronic-alarm2-4g-manual.pdf")],
       ["Detectronic LIDoTT R datasheet", localDoc("detectronic-lidott-r-datasheet.pdf")],
       ["ORI AquaSamp Mini brochure", localDoc("ori-aquasamp-mini-brochure.pdf")],
       ["ORI PumpModul portable sampler datasheet", localDoc("ori-pumpmodul-datasheet.pdf")],
