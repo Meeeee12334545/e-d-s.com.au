@@ -412,7 +412,7 @@ const labSection = ({ eyebrow = "Flow lab", title = "See what a storm does to a 
         <div class="panel-head">
           <div class="panel-title">${icon("activity", false)} Sewer hydrograph</div>
           <div class="lab-status">
-            <span class="lab-chip" id="lab-raining" role="status">${icon("cloud-rain", false)}Raining <b id="lab-rain-out">0</b>&nbsp;mm/h</span>
+            <span class="lab-chip" id="lab-raining">${icon("cloud-rain", false)}Raining <b id="lab-rain-out">0</b>&nbsp;mm/h</span>
             <time class="lab-clock" id="lab-clock" aria-label="Simulated time">Day 1 · 06:00</time>
           </div>
         </div>
