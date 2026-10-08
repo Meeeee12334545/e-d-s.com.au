@@ -159,7 +159,7 @@ function header(r, current) {
         <a class="header-quote" href="${r}contact.html#enquiry" data-quote-link hidden>${icon("clipboard-list")}<span class="sr-only">Quote list, </span><b data-quote-count>0</b><span class="sr-only"> items</span></a>
         <a class="btn btn-primary" href="${r}contact.html">Contact us</a>
       </div>
-      <button class="burger" aria-label="Open menu" aria-expanded="false">${icon("menu", false)}</button>
+      <button class="burger" aria-label="Open menu" aria-expanded="false" data-track-label="Menu">${icon("menu", false)}</button>
     </div>
   </header>
   <div class="drawer" aria-label="Menu">
@@ -1142,8 +1142,8 @@ ${pageHero(r, { crumbs: [["Products"]], eyebrow: "Products", title: "Industry le
     <div class="finder-bar" data-reveal>
       <label class="finder-search">${icon("search", false)}<input type="search" placeholder="Search by name, brand or use" aria-label="Search instruments" autocomplete="off" spellcheck="false"></label>
       <div class="finder-chips" role="group" aria-label="Filter by type">
-        <button type="button" class="fchip" data-type="" aria-pressed="true">All<span>${products.length}</span></button>
-        ${C.productTypes.map((t) => `<button type="button" class="fchip" data-type="${t.id}" aria-pressed="false">${icon(t.icon)}${t.label}<span>${products.filter((p) => p.type === t.id).length}</span></button>`).join("")}
+        <button type="button" class="fchip" data-type="" aria-pressed="true" data-track-label="All instruments">All<span>${products.length}</span></button>
+        ${C.productTypes.map((t) => `<button type="button" class="fchip" data-type="${t.id}" aria-pressed="false" data-track-label="${esc(t.label)}">${icon(t.icon)}${t.label}<span>${products.filter((p) => p.type === t.id).length}</span></button>`).join("")}
       </div>
     </div>
     <p class="finder-count" role="status">Showing all ${products.length} instruments</p>

@@ -1,6 +1,6 @@
 // The analytics dashboard. Fetches /admin/api/stats for the chosen period and
 // draws the tiles, the chart and the lists; /admin/api/live feeds the "on the
-// site now" count and the latest visits. No libraries: the chart is SVG.
+// site now" count, and /admin/api/visits each visit step by step. No libraries: the chart is SVG.
 // Everything that came from a visitor's browser goes in with textContent.
 (() => {
   const $ = (s, el = document) => el.querySelector(s);
@@ -50,6 +50,7 @@
     perVisit: { label: "Pages per visit", fmt: dec, good: 1 },
     bounceRate: { label: "Bounce rate", fmt: pct, good: -1, points: true },
     avgTime: { label: "Time on page", fmt: dur, good: 1 },
+    clicks: { label: "Clicks", fmt: num, good: 1 },
   };
 
   // Bucket keys are calendar dates in the site's time zone, so format them as UTC.
@@ -82,6 +83,7 @@
       if (mine !== ticket) return;
       state.data = data;
       render();
+      loadVisits();
     } finally {
       if (mine === ticket) dash.classList.remove("loading");
     }
@@ -93,7 +95,6 @@
     const d = await res.json();
     $("#live-text").textContent = d.now === 1 ? "1 person on the site now" : `${d.now} people on the site now`;
     $("#live").classList.toggle("on", d.now > 0);
-    renderVisits(d.visits);
   }
 
   function render() {
@@ -288,7 +289,33 @@
   const onPage = (r) => (r.page ? `on ${r.page}` : r.pages > 1 ? `on ${r.pages} pages` : "");
   const visitors = [["visitors", "Visitors", num]];
 
+  // What each kind of click is called, and its colour in the lists and timeline.
+  const KINDS = {
+    link: ["Link", "t-click"], button: ["Button", "t-click"], toggle: ["Menu or question", "t-click"], tab: ["Tab", "t-click"],
+    download: ["Download", "t-goal"], contact: ["Email or phone", "t-goal"], form: ["Form sent", "t-goal"],
+    outbound: ["Other site", "t-leave"], search: ["Search", "t-search"], choice: ["Choice", "t-search"],
+  };
+  const quoted = (v) => (v ? `“${v}”` : "");
+  // what an action belonged to: "for Hach FL900", or "in search results for …"
+  const inSearch = (item) => /^(search results|suggested search results)/.test(item || "");
+  const forWord = (item) => (inSearch(item) ? "in" : "for");
+  const clickName = (r) =>
+    r.type === "download" ? fileName(r.target) : r.type === "contact" ? contact(r.target) : r.type === "outbound" ? `${r.label ? `${quoted(r.label)} to ` : ""}${site(r.target)}` : quoted(r.label || "(no words on it)");
+  const clickSub = (r) => join(
+    r.type === "link" && r.target && (r.target.startsWith("#") ? "jumps down the page" : `goes to ${r.target}`),
+    r.type === "toggle" && (r.target === "close" ? "closed" : "opened"),
+    r.type === "download" && r.label && `link ${quoted(r.label)}`,
+    r.item && `${forWord(r.item)} ${r.item}`, r.area && !inSearch(r.item) && `in ${r.area}`, onPage(r),
+  );
+
   const CARDS = [
+    { id: "clicked", title: "What people clicked", wide: true, note: "Every link, button, menu and tab, named by the words on it and where it was on the page", tabs: [
+      { label: "Everything clicked", key: "clicked", head: "What was clicked", badge: (r) => KINDS[r.type], name: clickName, sub: clickSub, cols: [["count", "Clicks", num], ["visitors", "Visitors", num]] },
+      { label: "Where on the page", key: "areas", head: "Part of the page", name: (r) => r.name, cols: [["count", "Clicks", num], ["visitors", "Visitors", num]] },
+      { label: "Pages with clicks", key: "clickPages", head: "Page", name: (r) => r.path, sub: (r) => r.title, cols: [["count", "Clicks", num], ["visitors", "Visitors", num]] },
+      { label: "Searches", key: "searches", head: "Words searched for", name: (r) => quoted(r.name), sub: (r) => r.area && `in ${r.area}`, cols: [["count", "Times", num], ["visitors", "Visitors", num]] },
+      { label: "Form choices", key: "choices", head: "Option picked", name: (r) => quoted(r.name), sub: (r) => r.field && `in the field ${quoted(r.field)}`, cols: [["count", "Times", num], ["visitors", "Visitors", num]] },
+    ] },
     { id: "pages", title: "Pages", tabs: [
       { label: "Top pages", key: "pages", head: "Page", name: (r) => r.path, sub: (r) => r.title, cols: [["views", "Views", num], ["visitors", "Visitors", num], ["avgTime", "Time", dur]] },
       { label: "Entry pages", key: "entries", head: "First page of the visit", name: (r) => r.path, sub: (r) => r.title, cols: [["visits", "Visits", num]] },
@@ -341,6 +368,8 @@
       const text = String(tab.name(r) ?? "");
       const t = h("span", "t", text);
       t.title = text;
+      const badge = tab.badge?.(r);
+      if (badge) t.prepend(h("span", `ev-tag small ${badge[1]}`, badge[0]));
       name.append(t);
       const sub = tab.sub?.(r);
       if (sub) name.append(h("small", null, sub));
@@ -359,7 +388,7 @@
       cardState.set(card.id, cs);
       const tab = card.tabs[cs.tab];
       const rows = state.data[tab.key] || [];
-      const el = h("section", "card");
+      const el = h("section", card.wide ? "card wide" : "card");
       el.setAttribute("aria-labelledby", `${card.id}-title`);
       const head = h("div", "card-head");
       const titles = h("div");
@@ -392,7 +421,7 @@
     }
   }
 
-  /* ---- latest visits ---- */
+  /* ---- visitor activity: each visit, step by step ---- */
   const DEVICE = { Desktop: "monitor", Mobile: "smartphone", Tablet: "tablet" };
   const ago = (ts) => {
     const sec = (Date.now() - ts) / 1000;
@@ -401,42 +430,173 @@
     if (sec < 86400) return `${Math.floor(sec / 3600)} h ago`;
     return fWhen.format(ts);
   };
-  function step(st) {
-    const li = h("li");
-    const chip = h("span", "step");
-    let name = "file-text", text = st.path, title = st.title || st.path;
-    if (st.type === "pageview" && st.status === 404) { name = "triangle-alert"; chip.classList.add("warn"); text = `${st.path} (not found)`; }
-    else if (st.type === "download") { name = "file-down"; text = fileName(st.target); title = st.target; }
-    else if (st.type === "contact") { name = /^tel:/i.test(st.target) ? "phone" : "mail"; text = contact(st.target); title = st.target; }
-    else if (st.type === "outbound") { name = "external-link"; text = site(st.target); title = st.target; }
-    else if (st.type === "form") { name = "send"; text = st.label || "Form"; title = text; }
-    if (st.type !== "pageview") chip.classList.add("act");
-    chip.title = title;
-    chip.append(icon(name), h("span", null, text));
-    li.append(chip);
+  const fClock = new Intl.DateTimeFormat("en-AU", { timeZone: dash.dataset.tz, hour: "numeric", minute: "2-digit", second: "2-digit" });
+  const ordinal = (n) => `${n}${n % 100 >= 11 && n % 100 <= 13 ? "th" : ["th", "st", "nd", "rd"][n % 10] || "th"}`;
+  const plural = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
+  // "Sewer Flow Monitoring | EDS" is the page "Sewer Flow Monitoring".
+  const pageName = (st) => (st.path === "/" ? "Home" : (st.title || "").split(" | ")[0] || st.path);
+
+  // Each step as a coloured tag and a sentence: plain words, with what was
+  // clicked or searched for in quotes and the thing it was about in bold.
+  function describe(st) {
+    const q = (v) => h("q", null, v || "(no words on it)");
+    const b = (v) => h("b", null, v);
+    const forItem = !st.item ? [] : inSearch(st.item) ? [` in ${st.item}`] : [" for ", b(st.item)];
+    const area = st.area && `in ${st.area}`;
+    switch (st.type) {
+      case "pageview":
+        if (st.status === 404) return { tag: "Not found", cls: "t-warn", icon: "triangle-alert", what: ["Tried to open a page that does not exist: ", b(st.path)] };
+        return { tag: "Page view", cls: "t-page", icon: "file-text", what: ["Viewed the page ", b(pageName(st))],
+          where: [st.path, st.engaged >= 1000 && `on screen for ${dur(st.engaged)}`, st.scroll != null && `scrolled ${st.scroll}% of the way down`] };
+      case "link":
+        if (st.target?.startsWith("#")) return { tag: "Link click", cls: "t-click", icon: "hash", what: ["Clicked ", q(st.label), " to jump down the page", ...forItem], where: [area] };
+        return { tag: "Link click", cls: "t-click", icon: "link", what: ["Clicked the link ", q(st.label), ...forItem], where: [st.target && `goes to ${st.target}`, !inSearch(st.item) && area] };
+      case "button":
+        return { tag: "Button click", cls: "t-click", icon: "mouse-pointer-click", what: ["Clicked the button ", q(st.label), ...forItem], where: [area] };
+      case "toggle":
+        return { tag: st.target === "close" ? "Closed" : "Opened", cls: "t-click", icon: "chevrons-up-down", what: [st.target === "close" ? "Closed " : "Opened ", q(st.label), ...forItem], where: [area] };
+      case "tab":
+        return { tag: "Tab", cls: "t-click", icon: "panels-top-left", what: ["Switched to the tab ", q(st.label), ...forItem], where: [area] };
+      case "download":
+        return { tag: "Download", cls: "t-goal", icon: "file-down", what: ["Downloaded ", b(fileName(st.target)), ...forItem], where: [st.label && `from the link ${quoted(st.label)}`, area] };
+      case "contact":
+        return /^tel:/i.test(st.target)
+          ? { tag: "Phone", cls: "t-goal", icon: "phone", what: ["Tapped the phone number ", b(contact(st.target))], where: [area] }
+          : { tag: "Email", cls: "t-goal", icon: "mail", what: ["Clicked the email address ", b(contact(st.target))], where: [area] };
+      case "form":
+        return { tag: "Form sent", cls: "t-goal", icon: "send", what: ["Sent the form ", q(st.label)], where: [area] };
+      case "outbound":
+        return { tag: "Left the site", cls: "t-leave", icon: "external-link", what: ["Followed a link to another site: ", b(site(st.target))], where: [st.label && `the link ${quoted(st.label)}`, area] };
+      case "search":
+        return { tag: "Search", cls: "t-search", icon: "search", what: ["Searched for ", q(st.label)], where: [area] };
+      case "choice":
+        return /^(Un)?ticked /.test(st.label || "")
+          ? { tag: "Choice", cls: "t-search", icon: "list-checks", what: [st.label, ...forItem], where: [area] }
+          : { tag: "Choice", cls: "t-search", icon: "list-checks", what: ["Picked ", q(st.label), ...(st.item ? [" in the field ", b(st.item)] : [])], where: [area] };
+      default:
+        return { tag: st.type, cls: "t-click", icon: "mouse-pointer-click", what: [st.label || st.type], where: [area] };
+    }
+  }
+
+  function timelineRow(st) {
+    const d = describe(st);
+    const li = h("li", `ev ${d.cls}`);
+    const when = h("time", null, fClock.format(st.ts));
+    when.dateTime = new Date(st.ts).toISOString();
+    const tag = h("span", `ev-tag ${d.cls}`);
+    tag.append(icon(d.icon), d.tag);
+    const body = h("div", "ev-body");
+    const what = h("p", "ev-what");
+    what.append(...d.what.filter((x) => x !== "" && x != null));
+    body.append(what);
+    const where = join(...(d.where || []));
+    if (where) body.append(h("p", "ev-where", where));
+    li.append(when, tag, body);
     return li;
   }
-  function renderVisits(visits) {
+
+  // the visit at a glance: pages as their names, actions as coloured chips
+  function chip(st) {
+    const d = describe(st);
+    const li = h("li");
+    const c = h("span", `step ${d.cls}`);
+    const text = st.type === "pageview" ? (st.status === 404 ? `${st.path} (not found)` : pageName(st)) : d.what.map((x) => (typeof x === "string" ? x : x.textContent)).join("");
+    c.title = text;
+    c.append(icon(d.icon), h("span", null, text));
+    li.append(c);
+    return li;
+  }
+
+  const vstate = { show: "all", list: [], total: 0, open: new Set() };
+  const rangeQuery = () => {
+    const q = new URLSearchParams({ range: state.range });
+    if (state.range === "custom") { q.set("from", state.from); q.set("to", state.to); }
+    return q;
+  };
+  // `more` adds the next page; otherwise the list reloads, keeping as many visits as are shown.
+  async function loadVisits(more = false) {
+    const period = rangeQuery().toString();
+    if (period !== vstate.period) { vstate.period = period; vstate.list = []; }
+    const q = rangeQuery();
+    q.set("show", vstate.show);
+    q.set("offset", more ? vstate.list.length : 0);
+    q.set("limit", more ? 20 : Math.min(100, Math.max(20, vstate.list.length)));
+    const key = q.toString();
+    vstate.key = key;
+    const res = await fetch(`/admin/api/visits?${q}`);
+    if (res.status === 401) return location.reload();
+    const d = await res.json();
+    if (vstate.key !== key) return;
+    vstate.total = d.total;
+    vstate.list = more ? [...vstate.list, ...d.visits.filter((v) => !vstate.list.some((x) => x.id === v.id))] : d.visits;
+    renderVisits();
+  }
+
+  function renderVisits() {
+    const { list, total } = vstate;
     const box = $("#visits");
     box.textContent = "";
-    if (!visits.length) { box.append(h("li", "empty", "No visits yet.")); return; }
-    for (const v of visits) {
+    const label = { all: "visits", clicked: "visits where someone clicked something", contacted: "visits where someone got in touch" }[vstate.show];
+    $("#visit-count").textContent = total ? `Showing ${nf.format(list.length)} of ${nf.format(total)} ${label}` : "";
+    const more = $("#visits-more");
+    more.hidden = list.length >= total;
+    more.textContent = `Show ${Math.min(20, total - list.length)} more visits`;
+    if (!list.length) { box.append(h("li", "empty", vstate.show === "all" ? "No visits in this period." : `No ${label} in this period.`)); return; }
+    for (const v of list) {
       const li = h("li", "visit");
-      const head = h("div", "visit-head");
-      const pages = v.steps.filter((x) => x.type === "pageview").length;
-      const who = v.orgKind === "organisation" ? v.org : v.city || v.region;
-      const via = v.orgKind === "organisation" ? v.city || v.region : v.org && `via ${v.org}`;
-      head.append(icon(DEVICE[v.device] || "monitor"), h("b", null, who), h("span", null, join(via, v.browser && v.os && `${v.browser} on ${v.os}`, `from ${v.source}`, `${pages} ${pages === 1 ? "page" : "pages"}`, v.end - v.start >= 1000 && dur(v.end - v.start))));
+      const det = h("details");
+      det.open = vstate.open.has(v.id);
+      det.addEventListener("toggle", () => (det.open ? vstate.open.add(v.id) : vstate.open.delete(v.id)));
+      const sum = h("summary", "visit-head");
+      const top = h("div", "visit-top");
+      const isOrg = v.orgKind === "organisation";
+      const who = isOrg ? v.org : join(v.city, v.region) || "Unknown location";
+      const whoEl = h("b", null, who);
+      top.append(icon(DEVICE[v.device] || "monitor"), whoEl);
+      const where = isOrg ? join(v.city, v.region) : v.org && `on ${v.org}`;
+      if (where) top.append(h("span", "muted", where));
+      if (v.live) top.append(h("span", "live-badge", "On the site now"));
       const when = h("time", null, ago(v.start));
       when.dateTime = new Date(v.start).toISOString();
       when.title = fWhen.format(v.start);
-      head.append(when);
-      const journey = h("ol", "journey");
-      v.steps.forEach((st) => journey.append(step(st)));
-      li.append(head, journey);
+      top.append(when);
+
+      const facts = h("ul", "visit-facts");
+      const fact = (ic, text, title) => { if (!text) return; const f = h("li"); f.append(icon(ic), h("span", null, text)); if (title) f.title = title; facts.append(f); };
+      fact("route", `Came from ${v.source || "a typed address or bookmark"}`, v.referrer && `Referrer: ${v.referrer}`);
+      if (v.campaign) fact("link", `Campaign ${quoted(v.campaign)}`, join(v.medium));
+      fact(DEVICE[v.device] || "monitor", join(v.device, v.browser && v.os && `${v.browser} on ${v.os}`));
+      fact("file-text", plural(v.pages, "page"));
+      fact("mouse-pointer-click", plural(v.clicks, "click"));
+      const extras = v.steps.filter((x) => KINDS[x.type] && x.type !== "link" && x.type !== "button" && x.type !== "toggle" && x.type !== "tab").length;
+      if (extras) fact("list-checks", plural(extras, "other action"));
+      if (v.end - v.start >= 1000) fact("clock", `${dur(v.end - v.start)} on the site`);
+      if (v.visitNo > 1) fact("users", `${ordinal(v.visitNo)} visit today`, "The same browser and network came earlier today");
+      const preview = h("ol", "journey");
+      const shown = v.steps.slice(0, 14);
+      shown.forEach((st) => preview.append(chip(st)));
+      if (v.steps.length > shown.length) preview.append(h("li", "muted", `+${v.steps.length - shown.length} more`));
+      const hint = h("span", "visit-open");
+      hint.append(icon("chevron-right"), h("span", "closed-only", "See every step"), h("span", "open-only", "Hide steps"));
+      sum.append(top, facts, preview, hint);
+
+      const tl = h("ol", "timeline");
+      tl.setAttribute("aria-label", `Everything this visitor did, in order, ${fWhen.format(v.start)}`);
+      v.steps.forEach((st) => tl.append(timelineRow(st)));
+      det.append(sum, tl);
+      li.append(det);
       box.append(li);
     }
   }
+  $("#visit-filter").addEventListener("click", (e) => {
+    const b = e.target.closest("button");
+    if (!b || b.dataset.show === vstate.show) return;
+    vstate.show = b.dataset.show;
+    for (const x of $("#visit-filter").children) x.setAttribute("aria-pressed", String(x === b));
+    vstate.list = [];
+    loadVisits();
+  });
+  $("#visits-more").addEventListener("click", () => loadVisits(true));
 
   /* ---- controls ---- */
   $("#ranges").addEventListener("click", (e) => {
@@ -487,7 +647,9 @@
 
   load();
   loadLive();
-  setInterval(() => { if (!document.hidden) loadLive(); }, 30e3);
+  // the visit list follows along while the period includes today
+  const refresh = () => { loadLive(); if (state.data?.range.to === state.data?.range.today) loadVisits(); };
+  setInterval(() => { if (!document.hidden) refresh(); }, 30e3);
   setInterval(() => { if (!document.hidden && state.data?.range.to === state.data?.range.today) load(); }, 5 * 60e3);
-  document.addEventListener("visibilitychange", () => { if (!document.hidden) loadLive(); });
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) refresh(); });
 })();
