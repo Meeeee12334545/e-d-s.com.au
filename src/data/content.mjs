@@ -10,7 +10,10 @@ export const localDoc = (file) => `@root/assets/docs/${file}`;
 // Photographs live in src/assets/img/photos, prepared by tools/photos.py, and
 // are named here as { photo: "<name>", alt, caption }: `figure` (or a pair as
 // `figures`) on a service or solution page, `asideFigure` for a product shot
-// in its sidebar. The photos are EDS's own site photos unless noted.
+// in its sidebar. Every photo is shown in the same 3:2 frame with the same
+// teal grade; `pos` picks the part to keep when the crop bites ("50% 20%"
+// keeps the top) and `plain: true` shows a drawing whole, in its own colours.
+// The photos are EDS's own site photos unless noted.
 
 export const site = {
   name: "Environmental Data Services",
@@ -123,7 +126,7 @@ export const services = [
         ],
       },
     ],
-    figure: { photo: "sewer-av-meter", alt: "An area velocity flow meter on a mounting band at the invert of a sewer, seen from the maintenance hole above, with wastewater flowing over it", caption: "An area velocity flow meter at the invert of a sewer, measuring depth and velocity in the flow." },
+    figure: { photo: "sewer-av-meter", alt: "An area velocity flow meter on a mounting band at the invert of a sewer, seen from the maintenance hole above, with wastewater flowing over it", caption: "An area velocity flow meter at the invert of a sewer, measuring depth and velocity in the flow.", pos: "50% 45%" },
     widget: "lab",
     related: ["inflow-infiltration-studies", "data-as-a-service", "sewer-model-calibration"],
     solutions: ["wastewater-monitoring"],
@@ -758,7 +761,7 @@ export const services = [
         ],
       },
     ],
-    figure: { photo: "telemetry-pole-solar", alt: "A solar panel and a telemetry enclosure mounted on a pole beside a monitoring site, with a maintenance hole in the long grass below", caption: "A solar powered telemetry site. Readings leave over the mobile network as they are taken.", portrait: true },
+    figure: { photo: "telemetry-pole-solar", alt: "A solar panel and a telemetry enclosure mounted on a pole beside a monitoring site, with a maintenance hole in the long grass below", caption: "A solar powered telemetry site. Readings leave over the mobile network as they are taken.", pos: "50% 18%" },
     related: ["data-as-a-service", "sewer-flow-monitoring", "facility-management"],
     products: ["eds", "detectronic"],
   },
@@ -861,7 +864,7 @@ export const services = [
         ],
       },
     ],
-    figure: { photo: "telemetry-cabinet", alt: "An open site cabinet with a data logger, a modem and a power supply mounted inside, wired to the instruments on site", caption: "Inside a site cabinet: logger, telemetry and power supply, wired to the station's instruments and on to SCADA.", portrait: true },
+    figure: { photo: "telemetry-cabinet", alt: "An open site cabinet with a data logger, a modem and a power supply mounted inside, wired to the instruments on site", caption: "Inside a site cabinet: logger, telemetry and power supply, wired to the station's instruments and on to SCADA.", pos: "50% 62%" },
     related: ["real-time-monitoring", "pump-station-monitoring", "facility-management"],
     products: ["eds", "aquamonitrix"],
   },
@@ -1251,7 +1254,7 @@ export const solutions = [
         ],
       },
     ],
-    figure: { photo: "treatment-plant-aerial", alt: "Aerial view of three circular clarifiers at a wastewater treatment plant, joined by walkways across the grass", caption: "From the network to the plant: flow and quality monitored at every stage of treatment." },
+    figure: { photo: "treatment-plant-aerial", alt: "Aerial view of three circular clarifiers at a wastewater treatment plant, joined by walkways across the grass", caption: "From the network to the plant: flow and quality monitored at every stage of treatment.", pos: "38% 50%" },
     related: ["automatic-sampling", "environmental-monitoring"],
     productLinks: ["detectronic", "hach-flow", "aquamonitrix"],
   },
@@ -1658,7 +1661,7 @@ export const lidott = {
   image2: img("lidott-alarm-interior-drawing-web.jpg"),
   datasheet: localDoc("detectronic-lidott-alarm-datasheet.pdf"),
   // Detectronic's drawing of the alarm in place, labelled as an illustration.
-  figure: { photo: "lidott-alarm-site", alt: "Cutaway illustration of a LIDoTT Alarm mounted at the top of a maintenance hole beneath a street, measuring the sewer level below by radar and sending level alarms to the cloud over the mobile network", caption: "Illustration: where it sits. Mounted in the maintenance hole, measuring the level by radar and reporting alarms over the mobile network." },
+  figure: { photo: "lidott-alarm-site", alt: "Cutaway illustration of a LIDoTT Alarm mounted at the top of a maintenance hole beneath a street, measuring the sewer level below by radar and sending level alarms to the cloud over the mobile network", caption: "Illustration: where it sits. Mounted in the maintenance hole, measuring the level by radar and reporting alarms over the mobile network.", plain: true },
   highlights: [
     ["radar", "Radar sensor", "5° beam angle"],
     ["ruler", "Range", "Measures up to 8.4 m"],
@@ -2010,9 +2013,9 @@ export const about = {
     photos: [
       { photo: "sewer-av-meter", alt: "An area velocity flow meter on a mounting band at the invert of a sewer, seen from the maintenance hole above, with wastewater flowing over it", caption: "An area velocity flow meter in the channel of a sewer." },
       { photo: "site-crew-manhole", alt: "A sewer maintenance hole in a park with a safety barrier set up beside it and the EDS van parked nearby", caption: "A site visit." },
-      { photo: "telemetry-pole-solar", alt: "A solar panel and a telemetry enclosure mounted on a pole beside a monitoring site", caption: "A solar powered telemetry site." },
+      { photo: "telemetry-pole-solar", alt: "A solar panel and a telemetry enclosure mounted on a pole beside a monitoring site", caption: "A solar powered telemetry site.", pos: "50% 18%" },
       { photo: "sewer-sensors-chamber", alt: "A sewer chamber with a level float and an area velocity sensor installed in the flow", caption: "Level and velocity sensors in a chamber." },
-      { photo: "telemetry-cabinet", alt: "An open site cabinet with a data logger, a modem and a power supply mounted inside", caption: "Inside a site cabinet." },
+      { photo: "telemetry-cabinet", alt: "An open site cabinet with a data logger, a modem and a power supply mounted inside", caption: "Inside a site cabinet.", pos: "50% 62%" },
     ],
   },
   quote: { text: "EDS helped us design and implement a user friendly and rugged sewer monitoring program that was completely remote. The level of service and professionalism received by EDS is always leading the industry.", who: "Tony Cockrel", org: "DERM" },

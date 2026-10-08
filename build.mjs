@@ -4,6 +4,7 @@
 //   npm run dev     -> builds, then runs the site server (server/) on http://localhost:4173
 import { mkdir, readFile, writeFile, rm, cp } from "node:fs/promises";
 import { readFileSync, readdirSync, existsSync } from "node:fs";
+import { createHash } from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import * as C from "./src/data/content.mjs";
@@ -47,6 +48,15 @@ const year = new Date().getFullYear();
 const SITE_URL = (process.env.SITE_URL || site.url).replace(/\/+$/, "");
 const pageUrl = (file) => `${SITE_URL}/${file === "index.html" ? "" : file}`;
 
+// The stylesheet and scripts are addressed with a hash of their contents, so
+// a browser holding yesterday's copy fetches today's along with the new pages
+// rather than laying them out with old rules.
+const versions = new Map();
+const asset = (r, file) => {
+  if (!versions.has(file)) versions.set(file, createHash("sha1").update(readFileSync(path.join(ROOT, "src", file))).digest("hex").slice(0, 8));
+  return `${r}assets/${file}?v=${versions.get(file)}`;
+};
+
 const slugify = (s) => String(s).toLowerCase().replace(/&/g, " and ").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 const typeOf = (id) => C.productTypes.find((t) => t.id === id);
 // Every product, flattened, with the brand and range it belongs to. A few
@@ -84,11 +94,13 @@ function photo(name, alt, { sizes = "(max-width: 980px) calc(100vw - 40px), 740p
   const [big] = v;
   return `<picture><source type="image/webp" srcset="${set("webp")}" sizes="${sizes}"><img src="@root/assets/img/photos/${name}-${big.w}x${big.h}.jpg" srcset="${set("jpg")}" sizes="${sizes}" width="${big.w}" height="${big.h}" alt="${esc(alt)}" loading="lazy" decoding="async"></picture>`;
 }
-// A captioned photograph: { photo, alt, caption }, with `portrait: true` for
-// one that is taller than it is wide, so it does not fill the column.
+// A captioned photograph: { photo, alt, caption }. Every photo is shown in
+// the same 3:2 frame with the same grade (site.css); `pos` says which part
+// to keep when the crop bites ("50% 20%" favours the top), and `plain: true`
+// is for a drawing, shown whole and in its own colours.
 const photoFigure = (f, { i, sizes } = {}) => `
-<figure class="photo${f.portrait ? " portrait" : ""}" data-reveal${i != null ? ` style="--i:${i}"` : ""}>
-  <div class="photo-frame">${photo(f.photo, f.alt, { sizes })}</div>
+<figure class="photo${f.plain ? " photo-plain" : ""}" data-reveal${i != null ? ` style="--i:${i}"` : ""}>
+  <div class="photo-frame"${f.pos ? ` style="--pos:${esc(f.pos)}"` : ""}>${photo(f.photo, f.alt, { sizes })}</div>
   ${f.caption ? `<figcaption>${esc(f.caption)}</figcaption>` : ""}
 </figure>`;
 // Two photographs side by side.
@@ -303,7 +315,7 @@ let heroCrumbs = null;
 // there to receive visits, unless ANALYTICS_ENDPOINT points at one.
 const ENDPOINT = process.env.ANALYTICS_ENDPOINT || "";
 const tracker = (r, file) =>
-  (process.env.STATIC_HOST || process.env.PREVIEW) && !ENDPOINT ? "" : `\n<script src="${r}assets/js/track.js" defer${ENDPOINT ? ` data-endpoint="${esc(ENDPOINT)}"` : ""}${file === "404.html" ? ' data-status="404"' : ""}></script>`;
+  (process.env.STATIC_HOST || process.env.PREVIEW) && !ENDPOINT ? "" : `\n<script src="${asset(r, "js/track.js")}" defer${ENDPOINT ? ` data-endpoint="${esc(ENDPOINT)}"` : ""}${file === "404.html" ? ' data-status="404"' : ""}></script>`;
 
 function layout({ file, title, description, current, body, scripts = [] }) {
   const depth = file.split("/").length - 1;
@@ -336,7 +348,7 @@ function layout({ file, title, description, current, body, scripts = [] }) {
 <link rel="apple-touch-icon" href="${r}assets/img/apple-touch-icon.png">
 <link rel="preload" href="${r}assets/fonts/geist-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <script>document.documentElement.classList.add("js")</script>
-<link rel="stylesheet" href="${r}assets/css/site.css">
+<link rel="stylesheet" href="${asset(r, "css/site.css")}">
 ${jsonLd(file, crumbs)}
 </head>
 <body id="top">
@@ -347,10 +359,10 @@ ${html}
 ${footer(r)}
 ${actionBar(r, current)}
 ${searchDialog()}
-<script src="${r}assets/js/site.js" defer></script>
-<script src="${r}assets/js/search.js" defer></script>
-<script src="${r}assets/js/quote.js" defer></script>
-${scripts.map((s) => `<script src="${r}assets/js/${s}" defer></script>`).join("\n")}${tracker(r, file)}
+<script src="${asset(r, "js/site.js")}" defer></script>
+<script src="${asset(r, "js/search.js")}" defer></script>
+<script src="${asset(r, "js/quote.js")}" defer></script>
+${scripts.map((s) => `<script src="${asset(r, `js/${s}`)}" defer></script>`).join("\n")}${tracker(r, file)}
 </body>
 </html>
 `.replaceAll("@root/", r);

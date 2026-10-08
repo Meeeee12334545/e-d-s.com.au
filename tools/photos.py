@@ -2,7 +2,7 @@
 """Prepare a photograph for the site.
 
     python3 tools/photos.py <source> <name> [--crop x0,y0,x1,y1] [--patch x0,y0,x1,y1:fx,fy]
-                            [--widths 1600,800] [--quality 82]
+                            [--widths 1600,800] [--quality 82] [--no-grade]
 
 Writes src/assets/img/photos/<name>-<w>x<h>.jpg and .webp at each width (never
 larger than the source), with the camera's metadata left out. build.mjs finds
@@ -10,6 +10,11 @@ them by name, so a page refers to the photo as photo("<name>"). Fractions of
 the image, 0 to 1, describe a crop, or a patch: the rectangle to cover and the
 top left corner of the area to copy over it, or "above" to mirror the strip
 just above it (to hide a date stamp). Patches are feathered at the edges.
+Each photo is graded the same way, so the set matches: levels stretched a
+little with the colour balance kept, and the colour eased back. --no-grade
+leaves a drawing alone. site.css adds the brand tint on the page.
+
+tools/photos.sh runs every photo on the site through this script.
 
     python3 tools/photos.py <source> --product <file> [--max 1000]
 
@@ -18,7 +23,7 @@ it straight to src/assets/img/<file>, as JPEG or PNG by its extension.
 Needs Pillow (pip install pillow).
 """
 import argparse, os, sys
-from PIL import Image, ImageDraw, ImageOps, ImageFilter
+from PIL import Image, ImageDraw, ImageEnhance, ImageOps, ImageFilter
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 IMG = os.path.join(ROOT, "src/assets/img")
@@ -34,6 +39,7 @@ ap = argparse.ArgumentParser()
 ap.add_argument("source"); ap.add_argument("name", nargs="?")
 ap.add_argument("--crop"); ap.add_argument("--patch", action="append", default=[])
 ap.add_argument("--widths", default="1600,800"); ap.add_argument("--quality", type=int, default=82)
+ap.add_argument("--no-grade", action="store_true")
 ap.add_argument("--product"); ap.add_argument("--max", type=int, default=1000)
 a = ap.parse_args()
 
@@ -64,6 +70,9 @@ for p in a.patch:
     im.paste(tile, (x0, y0), mask.filter(ImageFilter.GaussianBlur(5)))
 if a.crop:
     im = im.crop(box(im, frac(a.crop)))
+if not a.no_grade:
+    im = ImageOps.autocontrast(im, cutoff=0.4, preserve_tone=True)
+    im = ImageEnhance.Color(im).enhance(0.88)
 
 os.makedirs(os.path.join(IMG, "photos"), exist_ok=True)
 widths = sorted({min(int(w), im.width) for w in a.widths.split(",")}, reverse=True)
