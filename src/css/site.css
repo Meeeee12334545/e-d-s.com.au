@@ -1307,12 +1307,12 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: 6
 .actionbar .count { position: absolute; top: -6px; right: -4px; box-shadow: 0 0 0 2px rgba(7, 35, 33, .92); }
 
 .quote-toast {
-  position: fixed; z-index: 130; left: 50%; bottom: 24px; translate: -50% 18px; opacity: 0; pointer-events: none;
+  position: fixed; z-index: 130; left: 50%; bottom: 24px; translate: -50% 18px; opacity: 0; visibility: hidden; pointer-events: none;
   display: flex; align-items: center; gap: 16px; width: max-content; max-width: calc(100% - 32px); padding: 10px 10px 10px 18px;
   border-radius: 16px; border: 1px solid var(--line-dark-strong); background: rgba(7, 35, 33, .96); color: #fff; font-size: .92rem;
-  box-shadow: 0 20px 44px rgba(0, 0, 0, .32); transition: opacity .25s var(--ease), translate .4s var(--ease-out);
+  box-shadow: 0 20px 44px rgba(0, 0, 0, .32); transition: opacity .25s var(--ease), translate .4s var(--ease-out), visibility 0s linear .4s;
 }
-.quote-toast.show { opacity: 1; translate: -50% 0; pointer-events: auto; }
+.quote-toast.show { opacity: 1; visibility: visible; translate: -50% 0; pointer-events: auto; transition-delay: 0s; }
 .quote-toast a { flex: none; padding: 9px 15px; border-radius: 999px; background: var(--aqua); color: #04201d; font-weight: 650; }
 .quote-toast a:hover { background: #7bc1b5; }
 
