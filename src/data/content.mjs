@@ -7,6 +7,10 @@
 export const img = (file) => `@root/assets/img/${file}`;
 // Documents (datasheets, white papers, software) live in src/assets/docs.
 export const localDoc = (file) => `@root/assets/docs/${file}`;
+// Photographs live in src/assets/img/photos, prepared by tools/photos.py, and
+// are named here as { photo: "<name>", alt, caption }: `figure` (or a pair as
+// `figures`) on a service or solution page, `asideFigure` for a product shot
+// in its sidebar. The photos are EDS's own site photos unless noted.
 
 export const site = {
   name: "Environmental Data Services",
@@ -119,6 +123,7 @@ export const services = [
         ],
       },
     ],
+    figure: { photo: "sewer-av-meter", alt: "An area velocity flow meter on a mounting band at the invert of a sewer, seen from the maintenance hole above, with wastewater flowing over it", caption: "An area velocity flow meter at the invert of a sewer, measuring depth and velocity in the flow." },
     widget: "lab",
     related: ["inflow-infiltration-studies", "data-as-a-service", "sewer-model-calibration"],
     solutions: ["wastewater-monitoring"],
@@ -211,6 +216,10 @@ export const services = [
         ],
       },
     ],
+    figures: [
+      { photo: "infiltration-joints", alt: "Groundwater streaming into a maintenance hole through the joints in its concrete wall, over an instrument mounted below", caption: "Infiltration: groundwater seeping in through failing joints, long after the rain has stopped." },
+      { photo: "inflow-manhole-rain", alt: "Water cascading down the step irons of a maintenance hole during heavy rain", caption: "Inflow: stormwater pouring into a maintenance hole while a storm is under way." },
+    ],
     widget: "lab",
     related: ["sewer-flow-monitoring", "thermal-infiltration-surveys", "sewer-model-calibration"],
     solutions: ["network-thermal-monitoring", "wastewater-monitoring"],
@@ -284,6 +293,7 @@ export const services = [
         ],
       },
     ],
+    figure: { photo: "sewer-sensors-chamber", alt: "A sewer chamber with a level float and an area velocity sensor on a stainless steel bracket, both installed in the flow", caption: "Level and velocity sensors installed in a chamber on an EDS monitored site. Under DaaS, EDS chooses the site, installs the equipment and maintains it." },
     related: ["sewer-flow-monitoring", "real-time-monitoring", "inflow-infiltration-studies"],
     solutions: ["wastewater-monitoring"],
     products: ["detectronic"],
@@ -333,6 +343,7 @@ export const services = [
         ],
       },
     ],
+    figure: { photo: "sewer-manhole-bracket", alt: "Looking down a maintenance hole to a sensor bracket fixed across the invert of the pipe, with the sensor cable running up the shaft", caption: "A monitoring site: the sensor bracket across the invert, cabled to a logger at the top of the shaft. Sites are chosen by their hydraulics, so the model is calibrated to readings it can trust." },
     related: ["sewer-flow-monitoring", "inflow-infiltration-studies", "network-assessment"],
     products: ["detectronic", "hach-flow"],
   },
@@ -426,6 +437,7 @@ export const services = [
         ],
       },
     ],
+    figure: { photo: "sewer-overflow-street", alt: "Wastewater surging up around a manhole cover and across a flooded street", caption: "A surcharging sewer. A level alarm in the chamber warns of the rising depth before a blockage becomes a spill like this one." },
     widget: "lidott",
     related: ["sewer-flow-monitoring", "real-time-monitoring", "pump-station-monitoring"],
     solutions: ["wastewater-monitoring", "asset-network-assessment"],
@@ -511,6 +523,7 @@ export const services = [
         ],
       },
     ],
+    figure: { photo: "treatment-plant-clarifier", alt: "The circular clarifier of a wastewater treatment plant on a clear day, with its scraper bridge and weir", caption: "A treatment plant clarifier. Quality monitoring covers the process from the inlet works to the effluent, as well as the network and the environment around it." },
     related: ["sampling-programs", "trade-waste", "auditing-calibration"],
     solutions: ["wastewater-monitoring", "environmental-monitoring"],
     products: ["eds", "aquamonitrix", "ori"],
@@ -653,6 +666,7 @@ export const services = [
         ],
       },
     ],
+    figure: { photo: "clamp-on-ultrasonic", alt: "A pair of ultrasonic transducers strapped to a green pipe, cabled to a wall mounted flow transmitter with a keypad and display", caption: "Clamp-on ultrasonic transducers measure flow from outside the pipe, with no cut into the line and nothing in the flow." },
     related: ["auditing-calibration", "equipment-rental", "real-time-monitoring"],
     products: ["dynaflox", "eds"],
   },
@@ -689,6 +703,7 @@ export const services = [
         ],
       },
     ],
+    asideFigure: { src: img("tipping-bucket-rain-gauge.png"), alt: "A tipping bucket rain gauge: a stainless steel cylinder with a bronze funnel on a levelling base", caption: "Tipping bucket rain gauge", w: 360, h: 500 },
     related: ["inflow-infiltration-studies", "sewer-model-calibration", "sewer-flow-monitoring"],
     solutions: ["environmental-monitoring"],
     products: ["eds"],
@@ -743,6 +758,7 @@ export const services = [
         ],
       },
     ],
+    figure: { photo: "telemetry-pole-solar", alt: "A solar panel and a telemetry enclosure mounted on a pole beside a monitoring site, with a maintenance hole in the long grass below", caption: "A solar powered telemetry site. Readings leave over the mobile network as they are taken.", portrait: true },
     related: ["data-as-a-service", "sewer-flow-monitoring", "facility-management"],
     products: ["eds", "detectronic"],
   },
@@ -845,6 +861,7 @@ export const services = [
         ],
       },
     ],
+    figure: { photo: "telemetry-cabinet", alt: "An open site cabinet with a data logger, a modem and a power supply mounted inside, wired to the instruments on site", caption: "Inside a site cabinet: logger, telemetry and power supply, wired to the station's instruments and on to SCADA.", portrait: true },
     related: ["real-time-monitoring", "pump-station-monitoring", "facility-management"],
     products: ["eds", "aquamonitrix"],
   },
@@ -938,6 +955,7 @@ export const services = [
         ],
       },
     ],
+    figure: { photo: "sewer-pipe-downstream", alt: "Looking along a large sewer pipe from a maintenance hole, with the sensor mounting band fixed inside the entry and flow running away into the dark", caption: "Looking downstream from a maintenance hole. Flow and depth measured at sites like this show how the network is performing, and where it is not." },
     related: ["sewer-model-calibration", "data-analysis-reporting", "sewer-flow-monitoring"],
     solutions: ["asset-network-assessment"],
     products: ["detectronic", "eds"],
@@ -983,6 +1001,7 @@ export const services = [
         ],
       },
     ],
+    figure: { photo: "site-crew-manhole", alt: "A sewer maintenance hole in a park with a safety barrier set up beside it and the EDS van parked nearby", caption: "A site visit: barriers up, the maintenance hole open, and the instrument checked against a reference measurement where it is installed." },
     related: ["closed-channel-flow", "trade-waste", "equipment-rental"],
     products: ["hach-flow", "dynaflox", "eds"],
   },
@@ -1058,6 +1077,10 @@ export const services = [
           ["Amberley Fire Training Facility", "Built by EDS in 2001 and 2002."],
         ],
       },
+    ],
+    figures: [
+      { photo: "fire-training-pad", alt: "A live fire burning across a concrete training pad under a clear sky, with bushland behind", caption: "A live fire training pad." },
+      { photo: "fire-training-fuselage", alt: "An aircraft fuselage fire trainer marked Royal Australian Air Force, standing on a concrete pad", caption: "An aircraft fire trainer at a Defence training facility." },
     ],
     quote: {
       text: "Motivated people, delivering multiple services together as one team, and a continual focus on processes, results in cost-reductions from synergies and integration.",
@@ -1228,6 +1251,7 @@ export const solutions = [
         ],
       },
     ],
+    figure: { photo: "treatment-plant-aerial", alt: "Aerial view of three circular clarifiers at a wastewater treatment plant, joined by walkways across the grass", caption: "From the network to the plant: flow and quality monitored at every stage of treatment." },
     related: ["automatic-sampling", "environmental-monitoring"],
     productLinks: ["detectronic", "hach-flow", "aquamonitrix"],
   },
@@ -1300,6 +1324,7 @@ export const solutions = [
         ],
       },
     ],
+    figure: { photo: "stormwater-culvert", alt: "A sensor cable running into a concrete stormwater culvert with a shallow stream flowing out of it between rocks", caption: "A stormwater culvert instrumented for monitoring. The same equipment serves rivers, drains and surface water." },
     related: ["wastewater-monitoring", "automatic-sampling"],
     productLinks: ["eds", "beadedstream", "aquamonitrix"],
   },
@@ -1357,7 +1382,8 @@ export const brands = [
     tag: "Sewer and wastewater network monitoring",
     summary: "Ultrasonic flow, level and water quality instruments engineered for sewer networks.",
     logo: img("detectronic-logocolour.png"),
-    cover: img("lidott-sensor-r-1.png"),
+    cover: img("detectronic-msfm-s2-lidott.png"),
+    coverName: "MSFM S2 flow monitor and LIDoTT level sensor",
     intro: [
       "Detectronic is a specialist in sewer and wastewater network monitoring and management, focused on measuring, recording, reporting and reacting to wastewater depths and flow rates.",
       "Detectronic designs and manufactures a comprehensive range of advanced ultrasonic flow, level and water quality monitoring instruments, engineered for the accurate monitoring of sewerage networks, wastewater systems and trade effluent.",
@@ -1386,7 +1412,7 @@ export const brands = [
           { name: "LIDoTT Alarm", type: "level", note: "Self contained level measurement and alarm device", image: img("lidott-alarm-3.png"), href: "products/lidott-alarm.html", docs: [{ label: "Datasheet", href: localDoc("detectronic-lidott-alarm-datasheet.pdf") }] },
           { name: "Alarm2", type: "level", note: "All-in-one radar level monitor with alarms, up to 20 m, LoRaWAN or cellular", image: img("detectronic-alarm2.png"), href: "products/alarm2.html", docs: [{ label: "Datasheet", href: localDoc("detectronic-alarm2-datasheet.pdf") }, { label: "4G manual", href: localDoc("detectronic-alarm2-4g-manual.pdf") }] },
           { name: "LIDoTT R", type: "level", note: "High-precision radar and pressure sensor for continuous monitoring", image: img("lidott-sensor-r-1.png"), docs: [{ label: "Datasheet", href: localDoc("detectronic-lidott-r-datasheet.pdf") }] },
-          { name: "Multi Channel Data Loggers", type: "logger", note: "Rugged remote multichannel loggers", image: img("new-2-channel-logger-1001x1024.jpg") },
+          { name: "Multi Channel Data Loggers", type: "logger", note: "GPRS 2 channel logger for pulse output water meters, with optional pressure to 200 m and alarms on each channel", image: img("new-2-channel-logger-1001x1024.jpg"), docs: [{ label: "2 channel logger datasheet", href: localDoc("detectronic-msfm-gprs-2-channel-data-logger-datasheet.pdf") }] },
         ],
       },
     ],
@@ -1631,6 +1657,8 @@ export const lidott = {
   image: img("lidott-alarm-3.png"),
   image2: img("lidott-alarm-interior-drawing-web.jpg"),
   datasheet: localDoc("detectronic-lidott-alarm-datasheet.pdf"),
+  // Detectronic's drawing of the alarm in place, labelled as an illustration.
+  figure: { photo: "lidott-alarm-site", alt: "Cutaway illustration of a LIDoTT Alarm mounted at the top of a maintenance hole beneath a street, measuring the sewer level below by radar and sending level alarms to the cloud over the mobile network", caption: "Illustration: where it sits. Mounted in the maintenance hole, measuring the level by radar and reporting alarms over the mobile network." },
   highlights: [
     ["radar", "Radar sensor", "5° beam angle"],
     ["ruler", "Range", "Measures up to 8.4 m"],
@@ -1973,6 +2001,20 @@ export const about = {
     ],
   },
   founder: { name: "Cynthia Harper", role: "Co-founder, Environmental Data Services", text: "EDS continues to strive to deliver the level of service and professionalism that was part of Graham's founding ethos." },
+  // Photographs from EDS sites: one beside the timeline on the home page, and
+  // the mosaic on the about page (the first photo is the large one).
+  homePhoto: { photo: "site-crew-manhole", alt: "A sewer maintenance hole in a park with a safety barrier set up beside it and the EDS van parked nearby", caption: "On site: a maintenance hole opened for an instrument check." },
+  field: {
+    heading: "The work, as it is.",
+    lede: "Sewers, chambers, cabinets and poles: the sites EDS crews instrument, visit and keep reporting.",
+    photos: [
+      { photo: "sewer-av-meter", alt: "An area velocity flow meter on a mounting band at the invert of a sewer, seen from the maintenance hole above, with wastewater flowing over it", caption: "An area velocity flow meter in the channel of a sewer." },
+      { photo: "site-crew-manhole", alt: "A sewer maintenance hole in a park with a safety barrier set up beside it and the EDS van parked nearby", caption: "A site visit." },
+      { photo: "telemetry-pole-solar", alt: "A solar panel and a telemetry enclosure mounted on a pole beside a monitoring site", caption: "A solar powered telemetry site." },
+      { photo: "sewer-sensors-chamber", alt: "A sewer chamber with a level float and an area velocity sensor installed in the flow", caption: "Level and velocity sensors in a chamber." },
+      { photo: "telemetry-cabinet", alt: "An open site cabinet with a data logger, a modem and a power supply mounted inside", caption: "Inside a site cabinet." },
+    ],
+  },
   quote: { text: "EDS helped us design and implement a user friendly and rugged sewer monitoring program that was completely remote. The level of service and professionalism received by EDS is always leading the industry.", who: "Tony Cockrel", org: "DERM" },
 };
 
@@ -2140,6 +2182,7 @@ export const downloads = [
       ["Detectronic LIDoTT Alarm datasheet", localDoc("detectronic-lidott-alarm-datasheet.pdf")],
       ["Detectronic Alarm2 radar level monitor datasheet", localDoc("detectronic-alarm2-datasheet.pdf")],
       ["Detectronic Alarm2 4G LTE Cat 1 manual", localDoc("detectronic-alarm2-4g-manual.pdf")],
+      ["Detectronic MSFM GPRS 2 channel data logger datasheet", localDoc("detectronic-msfm-gprs-2-channel-data-logger-datasheet.pdf")],
       ["Detectronic LIDoTT R datasheet", localDoc("detectronic-lidott-r-datasheet.pdf")],
       ["ORI AquaSamp Mini brochure", localDoc("ori-aquasamp-mini-brochure.pdf")],
       ["ORI PumpModul portable sampler datasheet", localDoc("ori-pumpmodul-datasheet.pdf")],

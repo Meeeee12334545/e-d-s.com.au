@@ -1055,6 +1055,45 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: 6
 .aside-figure img { width: auto; max-height: 320px; }
 .aside-figure figcaption { font-size: .82rem; color: var(--muted); }
 .table-scroll { overflow-x: auto; border-radius: var(--radius); }
+
+/* ---------- photographs ----------
+   Site photos (tools/photos.py). The frame clips a slow zoom on hover; the
+   caption sits under the photo behind a short rule, like an eyebrow. */
+.photo { margin: clamp(32px, 4vw, 48px) 0 0; }
+.photo-frame { position: relative; overflow: hidden; border-radius: var(--radius); background: var(--bg-alt); box-shadow: var(--shadow-md), inset 0 0 0 1px rgba(5, 9, 15, .06); isolation: isolate; }
+.photo-frame img { width: 100%; height: auto; transition: scale 1.4s var(--ease-out); }
+.photo:hover .photo-frame img { scale: 1.035; }
+.photo figcaption { display: flex; gap: 10px; align-items: baseline; margin-top: 12px; font-size: .86rem; line-height: 1.5; color: var(--muted); max-width: 62ch; }
+.photo figcaption::before { content: ""; flex: none; width: 18px; height: 2px; border-radius: 2px; background: var(--brand); translate: 0 -4px; }
+/* a photo taller than it is wide stops short of the column's width */
+.photo.portrait { max-width: 520px; }
+.photo-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: clamp(32px, 4vw, 48px); align-items: start; }
+.photo-row .photo { margin: 0; }
+.dark .photo-frame { background: var(--deep-2); box-shadow: 0 20px 50px rgba(0, 0, 0, .35), inset 0 0 0 1px rgba(255, 255, 255, .08); }
+.dark .photo figcaption { color: var(--on-dark-faint); }
+.dark .photo figcaption::before { background: var(--aqua); }
+/* home: the site photo above the client's words */
+.about-side { display: grid; gap: 18px; align-content: start; }
+.about-side .photo { margin: 0; }
+/* about: photos from the field, one large and four beside it */
+.mosaic { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-rows: 236px; gap: 14px; }
+.mosaic .photo { margin: 0; display: flex; flex-direction: column; min-height: 0; }
+.mosaic .photo-frame { flex: 1; min-height: 0; }
+.mosaic .photo-frame picture, .mosaic .photo-frame img { height: 100%; }
+.mosaic .photo-frame img { object-fit: cover; }
+.mosaic .photo:first-child { grid-column: span 2; grid-row: span 2; }
+.mosaic figcaption { margin-top: 10px; font-size: .8rem; }
+@media (max-width: 980px) {
+  .mosaic { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 210px; }
+}
+@media (max-width: 700px) {
+  .photo-row { grid-template-columns: 1fr; }
+  .photo.portrait { max-width: none; }
+}
+@media (max-width: 560px) {
+  .mosaic { grid-template-columns: 1fr; grid-auto-rows: 240px; }
+  .mosaic .photo:first-child { grid-column: auto; grid-row: auto; }
+}
 .actionbar { display: none; }
 
 /* ---------- icon choreography ----------

@@ -35,6 +35,7 @@ The build stops with an error if a page repeats an element id, since product lin
 | `src/js/lab.js` | The storm and hydrograph simulator: the flow lab on the home page and the sewer flow monitoring and inflow and infiltration pages. Values can be read off the chart with the pointer or the arrow keys, the simulation can be paused, and the band between measured flow and the dry weather pattern is shaded as inflow and infiltration. |
 | `src/js/widgets.js` | Office map, LIDoTT Alarm demo, EDS Asset Score dial. |
 | `src/assets/img/` | Product photos and logos. Reference one with `img("file-name.png")` in `content.mjs`. Also the favicon and touch icon (cut from the EDS mark in the logo) and `og-card.jpg`, the 1200 × 630 image shown when a page is shared. |
+| `src/assets/img/photos/` | Photographs of EDS sites and work, each as `<name>-<width>x<height>.jpg` with a WebP twin at two widths, written by `tools/photos.py` (needs Python with Pillow) from the originals on the EDS Synology drive (`EDS Portal/Website/Website Images`). A page names one as `{ photo: "<name>", alt, caption }`: `figure` or a pair as `figures` on a service or solution page, `homePhoto` and `field.photos` in `about`, and `figure` on the LIDoTT Alarm page. `asideFigure` puts a product shot in a page's sidebar instead. The script drops the camera's metadata, can crop, and can patch out a date stamp. |
 | `src/assets/docs/` | Datasheets, brochures, manuals, white papers and software downloads. Reference one with `localDoc("file-name.pdf")` in `content.mjs`. |
 | `content/privacy.txt` | Privacy policy text, carried over from the old site. |
 | `src/js/track.js` | Counts visits for the analytics dashboard. No cookies. |
@@ -88,6 +89,7 @@ Other settings (`PORT`, `DATA_DIR`, `ANALYTICS_TZ`, `SESSION_SECRET`, `TRUSTED_P
 - **Surface effects.** The card edge spotlight, the beam round the hero meter card and the drawn link underline follow VengeanceUI components (https://github.com/Ashutoshx7/VengeanceUI, MIT), rewritten in plain CSS. The film grain on dark bands, teal-tinted shadows, the home services bento and the sparing use of eyebrow labels follow taste-skill (https://github.com/Leonxlnx/taste-skill, MIT).
 - **Motion is full for everyone.** By EDS's decision (2 October 2026) the site always animates and has no reduced-motion mode or switch; it does not follow a device's Reduce Motion setting.
 - **Simulations are labelled.** The flow lab, LIDoTT demo, Asset Score dial and FlowSense screens are illustrations and say so on the page. Do not present them as live data, and do not use client site names in them.
+- **Photographs are EDS's own, or were on the old site.** Captions describe what is in the picture and claim nothing the copy does not already say; no client or site names. Blue Siren material is not used: EDS no longer sells that range.
 
 ## Still to do
 

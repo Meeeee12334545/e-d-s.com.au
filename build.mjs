@@ -3,7 +3,7 @@
 //   npm run build   -> writes dist/
 //   npm run dev     -> builds, then runs the site server (server/) on http://localhost:4173
 import { mkdir, readFile, writeFile, rm, cp } from "node:fs/promises";
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, readdirSync, existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import * as C from "./src/data/content.mjs";
@@ -65,6 +65,39 @@ const contactHref = (r, { topic, product, mode } = {}) => {
   const qs = q.toString();
   return `${r}contact.html${qs ? `?${esc(qs)}` : ""}`;
 };
+
+// Photographs. tools/photos.py writes each one to src/assets/img/photos as
+// <name>-<width>x<height>.jpg with a WebP twin, at two widths, so the browser
+// can take the smaller one on a phone. The width and height attributes hold
+// the photo's space on the page before it loads.
+const PHOTOS = {};
+for (const f of readdirSync(path.join(ROOT, "src/assets/img/photos"))) {
+  const m = f.match(/^(.+)-(\d+)x(\d+)\.jpg$/);
+  if (m) (PHOTOS[m[1]] ||= []).push({ w: +m[2], h: +m[3] });
+}
+for (const list of Object.values(PHOTOS)) list.sort((a, b) => b.w - a.w);
+// `sizes` is how wide the photo is laid out, so the browser can choose a width.
+function photo(name, alt, { sizes = "(max-width: 980px) calc(100vw - 40px), 740px" } = {}) {
+  const v = PHOTOS[name];
+  if (!v) throw new Error(`No photo named "${name}" in src/assets/img/photos (see tools/photos.py)`);
+  const set = (ext) => v.map((s) => `@root/assets/img/photos/${name}-${s.w}x${s.h}.${ext} ${s.w}w`).join(", ");
+  const [big] = v;
+  return `<picture><source type="image/webp" srcset="${set("webp")}" sizes="${sizes}"><img src="@root/assets/img/photos/${name}-${big.w}x${big.h}.jpg" srcset="${set("jpg")}" sizes="${sizes}" width="${big.w}" height="${big.h}" alt="${esc(alt)}" loading="lazy" decoding="async"></picture>`;
+}
+// A captioned photograph: { photo, alt, caption }, with `portrait: true` for
+// one that is taller than it is wide, so it does not fill the column.
+const photoFigure = (f, { i, sizes } = {}) => `
+<figure class="photo${f.portrait ? " portrait" : ""}" data-reveal${i != null ? ` style="--i:${i}"` : ""}>
+  <div class="photo-frame">${photo(f.photo, f.alt, { sizes })}</div>
+  ${f.caption ? `<figcaption>${esc(f.caption)}</figcaption>` : ""}
+</figure>`;
+// Two photographs side by side.
+const figureRow = (figs) => `<div class="photo-row">${figs.map((f, i) => photoFigure(f, { i, sizes: "(max-width: 700px) calc(100vw - 40px), (max-width: 980px) calc(50vw - 28px), 362px" })).join("")}</div>`;
+// What a service or solution page shows after its introduction: one
+// photograph (`figure`) or a pair (`figures`).
+const figuresHtml = (s) => (s.figures ? figureRow(s.figures) : s.figure ? photoFigure(s.figure) : "");
+// A product shot or drawing in the sidebar: { src, alt, caption, w, h }.
+const asideFigure = (s) => (s.asideFigure ? `<figure class="aside-card aside-figure" data-reveal="right"><img src="${s.asideFigure.src}" alt="${esc(s.asideFigure.alt)}" width="${s.asideFigure.w}" height="${s.asideFigure.h}" loading="lazy"><figcaption>${esc(s.asideFigure.caption)}</figcaption></figure>` : "");
 
 /* ------------------------------------------------------------------ */
 /* layout                                                              */
@@ -888,11 +921,14 @@ ${waysSection(r)}
       </div>
       <a class="link-arrow" href="${r}about.html" style="margin-top:18px">The EDS story ${icon("arrow-right")}</a>
     </div>
-    <figure class="quote" data-reveal="right" style="margin:0">
-      ${icon("quote", false)}
-      <blockquote>${C.about.quote.text}</blockquote>
-      <cite><b>${C.about.quote.who}</b>, ${C.about.quote.org}</cite>
-    </figure>
+    <div class="about-side">
+      ${photoFigure(C.about.homePhoto, { sizes: "(max-width: 980px) calc(100vw - 40px), 460px" })}
+      <figure class="quote" data-reveal="right" style="margin:0">
+        ${icon("quote", false)}
+        <blockquote>${C.about.quote.text}</blockquote>
+        <cite><b>${C.about.quote.who}</b>, ${C.about.quote.org}</cite>
+      </figure>
+    </div>
   </div>
 </section>
 
@@ -993,7 +1029,7 @@ function sectionsOf(s) {
 // The sidebar: a contact card, then one card of links per non-empty
 // [title, links] section, where each link is [href, label, icon?, external?].
 // `topic` is the enquiry topic the contact card's button opens the form with.
-const asideHtml = (r, sections, topic) => `
+const asideHtml = (r, sections, topic, extra = "") => `
 <aside class="aside">
   <div class="aside-card brand" data-reveal="right">
     <h3>Talk to our team</h3>
@@ -1001,6 +1037,7 @@ const asideHtml = (r, sections, topic) => `
     <a class="btn btn-primary" href="${contactHref(r, { topic })}">Enquire now ${icon("arrow-right")}</a>
     <a class="btn btn-ghost" href="${site.phoneHref}" style="margin-left:6px">${icon("phone")} ${site.phone}</a>
   </div>
+  ${extra}
   ${sections.filter(([, links]) => links.length).map(([title, links], i) => `<div class="aside-card" data-reveal="right" style="--i:${i + 1}"><h3>${title}</h3><ul class="aside-links">${links.map(([href, label, ic = "arrow-right", ext]) => `<li><a href="${href}"${ext ? ' rel="noopener"' : ""}>${esc(label)}${icon(ic)}</a></li>`).join("")}</ul></div>`).join("")}
 </aside>`;
 const svcLinks = (r, slugs = []) => slugs.map((slug) => [`${r}services/${slug}.html`, svc(slug).short || svc(slug).title]);
@@ -1020,12 +1057,13 @@ ${pageHero(r, { crumbs: [["Services", "services/index.html"], [s.short || s.titl
 <section class="section" id="overview"><div class="wrap split">
   <div>
     <div class="prose" data-reveal>${s.intro.map((p) => `<p>${esc(p)}</p>`).join("")}</div>
+    ${figuresHtml(s)}
     ${s.blocks.length ? `<div style="margin-top:clamp(40px,5vw,64px)">${s.blocks.map(blockHtml).join("")}</div>` : ""}
     ${s.compare ? compareHtml(s.compare) : ""}
     ${s.quote ? `<figure class="quote" data-reveal style="margin:clamp(40px,5vw,64px) 0 0">${icon("quote", false)}<blockquote>${esc(s.quote.text)}</blockquote></figure>` : ""}
     ${resultsFor(s.slug).length ? `<div class="block results-block" id="results" data-reveal><h2 class="h-md">Results from the field</h2>${resultCards(resultsFor(s.slug))}</div>` : ""}
   </div>
-  ${asideHtml(r, [["Related services", svcLinks(r, s.related)], ["Related solutions", solLinks(r, s.solutions)], ["Products we use", brandLinks(r, s.products)], ["White papers", paperLinks(s.papers)]], s.title)}
+  ${asideHtml(r, [["Related services", svcLinks(r, s.related)], ["Related solutions", solLinks(r, s.solutions)], ["Products we use", brandLinks(r, s.products)], ["White papers", paperLinks(s.papers)]], s.title, asideFigure(s))}
 </div></section>
 ${s.process ? processSection() : ""}
 ${s.widget === "lab" ? labSection({ eyebrow: "Try it", title: s.slug.startsWith("inflow") ? "Watch inflow and infiltration happen." : "What the flow meter sees in a storm." }) : ""}
@@ -1059,9 +1097,10 @@ ${pageHero(r, { crumbs: [["Solutions", "solutions/index.html"], [s.title]], icon
 <section class="section" id="overview"><div class="wrap split">
   <div>
     <div class="prose" data-reveal>${s.intro.map((p) => `<p>${esc(p)}</p>`).join("")}</div>
+    ${figuresHtml(s)}
     ${(s.blocks || []).length ? `<div style="margin-top:clamp(40px,5vw,64px)">${s.blocks.map(blockHtml).join("")}</div>` : ""}
   </div>
-  ${asideHtml(r, [["Related solutions", solLinks(r, s.related)], ["Related services", svcLinks(r, C.services.filter((x) => x.solutions?.includes(s.slug)).map((x) => x.slug))], ["Products we use", brandLinks(r, s.productLinks)]], s.title)}
+  ${asideHtml(r, [["Related solutions", solLinks(r, s.related)], ["Related services", svcLinks(r, C.services.filter((x) => x.solutions?.includes(s.slug)).map((x) => x.slug))], ["Products we use", brandLinks(r, s.productLinks)]], s.title, asideFigure(s))}
 </div></section>
 ${s.widget === "eas" ? `<section class="section dark" id="asset-score"><div class="wrap"><div class="section-head"><p class="eyebrow">EDS Asset Score</p><h2 class="h-lg" data-reveal>One score, watched around the clock.</h2></div>${easDemo()}</div></section>` : ""}
 ${ctaSection(r, { topic: s.title })}`,
@@ -1117,6 +1156,8 @@ ${ctaSection(r, { title: "Need help choosing an instrument?", lede: "Our team ha
 
 for (const b of C.brands) {
   const range = products.filter((p) => p.brand === b);
+  // The hero shows the brand's cover photo: a product's own shot, or a shot
+  // of the range named by `coverName`.
   const cover = range.find((p) => p.image === b.cover) || range[0];
   const pricing = { topic: "Product pricing", product: b.title };
   // Brand-wide documents first, then each product's, named after the product.
@@ -1137,7 +1178,7 @@ for (const b of C.brands) {
     current: "products",
     scripts: ["products.js"],
     body: (r) => `
-${pageHero(r, { crumbs: [["Products", "products/index.html"], [b.name]], iconName: b.icon, eyebrow: b.tag, title: b.title, lede: b.summary, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${contactHref(r, pricing)}">Request pricing ${icon("arrow-right")}</a><a class="btn btn-ghost btn-lg" href="#range">${icon("layout-grid")} View the range</a>`, visual: heroProduct(cover.image, cover.name) })}
+${pageHero(r, { crumbs: [["Products", "products/index.html"], [b.name]], iconName: b.icon, eyebrow: b.tag, title: b.title, lede: b.summary, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${contactHref(r, pricing)}">Request pricing ${icon("arrow-right")}</a><a class="btn btn-ghost btn-lg" href="#range">${icon("layout-grid")} View the range</a>`, visual: heroProduct(b.cover || cover.image, b.coverName || cover.name) })}
 <section class="section"><div class="wrap split">
   <div>
     <div class="prose" data-reveal>${b.intro.map((p) => `<p>${esc(p)}</p>`).join("")}</div>
@@ -1181,6 +1222,7 @@ ${pageHero(r, { crumbs: [["Products", "products/index.html"], ["Detectronic", "p
   <div>
     <div class="prose" data-reveal>${C.lidott.description.map((p) => `<p>${esc(p)}</p>`).join("")}</div>
     <div class="feature-list" style="margin-top:40px">${C.lidott.sections.map(([t, d]) => `<div class="feature holder" data-reveal>${icon("circle-check")}<div><b>${esc(t)}</b><span>${esc(d)}</span></div></div>`).join("")}</div>
+    ${photoFigure(C.lidott.figure)}
   </div>
   <aside class="aside">
     <figure class="aside-card aside-figure" data-reveal="right"><img src="${C.lidott.image2}" alt="Drawing of LIDoTT Alarm in section" loading="lazy"><figcaption>LIDoTT Alarm, in section</figcaption></figure>
@@ -1306,6 +1348,10 @@ ${pageHero(r, { crumbs: [["About"]], eyebrow: "About EDS", title: "Australian ow
   <aside class="aside">
     <figure class="quote" data-reveal="right" style="margin:0">${icon("quote", false)}<blockquote style="font-size:1.25rem">${C.about.quote.text}</blockquote><cite><b>${C.about.quote.who}</b>, ${C.about.quote.org}</cite></figure>
   </aside>
+</div></section>
+<section class="section dark" id="in-the-field"><div class="wrap">
+  <div class="section-head"><p class="eyebrow">In the field</p><h2 class="h-lg" data-reveal>${esc(C.about.field.heading)}</h2><p class="lede" data-reveal style="--i:1">${esc(C.about.field.lede)}</p></div>
+  <div class="mosaic">${C.about.field.photos.map((f, i) => photoFigure(f, { i, sizes: i ? "(max-width: 560px) calc(100vw - 40px), (max-width: 980px) calc(50vw - 27px), 300px" : "(max-width: 980px) calc(100vw - 40px), 614px" })).join("")}</div>
 </div></section>
 <section class="section alt" id="how-we-work"><div class="wrap">
   <div class="section-head"><p class="eyebrow">How we work</p><h2 class="h-lg" data-reveal>${esc(C.about.approach.heading)}</h2><p class="lede" data-reveal style="--i:1">${esc(C.about.approach.lede)}</p></div>
