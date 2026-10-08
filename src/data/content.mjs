@@ -2313,7 +2313,6 @@ export const oldPages = {
   "network-thermal-monitoring": "solutions/network-thermal-monitoring.html",
   "structure-performance-and-monitoring-1": "solutions/structure-performance.html",
   "asset-monitoring-and-servicing": "solutions/structure-performance.html",
-  "new-page-4-1": "solutions/asset-network-assessment.html",
   // Products
   eds: "products/eds.html",
   ilab: "products/eds.html",
