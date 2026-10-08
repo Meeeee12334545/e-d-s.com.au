@@ -38,7 +38,7 @@ The build stops with an error if a page repeats an element id, since product lin
 | `src/assets/img/photos/` | Photographs of EDS sites and work, each as `<name>-<width>x<height>.jpg` with a WebP twin at two widths, written by `tools/photos.py` (needs Python with Pillow) from the originals on the EDS Synology drive (`EDS Portal/Website/Website Images`); `sh tools/photos.sh` regenerates them all. Every photo gets the same grade (levels and colour evened out by the script, the brand teal laid over it by `site.css`) and the same 3:2 frame, so photos from different cameras and days read as one set. A page names one as `{ photo: "<name>", alt, caption }`: `figure` or a pair as `figures` on a service or solution page, `homePhoto` and `field.photos` in `about`, and `figure` on the LIDoTT Alarm page. `asideFigure` puts a product shot in a page's sidebar instead. The script drops the camera's metadata, can crop, and can patch out a date stamp. `pos` on a photo says which part to keep when the frame crops it; `plain: true` shows a drawing whole and ungraded. |
 | `src/assets/docs/` | Datasheets, brochures, manuals, white papers and software downloads. Reference one with `localDoc("file-name.pdf")` in `content.mjs`. |
 | `content/privacy.txt` | Privacy policy text, carried over from the old site. |
-| `src/js/track.js` | Counts visits for the analytics dashboard. No cookies. |
+| `src/js/track.js` | Counts visits and records each click, search and form choice for the analytics dashboard. No cookies. |
 | `server/index.mjs` | The site server: serves `dist/`, takes visits at `/api/collect`, hosts `/admin`. |
 | `server/store.mjs` | The SQLite database (`data/analytics.db`) and the dashboard's queries. |
 | `server/collect.mjs` | Checks each visit, filters bots, works out source, device and location. |
@@ -50,8 +50,15 @@ Sign in at `/admin` to see visitors, visits, page views, bounce rate and time on
 page for any period against the period before, plus top pages, entry pages,
 sources and campaigns (`utm_*` tags), locations (Australian states from the time
 zone), devices, document downloads, email and phone clicks, form submissions,
-links to other sites, pages not found, and each recent visit page by page.
-Everything exports to CSV.
+links to other sites and pages not found. "What people clicked" lists every link,
+button, menu, tab and question clicked, named by the words on it, what it belonged
+to (a product, say) and where on the page it was (the header, the footer, a section
+by its heading), plus searches and the options picked in forms. "Visitor activity"
+shows each visit in the period with every step in order, labelled in plain words
+("Clicked the button “Add to quote” for Hach FL900"). Nothing typed into a form is
+recorded. Everything exports to CSV, with an `action` column in plain words. A
+button or link can name itself for the dashboard with `data-track-label`, and a
+card can name what its buttons belong to with `data-track-item`.
 
 - **Turn it on** by setting `ADMIN_PASSWORD`. Locally, copy `.env.example` to `.env`
   (git ignores it). Without a password `/admin` explains how to set one.

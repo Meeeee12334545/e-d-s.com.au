@@ -49,7 +49,8 @@ const json = (res, data) => send(res, 200, "application/json; charset=utf-8", JS
 const redirect = (res, to, extra = {}) => { res.writeHead(303, { ...HEADERS, Location: to, ...extra }); res.end(); };
 
 /* ---- icons: Lucide, read from the same package the site build uses ---- */
-const ICONS = ["log-out", "download", "monitor", "smartphone", "tablet", "file-down", "mail", "phone", "external-link", "send", "triangle-alert", "file-text", "info", "users", "chevron-right"];
+const ICONS = ["log-out", "download", "monitor", "smartphone", "tablet", "file-down", "mail", "phone", "external-link", "send", "triangle-alert", "file-text", "info", "users", "chevron-right",
+  "mouse-pointer-click", "link", "search", "list-checks", "panels-top-left", "chevrons-up-down", "hash", "clock", "route"];
 const sprite = `<svg xmlns="http://www.w3.org/2000/svg" class="sprite" aria-hidden="true">${ICONS.map((name) => {
   const file = path.join(HERE, "../node_modules/lucide-static/icons", `${name}.svg`);
   const inner = existsSync(file) ? readFileSync(file, "utf8").replace(/^[\s\S]*?<svg[\s\S]*?>/, "").replace(/<\/svg>\s*$/, "").replace(/\s*\n\s*/g, "") : "";
@@ -138,8 +139,24 @@ const dashboard = () => page("Site analytics | EDS admin", `
   <div class="grid" id="cards"></div>
 
   <section class="card visits-card" aria-labelledby="visits-title">
-    <div class="card-head"><div><h2 id="visits-title">Latest visits</h2><p class="sub">Each visit page by page, newest first. Updates every 30 seconds.</p></div></div>
+    <div class="card-head">
+      <div><h2 id="visits-title">Visitor activity</h2><p class="sub">Every visit in the period, newest first, with each page they opened and everything they clicked, searched for or chose. Open a visit to see it step by step.</p></div>
+      <div class="seg" id="visit-filter" role="group" aria-label="Which visits to show">
+        <button type="button" data-show="all" aria-pressed="true">All visits</button>
+        <button type="button" data-show="clicked" aria-pressed="false">Clicked something</button>
+        <button type="button" data-show="contacted" aria-pressed="false">Got in touch</button>
+      </div>
+    </div>
+    <div class="key-row" aria-label="What the action labels mean">
+      <span class="ev-tag t-page">${icon("file-text")}Page view</span>
+      <span class="ev-tag t-click">${icon("mouse-pointer-click")}Click</span>
+      <span class="ev-tag t-search">${icon("search")}Search or choice</span>
+      <span class="ev-tag t-goal">${icon("send")}Enquiry or download</span>
+      <span class="ev-tag t-leave">${icon("external-link")}Left the site</span>
+    </div>
+    <p class="visit-count" id="visit-count" aria-live="polite"></p>
     <ol class="visits" id="visits"></ol>
+    <button class="more" type="button" id="visits-more" hidden>Show more visits</button>
   </section>
 
   <section class="about">
@@ -148,7 +165,8 @@ const dashboard = () => page("Site analytics | EDS admin", `
       <li><b>No cookies.</b> Visitors are counted with a hash of their IP address and browser that is reset every day. IP addresses are never stored, so a person who comes back tomorrow counts as a new visitor.</li>
       <li><b>Organisations</b> are whoever holds the visitor's network in the public internet registries, so they name a business, council or university only when it has its own network. People at home, on a phone or at a business that just buys internet show under their internet provider; cloud networks are usually VPNs, iCloud Private Relay or bots that got through.</li>
       <li><b>A visit</b> ends after 30 minutes with no activity. <b>Bounce rate</b> is the share of visits that saw one page. <b>Time on page</b> counts only the time the page was on screen.</li>
-      <li><b>Form submissions</b> are counted when someone presses send. The site's forms open the visitor's own email program, so this is an intent to email, not a message received.</li>
+      <li><b>Clicks</b> are every link, button, menu, tab and question a visitor clicked, named by the words on it, with what it belonged to (a product, say) and where on the page it was: the header, the footer, or a section by its heading. <b>Searches</b> are the words typed into site search or the instrument finder. <b>Choices</b> are options picked in a form, such as the enquiry topic; nothing typed into a form is recorded.</li>
+      <li><b>Form submissions</b> are counted when someone presses send on a complete form.</li>
       <li><b>Locations</b> in Australia come from the visitor's time zone, so Sydney and Canberra share one row. Cities are approximate, from <a href="https://db-ip.com" target="_blank" rel="noopener">IP Geolocation by DB-IP</a>, and on mobile networks can be hundreds of kilometres out. Bots and crawlers are left out. Times are in ${TZ.replace("_", " ")} time.</li>
       <li><label class="check"><input type="checkbox" id="ignore"> Don't count my own visits from this browser</label></li>
     </ul>
@@ -166,10 +184,21 @@ function readForm(req) {
   });
 }
 
+// Each row's action in plain words, for the spreadsheet's "action" column.
+const ACTIONS = {
+  link: "Clicked a link", button: "Clicked a button", tab: "Picked a tab", download: "Downloaded a document",
+  outbound: "Went to another site", search: "Searched", choice: "Chose an option", form: "Sent a form",
+};
+const describe = (r) =>
+  r.type === "pageview" ? (r.status === 404 ? "Page not found" : "Viewed a page")
+  : r.type === "toggle" ? (r.target === "close" ? "Closed" : "Opened")
+  : r.type === "contact" ? (/^tel:/i.test(r.target || "") ? "Clicked the phone number" : "Clicked an email address")
+  : ACTIONS[r.type] || r.type;
+
 // CSV for spreadsheets. Cells that start like a formula are prefixed with an
 // apostrophe, because page titles and links come from visitors' browsers.
 function csv(rows) {
-  const cols = ["time", "type", "path", "title", "status", "source", "medium", "campaign", "referrer", "device", "browser", "os", "region", "country", "city", "organisation", "network_type", "target", "label", "seconds_on_page", "scroll_percent", "visit"];
+  const cols = ["time", "type", "path", "title", "status", "source", "medium", "campaign", "referrer", "device", "browser", "os", "region", "country", "city", "organisation", "network_type", "action", "target", "label", "item", "area", "seconds_on_page", "scroll_percent", "visit"];
   const cell = (v) => {
     let s = v == null ? "" : String(v);
     if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
@@ -177,7 +206,7 @@ function csv(rows) {
   };
   const time = new Intl.DateTimeFormat("sv-SE", { timeZone: TZ, dateStyle: "short", timeStyle: "medium" });
   const lines = rows.map((r) => [time.format(r.ts), r.type, r.path, r.title, r.status, r.source, r.medium, r.campaign, r.referrer, r.device, r.browser, r.os,
-    r.region, r.country, r.city, r.org, r.org_kind, r.target, r.label, r.engaged == null ? "" : Math.round(r.engaged / 1000), r.scroll, r.session].map(cell).join(","));
+    r.region, r.country, r.city, r.org, r.org_kind, describe(r), r.target, r.label, r.item, r.area, r.engaged == null ? "" : Math.round(r.engaged / 1000), r.scroll, r.session].map(cell).join(","));
   return `﻿${cols.join(",")}\n${lines.join("\n")}\n`;
 }
 
@@ -206,6 +235,7 @@ export async function admin(req, res, url, store) {
   const q = Object.fromEntries(url.searchParams);
   if (route === "/admin/api/stats") return json(res, store.stats(q));
   if (route === "/admin/api/live") return json(res, store.live());
+  if (route === "/admin/api/visits") return json(res, store.visits(q));
   if (route === "/admin/api/export.csv") {
     const { from, to } = resolveRange(q);
     return send(res, 200, "text/csv; charset=utf-8", csv(store.exportRows(q)), { "Content-Disposition": `attachment; filename="eds-analytics-${from}-to-${to}.csv"` });
