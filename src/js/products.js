@@ -103,8 +103,9 @@
   /* ================= instrument finder ================= */
   const finder = document.querySelector(".finder");
   if (!finder) return;
-  const input = finder.querySelector(".finder-search input");
-  const chips = [...finder.querySelectorAll(".fchip")];
+  // The search box and type chips sit in the page hero, above the results.
+  const input = document.querySelector(".finder-search input");
+  const chips = [...document.querySelectorAll(".finder-chips .fchip")];
   const count = finder.querySelector(".finder-count");
   const empty = finder.querySelector(".finder-empty");
   let type = "";

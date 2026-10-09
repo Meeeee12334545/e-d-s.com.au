@@ -188,6 +188,43 @@
     window.addEventListener("resize", fit, { passive: true });
   }
 
+  /* ---- section bar: marks the section in view ---- */
+  // On service and solution pages. The section whose top has passed under the
+  // bar is the current one, and its link scrolls into view along the bar.
+  const secbar = $(".secbar");
+  if (secbar) {
+    const list = $("ol", secbar);
+    const links = $$("a", list);
+    const targets = links.map((a) => document.getElementById(a.hash.slice(1))).filter(Boolean);
+    let current, ticking = false;
+    const update = () => {
+      ticking = false;
+      const bar = secbar.getBoundingClientRect();
+      secbar.classList.toggle("stuck", bar.top <= (header?.offsetHeight || 0) + 1);
+      // A section counts once its top passes a line a little below the bar;
+      // of two side by side (same top), the first one wins.
+      const line = bar.bottom + Math.min(innerHeight * 0.3, 240);
+      let id = "", best = -Infinity;
+      for (const t of targets) {
+        const top = Math.round(t.getBoundingClientRect().top);
+        if (top <= line && top > best) { id = t.id; best = top; }
+      }
+      if (id === current) return;
+      current = id;
+      for (const a of links) {
+        const on = a.hash === `#${id}`;
+        a.classList.toggle("on", on);
+        if (on) {
+          a.setAttribute("aria-current", "location");
+          list.scrollTo({ left: a.offsetLeft - (list.clientWidth - a.offsetWidth) / 2, behavior: calm ? "auto" : "smooth" });
+        } else a.removeAttribute("aria-current");
+      }
+    };
+    window.addEventListener("scroll", () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
+    window.addEventListener("resize", update, { passive: true });
+    update();
+  }
+
   /* ---- home hero: an illustrative flow meter reporting in ---- */
   // The last day of readings at half-hour steps, against the dry weather
   // pattern, moved on by one reading every few seconds. Not live data.
@@ -420,7 +457,7 @@
       topics[0].focus();
     });
 
-    // Arriving from a "Request pricing" or "Enquire now" button: choose the
+    // Arriving from a "Request pricing" or "Start an enquiry" button: choose the
     // topic it was about and name the product, if there was one.
     const params = new URLSearchParams(location.search);
     const product = params.get("product");
