@@ -94,8 +94,15 @@ setInterval(() => hits.clear(), 60e3).unref();
 const limited = (ip) => { const n = (hits.get(ip) || 0) + 1; hits.set(ip, n); return n > 120; };
 
 const trustedProxies = new Set((process.env.TRUSTED_PROXIES || "").split(",").map((ip) => ip.trim()).filter(Boolean));
+// A header that the host's edge always overwrites with the caller's address (Cloudflare's
+// cf-connecting-ip on Render). Only safe when nothing can reach the server around that edge.
+const ipHeader = (process.env.CLIENT_IP_HEADER || "").trim().toLowerCase();
 export const clientIp = (req) => {
   const remote = req.socket.remoteAddress || "";
+  if (ipHeader) {
+    const given = String(req.headers[ipHeader] || "").trim();
+    if (isIP(given)) return given;
+  }
   if (trustedProxies.has(remote)) {
     const forwarded = String(req.headers["x-forwarded-for"] || "").split(",").map((ip) => ip.trim());
     for (let i = forwarded.length - 1; i >= 0; i--) if (isIP(forwarded[i]) && !trustedProxies.has(forwarded[i])) return forwarded[i];
