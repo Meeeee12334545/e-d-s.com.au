@@ -33,7 +33,7 @@
     $("brandLink").textContent = d.brand;
     $("brandLink").href = d.brandHref;
     const label = d.name === d.brand ? d.name : `${d.name} (${d.brand})`;
-    $("enquire").href = `${root}contact.html?${new URLSearchParams({ topic: "Product pricing", product: label })}`;
+    $("enquire").href = `${root}enquire.html?${new URLSearchParams({ topic: "Product pricing", product: label })}`;
     $("quote").dataset.quote = JSON.stringify(d.quote);
     window.EDS?.quote?.refresh();
     $("page").hidden = !d.page;

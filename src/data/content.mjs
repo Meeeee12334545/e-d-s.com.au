@@ -2291,7 +2291,7 @@ export const oldPages = {
   "what-we-do": "about.html",
   "contact-2": "contact.html",
   "contact-eds": "contact.html",
-  enquire: "contact.html",
+  // The old /enquire is served by the enquiry page itself, enquire.html.
   "eds-privacy-statement": "privacy.html",
   downloads: "resources.html",
   "download-and-support": "resources.html",

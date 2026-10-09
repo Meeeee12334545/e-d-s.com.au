@@ -1,5 +1,6 @@
 // The quote list: "Add to quote" on any product collects it here, the header
-// shows how many are waiting, and the enquiry form on contact.html lists them
+// shows how many are waiting, and the enquiry form (enquire.html, and on
+// contact.html) lists them
 // with a quantity each and sends them with the enquiry. Kept in this browser
 // only (localStorage), so nothing is stored or sent until the visitor sends
 // the enquiry themselves.
@@ -63,14 +64,14 @@
       toastEl = document.createElement("div");
       toastEl.className = "quote-toast";
       toastEl.setAttribute("role", "status");
-      toastEl.innerHTML = `<span></span><a href="${root}contact.html#enquiry">View list</a>`;
+      toastEl.innerHTML = `<span></span><a href="${root}enquire.html">View list</a>`;
     }
     // A modal dialog (the quick view) sits above everything in the body, so
     // the toast goes inside it while one is open.
     (document.querySelector("dialog[open]") || document.body).appendChild(toastEl);
     const n = load().length;
     $("span", toastEl).textContent = `${name} added. ${n} ${n === 1 ? "product" : "products"} in your quote list.`;
-    // On the contact page the list is already in view, so no link is needed.
+    // Where the form is on the page the list is already there, so no link.
     $("a", toastEl).hidden = !!$("[data-quote-box]");
     toastEl.classList.add("show");
     clearTimeout(toastTimer);
@@ -140,10 +141,10 @@
       if (li && step) setQty(li.dataset.id, Number($("input", li).value) + Number(step.dataset.step));
       if (li && e.target.closest(".quote-remove")) {
         // Keep focus in the list: on the next row's remove button, or on the
-        // name field once the list is empty.
+        // details box once the list is empty.
         const next = (li.nextElementSibling || li.previousElementSibling)?.dataset.id;
         remove(li.dataset.id);
-        (next ? $(`li[data-id="${CSS.escape(next)}"] .quote-remove`, box) : $("input[name=Name]"))?.focus();
+        (next ? $(`li[data-id="${CSS.escape(next)}"] .quote-remove`, box) : $("textarea[name=Message]"))?.focus();
       }
     });
     box.addEventListener("change", (e) => {
@@ -152,16 +153,12 @@
     });
     $("[data-quote-clear]", box).addEventListener("click", () => {
       save([]);
-      $("input[name=Name]")?.focus();
+      $("textarea[name=Message]")?.focus();
     });
 
     // Arriving with products in the list and no topic chosen: ask for pricing.
-    const select = $("select[name=subject]");
     const params = new URLSearchParams(location.search);
-    if (select && load().length && !params.get("topic")) {
-      const opt = [...select.options].find((o) => o.text === "Product pricing");
-      if (opt) select.value = opt.value;
-    }
+    if (load().length && !params.get("topic")) window.EDS?.enquiry?.setTopic("Product pricing");
   }
 
   // Another tab added or removed something.

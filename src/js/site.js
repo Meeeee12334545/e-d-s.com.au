@@ -253,6 +253,8 @@
   // site.formKey), which emails it to site.email. Nothing opens the
   // visitor's email program. If sending fails, the form stays as it was
   // with a message to try again or call.
+  // The topic tiles only pick the subject, which goes as "Interested in".
+  const UNSENT = new Set(["subject", "Topic"]);
   async function send(form) {
     const data = new FormData(form);
     const product = data.get("Product");
@@ -263,7 +265,7 @@
     body.set("from_name", "EDS website");
     if (data.get("Email")) body.set("replyto", data.get("Email"));
     if (data.get("subject")) body.set("Interested in", data.get("subject"));
-    data.forEach((v, k) => { if (k !== "subject" && String(v).trim()) body.append(k, v); });
+    data.forEach((v, k) => { if (!UNSENT.has(k) && String(v).trim()) body.append(k, v); });
     try {
       const res = await fetch("https://api.web3forms.com/submit", { method: "POST", body, headers: { Accept: "application/json" }, signal: AbortSignal.timeout(20000) });
       return (await res.json()).success === true;
@@ -271,7 +273,7 @@
       return false;
     }
   }
-  const ERRORS = { Name: "Please tell us your name.", Email: "Please enter an email address we can reply to.", Message: "Please add a short message." };
+  const ERRORS = { Name: "Please tell us your name.", Email: "Please enter an email address we can reply to.", Phone: "Please add a number we can call you on.", Message: "Please tell us a little about it." };
   function check(field) {
     const ok = field.checkValidity();
     field.setAttribute("aria-invalid", String(!ok));
@@ -288,15 +290,86 @@
     return false;
   }
 
+  /* ---- the enquiry form, on enquire.html and contact.html ----
+     Three numbered parts (topic, project, contact) that tick themselves off
+     as they are filled in, topic tiles that set the subject and the hint in
+     the details box, and a confirmation that sums up what was sent. */
+  const enquiry = $("form.form[data-key]");
+  const topics = enquiry ? $$("input[name=Topic]", enquiry) : [];
+  const detail = enquiry && $("[data-topic-detail]", enquiry);
+  const pick = detail && $("select", detail);
+  const message = enquiry && enquiry.elements.Message;
+  const phone = enquiry && enquiry.elements.Phone;
+  const wantsCall = enquiry && $("input[data-needs-phone]", enquiry);
+
+  function syncEnquiry() {
+    const tile = topics.find((t) => t.checked);
+    detail.hidden = tile?.dataset.topic !== "monitoring";
+    enquiry.elements.subject.value = tile ? tile.dataset.subject || pick.value || "Monitoring services" : "General enquiry";
+    message.placeholder = tile?.dataset.prompt || message.dataset.prompt;
+    // Asking for a call makes the phone number the one thing we need.
+    phone.required = wantsCall.checked;
+    phone.closest(".field").classList.toggle("needed", wantsCall.checked);
+    if (!phone.required && phone.hasAttribute("aria-invalid")) check(phone);
+    const done = {
+      topic: !!tile,
+      project: message.value.trim() !== "",
+      you: ["Name", "Email", "Phone"].every((k) => enquiry.elements[k].checkValidity()) && enquiry.elements.Name.value.trim() !== "",
+    };
+    for (const [part, ok] of Object.entries(done)) {
+      $(`[data-progress=${part}]`, enquiry).classList.toggle("done", ok);
+      $(`[data-part=${part}]`, enquiry).classList.toggle("done", ok);
+    }
+    const n = Object.values(done).filter(Boolean).length;
+    enquiry.style.setProperty("--done", n / 3);
+    enquiry.classList.toggle("ready", n === 3);
+  }
+
+  // Picks the tile (or the service under "A monitoring service") whose
+  // subject matches, as the ?topic= links and the quote list ask for.
+  function setTopic(text) {
+    const t = String(text || "").trim().toLowerCase();
+    if (!enquiry || !t) return false;
+    const tile = topics.find((i) => i.dataset.subject.toLowerCase() === t);
+    const opt = [...pick.options].find((o) => o.value && o.text.toLowerCase() === t);
+    if (tile) tile.checked = true;
+    else if (opt) {
+      topics.find((i) => i.dataset.topic === "monitoring").checked = true;
+      pick.value = opt.value;
+    } else return false;
+    syncEnquiry();
+    return true;
+  }
+
+  function summarise() {
+    const el = enquiry.elements;
+    const listed = el.Products.disabled ? 0 : el.Products.value.trim().split("\n").filter(Boolean).length;
+    const call = el["Reply by"].value === "Phone call";
+    return {
+      name: el.Name.value.trim().split(/\s+/)[0],
+      topic: el.subject.value,
+      products: [el.Product.value, listed ? `${listed} ${listed === 1 ? "product" : "products"} from your quote list` : ""].filter(Boolean).join(", "),
+      way: el["Way of working"].value,
+      reply: call ? `By phone, on ${el.Phone.value.trim()}` : `By email, to ${el.Email.value.trim()}`,
+    };
+  }
+  function showSummary(s) {
+    $("[data-done-title]", enquiry).textContent = s.name ? `Thanks, ${s.name}. Your enquiry is with our team.` : "Thanks. Your enquiry is with our team.";
+    $$("[data-sum]", enquiry).forEach((dd) => {
+      dd.textContent = s[dd.dataset.sum] || "";
+      dd.parentElement.hidden = !dd.textContent;
+    });
+  }
+
   $$("form[data-key]").forEach((form) => {
-    const fields = $$("[required]", form);
+    const isEnquiry = form === enquiry;
     // Once a field has been flagged, re-check it as the visitor fixes it.
-    fields.forEach((f) => f.addEventListener("input", () => f.hasAttribute("aria-invalid") && check(f)));
+    form.addEventListener("input", (e) => e.target.hasAttribute?.("aria-invalid") && check(e.target));
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       if (form.hasAttribute("aria-busy")) return;
-      if (form.classList.contains("form")) {
-        const bad = fields.filter((f) => !check(f));
+      if (isEnquiry) {
+        const bad = $$("[required]", form).filter((f) => !check(f));
         if (bad.length) {
           bad[0].focus({ preventScroll: true });
           bad[0].scrollIntoView({ block: "center" });
@@ -307,7 +380,8 @@
       $$("[data-done]", form).forEach((d) => (d.hidden = true));
       form.setAttribute("aria-busy", "true");
       btn.disabled = true;
-      if (label) label.textContent = "Sending…";
+      if (label) label.textContent = "Submitting…";
+      const summary = isEnquiry && summarise();
       const sent = await send(form);
       form.removeAttribute("aria-busy");
       btn.disabled = false;
@@ -317,37 +391,40 @@
         // list, message), keeping name and contact details for another.
         const keep = ["Name", "Organisation", "Email", "Phone"].map((k) => [k, form.elements[k]?.value]);
         form.reset();
-        if (form.classList.contains("form")) {
+        if (isEnquiry) {
           keep.forEach(([k, v]) => form.elements[k] && (form.elements[k].value = v));
           const ctx = $(".form-context", form);
           if (ctx) { ctx.hidden = true; $("input", ctx).value = ""; } // hidden inputs keep their value through reset()
           window.EDS?.quote?.clear();
+          showSummary(summary);
+          syncEnquiry();
         }
       }
       const done = $(`[data-done=${sent ? "sent" : "error"}]`, form);
       done.hidden = false;
       const fieldset = $(".form-fields", form);
-      if (fieldset && sent) { fieldset.hidden = true; done.focus(); }
+      if (fieldset && sent) {
+        fieldset.hidden = true;
+        done.focus({ preventScroll: true });
+        form.scrollIntoView({ block: "start" });
+      }
     });
   });
 
-  const enquiry = $("form.form[data-key]");
   if (enquiry) {
+    enquiry.addEventListener("input", syncEnquiry);
+    enquiry.addEventListener("change", syncEnquiry);
     $("[data-form-edit]", enquiry).addEventListener("click", () => {
       $$("[data-done]", enquiry).forEach((d) => (d.hidden = true));
       $(".form-fields", enquiry).hidden = false;
-      $("textarea[name=Message]", enquiry).focus();
+      topics[0].focus();
     });
 
     // Arriving from a "Request pricing" or "Enquire now" button: choose the
     // topic it was about and name the product, if there was one.
     const params = new URLSearchParams(location.search);
-    const topic = params.get("topic"), product = params.get("product");
-    const select = $("select[name=subject]", enquiry);
-    if (topic) {
-      const opt = [...select.options].find((o) => o.text.toLowerCase() === topic.toLowerCase());
-      if (opt) select.value = opt.value;
-    }
+    const product = params.get("product");
+    const topic = setTopic(params.get("topic"));
     // From a "Buy, hire or Data as a Service" card: tick that way of working.
     const mode = params.get("mode");
     const modeInput = mode && $$("input[data-mode]", enquiry).find((i) => i.dataset.mode === mode);
@@ -360,18 +437,38 @@
       $("[data-context-clear]", ctx).addEventListener("click", () => {
         $("input", ctx).value = "";
         ctx.hidden = true;
-        $("input[name=Name]", enquiry).focus();
+        message.focus();
       });
     }
+    syncEnquiry();
     if (topic || product || modeInput) {
-      // Bring the form into view and start them typing.
+      // Bring the form into view (on the contact page it starts below the
+      // contact details) and start them on the details.
       enquiry.classList.add("in");
       requestAnimationFrame(() => {
-        enquiry.scrollIntoView({ block: "center" });
-        $("input[name=Name]", enquiry).focus({ preventScroll: true });
+        if (enquiry.getBoundingClientRect().top > innerHeight / 2) enquiry.scrollIntoView({ block: "start" });
+        message.focus({ preventScroll: true });
       });
     }
+
+    // Links on this page that start an enquiry (the Sales and Service cards)
+    // choose their topic in place rather than loading the page again.
+    document.addEventListener("click", (e) => {
+      const a = e.target.closest("a[href*='topic=']");
+      if (!a || a.pathname !== location.pathname || e.metaKey || e.ctrlKey || e.shiftKey || e.button) return;
+      if (!setTopic(new URLSearchParams(a.search).get("topic"))) return;
+      e.preventDefault();
+      $$("[data-done]", enquiry).forEach((d) => (d.hidden = true));
+      $(".form-fields", enquiry).hidden = false;
+      const tile = topics.find((t) => t.checked).closest(".topic-tile");
+      tile.classList.remove("flash");
+      void tile.offsetWidth; // restart the animation
+      tile.classList.add("flash");
+      enquiry.scrollIntoView({ behavior: calm ? "auto" : "smooth", block: "start" });
+      message.focus({ preventScroll: true });
+    });
   }
+  window.EDS.enquiry = { setTopic };
 
   /* ---- head office: open now, or when it next opens ---- */
   // The hours come from site.openingHours in content.mjs, via the footer.
