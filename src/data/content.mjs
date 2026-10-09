@@ -1955,9 +1955,13 @@ export const flowsense = {
     ["How do we get started?", "Send us the flow history you already hold and EDS will set up a 90 day trial of the whole platform on it. Or ask for a walkthrough using your own sites."],
   ],
   docs: [
+    { label: "Platform overview", note: "The short introduction: what FlowSense does, from the instrument in the pipe to the board paper.", href: localDoc("eds-flowsense-platform-overview.pdf") },
     { label: "Platform brochure", note: "The whole platform in sixteen pages: the screens, the standards it follows and the pricing.", href: localDoc("eds-flowsense-brochure.pdf") },
-    { label: "Features and benefits", note: "What FlowSense does to monitor, analyse and plan a sewer network.", href: localDoc("eds-flowsense-features-and-benefits.pdf") },
-    { label: "Sending data to your SCADA", note: "For engineering, control systems and IT teams.", href: localDoc("eds-flowsense-data-to-scada.pdf") },
+    { label: "Features and benefits", note: "What FlowSense does to monitor, analyse and engineer a sewer network.", href: localDoc("eds-flowsense-features-and-benefits.pdf") },
+    { label: "The value case", note: "Monitoring, modelling, alerting and the infiltration study in one subscription, priced against what the market publishes.", href: localDoc("eds-flowsense-value-case.pdf") },
+    { label: "Competitive brochure", note: "Why depth and velocity together matter, and how FlowSense compares with ADS, StormHarvester and Kallipr.", href: localDoc("eds-flowsense-competitive-brochure.pdf") },
+    { label: "Connecting your SCADA", note: "The five ways readings get in, with ports and setup. For engineering, control systems and IT teams.", href: localDoc("eds-flowsense-connecting-your-scada.pdf") },
+    { label: "Sending data to your SCADA", note: "The four standing feeds back out to your SCADA, historian or reporting tools.", href: localDoc("eds-flowsense-data-to-scada.pdf") },
     { label: "Industry paper: One Platform, Many Sources", note: "The case for bringing every logger brand and your SCADA data onto one platform, with the savings costed.", href: localDoc("eds-industry-paper-one-platform-many-sources.pdf") },
   ],
 };
@@ -2174,8 +2178,12 @@ export const downloads = [
     group: "EDS FlowSense",
     icon: "waves",
     items: [
+      ["FlowSense platform overview", localDoc("eds-flowsense-platform-overview.pdf")],
       ["FlowSense platform brochure", localDoc("eds-flowsense-brochure.pdf")],
       ["FlowSense features and benefits", localDoc("eds-flowsense-features-and-benefits.pdf")],
+      ["FlowSense value case", localDoc("eds-flowsense-value-case.pdf")],
+      ["FlowSense competitive brochure", localDoc("eds-flowsense-competitive-brochure.pdf")],
+      ["Connecting your SCADA to FlowSense", localDoc("eds-flowsense-connecting-your-scada.pdf")],
       ["Sending FlowSense data to your SCADA", localDoc("eds-flowsense-data-to-scada.pdf")],
       ["One Platform, Many Sources: FlowSense industry paper", localDoc("eds-industry-paper-one-platform-many-sources.pdf")],
     ],
