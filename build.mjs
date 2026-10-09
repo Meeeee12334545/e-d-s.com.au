@@ -1453,11 +1453,12 @@ const enquiryForm = (r, reveal) => `
           ${[["topic", "Topic"], ["project", "Project"], ["you", "Contact"]].map(([k, t], i) => `<li data-progress="${k}"><span><b>${i + 1}</b>${icon("check", false)}</span>${t}</li>`).join("")}
         </ol>
       </div>
-      <fieldset class="form-part" data-part="topic">
+      <fieldset class="form-part" data-part="topic" aria-describedby="topic-error">
         <legend><span class="part-no"><b>1</b>${icon("check", false)}</span>What can we help with?</legend>
         <div class="topic-tiles">
           ${enquiryTopics.map((t) => `<label class="topic-tile holder"><input type="radio" name="Topic" value="${esc(t.title)}" data-topic="${t.id}" data-subject="${esc(t.subject || "")}" data-prompt="${esc(t.prompt)}"><span class="card-icon">${icon(t.icon)}</span><b>${esc(t.title)}</b><small>${esc(t.hint)}</small></label>`).join("")}
         </div>
+        <small class="field-error" id="topic-error" data-topic-error hidden role="alert">Please choose a topic.</small>
         <label class="field topic-detail" data-topic-detail hidden>Which service or solution?<select>
           <option value="">Not sure yet, or more than one</option>
           ${C.serviceGroups.map((g) => `<optgroup label="${esc(g.title)}">${C.services.filter((s) => s.group === g.id).map((s) => `<option>${esc(s.title)}</option>`).join("")}</optgroup>`).join("")}

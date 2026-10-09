@@ -844,7 +844,7 @@ input[type="range"]:active::-moz-range-thumb { cursor: grabbing; box-shadow: 0 0
 .contact-cards { display: grid; gap: 12px; align-content: start; }
 /* the ways to reach us stay beside the form as it scrolls past */
 @media (min-width: 981px) {
-  .contact-cards { position: sticky; top: calc(var(--header-h) + 20px); }
+  .contact-cards.fits { position: sticky; top: calc(var(--header-h) + 20px); }
 }
 /* enquire.html: the form, with a call card and head office beside it */
 .enquire-section { padding-top: clamp(32px, 5vw, 64px); }

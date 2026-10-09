@@ -180,7 +180,7 @@
   /* ---- sidebars follow the page only when they fit on screen ---- */
   // A sticky sidebar taller than the window hides its last cards until the
   // end of the page, so those scroll with the page instead.
-  const asides = $$(".aside");
+  const asides = $$(".aside, .contact-cards");
   if (asides.length) {
     const fit = () => asides.forEach((a) => a.classList.toggle("fits", a.offsetHeight < window.innerHeight - 140));
     const ro = new ResizeObserver(fit);
@@ -296,6 +296,7 @@
      the details box, and a confirmation that sums up what was sent. */
   const enquiry = $("form.form[data-key]");
   const topics = enquiry ? $$("input[name=Topic]", enquiry) : [];
+  const topicError = enquiry && $("[data-topic-error]", enquiry);
   const detail = enquiry && $("[data-topic-detail]", enquiry);
   const pick = detail && $("select", detail);
   const message = enquiry && enquiry.elements.Message;
@@ -304,6 +305,10 @@
 
   function syncEnquiry() {
     const tile = topics.find((t) => t.checked);
+    if (tile) {
+      topicError.hidden = true;
+      $("[data-part=topic]", enquiry).removeAttribute("aria-invalid");
+    }
     detail.hidden = tile?.dataset.topic !== "monitoring";
     enquiry.elements.subject.value = tile ? tile.dataset.subject || pick.value || "Monitoring services" : "General enquiry";
     message.placeholder = tile?.dataset.prompt || message.dataset.prompt;
@@ -369,6 +374,14 @@
       e.preventDefault();
       if (form.hasAttribute("aria-busy")) return;
       if (isEnquiry) {
+        if (!topics.some((t) => t.checked)) {
+          topicError.hidden = false;
+          const topicPart = $("[data-part=topic]", enquiry);
+          topicPart.setAttribute("aria-invalid", "true");
+          topics[0].focus({ preventScroll: true });
+          topicPart.scrollIntoView({ block: "center" });
+          return;
+        }
         const bad = $$("[required]", form).filter((f) => !check(f));
         if (bad.length) {
           bad[0].focus({ preventScroll: true });
@@ -455,7 +468,7 @@
     // choose their topic in place rather than loading the page again.
     document.addEventListener("click", (e) => {
       const a = e.target.closest("a[href*='topic=']");
-      if (!a || a.pathname !== location.pathname || e.metaKey || e.ctrlKey || e.shiftKey || e.button) return;
+      if (!a || a.pathname.replace(/\.html$/, "") !== location.pathname.replace(/\.html$/, "") || e.metaKey || e.ctrlKey || e.shiftKey || e.button) return;
       if (!setTopic(new URLSearchParams(a.search).get("topic"))) return;
       e.preventDefault();
       $$("[data-done]", enquiry).forEach((d) => (d.hidden = true));
