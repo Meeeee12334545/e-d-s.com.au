@@ -2132,7 +2132,7 @@ export const papers = [
     kind: "Industry paper",
     title: "One Platform, Many Sources",
     date: "October 2026",
-    text: "The benefits and savings of bringing flow data from several logger manufacturers and the SCADA historian onto one manufacturer agnostic platform. It costs what fragmentation hides, from manual data handling to faults found too late, with FlowSense as the worked example.",
+    text: "The benefits and savings of bringing flow data from several logger manufacturers and the SCADA historian onto one manufacturer-agnostic platform. It costs what fragmentation hides, from manual data handling to faults found too late, with FlowSense as the worked example.",
     href: localDoc("eds-industry-paper-one-platform-many-sources.pdf"),
   },
   {
