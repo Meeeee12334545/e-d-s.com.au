@@ -50,7 +50,7 @@ const redirect = (res, to, extra = {}) => { res.writeHead(303, { ...HEADERS, Loc
 
 /* ---- icons: Lucide, read from the same package the site build uses ---- */
 const ICONS = ["log-out", "download", "monitor", "smartphone", "tablet", "file-down", "mail", "phone", "external-link", "send", "triangle-alert", "file-text", "info", "users", "chevron-right",
-  "mouse-pointer-click", "link", "search", "list-checks", "panels-top-left", "chevrons-up-down", "hash", "clock", "route"];
+  "mouse-pointer-click", "link", "search", "list-checks", "panels-top-left", "chevrons-up-down", "hash", "clock", "route", "building-2"];
 const sprite = `<svg xmlns="http://www.w3.org/2000/svg" class="sprite" aria-hidden="true">${ICONS.map((name) => {
   const file = path.join(HERE, "../node_modules/lucide-static/icons", `${name}.svg`);
   const inner = existsSync(file) ? readFileSync(file, "utf8").replace(/^[\s\S]*?<svg[\s\S]*?>/, "").replace(/<\/svg>\s*$/, "").replace(/\s*\n\s*/g, "") : "";
@@ -136,15 +136,12 @@ const dashboard = () => page("Site analytics | EDS admin", `
     <div class="chart" id="chart"></div>
   </section>
 
-  <div class="grid" id="cards"></div>
-
   <section class="card visits-card" aria-labelledby="visits-title">
     <div class="card-head">
-      <div><h2 id="visits-title">Visitor activity</h2><p class="sub">Every visit in the period, newest first, with each page they opened and everything they clicked, searched for or chose. Open a visit to see it step by step.</p></div>
+      <div><h2 id="visits-title">Who visited and what they did</h2><p class="sub">Every visit in the period: who it was, how interested they were, and what they did. Open a visit for everything known about it, page by page.</p></div>
       <div class="seg" id="visit-filter" role="group" aria-label="Which visits to show">
-        <button type="button" data-show="all" aria-pressed="true">All visits</button>
-        <button type="button" data-show="clicked" aria-pressed="false">Clicked something</button>
-        <button type="button" data-show="contacted" aria-pressed="false">Got in touch</button>
+        ${[["all", "All visits"], ["orgs", "Organisations"], ["contacted", "Got in touch"], ["downloaded", "Downloaded"], ["clicked", "Clicked something"]]
+          .map(([v, l], i) => `<button type="button" data-show="${v}" aria-pressed="${!i}">${l} <span class="n"></span></button>`).join("")}
       </div>
     </div>
     <div class="key-row" aria-label="What the action labels mean">
@@ -159,6 +156,8 @@ const dashboard = () => page("Site analytics | EDS admin", `
     <button class="more" type="button" id="visits-more" hidden>Show more visits</button>
   </section>
 
+  <div class="grid" id="cards"></div>
+
   <section class="about">
     <h2>${icon("info")}How these numbers are counted</h2>
     <ul>
@@ -166,6 +165,7 @@ const dashboard = () => page("Site analytics | EDS admin", `
       <li><b>Organisations</b> are whoever holds the visitor's network in the public internet registries, so they name a business, council or university only when it has its own network. People at home, on a phone or at a business that just buys internet show under their internet provider; cloud networks are usually VPNs, iCloud Private Relay or bots that got through.</li>
       <li><b>A visit</b> ends after 30 minutes with no activity. <b>Bounce rate</b> is the share of visits that saw one page. <b>Time on page</b> counts only the time the page was on screen.</li>
       <li><b>Clicks</b> are every link, button, menu, tab and question a visitor clicked, named by the words on it, with what it belonged to (a product, say) and where on the page it was: the header, the footer, or a section by its heading. <b>Searches</b> are the words typed into site search or the instrument finder. <b>Choices</b> are options picked in a form, such as the enquiry topic; nothing typed into a form is recorded.</li>
+      <li><b>Interest</b> sums up each visit. <b>Got in touch</b>: sent a form, or clicked the phone number or an email address. <b>Strong interest</b>: downloaded something, searched, read 3 or more pages or spent 2 minutes or more reading. <b>Browsing</b>: opened more than one page, clicked something, read for 30 seconds or stayed a minute or more. <b>Quick look</b>: one page, under 30 seconds of reading, no clicks.</li>
       <li><b>Form submissions</b> are counted when someone presses send on a complete form.</li>
       <li><b>Locations</b> in Australia come from the visitor's time zone, so Sydney and Canberra share one row. Cities are approximate, from <a href="https://db-ip.com" target="_blank" rel="noopener">IP Geolocation by DB-IP</a>, and on mobile networks can be hundreds of kilometres out. Bots and crawlers are left out. Times are in ${TZ.replace("_", " ")} time.</li>
       <li><label class="check"><input type="checkbox" id="ignore"> Don't count my own visits from this browser</label></li>
