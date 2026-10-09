@@ -49,6 +49,9 @@ export const offices = [
   { city: "Adelaide", state: "SA", note: "South Australia", lon: 138.6, lat: -34.93 },
 ];
 
+// The home hero's paragraph: 20 words at most, so the hero fits one screen.
+export const homeLede = "Monitoring instruments, field crews and data services for water and wastewater, across Australia since 1991.";
+
 export const stats = [
   { value: 1991, label: "Founded in Queensland. Australian owned ever since.", plain: true },
   { value: 4, label: "Offices across Australia" },
@@ -69,6 +72,172 @@ export const serviceGroups = [
   { id: "data", title: "Real-time data & analysis", heading: "From a reading to a decision.", lede: "Data that arrives as it happens, reaches the systems you already run, and ends in a report you can act on." },
   { id: "field", title: "Field services & support", heading: "The people and equipment behind every program.", lede: "Calibration, hire, facility management and training, from four offices across Australia." },
 ];
+
+// "At a glance" in each service and solution page hero: [icon, fact, line].
+// Every fact repeats something the page itself says, so nothing new is claimed.
+export const glance = {
+  "sewer-flow-monitoring": [
+    ["gauge", "Detectronic MSFM meters", "Area velocity, intrinsically safe, ATEX and IECEx"],
+    ["calendar-range", "Temporary or permanent", "From short I&I studies to long term master planning"],
+    ["cloud-rain", "Rain gauges alongside", "RIMCO 7499 gauges show how rain affects the network"],
+    ["database", "Full access to your data", "On our platform, or by API into your own systems"],
+  ],
+  "inflow-infiltration-studies": [
+    ["calendar-range", "6 to 12 weeks", "A typical short term study, through wet weather"],
+    ["timer", "Every 1 to 5 minutes", "Logging that captures storms and the daily pattern"],
+    ["shield-check", "ATEX and IECEx", "Intrinsically safe equipment for live networks"],
+    ["cloud-rain", "Rain gauges in the catchment", "Each response tied to the rain that caused it"],
+  ],
+  "data-as-a-service": [
+    ["wallet", "No capital outlay", "EDS selects the sites, installs and maintains the equipment"],
+    ["activity", "99.95% data availability", "A managed fleet with continuous oversight"],
+    ["gauge", "Detectronic MSFM AV meters", "Intrinsically safe, with integrated 4G"],
+    ["bell-ring", "Real-time alerts", "Know about a change when it happens"],
+  ],
+  "sewer-model-calibration": [
+    ["timer", "Every 1 to 5 minutes", "Flow and rainfall logged at high resolution"],
+    ["cloud-lightning", "At least three storms", "Before a calibration may be called verified"],
+    ["target", "Published acceptance bands", "Peak flow, event volume and peak timing scored"],
+    ["file-output", "Ready for EPA SWMM", "RTK parameters, with SWMM 5, GeoJSON, Excel and CSV exports"],
+  ],
+  "thermal-infiltration-surveys": [
+    ["thermometer", "Temperature finds it", "The sensors nearest the entry point shift first"],
+    ["waves", "Flow measures it", "An open channel meter records the extra water"],
+    ["hard-hat", "No excavation", "Strings go in through existing manholes"],
+    ["crosshair", "Targeted repairs", "Knowing where water enters narrows the cost of works"],
+  ],
+  "blockage-overflow-alarms": [
+    ["radar", "Radar level to ± 5 mm", "LIDoTT ALARM measures up to 8.4 m"],
+    ["battery-full", "Up to seven years", "Battery life, in a self-cleaning enclosure"],
+    ["bell-ring", "SMS, email and website", "Three alarm states, and a daily heartbeat"],
+    ["shield-check", "Zone 0", "ATEX and IECEx, the most hazardous classification"],
+  ],
+  "rehabilitation-verification": [
+    ["history", "Before and after", "Baseline monitoring before the works begin"],
+    ["cloud-rain", "Rainfall alongside flow", "Wet weather response compared before and after"],
+    ["gauge", "Whether capacity was restored", "Flow profiles show the return to baseline"],
+    ["file-text", "A documented outcome", "A report for asset and planning teams"],
+  ],
+  "water-quality-monitoring": [
+    ["flask-conical", "pH, EC and turbidity", "Sensors made by EDS"],
+    ["layers", "Up to seven parameters", "At once, with the iLab 901 multi-parameter sensor"],
+    ["test-tube", "Nitrate and nitrite", "Aquamonitrix, from one sample, with no pre-treatment"],
+    ["calendar-clock", "600 samples between services", "Over three months at six samples a day"],
+  ],
+  "sampling-programs": [
+    ["shield-check", "Intrinsically safe", "The only true intrinsically safe sampler in Australia"],
+    ["layout-grid", "The widest range", "Of sampler configurations in Australia"],
+    ["truck", "A rental fleet", "For short to long term projects"],
+    ["snowflake", "Refrigerated composite", "MicroLevel portable, fixed and refrigerated units"],
+  ],
+  "trade-waste": [
+    ["waves", "Flow", "Area velocity meters in channels, ultrasonic in full pipes"],
+    ["test-tubes", "Sampling", "Flow proportional where it is required"],
+    ["flask-conical", "Quality", "pH, EC, turbidity, nitrate and nitrite"],
+    ["file-check", "Compliance reporting", "Real-time readings and reports for your records"],
+  ],
+  "closed-channel-flow": [
+    ["magnet", "Magnetic", "No moving parts, for conductive liquids"],
+    ["audio-waveform", "Ultrasonic", "Transit time for clean liquids, Doppler for solids"],
+    ["gauge", "Pressure and contacting", "Differential pressure, capacitance, TDR and paddle wheel"],
+    ["wrench", "Supply to calibration", "Selection, installation, audits and hire"],
+  ],
+  "rainfall-monitoring": [
+    ["cloud-rain", "RIMCO 7499 gauges", "Tipping buckets sited in the catchment"],
+    ["timer", "Every 1 to 5 minutes", "So storm peaks are captured"],
+    ["split", "Inflow from infiltration", "Rapid response separated from slow groundwater"],
+    ["history", "Bureau of Meteorology loggers", "Developed by EDS in the 1990s, still in use"],
+  ],
+  "real-time-monitoring": [
+    ["radio-tower", "4G from the field", "The EDS Hawk needs no cabinet or mains power"],
+    ["refresh-cw", "Every 60 seconds", "Every site on one FlowSense map, worst first"],
+    ["bell-ring", "Email and SMS alarms", "Including a logger that has gone quiet"],
+    ["plug", "Your SCADA", "ClearSCADA, Schneider CITECT, ELPRO and more"],
+  ],
+  "pump-station-monitoring": [
+    ["cpu", "Pump Station Manager", "The EDS flagship since 1991"],
+    ["radar", "Wet well level", "Radar and pressure sensing with the LIDoTT R"],
+    ["plug", "SCADA integration", "ClearSCADA, Schneider CITECT, ELPRO and more"],
+    ["gauge", "Capacity against nameplate", "Pump wear shown before it becomes a failure"],
+  ],
+  "scada-telemetry-integration": [
+    ["plug", "Direct to SCADA", "ClearSCADA, Schneider CITECT, ELPRO and more"],
+    ["radio-tower", "4G telemetry", "Built into flow meters and loggers"],
+    ["code", "API, MQTT and webhooks", "Data pulled or pushed on your schedule"],
+    ["folder-down", "Hosted SFTP", "Nothing exposed at your end"],
+  ],
+  "data-analysis-reporting": [
+    ["shield-check", "ISO compliant validation", "Readings checked continuously"],
+    ["chart-pie", "20% of the network", "Typically carries 80% of the I&I"],
+    ["split", "A split that adds up", "Sanitary flow, infiltration and inflow sum to the metered total"],
+    ["badge-dollar-sign", "Priced at your rates", "Options ranked by NPV and cost per kilolitre"],
+  ],
+  "network-assessment": [
+    ["map", "Where the inflow is worst", "Severity mapped across catchments"],
+    ["activity", "Asset condition", "Read from the depth to velocity relationship"],
+    ["ruler", "WSA 02 checks", "Pipe capacity and self-cleansing velocity"],
+    ["list-ordered", "Prioritised improvements", "With their associated costs"],
+  ],
+  "auditing-calibration": [
+    ["waves", "Open and closed channel", "Flow meters, level sensors and loggers"],
+    ["flask-conical", "Analytical", "pH, EC, turbidity and nutrient analysers"],
+    ["map-pin", "In situ", "Audited and calibrated where it is installed"],
+    ["file-check", "A record of findings", "Adjustments and recommendations documented"],
+  ],
+  "equipment-rental": [
+    ["gauge", "Flow meters and loggers", "Including the 4G EDS Hawk"],
+    ["test-tubes", "Samplers", "Automatic water and wastewater samplers"],
+    ["flask-conical", "Analytical equipment", "For water quality programs"],
+    ["hard-hat", "Installed by you or by us", "Trained EDS crews can install and commission"],
+  ],
+  "facility-management": [
+    ["shield", "Defence since 2003", "Servicing and monitoring, under a contract still in place"],
+    ["route", "Transurban", "Key tunnel infrastructure, under a contract awarded in 2026"],
+    ["clock", "24/7 support", "Continuous oversight and rapid response"],
+    ["building-2", "Your BMS", "New technology integrated into existing infrastructure"],
+  ],
+  "training-support": [
+    ["graduation-cap", "Monitoring and modelling", "Training for your staff"],
+    ["download", "Software and drivers", "FSDATA Desktop, and EDS, Hach and Dynaflox software on request"],
+    ["settings", "EMS-Flow", "A five step wizard for commissioning flow sensors"],
+    ["life-buoy", "Ongoing support", "So implemented solutions keep working"],
+  ],
+  "structure-performance": [
+    ["gauge", "One score, 0 to 1000", "The EDS Asset Score, recorded around the clock"],
+    ["bell-ring", "Alarms on change", "Such as 5% in 60 minutes on any parameter"],
+    ["scan", "Sensors to suit", "Light, moisture, seismic and temperature"],
+    ["users", "The right people told", "On-site managers and key stakeholders"],
+  ],
+  "asset-network-assessment": [
+    ["traffic-cone", "Blockages and sediment", "Found and cleared before the next storm"],
+    ["activity", "Structural defects", "Sags, displaced joints and infiltration points"],
+    ["git-merge", "Cross connections", "Overnight flow in dry weather"],
+    ["map", "Where to spend", "Inflow severity mapped across catchments"],
+  ],
+  "network-thermal-monitoring": [
+    ["cable", "Up to 750 m", "Beadedstream cable with up to 125 sensors"],
+    ["thermometer", "± 0.1 °C", "Between −10 and 30 °C"],
+    ["satellite", "Pole-to-pole coverage", "D605 loggers report by Iridium satellite"],
+    ["plug", "Modbus or JSON", "The MLink connects cables to loggers and SCADA"],
+  ],
+  "wastewater-monitoring": [
+    ["award", "Australia's largest", "Service contractor for water and wastewater studies"],
+    ["waves", "Flow and quality", "The founding focus of EDS"],
+    ["calendar-range", "Programs of every length", "Short term studies to permanent stations"],
+    ["wallet", "No capital outlay", "With monitoring as Data as a Service"],
+  ],
+  "automatic-sampling": [
+    ["shield-check", "Intrinsically safe", "The only true intrinsically safe sampler in Australia"],
+    ["layout-grid", "The widest range", "Of sampler configurations in Australia"],
+    ["truck", "Buy or hire", "A select rental fleet for short to long term projects"],
+  ],
+  "environmental-monitoring": [
+    ["flask-conical", "Water quality", "Sondes, sensors, and Aquamonitrix for nutrients"],
+    ["cloud-rain", "Rainfall", "Logged at short intervals"],
+    ["thermometer", "Temperature", "Proven in the extremes of Alaska"],
+    ["test-tubes", "Sampling", "River, well, stormwater and watershed programs"],
+  ],
+};
 
 export const services = [
   {
@@ -2040,7 +2209,7 @@ export const ways = {
       mode: "buy", icon: "package", title: "Buy", line: "Own the instruments",
       text: "Choose from one of Australia's largest portfolios of monitoring instruments, made by EDS or by the leading manufacturers we represent.",
       points: ["Supply, installation and commissioning", "In situ audits and calibration", "Training for your staff"],
-      link: ["products/index.html", "Browse products"], topic: "Product pricing", cta: "Ask about pricing",
+      link: ["products/index.html", "Browse products"], topic: "Product pricing", cta: "Request pricing",
     },
     {
       mode: "hire", icon: "calendar-clock", title: "Hire", line: "For a study or a season",
