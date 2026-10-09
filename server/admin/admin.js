@@ -423,12 +423,15 @@
 
   /* ---- visitor activity: each visit, step by step ---- */
   const DEVICE = { Desktop: "monitor", Mobile: "smartphone", Tablet: "tablet" };
+  // The clock time, with how long ago for today's visits: "12:45 pm, 5 min ago".
+  // Earlier days get the day too, so 11 pm yesterday never reads as today.
+  const fTime = new Intl.DateTimeFormat("en-AU", { timeZone: dash.dataset.tz, hour: "numeric", minute: "2-digit" });
+  const fDate = new Intl.DateTimeFormat("en-CA", { timeZone: dash.dataset.tz });
   const ago = (ts) => {
+    if (fDate.format(ts) !== fDate.format(Date.now())) return fWhen.format(ts);
     const sec = (Date.now() - ts) / 1000;
-    if (sec < 60) return "just now";
-    if (sec < 3600) return `${Math.floor(sec / 60)} min ago`;
-    if (sec < 86400) return `${Math.floor(sec / 3600)} h ago`;
-    return fWhen.format(ts);
+    const rel = sec < 60 ? "just now" : sec < 3600 ? `${Math.floor(sec / 60)} min ago` : `${Math.floor(sec / 3600)} h ago`;
+    return `${fTime.format(ts)}, ${rel}`;
   };
   const fClock = new Intl.DateTimeFormat("en-AU", { timeZone: dash.dataset.tz, hour: "numeric", minute: "2-digit", second: "2-digit" });
   const ordinal = (n) => `${n}${n % 100 >= 11 && n % 100 <= 13 ? "th" : ["th", "st", "nd", "rd"][n % 10] || "th"}`;
@@ -507,6 +510,43 @@
     return li;
   }
 
+  // The visit in one sentence, what they did first and foremost: "Viewed Home,
+  // Sewer Flow Monitoring and Contact, downloaded fl900.pdf and sent the form …".
+  const andList = (xs) => (xs.length < 2 ? xs.join("") : `${xs.slice(0, -1).join(", ")} and ${xs[xs.length - 1]}`);
+  const uniq = (xs) => [...new Set(xs.filter(Boolean))];
+  const some = (xs, one, many, name) => (!xs.length ? null : xs.length === 1 ? `${one} ${name(xs[0])}` : `${many(xs.length)}`);
+  function story(v) {
+    const of = (type) => v.steps.filter((st) => st.type === type);
+    const pages = uniq(of("pageview").map((st) => (st.status === 404 ? null : pageName(st))));
+    const phones = of("contact").filter((st) => /^tel:/i.test(st.target || ""));
+    const emails = of("contact").filter((st) => !/^tel:/i.test(st.target || ""));
+    const parts = [
+      pages.length && `viewed ${pages.length > 4 ? `${andList(pages.slice(0, 3))} and ${pages.length - 3} more pages` : andList(pages)}`,
+      some(uniq(of("search").map((st) => st.label)), "searched for", (n) => `ran ${n} searches`, quoted),
+      some(uniq(of("download").map((st) => fileName(st.target))), "downloaded", (n) => `downloaded ${n} documents`, (x) => x),
+      some(of("form"), "sent the form", (n) => `sent ${n} forms`, (st) => quoted(st.label)),
+      phones.length && "tapped the phone number",
+      some(uniq(emails.map((st) => contact(st.target))), "emailed", (n) => `clicked ${n} email addresses`, (x) => x),
+      some(uniq(of("outbound").map((st) => site(st.target).split("/")[0])), "left for", (n) => `followed links to ${n} other sites`, (x) => x),
+    ].filter(Boolean);
+    const text = andList(parts) || "Opened the site";
+    return `${text[0].toUpperCase()}${text.slice(1)}.`;
+  }
+  // The things that matter most, as badges beside who it was.
+  function outcomes(v) {
+    const n = (test) => v.steps.filter(test).length;
+    const forms = n((st) => st.type === "form");
+    const phones = n((st) => st.type === "contact" && /^tel:/i.test(st.target || ""));
+    const emails = n((st) => st.type === "contact" && !/^tel:/i.test(st.target || ""));
+    const docs = new Set(v.steps.filter((st) => st.type === "download").map((st) => st.target)).size;
+    return [
+      forms && ["send", forms > 1 ? `Sent ${forms} enquiries` : "Sent an enquiry"],
+      phones && ["phone", "Phoned"],
+      emails && ["mail", "Emailed"],
+      docs && ["file-down", docs > 1 ? `Downloaded ${docs} documents` : "Downloaded a document"],
+    ].filter(Boolean);
+  }
+
   const vstate = { show: "all", list: [], total: 0, open: new Set() };
   const rangeQuery = () => {
     const q = new URLSearchParams({ range: state.range });
@@ -536,7 +576,7 @@
     const { list, total } = vstate;
     const box = $("#visits");
     box.textContent = "";
-    const label = { all: "visits", clicked: "visits where someone clicked something", contacted: "visits where someone got in touch" }[vstate.show];
+    const label = { all: "visits", orgs: "visits from named organisations", clicked: "visits where someone clicked something", contacted: "visits where someone got in touch" }[vstate.show];
     $("#visit-count").textContent = total ? `Showing ${nf.format(list.length)} of ${nf.format(total)} ${label}` : "";
     const more = $("#visits-more");
     more.hidden = list.length >= total;
@@ -552,15 +592,17 @@
       const isOrg = v.orgKind === "organisation";
       const who = isOrg ? v.org : join(v.city, v.region) || "Unknown location";
       const whoEl = h("b", null, who);
-      top.append(icon(DEVICE[v.device] || "monitor"), whoEl);
+      top.append(icon(isOrg ? "building-2" : DEVICE[v.device] || "monitor"), whoEl);
       const where = isOrg ? join(v.city, v.region) : v.org && `on ${v.org}`;
       if (where) top.append(h("span", "muted", where));
       if (v.live) top.append(h("span", "live-badge", "On the site now"));
+      for (const [ic, text] of outcomes(v)) { const b = h("span", "goal-badge t-goal"); b.append(icon(ic), text); top.append(b); }
       const when = h("time", null, ago(v.start));
       when.dateTime = new Date(v.start).toISOString();
       when.title = fWhen.format(v.start);
       top.append(when);
 
+      const sumLine = h("p", "visit-story", story(v));
       const facts = h("ul", "visit-facts");
       const fact = (ic, text, title) => { if (!text) return; const f = h("li"); f.append(icon(ic), h("span", null, text)); if (title) f.title = title; facts.append(f); };
       fact("route", `Came from ${v.source || "a typed address or bookmark"}`, v.referrer && `Referrer: ${v.referrer}`);
@@ -568,7 +610,8 @@
       fact(DEVICE[v.device] || "monitor", join(v.device, v.browser && v.os && `${v.browser} on ${v.os}`));
       fact("file-text", plural(v.pages, "page"));
       fact("mouse-pointer-click", plural(v.clicks, "click"));
-      const extras = v.steps.filter((x) => KINDS[x.type] && x.type !== "link" && x.type !== "button" && x.type !== "toggle" && x.type !== "tab").length;
+      // forms, searches and choices; downloads, email, phone and other sites are already clicks
+      const extras = v.steps.filter((x) => x.type === "form" || x.type === "search" || x.type === "choice").length;
       if (extras) fact("list-checks", plural(extras, "other action"));
       if (v.end - v.start >= 1000) fact("clock", `${dur(v.end - v.start)} on the site`);
       if (v.visitNo > 1) fact("users", `${ordinal(v.visitNo)} visit today`, "The same browser and network came earlier today");
@@ -578,7 +621,7 @@
       if (v.steps.length > shown.length) preview.append(h("li", "muted", `+${v.steps.length - shown.length} more`));
       const hint = h("span", "visit-open");
       hint.append(icon("chevron-right"), h("span", "closed-only", "See every step"), h("span", "open-only", "Hide steps"));
-      sum.append(top, facts, preview, hint);
+      sum.append(top, sumLine, facts, preview, hint);
 
       const tl = h("ol", "timeline");
       tl.setAttribute("aria-label", `Everything this visitor did, in order, ${fWhen.format(v.start)}`);

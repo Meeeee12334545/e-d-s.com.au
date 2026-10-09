@@ -50,7 +50,7 @@ const redirect = (res, to, extra = {}) => { res.writeHead(303, { ...HEADERS, Loc
 
 /* ---- icons: Lucide, read from the same package the site build uses ---- */
 const ICONS = ["log-out", "download", "monitor", "smartphone", "tablet", "file-down", "mail", "phone", "external-link", "send", "triangle-alert", "file-text", "info", "users", "chevron-right",
-  "mouse-pointer-click", "link", "search", "list-checks", "panels-top-left", "chevrons-up-down", "hash", "clock", "route"];
+  "mouse-pointer-click", "link", "search", "list-checks", "panels-top-left", "chevrons-up-down", "hash", "clock", "route", "building-2"];
 const sprite = `<svg xmlns="http://www.w3.org/2000/svg" class="sprite" aria-hidden="true">${ICONS.map((name) => {
   const file = path.join(HERE, "../node_modules/lucide-static/icons", `${name}.svg`);
   const inner = existsSync(file) ? readFileSync(file, "utf8").replace(/^[\s\S]*?<svg[\s\S]*?>/, "").replace(/<\/svg>\s*$/, "").replace(/\s*\n\s*/g, "") : "";
@@ -136,13 +136,12 @@ const dashboard = () => page("Site analytics | EDS admin", `
     <div class="chart" id="chart"></div>
   </section>
 
-  <div class="grid" id="cards"></div>
-
   <section class="card visits-card" aria-labelledby="visits-title">
     <div class="card-head">
-      <div><h2 id="visits-title">Visitor activity</h2><p class="sub">Every visit in the period, newest first, with each page they opened and everything they clicked, searched for or chose. Open a visit to see it step by step.</p></div>
+      <div><h2 id="visits-title">Who visited and what they did</h2><p class="sub">Every visit in the period, newest first: who it was, what they did, and every page and click in order. Open a visit to see it step by step.</p></div>
       <div class="seg" id="visit-filter" role="group" aria-label="Which visits to show">
         <button type="button" data-show="all" aria-pressed="true">All visits</button>
+        <button type="button" data-show="orgs" aria-pressed="false">Organisations</button>
         <button type="button" data-show="clicked" aria-pressed="false">Clicked something</button>
         <button type="button" data-show="contacted" aria-pressed="false">Got in touch</button>
       </div>
@@ -158,6 +157,8 @@ const dashboard = () => page("Site analytics | EDS admin", `
     <ol class="visits" id="visits"></ol>
     <button class="more" type="button" id="visits-more" hidden>Show more visits</button>
   </section>
+
+  <div class="grid" id="cards"></div>
 
   <section class="about">
     <h2>${icon("info")}How these numbers are counted</h2>

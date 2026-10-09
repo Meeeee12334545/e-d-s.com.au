@@ -254,9 +254,10 @@ export function openStore(dir) {
 
   // Each visit in the period, newest first, with every page and action in
   // order. `show` narrows them to visits where someone clicked something
-  // (clicked) or got in touch (contacted); `offset` and `limit` page through.
+  // (clicked), got in touch (contacted) or came from a named organisation (orgs); `offset` and `limit` page through.
   const SHOW = {
     all: "",
+    orgs: "HAVING max(org_kind = 'organisation') = 1",
     clicked: `HAVING sum(${CLICK}) > 0`,
     contacted: "HAVING sum(type IN ('contact', 'form')) > 0",
   };
