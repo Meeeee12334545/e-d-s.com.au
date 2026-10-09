@@ -16,7 +16,7 @@ npm start        # runs the server on an existing dist/
 
 Every push to `main` publishes the site to GitHub Pages at www.e-d-s.com.au (`.github/workflows/publish.yml` builds with `STATIC_HOST=1`, adds a `CNAME` file for the domain and pushes `dist/` to the `gh-pages` branch). The domain's DNS is at Digital Pacific: `www` is a CNAME to `meeeee12334545.github.io`, and the bare domain has GitHub's four A records.
 
-Old Squarespace addresses (`/hach-flow`, `/what-we-do` and so on) forward to their new pages through small pages the build writes from `oldPages` in `content.mjs`.
+Old Squarespace addresses (`/hach-flow`, `/what-we-do` and so on) forward to their new pages through small pages the build writes from `oldPages` in `content.mjs`. Documents the old site served from `/s/<file name>` still work: the build copies each document listed in `oldFiles` to its old address.
 
 The build stops with an error if a page repeats an element id, since product links, "On this page" lists and form labels all depend on ids being unique.
 

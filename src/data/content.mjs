@@ -1410,7 +1410,7 @@ export const brands = [
       {
         name: "Flow, level and logging",
         items: [
-          { name: "MSFM", type: "flow", note: "Rugged 4G area velocity flow meter", image: img("s2.5-04-small-766x1024.png"), docs: [{ label: "S2.5T datasheet", href: localDoc("detectronic-msfm-s2-5t-datasheet.pdf") }] },
+          { name: "MSFM", type: "flow", note: "Rugged 4G area velocity flow meter", image: img("s2.5-04-small-766x1024.png"), docs: [{ label: "S2.5T datasheet", href: localDoc("detectronic-msfm-s2-5t-datasheet.pdf") }, { label: "S2.5T manual", href: localDoc("detectronic-msfm-s2-5t-manual.pdf") }] },
           { name: "LIDoTT Smart", type: "level", note: "Long life, rugged 4G patented level monitor", image: img("dete01-01.24-600x452.png"), docs: [{ label: "LIDoTT Sensor datasheet", href: localDoc("detectronic-lidott-sensor-datasheet.pdf") }] },
           { name: "LIDoTT Alarm", type: "level", note: "Self contained level measurement and alarm device", image: img("lidott-alarm-3.png"), href: "products/lidott-alarm.html", docs: [{ label: "Datasheet", href: localDoc("detectronic-lidott-alarm-datasheet.pdf") }] },
           { name: "Alarm2", type: "level", note: "All-in-one radar level monitor with alarms, up to 20 m, LoRaWAN or cellular", image: img("detectronic-alarm2.png"), href: "products/alarm2.html", docs: [{ label: "Datasheet", href: localDoc("detectronic-alarm2-datasheet.pdf") }, { label: "4G manual", href: localDoc("detectronic-alarm2-4g-manual.pdf") }] },
@@ -2181,6 +2181,7 @@ export const downloads = [
       ["EDS Hawk 4G logger brochure", localDoc("eds-hawk-brochure.pdf")],
       ["iLab 901 multi-parameter sensor datasheet", localDoc("eds-ilab-901-datasheet.pdf")],
       ["Detectronic MSFM S2.5T flow meter datasheet", localDoc("detectronic-msfm-s2-5t-datasheet.pdf")],
+      ["Detectronic MSFM S2.5T installation and maintenance manual", localDoc("detectronic-msfm-s2-5t-manual.pdf")],
       ["Detectronic LIDoTT Sensor datasheet", localDoc("detectronic-lidott-sensor-datasheet.pdf")],
       ["Detectronic LIDoTT Alarm datasheet", localDoc("detectronic-lidott-alarm-datasheet.pdf")],
       ["Detectronic Alarm2 radar level monitor datasheet", localDoc("detectronic-alarm2-datasheet.pdf")],
@@ -2347,4 +2348,12 @@ export const oldPages = {
   "microlevel-portable-sampler": "products/microlevel.html",
   aquamonitrix: "products/aquamonitrix.html",
   "dynaflox-2": "products/dynaflox.html",
+};
+
+// Documents the old site served from /s/<file name>, which people still follow
+// from bookmarks, emails and other sites. The build puts a copy of the document
+// in src/assets/docs at each old address.
+export const oldFiles = {
+  "DNS-51-MSFM-S2-5T-Installation-and-Maintenance-Iss-3-07-06-21.pdf": "detectronic-msfm-s2-5t-manual.pdf",
+  "DNS-51-MSFM-S2-5T-Installation-and-Maintenance-Iss-3-07-06-21-xjce.pdf": "detectronic-msfm-s2-5t-manual.pdf",
 };
