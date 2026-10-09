@@ -2363,7 +2363,7 @@ export const oldPages = {
 
 // Documents the old site served from /s/<file name>, which people still follow
 // from bookmarks, emails and other sites. The build puts a copy of the document
-// in src/assets/docs at each old address.
+// in dist/s at each old address.
 export const oldFiles = {
   "DNS-51-MSFM-S2-5T-Installation-and-Maintenance-Iss-3-07-06-21.pdf": "detectronic-msfm-s2-5t-manual.pdf",
   "DNS-51-MSFM-S2-5T-Installation-and-Maintenance-Iss-3-07-06-21-xjce.pdf": "detectronic-msfm-s2-5t-manual.pdf",
