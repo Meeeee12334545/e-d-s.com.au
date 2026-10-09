@@ -481,73 +481,227 @@
     }
   }
 
-  function timelineRow(st) {
+  // "3m", "45s", "1h 5m": short enough to sit inside a page chip
+  const short = (ms) => {
+    const t = Math.round(ms / 1000);
+    return t < 60 ? `${t}s` : t < 3600 ? `${Math.round(t / 60)}m` : `${Math.floor(t / 3600)}h ${Math.round((t % 3600) / 60)}m`;
+  };
+  const isPhone = (st) => st.type === "contact" && /^tel:/i.test(st.target || "");
+  const isEmail = (st) => st.type === "contact" && !isPhone(st);
+  const andList = (xs) => (xs.length < 2 ? xs.join("") : `${xs.slice(0, -1).join(", ")} and ${xs[xs.length - 1]}`);
+  const uniq = (xs) => [...new Set(xs.filter(Boolean))];
+  const cap = (t) => `${t[0].toUpperCase()}${t.slice(1)}`;
+
+  // Everything worth knowing about a visit, worked out once from its steps.
+  function profile(v) {
+    const of = (test) => v.steps.filter(typeof test === "string" ? (st) => st.type === test : test);
+    const views = of("pageview");
+    const pages = views.filter((st) => st.status !== 404);
+    const reading = pages.reduce((a, st) => a + (st.engaged || 0), 0);
+    const longest = pages.reduce((a, st) => ((st.engaged || 0) > (a?.engaged || 0) ? st : a), null);
+    const deepest = pages.reduce((a, st) => (st.scroll != null && st.scroll > (a?.scroll ?? -1) ? st : a), null);
+    const p = {
+      views, pages, reading, longest, deepest,
+      names: uniq(pages.map(pageName)),
+      notFound: uniq(views.filter((st) => st.status === 404).map((st) => st.path)),
+      searches: uniq(of("search").map((st) => st.label)),
+      choices: of("choice"),
+      downloads: uniq(of("download").map((st) => fileName(st.target))),
+      forms: of("form"),
+      phones: uniq(of(isPhone).map((st) => contact(st.target))),
+      emails: uniq(of(isEmail).map((st) => contact(st.target))),
+      outbound: uniq(of("outbound").map((st) => site(st.target).split("/")[0])),
+      // what they looked at: the products, services and questions their clicks were about
+      topics: uniq(v.steps.map((st) => (st.item && st.type !== "choice" && !inSearch(st.item) ? st.item : null))),
+    };
+    const touched = p.forms.length || p.phones.length || p.emails.length;
+    p.level = touched ? 4
+      : p.downloads.length || p.searches.length || p.names.length >= 3 || reading >= 120e3 ? 3
+      : views.length >= 2 || reading >= 30e3 || v.end - v.start >= 60e3 || v.clicks > 0 ? 2 : 1;
+    return p;
+  }
+  const LEVELS = {
+    4: ["Got in touch", "Sent a form, or clicked the phone number or an email address"],
+    3: ["Strong interest", "Downloaded something, searched, read 3 or more pages or spent 2 minutes or more reading"],
+    2: ["Browsing", "Opened more than one page, clicked something, read for 30 seconds or stayed a minute or more"],
+    1: ["Quick look", "One page, under 30 seconds of reading, no clicks"],
+  };
+
+  // The visit in one sentence, what they did first and foremost: "Viewed Home,
+  // Sewer Flow Monitoring and Contact, downloaded fl900.pdf and sent the form …".
+  function story(v, p) {
+    const some = (xs, one, many) => (!xs.length ? null : xs.length === 1 ? `${one} ${xs[0]}` : many(xs.length));
+    const parts = [
+      p.names.length && `viewed ${p.names.length > 4 ? `${andList(p.names.slice(0, 3))} and ${p.names.length - 3} more pages` : andList(p.names)}`,
+      some(p.searches.map(quoted), "searched for", (n) => `ran ${n} searches`),
+      some(p.downloads, "downloaded", (n) => `downloaded ${n} documents`),
+      some(p.forms.map((st) => quoted(st.label)), "sent the form", (n) => `sent ${n} forms`),
+      p.phones.length && "clicked the phone number",
+      some(p.emails, "clicked the email address", (n) => `clicked ${n} email addresses`),
+      some(p.outbound, "left for", (n) => `followed links to ${n} other sites`),
+      p.notFound.length && `hit ${p.notFound.length === 1 ? "a missing page" : `${p.notFound.length} missing pages`}`,
+    ].filter(Boolean);
+    return `${cap(andList(parts) || "opened the site")}.`;
+  }
+  // The things that matter most, as badges beside who it was.
+  function outcomes(p) {
+    return [
+      p.forms.length && ["send", p.forms.length > 1 ? `Sent ${p.forms.length} forms` : "Sent a form"],
+      p.phones.length && ["phone", "Clicked the phone number"],
+      p.emails.length && ["mail", "Clicked an email address"],
+      p.downloads.length && ["file-down", p.downloads.length > 1 ? `Downloaded ${p.downloads.length} documents` : "Downloaded a document"],
+    ].filter(Boolean);
+  }
+
+  // Who the visit was: an organisation by name, otherwise where they were.
+  const NETWORK = {
+    organisation: "Organisation's own network",
+    provider: "Home, office or mobile internet",
+    hosting: "Cloud network, often a VPN, Private Relay or a bot",
+  };
+  const place = (v) => [v.city, v.region].filter(Boolean).join(", ");
+  function who(v) {
+    const isOrg = v.orgKind === "organisation";
+    return {
+      isOrg,
+      name: isOrg ? v.org : place(v) || "Unknown location",
+      network: v.orgKind ? `${NETWORK[v.orgKind] || "Network"}${!isOrg && v.org ? ` (${v.org})` : ""}` : null,
+      where: isOrg ? place(v) : null,
+    };
+  }
+
+  function levelBadge(level) {
+    const [label, why] = LEVELS[level];
+    const b = h("span", `level lvl-${level}`);
+    b.title = why;
+    const bars = h("span", "level-bars");
+    bars.setAttribute("aria-hidden", "true");
+    for (let i = 1; i <= 4; i++) bars.append(h("i", i <= level ? "on" : null));
+    b.append(bars, h("span", null, label));
+    return b;
+  }
+
+  // One row per action, under the page it happened on.
+  function actionRow(st, start) {
     const d = describe(st);
     const li = h("li", `ev ${d.cls}`);
-    const when = h("time", null, fClock.format(st.ts));
-    when.dateTime = new Date(st.ts).toISOString();
-    const tag = h("span", `ev-tag ${d.cls}`);
+    li.append(stamp(st.ts, start));
+    const tag = h("span", `ev-tag small ${d.cls}`);
     tag.append(icon(d.icon), d.tag);
     const body = h("div", "ev-body");
     const what = h("p", "ev-what");
-    what.append(...d.what.filter((x) => x !== "" && x != null));
+    what.append(tag, ...d.what.filter((x) => x !== "" && x != null));
     body.append(what);
     const where = join(...(d.where || []));
     if (where) body.append(h("p", "ev-where", where));
-    li.append(when, tag, body);
+    li.append(body);
     return li;
   }
+  // the clock time, and how far into the visit it was
+  function stamp(ts, start) {
+    const t = h("time", "stamp");
+    t.dateTime = new Date(ts).toISOString();
+    t.append(h("span", null, fClock.format(ts)), h("small", null, ts - start < 1000 ? "arrived" : `+${dur(ts - start)}`));
+    return t;
+  }
+  // a small bar: how long a page was on screen, or how far down it was read
+  function meter(frac, text, label) {
+    const m = h("span", "meter");
+    m.title = label;
+    const bar = h("span", "meter-bar");
+    const fill = h("i");
+    fill.style.width = `${Math.round(Math.max(0, Math.min(1, frac)) * 100)}%`;
+    bar.append(fill);
+    m.append(bar, h("span", null, text));
+    return m;
+  }
+  function timeline(v, p) {
+    const tl = h("ol", "timeline");
+    tl.setAttribute("aria-label", `Everything this visitor did, in order, ${fWhen.format(v.start)}`);
+    const most = Math.max(1, ...p.pages.map((st) => st.engaged || 0));
+    let group = null;
+    const open = (st) => {
+      const li = h("li", "tl-page");
+      const head = h("div", "tl-head");
+      if (st) {
+        const d = describe(st);
+        head.append(stamp(st.ts, v.start));
+        const main = h("div", "tl-main");
+        const title = h("p", "tl-title");
+        title.append(icon(d.icon), st.status === 404 ? h("b", null, `${st.path} (page not found)`) : h("b", null, pageName(st)));
+        if (st.status !== 404) title.append(h("span", "tl-path", st.path));
+        main.append(title);
+        if (st.status !== 404 && (st.engaged != null || st.scroll != null)) {
+          const ms = h("div", "meters");
+          if (st.engaged != null) ms.append(meter((st.engaged || 0) / most, `${dur(st.engaged)} on screen`, "Time the page was on screen"));
+          if (st.scroll != null) ms.append(meter(st.scroll / 100, `read ${st.scroll}% of the way down`, "How far down the page they scrolled"));
+          main.append(ms);
+        }
+        head.append(main);
+      } else head.append(h("p", "tl-title muted", "Before the first page view was recorded"));
+      group = h("ol", "tl-actions");
+      li.append(head, group);
+      tl.append(li);
+    };
+    for (const st of v.steps) {
+      if (st.type === "pageview") open(st);
+      else { if (!group) open(null); group.append(actionRow(st, v.start)); }
+    }
+    return tl;
+  }
 
-  // the visit at a glance: pages as their names, actions as coloured chips
+  // Every fact about the visit and the visitor, as labelled rows.
+  function facts(v, p, w) {
+    const dl = h("dl", "facts");
+    const row = (label, ...values) => {
+      const vals = values.flat().filter((x) => x != null && x !== "" && x !== false);
+      if (!vals.length) return;
+      const dd = h("dd");
+      vals.forEach((x, i) => { if (i) dd.append(h("br")); dd.append(typeof x === "string" ? h("span", null, x) : x); });
+      dl.append(h("dt", null, label), dd);
+    };
+    const small = (t) => h("small", null, t);
+    row("Organisation", w.isOrg ? v.org : null, w.isOrg && v.orgVisits > 1 ? small(`Visit ${v.orgVisitNo} of ${v.orgVisits} from them in this period`) : null);
+    row("Network", w.network);
+    row("Location", place(v), v.country && v.country !== "AU" && v.region !== regionName(v.country) ? regionName(v.country) : null, v.city ? small("City is approximate, from the IP address") : null);
+    row("Device", join(v.device, v.browser && v.os && `${v.browser} on ${v.os}`));
+    row("Came from", v.source || "Typed the address, a bookmark or a link in an app", v.referrer && v.referrer !== v.source ? small(v.referrer) : null);
+    row("Campaign", v.campaign && join(v.campaign, v.medium));
+    row("When", `${fWhen.format(v.start)}${v.end - v.start >= 60e3 ? ` to ${fTime.format(v.end)}` : ""}`, v.end - v.start >= 1000 ? small(`${dur(v.end - v.start)} on the site`) : null);
+    row("Earlier today", v.visitNo > 1 ? `${ordinal(v.visitNo)} visit today from this browser and network` : null);
+    row("Landed on", p.views[0] && (p.views[0].status === 404 ? `${p.views[0].path} (not found)` : pageName(p.views[0])), p.views[0] && small(p.views[0].path));
+    if (p.views.length > 1) row("Left from", pageName(p.views[p.views.length - 1]));
+    row("Pages", `${plural(p.views.length, "page view")}${p.names.length !== p.views.length ? `, ${plural(p.names.length, "different page")}` : ""}`,
+      p.reading >= 1000 ? small(`${dur(p.reading)} reading in all`) : null);
+    row("Most time on", p.longest?.engaged >= 1000 ? `${pageName(p.longest)} (${dur(p.longest.engaged)})` : null);
+    row("Read furthest", p.deepest && p.deepest.scroll > 0 ? `${p.deepest.scroll}% of ${pageName(p.deepest)}` : null);
+    row("Looked at", p.topics.slice(0, 8).join(", ") || null, p.topics.length > 8 ? small(`and ${p.topics.length - 8} more`) : null);
+    row("Clicks", v.clicks ? nf.format(v.clicks) : null);
+    row("Searched for", p.searches.map(quoted).join(", ") || null);
+    row("Picked", p.choices.map((st) => (st.item ? `${quoted(st.label)} in ${st.item}` : st.label)));
+    row("Downloaded", p.downloads);
+    row("Got in touch", p.forms.map((st) => `Sent the form ${quoted(st.label)}`), p.phones.map((x) => `Clicked the phone number ${x}`), p.emails.map((x) => `Clicked ${x}`));
+    row("Left for", p.outbound.join(", ") || null);
+    row("Missing pages", p.notFound);
+    return dl;
+  }
+  const regionNames = new Intl.DisplayNames(["en"], { type: "region" });
+  const regionName = (code) => { try { return regionNames.of(code); } catch { return code; } };
+
+  // the visit at a glance: pages as their names (with time on screen), actions as coloured chips
   function chip(st) {
     const d = describe(st);
     const li = h("li");
     const c = h("span", `step ${d.cls}`);
-    const text = st.type === "pageview" ? (st.status === 404 ? `${st.path} (not found)` : pageName(st)) : d.what.map((x) => (typeof x === "string" ? x : x.textContent)).join("");
-    c.title = text;
-    c.append(icon(d.icon), h("span", null, text));
+    const name = st.type === "pageview" ? (st.status === 404 ? `${st.path} (not found)` : pageName(st)) : d.what.map((x) => (typeof x === "string" ? x : x.textContent)).join("");
+    c.title = st.type === "pageview" && st.engaged >= 1000 ? `${name}, ${dur(st.engaged)} on screen` : name;
+    c.append(icon(d.icon), h("span", null, name));
+    if (st.type === "pageview" && st.engaged >= 1000) c.append(h("small", null, short(st.engaged)));
     li.append(c);
     return li;
   }
 
-  // The visit in one sentence, what they did first and foremost: "Viewed Home,
-  // Sewer Flow Monitoring and Contact, downloaded fl900.pdf and sent the form …".
-  const andList = (xs) => (xs.length < 2 ? xs.join("") : `${xs.slice(0, -1).join(", ")} and ${xs[xs.length - 1]}`);
-  const uniq = (xs) => [...new Set(xs.filter(Boolean))];
-  const some = (xs, one, many, name) => (!xs.length ? null : xs.length === 1 ? `${one} ${name(xs[0])}` : `${many(xs.length)}`);
-  function story(v) {
-    const of = (type) => v.steps.filter((st) => st.type === type);
-    const pages = uniq(of("pageview").map((st) => (st.status === 404 ? null : pageName(st))));
-    const phones = of("contact").filter((st) => /^tel:/i.test(st.target || ""));
-    const emails = of("contact").filter((st) => !/^tel:/i.test(st.target || ""));
-    const parts = [
-      pages.length && `viewed ${pages.length > 4 ? `${andList(pages.slice(0, 3))} and ${pages.length - 3} more pages` : andList(pages)}`,
-      some(uniq(of("search").map((st) => st.label)), "searched for", (n) => `ran ${n} searches`, quoted),
-      some(uniq(of("download").map((st) => fileName(st.target))), "downloaded", (n) => `downloaded ${n} documents`, (x) => x),
-      some(of("form"), "sent the form", (n) => `sent ${n} forms`, (st) => quoted(st.label)),
-      phones.length && "tapped the phone number",
-      some(uniq(emails.map((st) => contact(st.target))), "emailed", (n) => `clicked ${n} email addresses`, (x) => x),
-      some(uniq(of("outbound").map((st) => site(st.target).split("/")[0])), "left for", (n) => `followed links to ${n} other sites`, (x) => x),
-    ].filter(Boolean);
-    const text = andList(parts) || "Opened the site";
-    return `${text[0].toUpperCase()}${text.slice(1)}.`;
-  }
-  // The things that matter most, as badges beside who it was.
-  function outcomes(v) {
-    const n = (test) => v.steps.filter(test).length;
-    const forms = n((st) => st.type === "form");
-    const phones = n((st) => st.type === "contact" && /^tel:/i.test(st.target || ""));
-    const emails = n((st) => st.type === "contact" && !/^tel:/i.test(st.target || ""));
-    const docs = new Set(v.steps.filter((st) => st.type === "download").map((st) => st.target)).size;
-    return [
-      forms && ["send", forms > 1 ? `Sent ${forms} enquiries` : "Sent an enquiry"],
-      phones && ["phone", "Phoned"],
-      emails && ["mail", "Emailed"],
-      docs && ["file-down", docs > 1 ? `Downloaded ${docs} documents` : "Downloaded a document"],
-    ].filter(Boolean);
-  }
-
-  const vstate = { show: "all", list: [], total: 0, open: new Set() };
+  const vstate = { show: "all", list: [], total: 0, counts: null, open: new Set() };
   const rangeQuery = () => {
     const q = new URLSearchParams({ range: state.range });
     if (state.range === "custom") { q.set("from", state.from); q.set("to", state.to); }
@@ -568,65 +722,78 @@
     const d = await res.json();
     if (vstate.key !== key) return;
     vstate.total = d.total;
+    vstate.counts = d.counts;
     vstate.list = more ? [...vstate.list, ...d.visits.filter((v) => !vstate.list.some((x) => x.id === v.id))] : d.visits;
     renderVisits();
   }
 
+  const SHOWN = { all: "visits", orgs: "visits from named organisations", contacted: "visits where someone got in touch", downloaded: "visits with a download", clicked: "visits where someone clicked something" };
   function renderVisits() {
-    const { list, total } = vstate;
+    const { list, total, counts } = vstate;
+    for (const b of $("#visit-filter").children) {
+      const n = b.querySelector(".n");
+      if (n) n.textContent = counts ? nf.format(counts[b.dataset.show] ?? 0) : "";
+    }
     const box = $("#visits");
     box.textContent = "";
-    const label = { all: "visits", orgs: "visits from named organisations", clicked: "visits where someone clicked something", contacted: "visits where someone got in touch" }[vstate.show];
-    $("#visit-count").textContent = total ? `Showing ${nf.format(list.length)} of ${nf.format(total)} ${label}` : "";
+    const label = SHOWN[vstate.show];
+    $("#visit-count").textContent = total ? `Showing ${nf.format(list.length)} of ${nf.format(total)} ${label}, newest first` : "";
     const more = $("#visits-more");
     more.hidden = list.length >= total;
     more.textContent = `Show ${Math.min(20, total - list.length)} more visits`;
-    if (!list.length) { box.append(h("li", "empty", vstate.show === "all" ? "No visits in this period." : `No ${label} in this period.`)); return; }
+    if (!list.length) { box.append(h("li", "empty", `No ${label} in this period.`)); return; }
     for (const v of list) {
-      const li = h("li", "visit");
+      const p = profile(v);
+      const w = who(v);
+      const li = h("li", `visit lvl-${p.level}`);
       const det = h("details");
       det.open = vstate.open.has(v.id);
       det.addEventListener("toggle", () => (det.open ? vstate.open.add(v.id) : vstate.open.delete(v.id)));
       const sum = h("summary", "visit-head");
-      const top = h("div", "visit-top");
-      const isOrg = v.orgKind === "organisation";
-      const who = isOrg ? v.org : join(v.city, v.region) || "Unknown location";
-      const whoEl = h("b", null, who);
-      top.append(icon(isOrg ? "building-2" : DEVICE[v.device] || "monitor"), whoEl);
-      const where = isOrg ? join(v.city, v.region) : v.org && `on ${v.org}`;
-      if (where) top.append(h("span", "muted", where));
-      if (v.live) top.append(h("span", "live-badge", "On the site now"));
-      for (const [ic, text] of outcomes(v)) { const b = h("span", "goal-badge t-goal"); b.append(icon(ic), text); top.append(b); }
-      const when = h("time", null, ago(v.start));
-      when.dateTime = new Date(v.start).toISOString();
-      when.title = fWhen.format(v.start);
-      top.append(when);
 
-      const sumLine = h("p", "visit-story", story(v));
-      const facts = h("ul", "visit-facts");
-      const fact = (ic, text, title) => { if (!text) return; const f = h("li"); f.append(icon(ic), h("span", null, text)); if (title) f.title = title; facts.append(f); };
-      fact("route", `Came from ${v.source || "a typed address or bookmark"}`, v.referrer && `Referrer: ${v.referrer}`);
-      if (v.campaign) fact("link", `Campaign ${quoted(v.campaign)}`, join(v.medium));
-      fact(DEVICE[v.device] || "monitor", join(v.device, v.browser && v.os && `${v.browser} on ${v.os}`));
-      fact("file-text", plural(v.pages, "page"));
-      fact("mouse-pointer-click", plural(v.clicks, "click"));
-      // forms, searches and choices; downloads, email, phone and other sites are already clicks
-      const extras = v.steps.filter((x) => x.type === "form" || x.type === "search" || x.type === "choice").length;
-      if (extras) fact("list-checks", plural(extras, "other action"));
-      if (v.end - v.start >= 1000) fact("clock", `${dur(v.end - v.start)} on the site`);
-      if (v.visitNo > 1) fact("users", `${ordinal(v.visitNo)} visit today`, "The same browser and network came earlier today");
+      // who, where from and on what; when, and for how long
+      const top = h("div", "visit-top");
+      const avatar = h("span", `avatar${w.isOrg ? " org" : ""}`);
+      avatar.append(icon(w.isOrg ? "building-2" : DEVICE[v.device] || "monitor"));
+      const id = h("div", "who");
+      const line = h("p", "who-name");
+      line.append(h("b", null, w.name));
+      if (v.live) line.append(h("span", "live-badge", "On the site now"));
+      id.append(line, h("p", "who-sub", join(w.where, w.network, join(v.device, v.browser && v.os && `${v.browser} on ${v.os}`))));
+      const when = h("div", "when");
+      const t = h("time", null, ago(v.start));
+      t.dateTime = new Date(v.start).toISOString();
+      t.title = fWhen.format(v.start);
+      when.append(t);
+      if (v.end - v.start >= 1000) when.append(h("span", null, `${dur(v.end - v.start)} on the site`));
+      top.append(avatar, id, when);
+
+      // how interested, what they achieved, and whether they have been before
+      const badges = h("div", "visit-badges");
+      badges.append(levelBadge(p.level));
+      for (const [ic, text] of outcomes(p)) { const b = h("span", "goal-badge t-goal"); b.append(icon(ic), text); badges.append(b); }
+      if (w.isOrg && v.orgVisits > 1) { const b = h("span", "info-badge"); b.append(icon("building-2"), `${ordinal(v.orgVisitNo)} of ${v.orgVisits} visits from them this period`); badges.append(b); }
+      if (v.visitNo > 1) { const b = h("span", "info-badge"); b.append(icon("users"), `${ordinal(v.visitNo)} visit today`); b.title = "The same browser and network came earlier today"; badges.append(b); }
+      const src = h("span", "info-badge");
+      src.append(icon("route"), v.source ? `From ${v.source}` : "Typed address or bookmark");
+      if (v.referrer) src.title = `Referrer: ${v.referrer}`;
+      badges.append(src);
+
       const preview = h("ol", "journey");
       const shown = v.steps.slice(0, 14);
       shown.forEach((st) => preview.append(chip(st)));
       if (v.steps.length > shown.length) preview.append(h("li", "muted", `+${v.steps.length - shown.length} more`));
       const hint = h("span", "visit-open");
-      hint.append(icon("chevron-right"), h("span", "closed-only", "See every step"), h("span", "open-only", "Hide steps"));
-      sum.append(top, sumLine, facts, preview, hint);
+      hint.append(icon("chevron-right"), h("span", "closed-only", "See everything about this visit"), h("span", "open-only", "Hide details"));
+      sum.append(top, badges, h("p", "visit-story", story(v, p)), preview, hint);
 
-      const tl = h("ol", "timeline");
-      tl.setAttribute("aria-label", `Everything this visitor did, in order, ${fWhen.format(v.start)}`);
-      v.steps.forEach((st) => tl.append(timelineRow(st)));
-      det.append(sum, tl);
+      const body = h("div", "visit-body");
+      const about = h("section", "visit-about");
+      about.append(h("h3", null, "About this visit"), facts(v, p, w));
+      const steps = h("section", "visit-steps");
+      steps.append(h("h3", null, `Step by step: ${plural(p.views.length, "page")}, ${plural(v.steps.length - p.views.length, "action")}`), timeline(v, p));
+      body.append(about, steps);
+      det.append(sum, body);
       li.append(det);
       box.append(li);
     }

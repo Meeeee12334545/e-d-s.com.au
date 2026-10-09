@@ -103,6 +103,7 @@ export function openStore(dir) {
   // Databases from before the organisation lookup and action labels get their columns.
   const have = new Set(db.prepare("PRAGMA table_info(events)").all().map((c) => c.name));
   for (const col of ["org", "org_kind", "city", "item", "area"]) if (!have.has(col)) db.exec(`ALTER TABLE events ADD COLUMN ${col} TEXT`);
+  db.exec("CREATE INDEX IF NOT EXISTS events_org ON events(org, day)");
 
   const st = (sql) => db.prepare(sql);
   const getSalt = st("SELECT salt FROM salts WHERE day = ?");
@@ -253,13 +254,16 @@ export function openStore(dir) {
   const live = () => ({ now: st("SELECT count(DISTINCT visitor) n FROM events WHERE ts > ?").get(Date.now() - 5 * 60e3).n });
 
   // Each visit in the period, newest first, with every page and action in
-  // order. `show` narrows them to visits where someone clicked something
-  // (clicked), got in touch (contacted) or came from a named organisation (orgs); `offset` and `limit` page through.
+  // order. `show` narrows them to visits from a named organisation (orgs),
+  // where someone got in touch (contacted), downloaded something (downloaded)
+  // or clicked anything at all (clicked); `offset` and `limit` page through.
+  // `counts` says how many visits each of those would show.
   const SHOW = {
     all: "",
     orgs: "HAVING max(org_kind = 'organisation') = 1",
     clicked: `HAVING sum(${CLICK}) > 0`,
     contacted: "HAVING sum(type IN ('contact', 'form')) > 0",
+    downloaded: "HAVING sum(type = 'download') > 0",
   };
   function visits(q) {
     const { from, to } = resolveRange(q);
@@ -269,36 +273,46 @@ export function openStore(dir) {
     const total = st(`SELECT count(*) n FROM (SELECT session FROM events WHERE day BETWEEN ? AND ? GROUP BY session ${having})`).get(from, to).n;
     const sessions = st(`SELECT session FROM events WHERE day BETWEEN ? AND ? GROUP BY session ${having}
       ORDER BY max(ts) DESC LIMIT ? OFFSET ?`).all(from, to, limit, offset).map((r) => r.session);
-    const rows = st(`SELECT session, visitor, ts, type, path, title, status, source, referrer, medium, campaign, device, browser, os, region, city, org, org_kind,
+    const counts = st(`SELECT count(*) "all", coalesce(sum(o), 0) orgs, coalesce(sum(t), 0) contacted, coalesce(sum(d), 0) downloaded, coalesce(sum(c), 0) clicked
+      FROM (SELECT max(org_kind = 'organisation') o, max(type IN ('contact', 'form')) t, max(type = 'download') d, max(${CLICK}) c
+        FROM events WHERE day BETWEEN ? AND ? GROUP BY session)`).get(from, to);
+    const rows = st(`SELECT session, visitor, ts, type, path, title, status, source, referrer, medium, campaign, device, browser, os, region, country, city, org, org_kind,
       target, label, item, area, engaged, scroll FROM events WHERE session IN (SELECT value FROM json_each(?)) ORDER BY ts, id`).all(JSON.stringify(sessions));
     // the same visitor's earlier visits that day (the daily hash cannot see further back)
     const visitNo = st("SELECT count(DISTINCT session) n FROM events WHERE visitor = ? AND day = ? AND ts <= ?");
+    // an organisation keeps its name from day to day, so its visits can be counted across the period
+    const orgVisits = st(`SELECT count(DISTINCT session) n, count(DISTINCT session) FILTER (WHERE ts <= ?) upTo FROM events
+      WHERE org = ? AND org_kind = 'organisation' AND day BETWEEN ? AND ?`);
     const byId = new Map(sessions.map((id) => [id, null]));
     const since = Date.now() - 5 * 60e3;
     for (const r of rows) {
       let v = byId.get(r.session);
       if (!v) {
         v = { id: r.session, visitor: r.visitor, start: r.ts, end: r.ts, source: r.source, referrer: r.referrer, medium: r.medium, campaign: r.campaign,
-          device: r.device, browser: r.browser, os: r.os, region: r.region, pages: 0, clicks: 0, steps: [] };
+          device: r.device, browser: r.browser, os: r.os, region: r.region, country: r.country, pages: 0, clicks: 0, steps: [] };
         byId.set(r.session, v);
       }
       v.end = Math.max(v.end, r.ts + (r.engaged || 0));
       if (r.type === "pageview") {
         v.pages++;
         // a visit's first page view says where it came from and what it was on
-        for (const k of ["source", "referrer", "medium", "campaign", "device", "browser", "os", "region"]) v[k] ??= r[k];
+        for (const k of ["source", "referrer", "medium", "campaign", "device", "browser", "os", "region", "country"]) v[k] ??= r[k];
       }
       if (/^(link|button|toggle|tab|download|contact|outbound)$/.test(r.type)) v.clicks++;
       if (r.org && !v.org) Object.assign(v, { org: r.org, orgKind: r.org_kind });
       if (r.city && !v.city) v.city = r.city;
       v.steps.push({ ts: r.ts, type: r.type, path: r.path, title: r.title, status: r.status, target: r.target, label: r.label, item: r.item, area: r.area, engaged: r.engaged, scroll: r.scroll });
     }
-    const list = [...byId.values()].filter(Boolean).map(({ visitor, ...v }) => ({
-      ...v,
-      live: v.steps[v.steps.length - 1].ts > since,
-      visitNo: visitNo.get(visitor, local(v.start).day, v.start).n,
-    }));
-    return { total, offset, visits: list };
+    const list = [...byId.values()].filter(Boolean).map(({ visitor, ...v }) => {
+      const org = v.orgKind === "organisation" ? orgVisits.get(v.start, v.org, from, to) : null;
+      return {
+        ...v,
+        live: v.steps[v.steps.length - 1].ts > since,
+        visitNo: visitNo.get(visitor, local(v.start).day, v.start).n,
+        orgVisitNo: org?.upTo, orgVisits: org?.n,
+      };
+    });
+    return { total, offset, counts, visits: list };
   }
 
   function exportRows(q) {
