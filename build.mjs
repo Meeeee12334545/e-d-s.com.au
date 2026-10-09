@@ -878,11 +878,11 @@ add({
 
 ${waysSection(r)}
 
-<section class="section fs-band" id="flowsense">
+<section class="section fs-band fs-band-light" id="flowsense">
   <div class="wrap fs-grid">
     <div>
       <h2 class="h-lg" data-reveal>Sewer network intelligence.</h2>
-      <p class="lede" data-reveal style="--i:1;color:rgba(255,255,255,.85)">EDS FlowSense is the platform behind our monitoring, with flow analytics and engineering insight for every site EDS measures.</p>
+      <p class="lede" data-reveal style="--i:1">EDS FlowSense is the platform behind our monitoring, with flow analytics and engineering insight for every site EDS measures.</p>
       <div class="fs-list" role="tablist" data-reveal style="--i:2">
         ${[["flame", "I/I heat map", "One colour per severity band, with arrows showing which way the water runs."], ["siren", "Blockage Watch", "Early warning before a dry weather spill."], ["fan", "Pump Station Manager", "The wet well drawn to scale, with its live level."], ["bell-ring", "Alarms that reach people", "Sent to the email and mobile your team holds that day."]]
           .map(([ic, t, d], i) => `<button class="fs-item" role="tab" aria-selected="${i === 0}"><span class="card-icon">${icon(ic)}</span><span><b>${t}</b><span>${d}</span></span></button>`).join("")}
