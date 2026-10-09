@@ -1575,8 +1575,10 @@ function searchIndex() {
   put("Pages", "All solutions", "Monitoring applied to the problem in front of you.", "solutions/index.html", { i: "layout-grid" });
   put("Pages", "Home", site.tagline, "index.html", { i: "house" });
   put("Pages", "Privacy policy", "How EDS handles personal information.", "privacy.html", { i: "lock" });
-  for (const p of C.papers) put("Documents", p.title, `${p.kind || "White paper"} · ${p.date}`, p.href, { i: "file-text", x: 1, b: p.text });
-  for (const g of C.downloads) for (const [label, href] of g.items) put("Documents", label, g.group, plain(href), { i: g.icon, x: 1, b: g.note });
+  for (const p of C.papers) put("Documents", p.title, `${p.kind || "White paper"} · ${p.date}`, plain(p.href), { i: "file-text", x: 1, b: p.text });
+  for (const g of C.downloads) for (const [label, href] of g.items) {
+    if (!items.some((e) => e.h === plain(href))) put("Documents", label, g.group, plain(href), { i: g.icon, x: 1, b: g.note });
+  }
   for (const p of products) {
     for (const d of p.docs || []) {
       if (!items.some((e) => e.h === plain(d.href))) put("Documents", `${p.name}: ${d.label}`, `${p.brand.name} · ${docType(d.href)}`, plain(d.href), { i: "file-text", x: 1, b: text(p.brand.title, p.note) });
