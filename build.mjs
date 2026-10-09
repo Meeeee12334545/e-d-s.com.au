@@ -964,7 +964,7 @@ ${waysSection(r)}
       <a class="btn btn-outline" href="${r}resources.html">All resources ${icon("arrow-right")}</a>
     </div>
     <div class="grid c3">
-      ${C.papers.map((p, n) => `
+      ${C.papers.slice(0, 3).map((p, n) => `
       <a class="card paper tilt" href="${p.href}" rel="noopener" data-reveal style="--i:${n}">
         <div class="paper-top"><span class="card-icon">${icon("file-text")}</span><span class="tag">${p.date}</span></div>
         <div class="paper-body"><h3>${esc(p.title)}</h3><p>${esc(p.text)}</p><span class="link-arrow">Read the paper ${icon("arrow-up-right")}</span></div>
@@ -1398,7 +1398,7 @@ add({
 ${pageHero(r, { crumbs: [["Resources"]], eyebrow: "Resources", title: "White papers, downloads and support.", lede: "What we have learned in the field, and the files you need to keep instruments running.", visual: heroToc([["papers", "White papers", C.papers.length], ["downloads", "Software, drivers and datasheets", C.downloads.reduce((n, g) => n + g.items.length, 0)], ["support", "Passwords, RMA forms and data access"]]) })}
 <section class="section" id="papers"><div class="wrap">
   <div class="section-head"><p class="eyebrow">White papers</p><h2 class="h-lg" data-reveal>EDS publications</h2></div>
-  <div class="grid c3">
+  <div class="grid ${C.papers.length % 3 ? "c2" : "c3"}">
     ${C.papers.map((p, n) => `
     <a class="card paper tilt" href="${p.href}" rel="noopener" data-reveal style="--i:${n}">
       <div class="paper-top"><span class="card-icon">${icon("file-text")}</span><span class="tag">${p.date}</span></div>
@@ -1575,7 +1575,7 @@ function searchIndex() {
   put("Pages", "All solutions", "Monitoring applied to the problem in front of you.", "solutions/index.html", { i: "layout-grid" });
   put("Pages", "Home", site.tagline, "index.html", { i: "house" });
   put("Pages", "Privacy policy", "How EDS handles personal information.", "privacy.html", { i: "lock" });
-  for (const p of C.papers) put("Documents", p.title, `White paper · ${p.date}`, p.href, { i: "file-text", x: 1, b: p.text });
+  for (const p of C.papers) put("Documents", p.title, `${p.kind || "White paper"} · ${p.date}`, p.href, { i: "file-text", x: 1, b: p.text });
   for (const g of C.downloads) for (const [label, href] of g.items) put("Documents", label, g.group, plain(href), { i: g.icon, x: 1, b: g.note });
   for (const p of products) {
     for (const d of p.docs || []) {

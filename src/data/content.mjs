@@ -867,6 +867,7 @@ export const services = [
     figure: { photo: "telemetry-cabinet", alt: "An open site cabinet with a data logger, a modem and a power supply mounted inside, wired to the instruments on site", caption: "Inside a site cabinet: logger, telemetry and power supply, wired to the station's instruments and on to SCADA.", pos: "50% 62%" },
     related: ["real-time-monitoring", "pump-station-monitoring", "facility-management"],
     products: ["eds", "aquamonitrix"],
+    papers: ["one-platform-many-sources"],
   },
   {
     slug: "data-analysis-reporting",
@@ -915,7 +916,7 @@ export const services = [
     related: ["data-as-a-service", "inflow-infiltration-studies", "rehabilitation-verification"],
     solutions: ["asset-network-assessment"],
     products: ["detectronic"],
-    papers: ["measuring-the-invisible", "unforeseen-benefits"],
+    papers: ["one-platform-many-sources", "measuring-the-invisible", "unforeseen-benefits"],
   },
   {
     slug: "network-assessment",
@@ -1957,6 +1958,7 @@ export const flowsense = {
     { label: "Platform brochure", note: "The whole platform in sixteen pages: the screens, the standards it follows and the pricing.", href: localDoc("eds-flowsense-brochure.pdf") },
     { label: "Features and benefits", note: "What FlowSense does to monitor, analyse and plan a sewer network.", href: localDoc("eds-flowsense-features-and-benefits.pdf") },
     { label: "Sending data to your SCADA", note: "For engineering, control systems and IT teams.", href: localDoc("eds-flowsense-data-to-scada.pdf") },
+    { label: "Industry paper: One Platform, Many Sources", note: "The case for bringing every logger brand and your SCADA data onto one platform, with the savings costed.", href: localDoc("eds-industry-paper-one-platform-many-sources.pdf") },
   ],
 };
 
@@ -2126,6 +2128,14 @@ export const clients = [
 /* ------------------------------------------------------------------ */
 export const papers = [
   {
+    id: "one-platform-many-sources",
+    kind: "Industry paper",
+    title: "One Platform, Many Sources",
+    date: "October 2026",
+    text: "The benefits and savings of bringing flow data from several logger manufacturers and the SCADA historian onto one manufacturer agnostic platform. It costs what fragmentation hides, from manual data handling to faults found too late, with FlowSense as the worked example.",
+    href: localDoc("eds-industry-paper-one-platform-many-sources.pdf"),
+  },
+  {
     id: "unforeseen-benefits",
     title: "The Unforeseen Benefits of Sewer Inflow & Infiltration Monitoring",
     date: "October 2025",
@@ -2167,6 +2177,7 @@ export const downloads = [
       ["FlowSense platform brochure", localDoc("eds-flowsense-brochure.pdf")],
       ["FlowSense features and benefits", localDoc("eds-flowsense-features-and-benefits.pdf")],
       ["Sending FlowSense data to your SCADA", localDoc("eds-flowsense-data-to-scada.pdf")],
+      ["One Platform, Many Sources: FlowSense industry paper", localDoc("eds-industry-paper-one-platform-many-sources.pdf")],
     ],
   },
   // Full width, in two columns.
