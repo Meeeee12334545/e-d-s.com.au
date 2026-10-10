@@ -105,11 +105,8 @@ const photoFigure = (f, { i, sizes } = {}) => `
   <div class="photo-frame"${f.pos ? ` style="--pos:${esc(f.pos)}"` : ""}>${photo(f.photo, f.alt, { sizes })}</div>
   ${f.caption ? `<figcaption>${esc(f.caption)}</figcaption>` : ""}
 </figure>`;
-// Two photographs side by side.
-const figureRow = (figs) => `<div class="photo-row">${figs.map((f, i) => photoFigure(f, { i, sizes: "(max-width: 700px) calc(100vw - 40px), (max-width: 980px) calc(50vw - 28px), 362px" })).join("")}</div>`;
-// What a service or solution page shows after its introduction: one
-// photograph (`figure`) or a pair (`figures`).
-const figuresHtml = (s) => (s.figures ? figureRow(s.figures) : s.figure ? photoFigure(s.figure) : "");
+// Two photographs side by side, across the page.
+const figureRow = (figs) => `<div class="photo-row">${figs.map((f, i) => photoFigure(f, { i, sizes: "(max-width: 700px) calc(100vw - 40px), (max-width: 980px) calc(50vw - 28px), 612px" })).join("")}</div>`;
 // A product shot or drawing in the sidebar: { src, alt, caption, w, h }.
 const asideFigure = (s) => (s.asideFigure ? `<figure class="aside-card aside-figure" data-reveal="right"><img src="${s.asideFigure.src}" alt="${esc(s.asideFigure.alt)}" width="${s.asideFigure.w}" height="${s.asideFigure.h}" loading="lazy"><figcaption>${esc(s.asideFigure.caption)}</figcaption></figure>` : "");
 
@@ -481,7 +478,7 @@ const labSection = ({ eyebrow = "Flow lab", title = "See what a storm does to a 
           <p class="sr-only" id="lab-summary"></p>
           <p class="sr-only" id="lab-cursor-sr" aria-live="polite"></p>
         </div>
-        <p class="lab-hint">${icon("mouse-pointer-2", false)}Point at the chart to read values<span class="lab-kbd">, or focus it and press <kbd>←</kbd><kbd>→</kbd></span></p>
+        <p class="lab-hint">${icon("mouse-pointer-2", false)}<span>Point at the chart to read values<span class="lab-kbd">, or focus it and press <kbd>←</kbd> <kbd>→</kbd></span></span></p>
         <div class="lab-controls">
           <div class="lab-actions">
             <button class="btn btn-primary" id="lab-storm" data-magnetic>${icon("cloud-rain")} Send a storm</button>
@@ -854,7 +851,7 @@ add({
   <div class="wrap">
     <div class="section-head">
       <h2 class="h-lg" data-reveal>Where does EDS fit in your network?</h2>
-      <p class="lede" data-reveal style="--i:1">Hover over a district to lift it out of the city and see the services and products EDS brings to it.</p>
+      <p class="lede" data-reveal style="--i:1">Pick a district to lift it out of the city and see the services and products EDS brings to it.</p>
     </div>
   </div>
   <div class="wrap wide">
@@ -967,7 +964,7 @@ add({
   description: `${C.services.length} services from EDS: sewer flow and I&I monitoring, blockage alarms, water quality, sampling, rainfall, pump stations, SCADA integration, data analysis, calibration and more.`,
   current: "services",
   body: (r) => `
-${pageHero(r, { crumbs: [["Services"]], eyebrow: "Services", title: "Specialised services for water and wastewater networks.", lede: "From a single audit to a national monitoring program, delivered by trained crews in every state.", actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${r}contact.html">Talk to our team ${icon("arrow-right")}</a><a class="btn btn-ghost btn-lg" href="${site.phoneHref}">${icon("phone")} ${site.phone}</a><div class="chips">${C.serviceGroups.map((g) => `<a class="chip" href="#${g.id}">${esc(g.title)}</a>`).join("")}</div>`, visual: heroToc(C.serviceGroups.map((g) => [g.id, g.title, C.services.filter((s) => s.group === g.id).length])) })}
+${pageHero(r, { crumbs: [["Services"]], title: "Specialised services for water and wastewater networks.", lede: "From a single audit to a national monitoring program, delivered by trained crews in every state.", actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${r}contact.html">Talk to our team ${icon("arrow-right")}</a><a class="btn btn-ghost btn-lg" href="${site.phoneHref}">${icon("phone")} ${site.phone}</a><div class="chips">${C.serviceGroups.map((g) => `<a class="chip" href="#${g.id}">${esc(g.title)}</a>`).join("")}</div>`, visual: heroToc(C.serviceGroups.map((g) => [g.id, g.title, C.services.filter((s) => s.group === g.id).length])) })}
 ${C.serviceGroups.map((g, gi) => `
 <section class="section${gi % 2 ? " alt" : ""}" id="${g.id}"><div class="wrap">
   <div class="section-head"><p class="eyebrow">${esc(g.title)}</p><h2 class="h-lg" data-reveal>${esc(g.heading)}</h2><p class="lede" data-reveal style="--i:1">${esc(g.lede)}</p></div>
@@ -999,7 +996,7 @@ const blockHtml = (b) => `
   <h2 class="h-md">${esc(b.heading)}</h2>
   ${b.lede ? `<p class="block-lede">${esc(b.lede)}</p>` : ""}
   ${b.table ? tableHtml(b.table) : ""}
-  ${b.items ? `<div class="feature-list">${b.items.map(([t, d]) => `<div class="feature holder">${icon("circle-check")}<div><b>${esc(t)}</b><span>${esc(d)}</span></div></div>`).join("")}</div>` : ""}
+  ${b.items ? `<div class="feature-list">${b.items.map(([t, d]) => `<div class="feature holder"><div><b>${esc(t)}</b><span>${esc(d)}</span></div></div>`).join("")}</div>` : ""}
   ${b.list ? (b.steps || b.heading.includes("approach") ? `<ol class="steps">${b.list.map((l) => `<li>${esc(l)}</li>`).join("")}</ol>` : `<ul class="checks">${b.list.map((l) => `<li>${icon("check", false)}<span>${esc(l)}</span></li>`).join("")}</ul>`) : ""}
   ${b.faq ? faqHtml(b.faq) : ""}
 </div>`;
@@ -1037,20 +1034,24 @@ const glanceOf = (s) => {
   return facts ? heroPanel("At a glance", `<ul class="hero-steps glance">${facts.map(([ic, t, d]) => `<li><span class="card-icon">${icon(ic, false)}</span><span><b>${esc(t)}</b><small>${esc(d)}</small></span></li>`).join("")}</ul>`) : "";
 };
 
-// The contact card beside a page's opening text, with an optional product
-// shot below it. The related links sit in their own band near the end.
-const asideHtml = (r, topic, extra = "") => `
-<aside class="aside">
-  <div class="aside-card brand" data-reveal="right">
-    <h3>Talk to our team</h3>
-    <p>We would welcome the opportunity to discuss your requirements.</p>
-    <div class="aside-actions">
-      <a class="btn btn-primary" href="${contactHref(r, { topic })}">Start an enquiry ${icon("arrow-right")}</a>
-      <a class="btn btn-ghost" href="${site.phoneHref}">${icon("phone")} ${site.phone}</a>
-    </div>
-  </div>
-  ${extra}
-</aside>`;
+// A service or solution page's opening text, across the page: beside its
+// photograph (`figure`) or product shot (`asideFigure`) when it has one,
+// otherwise the first paragraph beside the rest. A pair of photographs
+// (`figures`) sits under the text. Enquiries are left to the hero, the
+// section bar and the closing band, so there is no contact card here.
+function overviewHtml(s) {
+  const paras = (list) => list.map((p) => `<p>${esc(p)}</p>`).join("");
+  const visual = s.figure ? photoFigure(s.figure, { sizes: "(max-width: 980px) calc(100vw - 40px), 580px" }) : asideFigure(s);
+  const [lead, ...rest] = s.intro;
+  const text = visual || !rest.length
+    ? `<div class="prose" data-reveal>${paras(s.intro)}</div>`
+    : `<div class="prose" data-reveal><p>${esc(lead)}</p></div><div class="prose prose-rest" data-reveal style="--i:1">${paras(rest)}</div>`;
+  return `
+<section class="section" id="overview"><div class="wrap">
+  <div class="intro">${text}${visual}</div>
+  ${s.figures ? figureRow(s.figures) : ""}
+</div></section>`;
+}
 const svcLinks = (r, slugs = []) => slugs.map((slug) => [`${r}services/${slug}.html`, svc(slug).short || svc(slug).title]);
 const solLinks = (r, slugs = []) => slugs.map((slug) => [`${r}solutions/${slug}.html`, sol(slug).title]);
 const brandLinks = (r, slugs = []) => slugs.map((slug) => [`${r}products/${slug}.html`, brand(slug).title]);
@@ -1064,7 +1065,7 @@ const paperLinks = (ids = []) => ids.map((id) => { const p = C.papers.find((x) =
 const isSteps = (b) => Boolean(b.list && (b.steps || b.heading.includes("approach")));
 const pairable = (b) => !b.table && !b.faq && !isSteps(b) && ((b.items && b.items.length <= 6) || (b.list && b.list.length <= 6));
 const bandHead = (b) => `<div class="band-head"><h2 class="h-md" data-reveal>${esc(b.heading)}</h2>${b.lede ? `<p class="lede" data-reveal style="--i:1">${esc(b.lede)}</p>` : ""}</div>`;
-const flatItems = (items) => `<ul class="flat-list">${items.map(([t, d], n) => `<li data-reveal style="--i:${n % 4}">${icon("circle-check")}<span><b>${esc(t)}</b><span>${esc(d)}</span></span></li>`).join("")}</ul>`;
+const flatItems = (items) => `<ul class="flat-list">${items.map(([t, d], n) => `<li data-reveal style="--i:${n % 4}"><span><b>${esc(t)}</b><span>${esc(d)}</span></span></li>`).join("")}</ul>`;
 const checkList = (list) => `<ul class="checks" data-reveal>${list.map((l) => `<li>${icon("check", false)}<span>${esc(l)}</span></li>`).join("")}</ul>`;
 const blockBody = (b) => (b.items ? flatItems(b.items) : b.list ? checkList(b.list) : "");
 const band = (tone, inner, { id, cls = "" } = {}) => `
@@ -1078,7 +1079,7 @@ function bandsOf(s) {
     const b = blocks[i], next = blocks[i + 1], id = slugify(b.heading);
     if (b.items && !cards) {
       cards = true;
-      out.push({ id, cls: "band-cards", html: `${bandHead(b)}<div class="feature-grid n${b.items.length}">${b.items.map(([t, d], n) => `<div class="feature holder" data-reveal style="--i:${n % 4}">${icon("circle-check")}<div><b>${esc(t)}</b><span>${esc(d)}</span></div></div>`).join("")}</div>` });
+      out.push({ id, cls: "band-cards", html: `${bandHead(b)}<div class="feature-grid n${b.items.length}">${b.items.map(([t, d], n) => `<div class="feature holder" data-reveal style="--i:${n % 4}"><div><b>${esc(t)}</b><span>${esc(d)}</span></div></div>`).join("")}</div>` });
     } else if (pairable(b) && next && pairable(next)) {
       out.push({ cls: "band-pair", html: `<div class="pair">${[b, next].map((x) => `<div class="pair-col" id="${slugify(x.heading)}">${bandHead(x)}${blockBody(x)}</div>`).join("")}</div>` });
       i++;
@@ -1101,9 +1102,9 @@ function bandsOf(s) {
   return out;
 }
 
-// The body of a service or solution page: the opening text beside a contact
-// card, then one band per section in alternating white and pale grey, how a
-// program runs, any demo, the related links in one band, and the call to action.
+// The body of a service or solution page: the opening text, then one band per
+// section in alternating white and pale grey, how a program runs, any demo,
+// the related links in one band, and the call to action.
 function detailBody(r, s, { related, demo = "" }) {
   let tone = "white";
   const flip = () => (tone = tone === "alt" ? "white" : "alt");
@@ -1112,13 +1113,7 @@ function detailBody(r, s, { related, demo = "" }) {
   const groups = related.filter(([, links]) => links.length);
   const relatedTone = demo ? "alt" : flip();
   return `
-<section class="section" id="overview"><div class="wrap split">
-  <div>
-    <div class="prose" data-reveal>${s.intro.map((p) => `<p>${esc(p)}</p>`).join("")}</div>
-    ${figuresHtml(s)}
-  </div>
-  ${asideHtml(r, s.title, asideFigure(s))}
-</div></section>
+${overviewHtml(s)}
 ${bands}
 ${process}
 ${demo}
@@ -1151,7 +1146,7 @@ add({
   description: "Structure performance monitoring, asset and network assessment, thermal monitoring, wastewater monitoring, automatic sampling and environmental monitoring.",
   current: "solutions",
   body: (r) => `
-${pageHero(r, { crumbs: [["Solutions"]], eyebrow: "Solutions", title: "Monitoring applied to the problem in front of you.", lede: "Each solution combines EDS instruments, field crews and data into an outcome you can act on.", visual: heroSteps("How a solution comes together", [["cpu", "Instruments", "Chosen from one of Australia's largest monitoring portfolios."], ["hard-hat", "Field crews", "Installed, maintained and calibrated by trained EDS crews."], ["chart-line", "Data you can act on", "Delivered to FlowSense, your SCADA system or a report."]]) })}
+${pageHero(r, { crumbs: [["Solutions"]], title: "Monitoring applied to the problem in front of you.", lede: "Each solution combines EDS instruments, field crews and data into an outcome you can act on.", visual: heroSteps("How a solution comes together", [["cpu", "Instruments", "Chosen from one of Australia's largest monitoring portfolios."], ["hard-hat", "Field crews", "Installed, maintained and calibrated by trained EDS crews."], ["chart-line", "Data you can act on", "Delivered to FlowSense, your SCADA system or a report."]]) })}
 <section class="section"><div class="wrap"><div class="grid c3">
   ${C.solutions.map((s, n) => cardLink(r, { href: `solutions/${s.slug}.html`, iconName: s.icon, title: s.title, text: s.summary, n })).join("")}
 </div></div></section>
@@ -1289,7 +1284,7 @@ ${pageHero(r, { crumbs: [["Products", "products/index.html"], ["Detectronic", "p
 <section class="section"><div class="wrap split">
   <div>
     <div class="prose" data-reveal>${C.lidott.description.map((p) => `<p>${esc(p)}</p>`).join("")}</div>
-    <div class="feature-list" style="margin-top:40px">${C.lidott.sections.map(([t, d]) => `<div class="feature holder" data-reveal>${icon("circle-check")}<div><b>${esc(t)}</b><span>${esc(d)}</span></div></div>`).join("")}</div>
+    <div class="feature-list" style="margin-top:40px">${C.lidott.sections.map(([t, d]) => `<div class="feature holder" data-reveal><div><b>${esc(t)}</b><span>${esc(d)}</span></div></div>`).join("")}</div>
     ${photoFigure(C.lidott.figure)}
   </div>
   <aside class="aside">
@@ -1313,7 +1308,7 @@ ${pageHero(r, { crumbs: [["Products", "products/index.html"], ["Detectronic", "p
 <section class="section"><div class="wrap split">
   <div>
     <div class="prose" data-reveal>${C.alarm2.description.map((p) => `<p>${esc(p)}</p>`).join("")}</div>
-    <div class="feature-list" style="margin-top:40px">${C.alarm2.sections.map(([t, d]) => `<div class="feature holder" data-reveal>${icon("circle-check")}<div><b>${esc(t)}</b><span>${esc(d)}</span></div></div>`).join("")}</div>
+    <div class="feature-list" style="margin-top:40px">${C.alarm2.sections.map(([t, d]) => `<div class="feature holder" data-reveal><div><b>${esc(t)}</b><span>${esc(d)}</span></div></div>`).join("")}</div>
   </div>
   <aside class="aside">
     <div class="aside-card" data-reveal="right"><h3>Specifications</h3><table class="specs"><tbody>${C.alarm2.specs.map(([k, v]) => `<tr><th>${k}</th><td>${v}</td></tr>`).join("")}</tbody></table></div>
@@ -1340,7 +1335,7 @@ ${pageHero(r, { crumbs: [["Products", "products/index.html"], [b.name, `products
 <section class="section"><div class="wrap split">
   <div>
     <div class="prose" data-reveal>${pg.intro.map((p) => `<p>${esc(p)}</p>`).join("")}</div>
-    <div class="feature-list" style="margin-top:40px">${pg.features.map(([t, d]) => `<div class="feature holder" data-reveal>${icon("circle-check")}<div><b>${esc(t)}</b><span>${esc(d)}</span></div></div>`).join("")}</div>
+    <div class="feature-list" style="margin-top:40px">${pg.features.map(([t, d]) => `<div class="feature holder" data-reveal><div><b>${esc(t)}</b><span>${esc(d)}</span></div></div>`).join("")}</div>
   </div>
   <aside class="aside">
     <figure class="aside-card aside-figure" data-reveal="right"><img src="${pg.figure.src}" alt="${esc(pg.figure.alt)}" loading="lazy"><figcaption>${esc(pg.figure.caption)}</figcaption></figure>
@@ -1364,7 +1359,7 @@ add({
   description: "EDS FlowSense: sewer network monitoring, flow analytics and engineering intelligence by Environmental Data Services.",
   current: "flowsense",
   body: (r) => `
-${pageHero(r, { crumbs: [["FlowSense"]], iconName: "waves", eyebrow: "EDS FlowSense", title: "Sewer network intelligence.", lede: C.flowsense.lede, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${site.flowsenseUrl}" rel="noopener">Open FlowSense ${icon("arrow-up-right")}</a><a class="btn btn-ghost btn-lg" href="${contactHref(r, { topic: "EDS FlowSense" })}">Request a walkthrough</a>`, visual: heroToc([["platform", "Inside the platform"], ["capabilities", "Capabilities", C.flowsense.features.length], ["standards", "Methods and standards"], ["questions", "Questions", C.flowsense.faq.length], ["documents", "Documents", C.flowsense.docs.length]]) })}
+${pageHero(r, { crumbs: [["FlowSense"]], iconName: "waves", title: "Sewer network intelligence.", lede: C.flowsense.lede, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${site.flowsenseUrl}" rel="noopener">Open FlowSense ${icon("arrow-up-right")}</a><a class="btn btn-ghost btn-lg" href="${contactHref(r, { topic: "EDS FlowSense" })}">Request a walkthrough</a>`, visual: heroToc([["platform", "Inside the platform"], ["capabilities", "Capabilities", C.flowsense.features.length], ["standards", "Methods and standards"], ["questions", "Questions", C.flowsense.faq.length], ["documents", "Documents", C.flowsense.docs.length]]) })}
 <section class="section fs-band" id="platform"><div class="wrap fs-grid">
   <div>
     <p class="eyebrow">Inside the platform</p>
@@ -1377,24 +1372,24 @@ ${pageHero(r, { crumbs: [["FlowSense"]], iconName: "waves", eyebrow: "EDS FlowSe
   ${fsScreen()}
 </div></section>
 <section class="section" id="capabilities"><div class="wrap">
-  <div class="section-head"><p class="eyebrow">Capabilities</p><h2 class="h-lg" data-reveal>Everything your network is telling you.</h2></div>
+  <div class="section-head"><h2 class="h-lg" data-reveal>Everything your network is telling you.</h2></div>
   <div class="grid c3">
     ${C.flowsense.features.map(([ic, t, d], n) => `<div class="card hoverable holder" data-reveal style="--i:${n % 3}"><span class="card-icon">${icon(ic)}</span><h3>${esc(t)}</h3><p>${esc(d)}</p></div>`).join("")}
   </div>
 </div></section>
 <section class="section alt" id="standards"><div class="wrap">
-  <div class="section-head"><p class="eyebrow">Methods</p><h2 class="h-lg" data-reveal>${esc(C.flowsense.standards.heading)}</h2><p class="lede" data-reveal style="--i:1">${esc(C.flowsense.standards.lede)}</p></div>
+  <div class="section-head"><h2 class="h-lg" data-reveal>${esc(C.flowsense.standards.heading)}</h2><p class="lede" data-reveal style="--i:1">${esc(C.flowsense.standards.lede)}</p></div>
   <div class="grid c3">
     ${C.flowsense.standards.items.map(([ic, t, d], n) => `<div class="card hoverable holder" data-reveal style="--i:${n % 3}"><span class="card-icon">${icon(ic)}</span><h3>${esc(t)}</h3><p>${esc(d)}</p></div>`).join("")}
   </div>
   <p class="note" data-reveal style="margin-top:22px">${esc(C.flowsense.standards.note)}</p>
 </div></section>
 <section class="section" id="questions"><div class="wrap split rev">
-  <div class="section-head" style="margin:0"><p class="eyebrow">Questions</p><h2 class="h-lg" data-reveal>What councils and utilities ask us.</h2><p class="lede" data-reveal style="--i:1">If your question is not here, our team will answer it on ${site.phone}.</p></div>
+  <div class="section-head" style="margin:0"><h2 class="h-lg" data-reveal>What councils and utilities ask us.</h2><p class="lede" data-reveal style="--i:1">If your question is not here, our team will answer it on ${site.phone}.</p></div>
   <div data-reveal>${faqHtml(C.flowsense.faq)}</div>
 </div></section>
 <section class="section alt" id="documents"><div class="wrap">
-  <div class="section-head"><p class="eyebrow">Documents</p><h2 class="h-lg" data-reveal>Read more about FlowSense.</h2></div>
+  <div class="section-head"><h2 class="h-lg" data-reveal>Read more about FlowSense.</h2></div>
   <ul class="doc-list grid c2">
     ${C.flowsense.docs.map((d, n) => `<li data-reveal style="--i:${n}"><a href="${d.href}" rel="noopener"><span class="card-icon">${icon("file-text")}</span><span>${esc(d.label)}<small>${esc(d.note)} ${docType(d.href)}.</small></span>${icon("download")}</a></li>`).join("")}
   </ul>
@@ -1410,7 +1405,7 @@ add({
   current: "about",
   scripts: ["widgets.js"],
   body: (r) => `
-${pageHero(r, { crumbs: [["About"]], eyebrow: "About EDS", title: "Australian owned and operated since 1991.", lede: "Scientists, engineers and technicians who excel in every facet of environmental monitoring and project delivery.", visual: heroFacts() })}
+${pageHero(r, { crumbs: [["About"]], title: "Australian owned and operated since 1991.", lede: "Scientists, engineers and technicians who excel in every facet of environmental monitoring and project delivery.", visual: heroFacts() })}
 <section class="section"><div class="wrap split">
   <div class="prose" data-reveal>${C.about.intro.map((p) => `<p>${esc(p)}</p>`).join("")}<h2>Our mission</h2>${C.about.mission.map((p) => `<p>${esc(p)}</p>`).join("")}</div>
   <aside class="aside">
@@ -1422,7 +1417,7 @@ ${pageHero(r, { crumbs: [["About"]], eyebrow: "About EDS", title: "Australian ow
   <div class="mosaic">${C.about.field.photos.map((f, i) => photoFigure(f, { i, sizes: i ? "(max-width: 560px) calc(100vw - 40px), (max-width: 980px) calc(50vw - 27px), 300px" : "(max-width: 980px) calc(100vw - 40px), 614px" })).join("")}</div>
 </div></section>
 <section class="section alt" id="how-we-work"><div class="wrap">
-  <div class="section-head"><p class="eyebrow">How we work</p><h2 class="h-lg" data-reveal>${esc(C.about.approach.heading)}</h2><p class="lede" data-reveal style="--i:1">${esc(C.about.approach.lede)}</p></div>
+  <div class="section-head"><h2 class="h-lg" data-reveal>${esc(C.about.approach.heading)}</h2><p class="lede" data-reveal style="--i:1">${esc(C.about.approach.lede)}</p></div>
   <div class="grid c3">
     ${C.about.approach.items.map(([ic, t, d], n) => `<div class="card hoverable holder" data-reveal style="--i:${n % 3}"><span class="card-icon">${icon(ic)}</span><h3>${esc(t)}</h3><p>${esc(d)}</p></div>`).join("")}
   </div>
@@ -1438,7 +1433,7 @@ ${pageHero(r, { crumbs: [["About"]], eyebrow: "About EDS", title: "Australian ow
 </div></section>
 <section class="section dark"><div class="wrap aus">
   <svg id="ausmap" data-offices='${JSON.stringify(C.offices)}' role="group" aria-label="Map of Australia showing EDS offices" data-reveal="scale"></svg>
-  <div><p class="eyebrow">Nationwide</p><h2 class="h-lg" data-reveal>Four offices across Australia.</h2>
+  <div><h2 class="h-lg" data-reveal>Four offices across Australia.</h2>
   <div class="office-list" style="margin-top:26px">${C.offices.map((o) => `<button class="office"><span class="card-icon">${icon("map-pin")}</span><span><b>${o.city}</b><span>${o.note}</span></span><em>${o.state}</em></button>`).join("")}</div></div>
 </div></section>
 ${ctaSection(r)}`,
@@ -1451,7 +1446,7 @@ add({
   description: "EDS white papers on inflow and infiltration, plus software, drivers, datasheets and selection guides.",
   current: "resources",
   body: (r) => `
-${pageHero(r, { crumbs: [["Resources"]], eyebrow: "Resources", title: "White papers, downloads and support.", lede: "What we have learned in the field, and the files you need to keep instruments running.", visual: heroToc([["papers", "White papers", C.papers.length], ["downloads", "Software, drivers and datasheets", C.downloads.reduce((n, g) => n + g.items.length, 0)], ["support", "Passwords, RMA forms and data access"]]) })}
+${pageHero(r, { crumbs: [["Resources"]], title: "White papers, downloads and support.", lede: "What we have learned in the field, and the files you need to keep instruments running.", visual: heroToc([["papers", "White papers", C.papers.length], ["downloads", "Software, drivers and datasheets", C.downloads.reduce((n, g) => n + g.items.length, 0)], ["support", "Passwords, RMA forms and data access"]]) })}
 <section class="section" id="papers"><div class="wrap">
   <div class="section-head"><p class="eyebrow">White papers</p><h2 class="h-lg" data-reveal>EDS publications</h2></div>
   <div class="grid ${C.papers.length % 3 ? "c2" : "c3"}">
@@ -1463,7 +1458,7 @@ ${pageHero(r, { crumbs: [["Resources"]], eyebrow: "Resources", title: "White pap
   </div>
 </div></section>
 <section class="section alt" id="downloads"><div class="wrap">
-  <div class="section-head"><p class="eyebrow">Downloads and manuals</p><h2 class="h-lg" data-reveal>Software, drivers and datasheets</h2></div>
+  <div class="section-head"><h2 class="h-lg" data-reveal>Software, drivers and datasheets</h2></div>
   <div class="grid c2">
     ${C.downloads.map((g) => `
     <div data-reveal${g.wide ? ' style="grid-column:1/-1;margin-top:28px"' : ""}>
@@ -1602,9 +1597,8 @@ add({
   current: "contact",
   scripts: ["widgets.js"],
   body: (r) => `
-${pageHero(r, { crumbs: [["Contact"]], eyebrow: "Contact", title: "Call or visit. We would like to hear about your project.", lede: `${site.hours}. One number for every state: ${site.phone.replace(/ /g, " ")}.`, visual: heroPanel("Quickest ways to reach us", `
+${pageHero(r, { crumbs: [["Contact"]], title: "Call or visit. We would like to hear about your project.", lede: `${site.hours}, with one number for every state.`, visual: heroPanel("Quickest ways to reach us", `
   <a class="hero-call" href="${site.phoneHref}">${icon("phone")}<span><small>Call from anywhere in Australia</small><b>${site.phone}</b></span></a>
-  ${openStatus()}
   <ul class="hero-links">
     <li><a href="#enquiry">${icon("message-square-text")}<span>Start an enquiry</span>${icon("arrow-down")}</a></li>
     <li><a href="#offices">${icon("map-pin")}<span>Offices in four states</span>${icon("arrow-down")}</a></li>
@@ -1612,7 +1606,6 @@ ${pageHero(r, { crumbs: [["Contact"]], eyebrow: "Contact", title: "Call or visit
 <section class="section alt"><div class="wrap contact-grid">
   <div class="contact-cards">
     <a class="contact-card" href="${site.phoneHref}" data-reveal><span class="card-icon">${icon("phone")}</span><span><b>${site.phone}</b><span>General enquiries, customer service, service department and sales</span></span></a>
-    <a class="contact-card" href="#enquiry" data-reveal><span class="card-icon">${icon("message-square-text")}</span><span><b>Start an enquiry</b><span>Projects, monitoring programs, pricing, hire and service. It goes straight to our team.</span></span></a>
     <a class="contact-card" href="${contactHref(r, { topic: "Product pricing" }, "contact.html")}" data-reveal><span class="card-icon">${icon("tag")}</span><span><b>Sales</b><span>${site.sales}<br>Pricing, quotes and hire</span></span></a>
     <a class="contact-card" href="${contactHref(r, { topic: "Equipment service or calibration" }, "contact.html")}" data-reveal><span class="card-icon">${icon("wrench")}</span><span><b>Service</b><span>${site.service}<br>Equipment service and calibration</span></span></a>
     <a class="contact-card" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent("13/20-22 Ellerslie Road, Meadowbrook QLD 4131")}" rel="noopener" data-reveal><span class="card-icon">${icon("map-pin")}</span><span><b>Head office</b><span>${site.address.join(", ")}</span></span></a>
@@ -1636,7 +1629,7 @@ add({
   description: "Ask EDS about monitoring, product pricing, equipment hire, service and calibration, or EDS FlowSense. Your enquiry goes straight to our team.",
   current: "enquire",
   body: (r) => `
-${pageHero(r, { compact: true, crumbs: [["Contact", "contact.html"], ["Start an enquiry"]], eyebrow: "Enquiry", title: "Tell us what you need.", lede: "Monitoring, pricing, hire, service or a question about FlowSense. A real person from our team will come back to you." })}
+${pageHero(r, { compact: true, crumbs: [["Contact", "contact.html"], ["Start an enquiry"]], title: "Tell us what you need.", lede: "Monitoring, pricing, hire, service or a question about FlowSense. A real person from our team will come back to you." })}
 <section class="section alt enquire-section"><div class="wrap enquire-grid">
   ${enquiryForm(r, "")}
   <aside class="enquire-aside">
