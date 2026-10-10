@@ -528,6 +528,9 @@ class IntegratedMemorySystem:
         inclusive ``start`` and ``end`` ISO 8601 or ``datetime`` bounds.
         Results are enriched with graph relationships for each matched entity.
         """
+        if time_filter and set(time_filter) - {"start", "end"}:
+            raise ValueError("time_filter accepts only start and end bounds")
+
         start_time = (
             self._parse_time_bound(time_filter["start"])
             if time_filter and "start" in time_filter

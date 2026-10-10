@@ -98,6 +98,9 @@ class Sandbox:
 
         Returns:
             dict with keys "stdout", "stderr", "exit_code".
+
+        Pass an argument list for commands containing untrusted values; the
+        infrastructure adapter must execute argument lists without a shell.
         """
         # Implementation depends on infrastructure
         pass
@@ -240,7 +243,7 @@ class ImageBuilder:
     async def _execute_build_step(
         self, command: str | list[str], environment: Optional[dict[str, str]] = None
     ) -> None:
-        """Execute a build step (infrastructure-specific)."""
+        """Execute argv directly and pass its temporary environment only to the child."""
         pass
 
     async def _get_commit_sha(self) -> str:

@@ -127,14 +127,14 @@ def categorize_messages(messages: List[Dict]) -> Dict[str, List[Dict]]:
 
         if role == "system":
             categories["system_prompt"].append({**msg, "category": "system_prompt"})
+        elif "retrieved" in msg.get("tags", []):
+            categories["retrieved_document"].append({**msg, "category": "retrieved_document"})
         elif (
             role == "tool"
             or message_type == "tool_result"
             or "tool_use" in message_type
         ):
             categories["tool_output"].append({**msg, "category": "tool_output"})
-        elif "retrieved" in msg.get("tags", []):
-            categories["retrieved_document"].append({**msg, "category": "retrieved_document"})
         elif role in {"user", "assistant"}:
             categories["conversation"].append({**msg, "category": "conversation"})
         else:

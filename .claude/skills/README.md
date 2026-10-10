@@ -1,6 +1,6 @@
 # Project skills
 
-Claude Code loads each folder here that holds a `SKILL.md`. The files are copied unchanged from their upstream repos, with the upstream licence saved beside each skill as `LICENSE.txt`. To update a skill, copy it again from the source below.
+Claude Code loads each folder here that holds a `SKILL.md`. Skill content is adapted from upstream repos, with the upstream licence saved beside each skill as `LICENSE.txt`. To update a skill, copy it again from the source below.
 
 | Skill | Source | Licence |
 | --- | --- | --- |
@@ -10,6 +10,5 @@ Claude Code loads each folder here that holds a `SKILL.md`. The files are copied
 Notes:
 
 - `caveman` is turned on with `/caveman` or "caveman mode" and stays on until "stop caveman" or "normal mode". `/caveman ultra` and `/caveman wenyan` also activate the local caveman mode.
-- `harness-engineering` refers to `researcher/` files that live in the upstream repo, not here.
 - The Python files under each skill's `scripts/` folder are standard-library examples. Nothing runs them automatically.
 - `caveman` also retains its upstream `NOTICE` and `LICENSE-MIT` beside `LICENSE.txt`.

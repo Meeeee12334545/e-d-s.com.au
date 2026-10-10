@@ -123,27 +123,23 @@ class ImageBuilder:
     
     def _build_image(self, repo: str) -> str:
         """Build a single repository image."""
-        sandbox = modal.Sandbox.create()
-        
         # Validate repo and pass the token through temporary Git config env vars.
         if not re.fullmatch(r"[A-Za-z0-9-]+/[A-Za-z0-9._-]+", repo):
             raise ValueError("Repository must be specified as owner/name")
         token = get_app_installation_token(repo)
-        clone_url = f"https://github.com/{repo}.git"
         authorization = base64.b64encode(
             f"x-access-token:{token}".encode()
         ).decode()
-        sandbox.exec(
-            "git",
-            "clone",
-            clone_url,
-            "/workspace",
-            env={
-                "GIT_CONFIG_COUNT": "1",
-                "GIT_CONFIG_KEY_0": "http.https://github.com/.extraheader",
-                "GIT_CONFIG_VALUE_0": f"AUTHORIZATION: basic {authorization}",
-            },
+        credential_environment = {
+            "GIT_CONFIG_COUNT": "1",
+            "GIT_CONFIG_KEY_0": "http.https://github.com/.extraheader",
+            "GIT_CONFIG_VALUE_0": f"AUTHORIZATION: basic {authorization}",
+        }
+        sandbox = modal.Sandbox.create(
+            secrets=[modal.Secret.from_dict(credential_environment)]
         )
+        clone_url = f"https://github.com/{repo}.git"
+        sandbox.exec("git", "clone", clone_url, "/workspace")
         sandbox.exec(
             "git",
             "-C",

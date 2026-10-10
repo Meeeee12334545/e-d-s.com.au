@@ -2,6 +2,7 @@ import importlib.util
 import subprocess
 import sys
 import unittest
+from datetime import datetime
 from pathlib import Path
 
 
@@ -43,10 +44,10 @@ class MemoryStoreTests(unittest.TestCase):
         memory = MEMORY_STORE.IntegratedMemorySystem()
         memory.start_session("session")
         memory.store_fact(
-            "same memory", "Alice", timestamp=MEMORY_STORE.datetime(2025, 1, 2)
+            "same memory", "Alice", timestamp=datetime(2025, 1, 3)
         )
         memory.store_fact(
-            "same memory", "Alice", timestamp=MEMORY_STORE.datetime(2025, 1, 3)
+            "same memory", "Alice", timestamp=datetime(2025, 1, 2)
         )
 
         results = memory.retrieve_memories(
