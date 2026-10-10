@@ -23,10 +23,10 @@ Typical usage::
 
 import hashlib
 import json
-from datetime import datetime
+import math
+import random
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
-
-import numpy as np
 
 __all__ = [
     "VectorStore",
@@ -45,7 +45,7 @@ class VectorStore:
 
     def __init__(self, dimension: int = 768) -> None:
         self.dimension: int = dimension
-        self.vectors: List[np.ndarray] = []
+        self.vectors: List[List[float]] = []
         self.metadata: List[Dict[str, Any]] = []
         self.entity_index: Dict[str, List[int]] = {}
         self.time_index: Dict[str, List[int]] = {}
@@ -57,7 +57,7 @@ class VectorStore:
         be able to retrieve later via semantic search.
         """
         metadata = metadata or {}
-        embedding: np.ndarray = self._embed(text)
+        embedding: List[float] = self._embed(text)
         index: int = len(self.vectors)
 
         self.vectors.append(embedding)
@@ -90,14 +90,14 @@ class VectorStore:
         Use when: retrieving memories relevant to a query, optionally
         narrowed by metadata filters (entity, session, time range).
         """
-        query_embedding: np.ndarray = self._embed(query)
+        query_embedding: List[float] = self._embed(query)
 
         scores: List[tuple[int, float]] = []
         for i, vec in enumerate(self.vectors):
-            score: float = float(
-                np.dot(query_embedding, vec)
-                / (np.linalg.norm(query_embedding) * np.linalg.norm(vec) + 1e-8)
-            )
+            dot_product = sum(a * b for a, b in zip(query_embedding, vec))
+            query_norm = math.sqrt(sum(value * value for value in query_embedding))
+            vector_norm = math.sqrt(sum(value * value for value in vec))
+            score = dot_product / (query_norm * vector_norm + 1e-8)
 
             # Apply filters
             if filters and not self._matches_filters(self.metadata[i], filters):
@@ -135,14 +135,14 @@ class VectorStore:
             return []
 
         if query:
-            query_embedding: np.ndarray = self._embed(query)
+            query_embedding: List[float] = self._embed(query)
             scored: List[tuple[int, float, Dict[str, Any]]] = []
             for i in indices:
-                vec: np.ndarray = self.vectors[i]
-                score: float = float(
-                    np.dot(query_embedding, vec)
-                    / (np.linalg.norm(query_embedding) * np.linalg.norm(vec) + 1e-8)
-                )
+                vec = self.vectors[i]
+                dot_product = sum(a * b for a, b in zip(query_embedding, vec))
+                query_norm = math.sqrt(sum(value * value for value in query_embedding))
+                vector_norm = math.sqrt(sum(value * value for value in vec))
+                score = dot_product / (query_norm * vector_norm + 1e-8)
                 scored.append((i, score, self.metadata[i]))
 
             scored.sort(key=lambda x: x[1], reverse=True)
@@ -156,16 +156,17 @@ class VectorStore:
                 for i in indices[:limit]
             ]
 
-    def _embed(self, text: str) -> np.ndarray:
+    def _embed(self, text: str) -> List[float]:
         """Generate embedding for text.
 
         In production, replace with an actual embedding model. This
-        deterministic stub uses the text hash as a random seed so that
+        deterministic stub uses a stable text digest as its seed so that
         identical texts always produce identical vectors. Uses a local
-        RNG to avoid corrupting global numpy random state.
+        RNG to avoid changing global random state.
         """
-        rng = np.random.default_rng(hash(text) % (2**32))
-        return rng.standard_normal(self.dimension)
+        seed = int.from_bytes(hashlib.sha256(text.encode()).digest()[:8], "big")
+        rng = random.Random(seed)
+        return [rng.gauss(0, 1) for _ in range(self.dimension)]
 
     def _time_key(self, timestamp: Any) -> str:
         """Create time key for indexing."""
@@ -523,17 +524,41 @@ class IntegratedMemorySystem:
         """Retrieve memories matching query.
 
         Use when: the agent needs to recall previously stored facts,
-        optionally filtered by entity or time. Results are enriched
-        with graph relationships for each matched entity.
+        optionally filtered by entity or time. ``time_filter`` accepts
+        inclusive ``start`` and ``end`` ISO 8601 or ``datetime`` bounds.
+        Results are enriched with graph relationships for each matched entity.
         """
+        start_time = (
+            self._parse_time_bound(time_filter["start"])
+            if time_filter and "start" in time_filter
+            else None
+        )
+        end_time = (
+            self._parse_time_bound(time_filter["end"])
+            if time_filter and "end" in time_filter
+            else None
+        )
+        if start_time and end_time and start_time > end_time:
+            raise ValueError("time_filter start must not be after end")
+
         # Vector search
         filters: Dict[str, Any] = {"session_id": self.session_id}
         if entity_filter:
             filters["entity"] = entity_filter
 
         results: List[Dict[str, Any]] = self.vector_store.search(
-            query, limit=limit, filters=filters
+            query,
+            limit=len(self.vector_store.vectors) if time_filter else limit,
+            filters=filters,
         )
+
+        if time_filter:
+            results = [
+                result for result in results
+                if self._matches_time_filter(
+                    result["metadata"].get("valid_from"), start_time, end_time
+                )
+            ][:limit]
 
         # Enrich with graph relationships
         for result in results:
@@ -544,6 +569,38 @@ class IntegratedMemorySystem:
                     result["relationships"] = self.graph.get_relationships(node_id)
 
         return results
+
+    @staticmethod
+    def _parse_time_bound(value: Any) -> datetime:
+        if isinstance(value, datetime):
+            parsed = value
+        elif isinstance(value, str):
+            try:
+                parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+            except ValueError as exc:
+                raise ValueError(
+                    "time_filter bounds must be ISO 8601 timestamps"
+                ) from exc
+        else:
+            raise ValueError(
+                "time_filter bounds must be datetime or ISO 8601 strings"
+            )
+
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=timezone.utc)
+        return parsed.astimezone(timezone.utc)
+
+    @classmethod
+    def _matches_time_filter(
+        cls, value: Any, start_time: Optional[datetime], end_time: Optional[datetime]
+    ) -> bool:
+        try:
+            timestamp = cls._parse_time_bound(value)
+        except ValueError:
+            return False
+        return (start_time is None or timestamp >= start_time) and (
+            end_time is None or timestamp <= end_time
+        )
 
     def retrieve_entity_context(self, entity: str) -> Dict[str, Any]:
         """Retrieve complete context for an entity.

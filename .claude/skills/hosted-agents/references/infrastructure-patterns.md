@@ -9,6 +9,11 @@ This reference provides detailed implementation patterns for building hosted age
 Modal provides the sandbox infrastructure with near-instant startup and filesystem snapshots.
 
 ```python
+import base64
+import os
+import re
+import subprocess
+
 import modal
 
 # Define the base image with all dependencies
@@ -39,17 +44,45 @@ class AgentSandbox:
     
     def _clone_and_setup(self):
         """Clone repo and run initial setup."""
+        if not re.fullmatch(r"[A-Za-z0-9-]+/[A-Za-z0-9._-]+", self.repo_url):
+            raise ValueError("Repository must be specified as owner/name")
+
         token = self._get_github_app_token()
-        os.system(f"git clone https://x-access-token:{token}@github.com/{self.repo_url}")
-        os.system("npm install")
-        os.system("npm run build")
+        clone_url = f"https://github.com/{self.repo_url}.git"
+        authorization = base64.b64encode(
+            f"x-access-token:{token}".encode()
+        ).decode()
+        clone_environment = os.environ.copy()
+        clone_environment.update({
+            "GIT_CONFIG_COUNT": "1",
+            "GIT_CONFIG_KEY_0": "http.https://github.com/.extraheader",
+            "GIT_CONFIG_VALUE_0": f"AUTHORIZATION: basic {authorization}",
+        })
+        subprocess.run(
+            ["git", "clone", clone_url, "/workspace"],
+            check=True,
+            env=clone_environment,
+        )
+        subprocess.run(
+            ["git", "-C", "/workspace", "remote", "set-url", "origin", clone_url],
+            check=True,
+        )
+        subprocess.run(["npm", "install"], cwd="/workspace", check=True)
+        subprocess.run(["npm", "run", "build"], cwd="/workspace", check=True)
     
     @modal.method()
     def execute_prompt(self, prompt: str, user_identity: dict) -> dict:
         """Execute a prompt in the sandbox."""
-        # Update git config for this user
-        os.system(f'git config user.name "{user_identity["name"]}"')
-        os.system(f'git config user.email "{user_identity["email"]}"')
+        subprocess.run(
+            ["git", "config", "user.name", user_identity["name"]],
+            cwd="/workspace",
+            check=True,
+        )
+        subprocess.run(
+            ["git", "config", "user.email", user_identity["email"]],
+            cwd="/workspace",
+            check=True,
+        )
         
         # Run the agent
         result = self.agent.run(prompt)
@@ -92,9 +125,34 @@ class ImageBuilder:
         """Build a single repository image."""
         sandbox = modal.Sandbox.create()
         
-        # Clone with app token
+        # Validate repo and pass the token through temporary Git config env vars.
+        if not re.fullmatch(r"[A-Za-z0-9-]+/[A-Za-z0-9._-]+", repo):
+            raise ValueError("Repository must be specified as owner/name")
         token = get_app_installation_token(repo)
-        sandbox.exec(f"git clone https://x-access-token:{token}@github.com/{repo} /workspace")
+        clone_url = f"https://github.com/{repo}.git"
+        authorization = base64.b64encode(
+            f"x-access-token:{token}".encode()
+        ).decode()
+        sandbox.exec(
+            "git",
+            "clone",
+            clone_url,
+            "/workspace",
+            env={
+                "GIT_CONFIG_COUNT": "1",
+                "GIT_CONFIG_KEY_0": "http.https://github.com/.extraheader",
+                "GIT_CONFIG_VALUE_0": f"AUTHORIZATION: basic {authorization}",
+            },
+        )
+        sandbox.exec(
+            "git",
+            "-C",
+            "/workspace",
+            "remote",
+            "set-url",
+            "origin",
+            clone_url,
+        )
         
         # Install dependencies
         sandbox.exec("cd /workspace && npm install")
@@ -530,10 +588,10 @@ class MultiplayerSession:
         """Process prompt with author attribution."""
         # Update git config for this author
         await self.sandbox.exec(
-            f'git config user.name "{prompt.author.name}"'
+            "git", "config", "user.name", prompt.author.name
         )
         await self.sandbox.exec(
-            f'git config user.email "{prompt.author.email}"'
+            "git", "config", "user.email", prompt.author.email
         )
         
         # Run agent
