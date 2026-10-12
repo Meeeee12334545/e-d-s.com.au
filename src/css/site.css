@@ -404,11 +404,11 @@ a.chip:hover { background: var(--aqua-soft); border-color: rgba(95, 180, 166, .5
 
 /* ---------- client logos ----------
    A still grid, every mark in one grey at one optical height, so the band
-   reads as a client list rather than a moving strip. Multiply drops the
-   logos' white backgrounds into the band; the colour returns on hover. */
+   reads as a client list rather than a moving strip. The logo files have
+   transparent backgrounds (tools/logos.py); the colour returns on hover. */
 .logo-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px clamp(16px, 2.5vw, 40px); padding-bottom: clamp(28px, 4vw, 44px); }
 .logo-grid li { height: 64px; display: flex; align-items: center; justify-content: center; }
-.logo-grid img { max-width: min(100%, 136px); max-height: 34px; width: auto; height: auto; object-fit: contain; mix-blend-mode: multiply; filter: grayscale(1) contrast(1.1); opacity: .6; transition: filter .3s var(--ease), opacity .3s var(--ease); }
+.logo-grid img { max-width: min(100%, 136px); max-height: 34px; width: auto; height: auto; object-fit: contain; filter: grayscale(1) contrast(1.1); opacity: .6; transition: filter .3s var(--ease), opacity .3s var(--ease); }
 .logo-grid li:hover img { filter: none; opacity: 1; }
 .clients { padding-block: 52px 56px; background: var(--bg-alt); border-bottom: 1px solid var(--border); }
 .clients p { text-align: center; font-size: .95rem; font-weight: 500; color: var(--muted); margin-bottom: 26px; }
