@@ -209,6 +209,13 @@
         const top = Math.round(t.getBoundingClientRect().top);
         if (top <= line && top > best) { id = t.id; best = top; }
       }
+      // How far the reader is through the current section, for the hairline
+      // under its link in the bar.
+      const cur = targets.find((t) => t.id === id);
+      if (cur) {
+        const box = cur.getBoundingClientRect();
+        secbar.style.setProperty("--p", Math.max(0, Math.min(1, (line - box.top) / box.height)).toFixed(3));
+      }
       if (id === current) return;
       current = id;
       for (const a of links) {
