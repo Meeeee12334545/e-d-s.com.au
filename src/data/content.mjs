@@ -248,6 +248,7 @@ export const services = [
     process: true,
     featured: true,
     summary: "Temporary and permanent flow monitoring for councils and water authorities, installed by trained crews Australia wide.",
+    tags: ["Councils", "Water authorities"],
     intro: [
       "EDS provides comprehensive sewer flow monitoring to help councils and water authorities manage their wastewater infrastructure efficiently and effectively. With more than three decades of experience, we pair industry-leading technology with hands-on support to deliver accurate, reliable data for informed decisions.",
       "Our crews are highly trained installation engineers, available Australia wide, who deliver results that are both safe and accurate. And unlike other providers, EDS gives you full access to the data.",
@@ -406,6 +407,7 @@ export const services = [
     group: "sewer",
     featured: true,
     summary: "A complete open channel sewer monitoring solution with no capital outlay, managed end to end by EDS.",
+    tags: ["No capital outlay", "99.95% data availability"],
     intro: [
       "EDS DaaS delivers a structured workflow that ensures accuracy, reliability and defensible results. We select the sites, install and maintain the equipment, validate the data continuously and deliver insights you can act on.",
     ],
