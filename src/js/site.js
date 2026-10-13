@@ -39,6 +39,35 @@
   document.addEventListener("click", (e) => { if (!e.target.closest(".nav-item")) closeAll(); });
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") { closeAll(); setDrawer(false); } });
 
+  // The Services menu: a rail of tabs, one per group, beside the open group's
+  // links. A tab opens on click, on the arrow keys (the tab lists below) and
+  // after a short pause under the pointer, so the rail can be crossed on the
+  // way to a link without every group flashing past.
+  // The panel takes the open tab's height (site.css eases the change), which
+  // is measured again once the fonts are in and whenever the window changes
+  // width, since both change how the lines wrap.
+  $$(".mega-tabs").forEach((menu) => {
+    const tabs = $$('[role="tab"]', menu);
+    const panes = $$('[role="tabpanel"]', menu);
+    const box = $(".mega-panes", menu);
+    let timer;
+    const fit = () => { const on = $(".mega-pane.on", menu); if (on && box) box.style.height = `${on.offsetHeight}px`; };
+    const show = (tab) => {
+      tabs.forEach((t) => { const on = t === tab; t.setAttribute("aria-selected", String(on)); t.tabIndex = on ? 0 : -1; });
+      // inert takes the closing list out of the tab order at once, before its fade ends
+      panes.forEach((p) => { const on = p.id === tab.getAttribute("aria-controls"); p.classList.toggle("on", on); p.inert = !on; });
+      fit();
+    };
+    tabs.forEach((tab) => {
+      tab.addEventListener("click", () => show(tab));
+      tab.addEventListener("pointerenter", (e) => { if (e.pointerType === "mouse") timer = setTimeout(() => show(tab), 90); });
+      tab.addEventListener("pointerleave", () => clearTimeout(timer));
+    });
+    fit();
+    document.fonts?.ready.then(fit);
+    window.addEventListener("resize", fit);
+  });
+
   // While the drawer is open the page behind it is inert, so keyboard focus
   // stays in the menu; closing it hands focus back to the menu button.
   const drawer = $(".drawer");
