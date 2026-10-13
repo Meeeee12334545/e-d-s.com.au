@@ -833,6 +833,8 @@ const pages = [];
 const add = (p) => pages.push(p);
 
 /* ---- home ---- */
+// A city ref is a service (`s:`), a solution (`o:`), a product range (`p:`),
+// or one of the two pages with no prefix, "flowsense" and "lidott".
 function cityHref(r, ref) {
   if (ref === "flowsense") return `${r}flowsense.html`;
   if (ref === "lidott") return `${r}products/lidott-alarm.html`;
@@ -841,7 +843,9 @@ function cityHref(r, ref) {
 }
 function cityLabel(ref) {
   if (ref === "flowsense") return "EDS FlowSense";
+  if (ref === "lidott") return "LIDoTT Alarm";
   const [k, slug] = ref.split(":");
+  if (k === "p") return esc(brand(slug).name);
   const item = k === "s" ? svc(slug) : sol(slug);
   return item.short || item.title;
 }
@@ -851,7 +855,7 @@ add({
   title: "EDS | Environmental Data Services: water, wastewater and environmental monitoring",
   description: "Environmental Data Services (EDS) has been a trusted leader in advanced monitoring solutions and specialised services since 1991, serving government, utilities, councils, consultants and industry across Australia.",
   current: "home",
-  scripts: ["city.js"],
+  scripts: ["city-scene.js", "city.js"],
   body: (r) => {
     const words = ["Every", "drop,", "measured."];
     // The page tells one story in ten bands. Dark bands run on a schedule:
@@ -924,21 +928,49 @@ add({
   </div>
   <div class="wrap wide">
     <div class="city-grid">
-      <div class="city-stage" data-reveal="scale"><svg id="city" role="group" aria-label="Interactive map of a city. Each district shows the EDS services and products used there."></svg></div>
-      <div class="city-tabs" role="tablist" aria-label="City districts">
-        ${C.city.map((z, i) => `<button class="city-tab" role="tab" data-zone="${z.id}" aria-selected="${i === 0}">${icon(z.icon)}${z.name}</button>`).join("")}
+      <div class="city-stage" data-reveal="scale">
+        <svg id="city" role="group" aria-label="${esc(C.cityUi.stageLabel)}"></svg>
+        <div class="city-tip" id="city-tip" role="group" aria-label="${esc(C.cityUi.tipLabel)}" hidden><div class="city-tip-body"></div><button type="button" class="city-tip-close" aria-label="${esc(C.cityUi.toolbar.close)}">${icon("x", false)}</button></div>
       </div>
+
+      <div class="city-bar">
+        <div class="city-toolbar" role="toolbar" aria-label="${esc(C.cityUi.toolbarLabel)}">
+          <button type="button" class="btn btn-ghost city-btn" data-act="storm" aria-pressed="false" aria-describedby="city-note">${icon("cloud-rain")}<span>${esc(C.cityUi.toolbar.storm)}</span></button>
+          <button type="button" class="btn btn-ghost city-btn" data-act="under" aria-pressed="false">${icon("layers")}<span>${esc(C.cityUi.toolbar.under)}</span></button>
+        </div>
+        <p class="city-caption" aria-live="off" data-rest="${esc(C.cityUi.captionRest)}">${esc(C.cityUi.captionRest)}</p>
+        <div class="city-hud" aria-label="${esc(C.cityUi.hud.label)}">
+          ${C.cityUi.hud.tiles.map((t) => `<div class="city-tile" data-tile="${t.key}"><span>${esc(t.label)}</span><b data-value>${esc(t.rest)}</b><small>${esc(t.unit)}</small>${t.key === "alarms" ? icon("bell", false) : ""}</div>`).join("")}
+          <div class="city-tile city-tile-spark" data-tile="spark"><span>${esc(C.cityUi.hud.sparkLabel)}</span><svg class="city-spark" viewBox="0 0 220 48" aria-hidden="true"></svg></div>
+        </div>
+        <p class="sr-only" id="city-live" aria-live="polite"></p>
+        <p class="note city-note" id="city-note">${icon("info", false)}${esc(C.cityUi.note)}</p>
+        <ul class="city-legend" aria-label="${esc(C.cityUi.legend.label)}">
+          ${C.cityUi.legend.items.map(([ic, label]) => `<li>${icon(ic, false)}${esc(label)}</li>`).join("")}
+        </ul>
+      </div>
+
+      <div class="city-tabs" role="tablist" aria-label="${esc(C.cityUi.tabsLabel)}">
+        ${C.city.map((z, i) => `<button class="city-tab" role="tab" id="city-tab-${z.id}" aria-controls="city-card-${z.id}" data-zone="${z.id}" aria-selected="${i === 0}" tabindex="${i === 0 ? 0 : -1}">${icon(z.icon)}${z.name}</button>`).join("")}
+      </div>
+
       <div class="city-panel">
         ${C.city.map((z, i) => `
-        <article class="city-card${i === 0 ? " active" : ""}" data-zone="${z.id}" data-name="${esc(z.name)}">
+        <article class="city-card${i === 0 ? " active" : ""}" id="city-card-${z.id}" role="tabpanel" aria-labelledby="city-tab-${z.id}" data-zone="${z.id}" data-name="${esc(z.name)}">
           <div class="city-card-head" style="--i:0"><span class="city-badge holder">${icon(z.icon)}</span><h3>${z.name}</h3></div>
           <p style="--i:1">${z.blurb}</p>
           <div style="--i:2"><h4>Services</h4><ul class="city-list">${z.services.map((s) => `<li><a href="${cityHref(r, s)}">${cityLabel(s)}${icon("arrow-right")}</a></li>`).join("")}</ul></div>
           <div style="--i:3"><h4>Products</h4><div class="chips">${z.products.map(([label, ref]) => `<a class="chip" href="${cityHref(r, ref)}">${esc(label)}</a>`).join("")}</div></div>
+          <div style="--i:4"><h4>${esc(C.cityUi.sensorsHeading)}</h4>
+            <ul class="city-sensors">${z.sensors.map((s) => `<li><button type="button" data-sensor="${s.id}" aria-controls="city-tip" aria-expanded="false">${icon(s.icon, false)}<span class="cs-name">${esc(s.name)}</span><span class="sr-only">: </span><span class="cs-read"><b data-read="${s.id}">${s.reads[0].text ? esc(C.cityUi.text[s.reads[0].text]) : s.reads[0].base.toFixed(s.reads[0].decimals)}</b>${s.reads[0].unit === "%" ? "%" : s.reads[0].unit ? ` ${esc(s.reads[0].unit)}` : ""}</span></button></li>`).join("")}</ul>
+            <p class="note">${esc(C.cityUi.readingsNote)}</p></div>
+          ${C.cityStorm.steps.filter((s) => s.zone === z.id).map((s) => `<p class="city-why" data-step="${s.n}" hidden style="--i:5">${esc(s.why)} <a href="${cityHref(r, s.link)}">${cityLabel(s.link)}${icon("arrow-right")}</a></p>`).join("")}
+          ${z.id === "ops" ? `<div class="sms city-log" style="--i:5" aria-label="${esc(C.cityUi.logLabel)}"><div><small>${esc(C.cityUi.logStamp)}</small>${esc(C.cityUi.heartbeat)}</div></div>` : ""}
         </article>`).join("")}
       </div>
     </div>
   </div>
+  <script type="application/json" id="city-data">${JSON.stringify({ ui: C.cityUi, storm: C.cityStorm, zones: C.city.map(({ id, name, sensors }) => ({ id, name, sensors })) }).replace(/</g, "\\u003c")}</script>
 </section>
 
 ${waysSection(r)}
