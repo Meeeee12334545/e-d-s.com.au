@@ -180,12 +180,39 @@ ul { margin: 0; padding: 0; list-style: none; }
 .mega-foot a { display: inline-flex; align-items: center; gap: 6px; padding: 0; color: var(--aqua); font-weight: 600; white-space: nowrap; }
 .mega-foot a:hover { background: none; color: #fff; }
 .mega .mega-all { grid-column: 1 / -1; margin-top: 6px; border-top: 1px solid var(--line-dark); border-radius: 0 0 12px 12px; color: var(--aqua); }
-/* Services: one titled column per group, too wide to hang off its button, so
-   it is centred under the header instead. */
+/* Services: a rail of tabs, one per service group and one for the solutions,
+   with the open tab's links beside it. One group shows at a time, so the
+   panel stays short enough to read in one look. Too wide to hang off its
+   button, so it is centred under the header instead. */
 .nav-item.wide { position: static; }
-.mega.groups { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0 6px; width: min(1040px, 100% - var(--gutter) * 2); top: calc(50% + 28px); }
-.mega.groups::before { inset: -20px 0 auto 0; height: 20px; }
-.mega-head { padding: 10px 12px 6px; font-size: .72rem; font-weight: 650; letter-spacing: .14em; text-transform: uppercase; color: var(--on-dark-faint); }
+.mega.mega-tabs { display: grid; grid-template-columns: 276px minmax(0, 1fr); gap: 0 14px; width: min(920px, 100% - var(--gutter) * 2); top: calc(50% + 28px); }
+.mega.mega-tabs::before { inset: -20px 0 auto 0; height: 20px; }
+.mega-rail { display: flex; flex-direction: column; padding: 2px 12px 8px 0; border-right: 1px solid var(--line-dark); }
+.mega-rail [role="tablist"] { display: flex; flex-direction: column; gap: 2px; }
+.mega-head { padding: 10px 12px 8px; font-size: .72rem; font-weight: 650; letter-spacing: .14em; text-transform: uppercase; color: var(--on-dark-faint); }
+.mega-tab { position: relative; display: flex; align-items: center; gap: 8px; width: 100%; padding: 11px 10px 11px 12px; border-radius: 12px; font-size: .96rem; font-weight: 600; line-height: 1.25; text-align: left; color: var(--on-dark-soft); transition: background-color .15s var(--ease), color .15s var(--ease); }
+.mega-tab span { flex: 1; }
+.mega-tab i { font-style: normal; font-family: var(--font-mono); font-size: .74rem; font-weight: 500; color: var(--on-dark-faint); }
+.mega-tab .icon { font-size: 15px; color: var(--aqua); opacity: 0; translate: -4px 0; transition: opacity .15s var(--ease), translate .2s var(--ease-out); }
+.mega-tab:hover { background: rgba(255, 255, 255, .06); color: #fff; }
+.mega-tab[aria-selected="true"] { background: rgba(255, 255, 255, .1); color: #fff; }
+.mega-tab[aria-selected="true"] .icon { opacity: 1; translate: 0 0; }
+/* a line sets the solutions tab apart from the service groups above it */
+.mega-tab.sep { margin-top: 12px; }
+.mega-tab.sep::before { content: ""; position: absolute; left: 12px; right: 12px; top: -7px; height: 1px; background: var(--line-dark); }
+/* Every tab's links sit in the same grid cell. site.js sets the cell to the
+   open tab's height, so the panel eases from one list's height to the next
+   rather than jumping. The hidden lists are invisible, which also keeps them
+   out of the tab order. */
+.mega-panes { display: grid; padding-top: 2px; overflow: hidden; transition: height .28s var(--ease-out); }
+.mega-pane { grid-area: 1 / 1; align-self: start; display: flex; flex-direction: column; gap: 2px; visibility: hidden; opacity: 0; transition: opacity .18s var(--ease), visibility 0s .18s; }
+.mega-pane.on { visibility: visible; opacity: 1; transition-delay: 0s; }
+.mega-pane-head { display: flex; align-items: baseline; justify-content: space-between; gap: 20px; padding: 10px 12px 12px; margin-bottom: 6px; border-bottom: 1px solid var(--line-dark); }
+.mega-pane-head p { font-size: .9rem; line-height: 1.45; color: var(--on-dark-faint); }
+.mega-pane-head a { display: inline-flex; align-items: center; gap: 5px; padding: 0; border-radius: 0; font-size: .86rem; font-weight: 600; color: var(--aqua); white-space: nowrap; }
+.mega-pane-head a .icon { font-size: 15px; margin: 0; }
+.mega-pane-head a:hover { background: none; color: #fff; }
+.mega-pane > a { padding: 8px 12px; }
 .header-cta { display: flex; align-items: center; gap: 10px; flex: none; }
 .header-phone { display: inline-flex; align-items: center; gap: 8px; font-weight: 650; font-size: 1.04rem; padding: 9px 12px; border-radius: 999px; }
 .header-phone:hover { background: rgba(255, 255, 255, .1); }
