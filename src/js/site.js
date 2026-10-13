@@ -24,9 +24,14 @@
   // Mega menus open on hover and on click, and close on Escape or outside
   // click. A menu opened by a click stays open when the pointer leaves, and a
   // click on a menu that hover has just opened keeps it open rather than
-  // shutting it in the visitor's face.
+  // shutting it in the visitor's face. Closing a menu that holds keyboard focus
+  // hands the focus back to its button, since its links are no longer focusable.
   const items = $$(".nav-item.has-mega");
-  const shut = (i) => { i.classList.remove("open"); delete i.dataset.by; $("button", i)?.setAttribute("aria-expanded", "false"); };
+  const shut = (i) => {
+    const btn = $("button", i);
+    i.classList.remove("open"); delete i.dataset.by; btn?.setAttribute("aria-expanded", "false");
+    if (btn && i.contains(document.activeElement) && document.activeElement !== btn) btn.focus();
+  };
   const closeAll = (except) => items.forEach((i) => { if (i !== except) shut(i); });
   items.forEach((item) => {
     const btn = $("button", item);

@@ -164,11 +164,14 @@ ul { margin: 0; padding: 0; list-style: none; }
   background: rgba(7, 35, 33, .99); border: 1px solid var(--line-dark); box-shadow: 0 24px 60px rgba(0, 0, 0, .45);
   backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
   opacity: 0; visibility: hidden; scale: .96; transform-origin: 50% 0;
+  /* A closed menu takes no pointer events, so nothing inside it can open it
+     from below the header. */
+  pointer-events: none;
   transition: opacity .18s var(--ease), scale .22s var(--ease-out), visibility 0s .2s;
 }
 .mega::before { content: ""; position: absolute; inset: -12px 0 auto 0; height: 12px; }
 .mega.cols-2 { display: grid; grid-template-columns: 1fr 1fr; min-width: 680px; }
-.nav-item.open > .mega { opacity: 1; visibility: visible; scale: 1; transition-delay: 0s; }
+.nav-item.open > .mega { opacity: 1; visibility: visible; scale: 1; pointer-events: auto; transition-delay: 0s; }
 .mega a { display: flex; align-items: flex-start; gap: 12px; padding: 9px 12px; border-radius: 12px; font-size: .92rem; font-weight: 550; color: var(--on-dark-soft); transition: background-color .15s var(--ease), color .15s var(--ease); }
 .mega a:hover { background: rgba(255, 255, 255, .08); color: #fff; }
 .mega a .icon { font-size: 18px; color: var(--aqua); margin-top: 2px; }
@@ -203,10 +206,13 @@ ul { margin: 0; padding: 0; list-style: none; }
 /* Every tab's links sit in the same grid cell. site.js sets the cell to the
    open tab's height, so the panel eases from one list's height to the next
    rather than jumping. The hidden lists are invisible, which also keeps them
-   out of the tab order. */
+   out of the tab order. The open list inherits its visibility from the menu
+   rather than setting its own: set visible by itself it would stay under the
+   pointer while the menu is closed, invisible, and open the menu from well
+   below the header. */
 .mega-panes { display: grid; padding-top: 2px; overflow: hidden; transition: height .28s var(--ease-out); }
 .mega-pane { grid-area: 1 / 1; align-self: start; display: flex; flex-direction: column; gap: 2px; visibility: hidden; opacity: 0; transition: opacity .18s var(--ease), visibility 0s .18s; }
-.mega-pane.on { visibility: visible; opacity: 1; transition-delay: 0s; }
+.mega-pane.on { visibility: inherit; opacity: 1; transition-delay: 0s; }
 .mega-pane-head { display: flex; align-items: baseline; justify-content: space-between; gap: 20px; padding: 10px 12px 12px; margin-bottom: 6px; border-bottom: 1px solid var(--line-dark); }
 .mega-pane-head p { font-size: .9rem; line-height: 1.45; color: var(--on-dark-faint); }
 .mega-pane-head a { display: inline-flex; align-items: center; gap: 5px; padding: 0; border-radius: 0; font-size: .86rem; font-weight: 600; color: var(--aqua); white-space: nowrap; }
