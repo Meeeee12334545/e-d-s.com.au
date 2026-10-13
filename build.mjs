@@ -113,34 +113,64 @@ const asideFigure = (s) => (s.asideFigure ? `<figure class="aside-card aside-fig
 /* ------------------------------------------------------------------ */
 /* layout                                                              */
 /* ------------------------------------------------------------------ */
-function header(r, current) {
-  // A mega menu takes a flat list of links, or `groups` of them (Services),
-  // which it lays out as one titled column per group.
-  // Each item carries a one-line description: the service's or solution's
-  // summary, the brand's summary, the product's lede.
+function header(r, current, menuTab) {
+  // The Services menu holds the services and the solutions: a rail of tabs
+  // down its left, one per service group and one for the solutions, and the
+  // open tab's links beside it, so only one group is read at a time. It
+  // opens on the tab of the page the visitor is on (`menuTab`: a service
+  // group's id or "solutions"), or the first. Products is a plain two
+  // column list. Each link carries a one-line description: the service's
+  // or solution's summary, the brand's summary, the product's lede.
   const mLink = (i) => `<a href="${r}${i.href}">${icon(i.icon)}<span><b>${esc(i.label)}</b>${i.desc ? `<small>${esc(i.desc)}</small>` : ""}</span></a>`;
-  const mega = (label, key, { items, groups }, all, cols) => `
-      <div class="nav-item has-mega${groups ? " wide" : ""}">
-        <button class="nav-link" aria-expanded="false"${current === key ? ' aria-current="page"' : ""}>${label}${icon("chevron-down", false)}</button>
-        <div class="mega${groups ? " groups" : cols ? " cols-2" : ""}">
-          ${groups ? groups.map((g) => `<div class="mega-group"><p class="mega-head">${esc(g.label)}</p>${g.items.map(mLink).join("")}</div>`).join("") : items.map(mLink).join("")}
-          <a class="mega-all" href="${r}${all.href}"><span>${all.label}</span>${icon("arrow-right")}</a>
-          ${groups ? `<div class="mega-foot"><span>Not sure which service fits? Tell us about the site or the problem and we will point you to the right one.</span><a href="${r}enquire.html">Start an enquiry ${icon("arrow-right")}</a></div>` : ""}
+  const navBtn = (label, keys) => `<button class="nav-link" aria-expanded="false"${keys.includes(current) ? ' aria-current="page"' : ""}>${label}${icon("chevron-down", false)}</button>`;
+  const tabs = [
+    ...C.serviceGroups.map((g) => ({
+      id: g.id, label: g.title, lede: g.lede, all: { href: `services/index.html#${g.id}`, label: "All services" },
+      items: C.services.filter((s) => s.group === g.id).map((s) => ({ href: `services/${s.slug}.html`, icon: s.icon, label: s.short || s.title, desc: s.summary })),
+    })),
+    {
+      id: "solutions", label: "Solutions", lede: "Each solution combines EDS instruments, field crews and data into an outcome you can act on.", all: { href: "solutions/index.html", label: "All solutions" },
+      items: C.solutions.map((s) => ({ href: `solutions/${s.slug}.html`, icon: s.icon, label: s.title, desc: s.summary })),
+    },
+  ];
+  const openTab = tabs.some((t) => t.id === menuTab) ? menuTab : tabs[0].id;
+  const tabbed = `
+      <div class="nav-item has-mega wide">
+        ${navBtn("Services", ["services", "solutions"])}
+        <div class="mega mega-tabs">
+          <div class="mega-rail">
+            <p class="mega-head" id="mega-rail-label">Services and solutions</p>
+            <div role="tablist" aria-labelledby="mega-rail-label">
+              ${tabs.map((t) => `<button class="mega-tab${t.id === "solutions" ? " sep" : ""}" role="tab" id="mega-tab-${t.id}" aria-controls="mega-pane-${t.id}" aria-selected="${t.id === openTab}" tabindex="${t.id === openTab ? 0 : -1}" data-track-label="${esc(t.label)}"><span>${esc(t.label)}</span><i aria-hidden="true">${t.items.length}</i>${icon("chevron-right", false)}</button>`).join("")}
+            </div>
+          </div>
+          <div class="mega-panes">
+            ${tabs.map((t) => `<div class="mega-pane${t.id === openTab ? " on" : ""}" role="tabpanel"${t.id === openTab ? "" : " inert"} id="mega-pane-${t.id}" aria-labelledby="mega-tab-${t.id}">
+              <div class="mega-pane-head"><p>${esc(t.lede)}</p><a href="${r}${t.all.href}">${t.all.label}${icon("arrow-right", false)}</a></div>
+              ${t.items.map(mLink).join("")}
+            </div>`).join("")}
+          </div>
+          <div class="mega-foot"><span>Not sure which service fits? Tell us about the site or the problem and we will point you to the right one.</span><a href="${r}enquire.html">Start an enquiry ${icon("arrow-right")}</a></div>
         </div>
       </div>`;
-  const sGroups = C.serviceGroups.map((g) => ({
-    label: g.title,
-    items: C.services.filter((s) => s.group === g.id).map((s) => ({ href: `services/${s.slug}.html`, icon: s.icon, label: s.short || s.title, desc: s.summary })),
-  }));
-  const oItems = C.solutions.map((s) => ({ href: `solutions/${s.slug}.html`, icon: s.icon, label: s.title, desc: s.summary }));
   const pItems = [...C.brands.map((b) => ({ href: `products/${b.slug}.html`, icon: b.icon, label: b.name, desc: b.tag })), ...C.productPages.map((pg) => ({ href: `products/${pg.slug}.html`, icon: pg.icon, label: pg.name, desc: pg.tag })), { href: "products/lidott-alarm.html", icon: "bell", label: "LIDoTT Alarm", desc: C.lidott.lede }, { href: "products/alarm2.html", icon: "bell-ring", label: "Alarm2", desc: C.alarm2.lede }];
+  const mega = (label, key, items, all) => `
+      <div class="nav-item has-mega">
+        ${navBtn(label, [key])}
+        <div class="mega cols-2">
+          ${items.map(mLink).join("")}
+          <a class="mega-all" href="${r}${all.href}"><span>${all.label}</span>${icon("arrow-right")}</a>
+        </div>
+      </div>`;
   const link = (href, label, key) => `<div class="nav-item"><a class="nav-link" href="${r}${href}"${current === key ? ' aria-current="page"' : ""}>${label}</a></div>`;
+  // The phone menu lists the same: each section has a heading, its links and,
+  // where it says so, a "View all" link after them.
   const dLink = (i) => `<a href="${r}${i.href}">${icon(i.icon, false)}${esc(i.label)}</a>`;
-  const dGroup = (label, { items, groups }, all) => `
+  const dGroup = (label, sections) => `
         <details><summary>${label}${icon("chevron-down", false)}</summary><div>
-          ${groups ? groups.map((g) => `<p class="drawer-sub">${esc(g.label)}</p>${g.items.map(dLink).join("")}`).join("") : items.map(dLink).join("")}
-          <a href="${r}${all}">${icon("arrow-right", false)}View all</a>
+          ${sections.map((g) => `${g.label ? `<p class="drawer-sub">${esc(g.label)}</p>` : ""}${g.items.map(dLink).join("")}${g.all ? `<a href="${r}${g.all.href}">${icon("arrow-right", false)}${g.all.label}</a>` : ""}`).join("")}
         </div></details>`;
+  const dSections = tabs.map((t, i) => ({ label: t.label, items: t.items, all: t.id === "solutions" ? t.all : i === C.serviceGroups.length - 1 ? { href: "services/index.html", label: "All services" } : null }));
   return `
   <a class="skip" href="#main">Skip to content</a>
   <div class="progress" aria-hidden="true"></div>
@@ -148,9 +178,8 @@ function header(r, current) {
     <div class="wrap">
       <a class="logo" href="${r}index.html" aria-label="EDS home"><img src="${site.logoWhite}" alt="EDS, Environmental Data Services" width="182" height="48"></a>
       <nav class="nav" aria-label="Main">
-        ${mega("Services", "services", { groups: sGroups }, { href: "services/index.html", label: "All services" })}
-        ${mega("Solutions", "solutions", { items: oItems }, { href: "solutions/index.html", label: "All solutions" })}
-        ${mega("Products", "products", { items: pItems }, { href: "products/index.html", label: "All products" }, true)}
+        ${tabbed}
+        ${mega("Products", "products", pItems, { href: "products/index.html", label: "All products" })}
         ${link("flowsense.html", "FlowSense", "flowsense")}
         ${link("about.html", "About", "about")}
         ${link("resources.html", "Resources", "resources")}
@@ -172,9 +201,8 @@ function header(r, current) {
         <button class="burger drawer-close" style="display:inline-flex" aria-label="Close menu">${icon("x", false)}</button>
       </div>
       <button class="drawer-search" type="button" data-search-open>${icon("search", false)}<span>Search products, services, documents</span></button>
-      ${dGroup("Services", { groups: sGroups }, "services/index.html")}
-      ${dGroup("Solutions", { items: oItems }, "solutions/index.html")}
-      ${dGroup("Products", { items: pItems }, "products/index.html")}
+      ${dGroup("Services", dSections)}
+      ${dGroup("Products", [{ items: pItems, all: { href: "products/index.html", label: "All products" } }])}
       <a class="drawer-link" href="${r}flowsense.html">FlowSense</a>
       <a class="drawer-link" href="${r}about.html">About</a>
       <a class="drawer-link" href="${r}resources.html">Resources</a>
@@ -325,7 +353,7 @@ const ENDPOINT = process.env.ANALYTICS_ENDPOINT || "";
 const tracker = (r, file) =>
   (process.env.STATIC_HOST || process.env.PREVIEW) && !ENDPOINT ? "" : `\n<script src="${asset(r, "js/track.js")}" defer${ENDPOINT ? ` data-endpoint="${esc(ENDPOINT)}"` : ""}${file === "404.html" ? ' data-status="404"' : ""}></script>`;
 
-function layout({ file, title, description, current, body, scripts = [] }) {
+function layout({ file, title, description, current, menuTab, body, scripts = [] }) {
   const depth = file.split("/").length - 1;
   // The not-found page can be served at any depth, so it links from the root.
   const r = file === "404.html" ? "/" : "../".repeat(depth);
@@ -360,7 +388,7 @@ function layout({ file, title, description, current, body, scripts = [] }) {
 ${jsonLd(file, crumbs)}
 </head>
 <body id="top">
-${header(r, current)}
+${header(r, current, menuTab)}
 <main id="main">
 ${html}
 </main>
@@ -1206,6 +1234,7 @@ for (const s of C.services) {
     title: `${s.title} | EDS`,
     description: s.summary,
     current: "services",
+    menuTab: s.group,
     scripts: { lab: ["lab.js"], lidott: ["widgets.js"] }[s.widget] || [],
     body: (r) => `
 ${pageHero(r, { crumbs: [["Services", "services/index.html"], [s.short || s.title]], title: s.title, lede: s.summary, compact: true, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${contactHref(r, { topic: s.title })}">Start an enquiry ${icon("arrow-right")}</a>${s.widget === "lab" ? `<a class="btn btn-ghost btn-lg" href="#flow-lab">${icon("cloud-rain")} Try the flow lab</a>` : ""}${s.widget === "lidott" ? `<a class="btn btn-ghost btn-lg" href="#alarm-demo">${icon("bell")} Try the alarm</a>` : ""}`, visual: glanceOf(s) })}
@@ -1225,6 +1254,7 @@ add({
   title: "Solutions | EDS",
   description: "Structure performance monitoring, asset and network assessment, thermal monitoring, wastewater monitoring, automatic sampling and environmental monitoring.",
   current: "solutions",
+  menuTab: "solutions",
   body: (r) => `
 ${pageHero(r, { crumbs: [["Solutions"]], title: "Monitoring applied to the problem in front of you.", lede: "Each solution combines EDS instruments, field crews and data into an outcome you can act on.", visual: heroSteps("How a solution comes together", [["cpu", "Instruments", "Chosen from one of Australia's largest monitoring portfolios."], ["hard-hat", "Field crews", "Installed, maintained and calibrated by trained EDS crews."], ["chart-line", "Data you can act on", "Delivered to FlowSense, your SCADA system or a report."]]) })}
 <section class="section"><div class="wrap"><div class="grid c3">
@@ -1238,6 +1268,7 @@ for (const s of C.solutions) {
     title: `${s.title} | EDS`,
     description: s.summary,
     current: "solutions",
+    menuTab: "solutions",
     scripts: s.widget === "eas" ? ["widgets.js"] : [],
     body: (r) => `
 ${pageHero(r, { crumbs: [["Solutions", "solutions/index.html"], [s.title]], title: s.title, lede: s.summary, compact: true, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${contactHref(r, { topic: s.title })}">Start an enquiry ${icon("arrow-right")}</a>`, visual: glanceOf(s) })}
