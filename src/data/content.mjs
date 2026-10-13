@@ -1021,7 +1021,7 @@ export const services = [
         items: [
           ["Scheduled files", "CSV files delivered to your server over SFTP or FTPS, for SCADA file importers and historians."],
           ["MQTT", "Messages to your broker as JSON or CSV. The closest thing to live."],
-          ["Read API", "Pulled over HTTPS on your own schedule, into tools such as Power BI, Excel, Grafana or ArcGIS. Read only, apart from one write a key must be granted: what a crew found on a work order."],
+          ["Read API", "Pulled over HTTPS on your own schedule, into tools such as Power BI, Excel, Grafana or ArcGIS. Read only, except that a key can be granted one write operation: recording what a crew found on a work order."],
           ["Webhooks", "Signed messages posted when an alarm is raised or cleared, a forecast puts a site at risk, or Blockage Watch flags a blockage."],
         ],
       },
