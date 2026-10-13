@@ -11,8 +11,10 @@ come out at an even size.
 
 writes src/assets/img/client-downer.png (and so on) beside each input. The
 background colour is read from the image's border, so it handles grey
-backgrounds, and ones that shade to white, as well as plain white. Run it on
-the original files, not on its own output. Needs Pillow.
+backgrounds, and ones that shade to white, as well as plain white. A PNG
+input is replaced by its transparent version (the original stays in git
+history); a file whose background is already transparent, such as the
+script's own output, is left unchanged. Needs Pillow.
 """
 import sys
 from collections import Counter
@@ -25,10 +27,15 @@ PAD = 4    # transparent pixels left round the trimmed logo
 
 
 def background(im):
+    """The most common opaque colour round the image's edge, or None when most
+    of the edge is already transparent (a logo this script has made)."""
     w, h = im.size
     px = im.load()
-    border = [px[x, y][:3] for x in range(w) for y in (0, h - 1)] + [px[x, y][:3] for y in range(h) for x in (0, w - 1)]
-    return Counter(border).most_common(1)[0][0]
+    border = [px[x, y] for x in range(w) for y in (0, h - 1)] + [px[x, y] for y in range(h) for x in (0, w - 1)]
+    opaque = [c[:3] for c in border if c[3] == 255]
+    if len(opaque) < len(border) / 2:
+        return None
+    return Counter(opaque).most_common(1)[0][0]
 
 
 def colour_to_alpha(im, bg):
@@ -61,6 +68,12 @@ def main(paths):
     for p in map(Path, paths):
         im = Image.open(p).convert("RGBA")
         bg = background(im)
+        # A logo with a transparent background is left alone, so the script
+        # is safe to run again on its own output (reading the clear edge as
+        # black would otherwise erase the whole logo).
+        if bg is None:
+            print(f"{p.name}: background already transparent, left unchanged")
+            continue
         out = colour_to_alpha(im, bg)
         box = out.getbbox()
         if box:
