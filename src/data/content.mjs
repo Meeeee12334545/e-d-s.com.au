@@ -2280,21 +2280,22 @@ export const industries = [
   ["landmark", "Government", "Federal, state and local, including Defence."],
 ];
 
+// Client logos, on transparent backgrounds made by tools/logos.py.
 export const clients = [
-  ["Downer", "client-downer.jpg"],
-  ["Ventia", "client-ventia.jpg"],
-  ["Bureau of Meteorology", "client-bureau-of-meteorology.jpg"],
-  ["Yarra Valley Water", "client-yarra-valley-water.jpg"],
+  ["Downer", "client-downer.png"],
+  ["Ventia", "client-ventia.png"],
+  ["Bureau of Meteorology", "client-bureau-of-meteorology.png"],
+  ["Yarra Valley Water", "client-yarra-valley-water.png"],
   ["Sydney Water", "client-sydney-water.png"],
-  ["Hunter Water", "client-hunter-water.jpg"],
-  ["Urban Utilities", "client-urban-utilities.jpeg"],
+  ["Hunter Water", "client-hunter-water.png"],
+  ["Urban Utilities", "client-urban-utilities.png"],
   ["Aurecon", "client-aurecon.png"],
   ["Stantec", "client-stantec.png"],
   ["Water Corporation", "client-water-corporation.png"],
-  ["Hach", "client-hach.jpg"],
-  ["Transurban", "client-transurban.jpg"],
-  ["GHD", "client-ghd.jpg"],
-  ["SMEC", "client-smec.jpg"],
+  ["Hach", "client-hach.png"],
+  ["Transurban", "client-transurban.png"],
+  ["GHD", "client-ghd.png"],
+  ["SMEC", "client-smec.png"],
   ["Veolia", "client-veolia.png"],
 ].map(([name, file]) => ({ name, src: img(file) }));
 
