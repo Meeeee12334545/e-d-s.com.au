@@ -970,7 +970,7 @@ add({
       </div>
     </div>
   </div>
-  <script type="application/json" id="city-data">${JSON.stringify({ ui: C.cityUi, storm: C.cityStorm, zones: C.city.map(({ id, name, line, sensors }) => ({ id, name, line, sensors })) }).replace(/</g, "\\u003c")}</script>
+  <script type="application/json" id="city-data">${JSON.stringify({ ui: C.cityUi, storm: C.cityStorm, zones: C.city.map(({ id, name, sensors }) => ({ id, name, sensors })) }).replace(/</g, "\\u003c")}</script>
 </section>
 
 ${waysSection(r)}

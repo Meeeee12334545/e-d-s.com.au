@@ -87,7 +87,6 @@
       hideTip();
     } else apply();
     const z = zoneOf[id];
-    if (!state.storm) setCaption(z?.line);
     if (announceIt && z) announce(fill(ui.live.select, { name: z.name, services: $$(".city-list a", cardOf(id)).length, products: $$(".chip", cardOf(id)).length }));
     // Where the tabs scroll sideways (phones), bring the selected one into
     // the row. Only the row scrolls: a selection never moves the page.
@@ -380,7 +379,8 @@
     btn.storm?.setAttribute("aria-pressed", "false"); $("span", btn.storm).textContent = ui.toolbar.storm;
     if (cancelled) { setCaption(ui.toolbar.stormCancelled); announce(ui.live.stormCancelled); }
     else announce(ui.live.stormEnd);
-    setTimeout(() => { if (!state.storm) setCaption(zoneOf[state.active]?.line); }, cancelled ? 2500 : 3000);
+    // the caption goes back to the instruction once the storm has settled
+    setTimeout(() => { if (!state.storm) setCaption(); }, cancelled ? 2500 : 3000);
     // the district the visitor had picked comes back, unless they picked
     // another one during the storm
     if (!st.userTookOver) setActive(st.prevActive);

@@ -2398,12 +2398,11 @@ export const downloads = [
 /* ------------------------------------------------------------------ */
 // Each district lists what EDS does there. `s:` links a service, `o:` a
 // solution, `p:` a product brand; plain strings are shown as chips.
-// `line` is shown under the map while the district is picked, and
-// `sensors` are the instruments drawn
-// on the map: `at` is the tile position (x, y, height), `major` ones carry a
-// name pill in the scene, `alarm` marks the one that raises the storm alarm,
-// and each `reads` entry drifts about `base` by `swing` and moves to `storm`
-// during the storm. Every figure is illustrative, none is live data.
+// `sensors` are the instruments drawn on the map: `at` is the tile position
+// (x, y, height), `major` ones carry a name pill in the scene, `alarm` marks
+// the one that raises the storm alarm, and each `reads` entry drifts about
+// `base` by `swing` and moves to `storm` during the storm. Every figure is
+// illustrative, none is live data.
 export const city = [
   {
     id: "sewer",
@@ -2412,7 +2411,6 @@ export const city = [
     blurb: "Under every street, flow and depth are measured at the maintenance hole and sent in over 4G.",
     services: ["s:sewer-flow-monitoring", "s:inflow-infiltration-studies", "s:blockage-overflow-alarms", "s:sewer-model-calibration"],
     products: [["Detectronic MSFM flow meter", "p:detectronic"], ["LIDoTT Alarm", "lidott"], ["Hach Flo-Dar", "p:hach-flow"]],
-    line: "Under every street, depth and velocity are measured at the maintenance hole and sent in over 4G.",
     sensors: [
       { id: "msfm", name: "Detectronic MSFM", instrument: "Area velocity flow meter", ref: "p:detectronic", icon: "gauge", at: [6.78, 3.05, 0], major: true,
         reads: [{ label: "Depth", unit: "mm", base: 212, swing: 6, storm: 1480, decimals: 0 }, { label: "Velocity", unit: "m/s", base: 0.76, swing: 0.03, storm: 1.9, decimals: 2 }, { label: "Flow", unit: "L/s", base: 41.8, swing: 1.2, storm: 310, decimals: 1 }] },
@@ -2431,7 +2429,6 @@ export const city = [
     blurb: "Wet well levels, pump runs and alarms, watched around the clock.",
     services: ["s:pump-station-monitoring", "s:real-time-monitoring", "s:scada-telemetry-integration", "s:network-assessment"],
     products: [["EDS Pump Station Manager", "p:eds"], ["EMS data loggers", "p:eds"], ["LIDoTT R level sensor", "p:detectronic"]],
-    line: "The wet well fills, the pumps run, and every start, stop and alarm is watched around the clock.",
     sensors: [
       { id: "psm", name: "Pump Station Manager", instrument: "Wet well level and pump runs", ref: "p:eds", icon: "cpu", at: [5.95, 9.3, 14], major: true,
         reads: [{ label: "Wet well", unit: "m", base: 1.12, swing: 0.18, storm: 2.61, decimals: 2 }, { label: "Pumps running", unit: "of 2", base: 1, swing: 0, storm: 2, decimals: 0 }] },
@@ -2448,7 +2445,6 @@ export const city = [
     blurb: "Flow, quality and sampling through every stage of treatment.",
     services: ["s:water-quality-monitoring", "o:wastewater-monitoring", "s:closed-channel-flow", "s:auditing-calibration"],
     products: [["Aquamonitrix nitrate analyser", "p:aquamonitrix"], ["ORI samplers", "p:ori"], ["Dynaflox ultrasonic meters", "p:dynaflox"]],
-    line: "Flow, quality and samples are taken through every stage of treatment, from inlet to outfall.",
     sensors: [
       { id: "dynaflox", name: "Dynaflox ultrasonic meter", instrument: "Closed channel flow", ref: "p:dynaflox", icon: "gauge", at: [0.9, 5.75, 6], major: true,
         reads: [{ label: "Inlet flow", unit: "L/s", base: 180, swing: 8, storm: 420, decimals: 0 }] },
@@ -2467,7 +2463,6 @@ export const city = [
     blurb: "Discharge measured and sampled, so trade waste stays compliant.",
     services: ["s:trade-waste", "s:sampling-programs", "s:equipment-rental", "s:auditing-calibration"],
     products: [["ORI ATEX samplers", "p:ori"], ["MicroLevel MICROSAMPLER", "p:microlevel"], ["Dynaflox flow meters", "p:dynaflox"]],
-    line: "Trade waste is metered and sampled at the discharge point, so what leaves the site is known.",
     sensors: [
       { id: "ori-atex", name: "ORI ATEX sampler", instrument: "Hazardous-area sampling", ref: "p:ori", icon: "shield-check", at: [10.6, 7.6, 12], major: true,
         reads: [{ label: "Bottle", unit: "of 24", base: 9, swing: 0, storm: 11, decimals: 0 }] },
@@ -2486,7 +2481,6 @@ export const city = [
     blurb: "Water quality, rainfall and temperature, from baseline to compliance.",
     services: ["o:environmental-monitoring", "s:water-quality-monitoring", "s:rainfall-monitoring", "o:network-thermal-monitoring"],
     products: [["iLab multi-parameter sonde", "p:eds"], ["Beadedstream thermistor strings", "p:beadedstream"], ["EDS pH, EC and turbidity sensors", "p:eds"]],
-    line: "Rain is logged in the catchment and the river is read for level, quality and temperature.",
     sensors: [
       { id: "rimco", name: "RIMCO 7499 rain gauge", instrument: "Tipping bucket", ref: "s:rainfall-monitoring", icon: "cloud-rain", at: [0.75, 0.75, 9], major: true,
         reads: [{ label: "Rain", unit: "mm/h", base: 0, swing: 0, storm: 18, decimals: 0 }, { label: "Last 24 h", unit: "mm", base: 2, swing: 0, storm: 24, decimals: 0 }] },
@@ -2505,7 +2499,6 @@ export const city = [
     blurb: "Buildings and structures scored 24/7 and managed as one service.",
     services: ["s:facility-management", "o:structure-performance", "o:asset-network-assessment"],
     products: [["EDS Asset Score (EAS)", "o:structure-performance"], ["EPM-2 pressure logger", "p:eds"], ["Metalog 4G logger", "p:eds"]],
-    line: "Buildings and structures are scored around the clock and the water network's pressure is logged.",
     sensors: [
       { id: "eas", name: "EDS Asset Score", instrument: "Light, moisture, seismic and temperature sensors", ref: "o:structure-performance", icon: "building-2", at: [11.35, 1.05, 88], major: true,
         reads: [{ label: "Score", unit: "/ 1000", base: 930, swing: 2, storm: 928, decimals: 0 }] },
@@ -2524,7 +2517,6 @@ export const city = [
     blurb: "Every reading arrives in one place: EDS FlowSense.",
     services: ["flowsense", "s:data-analysis-reporting", "s:real-time-monitoring", "s:data-as-a-service"],
     products: [["EDS FlowSense platform", "flowsense"], ["SCADA connection", "flowsense"], ["Alarms by SMS and email", "flowsense"]],
-    line: "Every reading arrives in one place, EDS FlowSense, with alarms by SMS and email and a feed to SCADA.",
     sensors: [
       { id: "flowsense", name: "EDS FlowSense", instrument: "Platform", ref: "flowsense", icon: "monitor-dot", at: [8.8, 6.5, 78], major: true,
         reads: [{ label: "Sites online", unit: "", base: 24, swing: 0, storm: 24, decimals: 0 }, { label: "Open alarms", unit: "", base: 0, swing: 0, storm: 1, decimals: 0 }, { label: "Availability", unit: "%", base: 99.95, swing: 0, storm: 99.95, decimals: 2 }] },
