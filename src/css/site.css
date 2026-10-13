@@ -314,69 +314,292 @@ ul { margin: 0; padding: 0; list-style: none; }
 .city-section { padding-block: clamp(40px, 6vw, 80px) clamp(56px, 6vw, 88px); overflow: hidden; }
 .wrap.wide { max-width: calc(1520px + var(--gutter) * 2); }
 .city-section .section-head { margin-bottom: 12px; }
-.city-grid { display: grid; grid-template-columns: minmax(0, 1fr) 360px; grid-template-areas: "stage panel" "tabs tabs"; gap: 12px clamp(16px, 2vw, 32px); align-items: center; }
-.city-stage { grid-area: stage; position: relative; margin-inline: calc(var(--gutter) * -0.5); }
+.city-grid { display: grid; grid-template-columns: minmax(0, 1fr) 360px; grid-template-areas: "stage panel" "bar panel" "tabs tabs"; gap: 12px clamp(16px, 2vw, 32px); align-items: center; }
+.city-stage { grid-area: stage; position: relative; margin-inline: calc(var(--gutter) * -0.5); touch-action: pan-y; user-select: none; }
 .city-stage::before { content: ""; position: absolute; inset: 18% 6% 4%; background: radial-gradient(closest-side, rgba(95, 180, 166, .07), rgba(95, 180, 166, 0)); filter: blur(30px); pointer-events: none; }
-#city { width: 100%; height: auto; overflow: visible; position: relative; }
-#city .slab-top { fill: #0a2a28; }
-#city .slab-l { fill: #051a18; }
-#city .slab-r { fill: #07211f; }
-#city .road-line { stroke: rgba(255, 255, 255, .12); stroke-width: 1; stroke-dasharray: 5 7; fill: none; }
-#city .pipe-glow { stroke: var(--aqua); stroke-width: 7; opacity: .05; fill: none; stroke-linecap: round; stroke-linejoin: round; }
-#city .pipe { stroke: rgba(95, 180, 166, .35); stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
-#city .pipe-flow { stroke: var(--aqua); stroke-width: 2.4; fill: none; stroke-linecap: round; stroke-dasharray: 3 15; animation: dash-flow 1.6s linear infinite; }
+.city-svg { width: 100%; height: auto; overflow: visible; position: relative; touch-action: pan-y; -webkit-user-select: none; user-select: none; }
+/* The city is two SVGs on one viewBox: the still districts, and over them an
+   overlay holding everything that moves, so only the overlay repaints. */
+.city-fx { position: absolute; inset: 0; pointer-events: none; will-change: transform; }
+.city-svg .zone-fx { transform-box: view-box; transition: translate .55s var(--ease-spring), scale .55s var(--ease-spring), opacity .35s var(--ease); }
+.city-svg .zone-fx.active { translate: 0 -14px; scale: 1.07; }
+.city-svg.has-active .zone-fx:not(.active) { opacity: .78; }
+.city-fx .under-fx { clip-path: url(#clip-roads); }
+.city-fx.is-underground .under-fx { clip-path: none; }
+.city-svg .zone.hover > .g { stroke: rgba(95, 180, 166, .55); stroke-width: 1.4; }
+.city-svg .zlabel.hover { opacity: 1; }
+.city-svg .uins { opacity: .55; transition: opacity .45s var(--ease); }
+.city-svg.is-underground .uins { opacity: 1; }
+.city-svg .uband { stroke: var(--aqua); stroke-width: 2.2; stroke-linecap: round; }
+.city-svg .usensor { fill: #0b302d; stroke: var(--aqua); stroke-width: 1; }
+.city-svg .ucable { fill: none; stroke: rgba(95, 180, 166, .6); stroke-width: 1; stroke-dasharray: 2 2; }
+.city-svg .uant { stroke: rgba(255, 255, 255, .5); stroke-width: 1; }
+.city-svg .ulevel { fill: #06201e; stroke: var(--aqua); stroke-width: 1; }
+.city-svg .uins .fl { fill: #0f4a45; } .city-svg .uins .fr { fill: #186a63; } .city-svg .uins .ft { fill: #5fb4a6; }
+.city-svg .uping { stroke-width: 1.1; }
+/* A district's palette is a set of registered custom properties, so one
+   transition on the district recolours every part of it, symbols included. */
+@property --top { syntax: "<color>"; inherits: true; initial-value: #2c938a; }
+@property --left { syntax: "<color>"; inherits: true; initial-value: #0f4a45; }
+@property --right { syntax: "<color>"; inherits: true; initial-value: #186a63; }
+@property --ground { syntax: "<color>"; inherits: true; initial-value: #0f403c; }
+@property --detail { syntax: "<color>"; inherits: true; initial-value: rgba(255, 255, 255, .16); }
+@property --tree { syntax: "<color>"; inherits: true; initial-value: #1f7a5c; }
+@property --tree-2 { syntax: "<color>"; inherits: true; initial-value: #17624a; }
+/* the slab, roads, bridge and street furniture */
+.city-svg .slab-top { fill: #0a2a28; }
+.city-svg .slab-l { fill: #051a18; }
+.city-svg .slab-r { fill: #07211f; }
+.city-svg .strata { fill: rgba(255, 255, 255, .04); }
+.city-svg .rim { fill: none; stroke: rgba(95, 180, 166, .2); stroke-width: 1; }
+.city-svg .base .mh { fill: #04201e; stroke: rgba(95, 180, 166, .5); stroke-width: 1; }
+.city-svg .road { fill: #0c3330; }
+.city-svg .road.deck { fill: #12423d; }
+.city-svg .kerb { fill: none; stroke: rgba(255, 255, 255, .07); stroke-width: 1; }
+.city-svg .stopline { fill: none; stroke: rgba(255, 255, 255, .22); stroke-width: 1.4; }
+.city-svg .road-line { stroke: rgba(255, 255, 255, .12); stroke-width: 1; stroke-dasharray: 5 7; fill: none; }
+.city-svg .pier { fill: #082522; }
+.city-svg .culvert-mouth { fill: #031512; stroke: rgba(95, 180, 166, .35); stroke-width: 1; }
+.city-svg .base .wtr { fill: #1b7f93; }
+.city-svg .rail { fill: none; stroke: rgba(255, 255, 255, .28); stroke-width: 1; }
+.city-svg .post { stroke: rgba(255, 255, 255, .28); stroke-width: 1; }
+.city-svg .rail.pipe-rack, .city-svg .post.pipe-rack { stroke: rgba(255, 255, 255, .5); stroke-width: 1.4; }
+.city-svg .rail.fence, .city-svg .post.fence { stroke: rgba(255, 255, 255, .16); }
+.city-svg .puddle { fill: var(--water); opacity: 0; transition: opacity 1.5s var(--ease); }
+.city-svg .base use { --pool: url(#pool); }
+/* the underground: faint at rest, brought forward by "Show the sewer" */
+.city-svg .ugrid { fill: url(#grid); opacity: 0; transition: opacity .45s var(--ease); }
+.city-svg .pipe-glow { stroke: var(--aqua); stroke-width: 7; opacity: .05; fill: none; stroke-linecap: round; stroke-linejoin: round; transition: opacity .45s var(--ease), stroke-width .45s var(--ease); }
+.city-svg .pipe { stroke: rgba(95, 180, 166, .35); stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; transition: opacity .45s var(--ease), stroke-width .45s var(--ease), stroke .45s var(--ease); }
+.city-svg .pipe-flow { stroke: var(--aqua); stroke-width: 2.4; fill: none; stroke-linecap: round; stroke-dasharray: 3 15; animation: dash-flow 1.6s linear infinite; transition: stroke .6s var(--ease); }
 @keyframes dash-flow { to { stroke-dashoffset: -18; } }
-#city .van .ft { fill: #f1fffc; }
-#city .van .fl { fill: #6fcfc1; }
-#city .van .fr { fill: #a9ebe1; }
-#city .zone {
-  --top: #2c938a; --left: #0f4a45; --right: #186a63; --ground: #0f403c; --ground-edge: #0a2a28; --detail: rgba(255, 255, 255, .16); --water: #1b7f93; --tree: #1f7a5c; --tree-2: #17624a;
-  cursor: pointer; transform-box: fill-box; transform-origin: 50% 60%;
-  transition: translate .55s var(--ease-spring), scale .55s var(--ease-spring), opacity .35s var(--ease);
+.city-svg .pipe.lat { opacity: 0; stroke-width: 1.2; }
+.city-svg .pipe-rising { fill: none; stroke: var(--amber); stroke-width: 2; stroke-dasharray: 3 9; stroke-linecap: round; opacity: .45; animation: dash-flow 2s linear infinite; transition: opacity .45s var(--ease); }
+.city-svg .pipe-out { fill: none; stroke: var(--water); stroke-width: 2; stroke-dasharray: 3 9; stroke-linecap: round; opacity: .45; animation: dash-flow 2.4s linear infinite; transition: opacity .45s var(--ease); }
+.city-svg .culvert { fill: none; stroke: var(--water); stroke-width: 2; stroke-dasharray: 2 5; opacity: .3; transition: opacity .45s var(--ease); }
+.city-svg .downpipe { fill: none; stroke: var(--amber); stroke-width: 1; opacity: 0; transition: opacity .45s var(--ease); }
+.city-svg .downpipe-dot { fill: var(--amber); opacity: 0; transition: opacity .45s var(--ease); }
+.city-svg .under use { opacity: 0; transition: opacity .45s var(--ease); }
+.city-svg .seep { fill: none; stroke: var(--water); stroke-width: 1.2; stroke-dasharray: 8 8; opacity: 0; animation: seep 2.4s linear infinite; animation-delay: calc(var(--i, 0) * -.8s); transition: opacity .45s var(--ease); }
+.city-svg .crack { stroke: var(--water); stroke-width: 1.2; opacity: 0; transition: opacity .45s var(--ease); }
+.city-svg .therm { fill: none; stroke: rgba(255, 255, 255, .55); stroke-width: 1; stroke-dasharray: 2 2; }
+.city-svg .bead { fill: var(--aqua); animation: pulse 2.4s var(--ease) infinite; animation-delay: calc(var(--i, 0) * -.4s); }
+.city-svg .under .therm, .city-svg .under .bead { opacity: 0; transition: opacity .45s var(--ease); }
+.city-svg.is-underground .zone > .g { opacity: .16; }
+.city-svg.is-underground .zone .ge-l, .city-svg.is-underground .zone .ge-r { opacity: .4; }
+.city-svg.is-underground .zone .decals { opacity: .35; }
+.city-svg.is-underground .zone .vol { opacity: .22; }
+.city-svg.is-underground .zone-fx { opacity: .7; }
+.city-svg.is-underground .ugrid { opacity: .5; }
+.city-svg.is-underground .pipe.lat, .city-svg.is-underground .downpipe, .city-svg.is-underground .downpipe-dot, .city-svg.is-underground .under use, .city-svg.is-underground .seep, .city-svg.is-underground .crack, .city-svg.is-underground .under .therm, .city-svg.is-underground .under .bead, .city-svg.is-underground .pipe-rising, .city-svg.is-underground .pipe-out, .city-svg.is-underground .culvert { opacity: 1; }
+.city-svg.is-underground .pipe { stroke-width: 4; stroke: rgba(95, 180, 166, .7); }
+.city-svg.is-underground .pipe-glow { stroke-width: 14; opacity: .14; }
+.city-svg.is-underground .pipe-flow { animation-duration: .8s; }
+.city-svg.is-underground .pipe-rising, .city-svg.is-underground .pipe-out, .city-svg.is-underground .culvert { stroke-width: 3; }
+.city-svg.is-underground .shadow { opacity: 0; }
+/* districts */
+.city-svg .zone {
+  --top: #2c938a; --left: #0f4a45; --right: #186a63; --ground: #0f403c; --detail: rgba(255, 255, 255, .16); --water: #1b7f93; --tree: #1f7a5c; --tree-2: #17624a;
+  cursor: pointer; transform-box: view-box;
+  transition: translate .55s var(--ease-spring), scale .55s var(--ease-spring), opacity .35s var(--ease), --top .35s var(--ease), --left .35s var(--ease), --right .35s var(--ease), --ground .35s var(--ease), --detail .35s var(--ease), --tree .35s var(--ease), --tree-2 .35s var(--ease);
 }
-#city .zone * { transition: fill .35s var(--ease), stroke .35s var(--ease), opacity .35s var(--ease); }
-#city .zone .g { fill: var(--ground); stroke: rgba(95, 180, 166, .16); stroke-width: 1; }
-#city .zone .ge-l { fill: #071f1d; }
-#city .zone .ge-r { fill: #092624; }
-#city .zone .ft { fill: var(--top); }
-#city .zone .fl { fill: var(--left); }
-#city .zone .fr { fill: var(--right); }
-#city .zone .fd { fill: var(--left); opacity: .7; }
-#city .zone .det { stroke: var(--detail); stroke-width: 1; fill: none; }
-#city .zone .wtr { fill: var(--water); }
-#city .zone .wtr-line { stroke: rgba(255, 255, 255, .5); stroke-width: 1.2; fill: none; stroke-dasharray: 6 12; stroke-linecap: round; animation: dash-flow 2.2s linear infinite; }
-#city .zone .tree { fill: var(--tree); }
-#city .zone .tree-2 { fill: var(--tree-2); }
-#city .zone .mh { fill: #06201e; stroke: var(--aqua); stroke-width: 1.2; }
-#city .zone .lit { fill: var(--aqua); opacity: .55; }
-#city .zone .smoke { fill: rgba(255, 255, 255, .5); animation: smoke 3.6s linear infinite; }
+.city-svg .zone:focus { outline: none; }
+.city-svg .zone > .g, .city-svg .zone .ge-l, .city-svg .zone .ge-r, .city-svg .zone .decals, .city-svg .zone .vol, .city-svg .zone .fx { transition: opacity .45s var(--ease), stroke .35s var(--ease); }
+.city-svg .zone .g { fill: var(--ground); stroke: rgba(95, 180, 166, .16); stroke-width: 1; }
+.city-svg .zone .ge-l { fill: #071f1d; }
+.city-svg .zone .ge-r { fill: #092624; }
+.city-svg .zone .ft { fill: var(--top); }
+.city-svg .zone .fl { fill: var(--left); }
+.city-svg .zone .fr { fill: var(--right); }
+.city-svg .zone .win { opacity: .9; }
+.city-svg .zone .pod { fill: rgba(4, 21, 19, .55); }
+.city-svg .zone .det { stroke: var(--detail); stroke-width: 1; fill: none; }
+.city-svg .zone .mast { stroke: rgba(255, 255, 255, .55); stroke-width: 1.2; fill: none; }
+.city-svg .zone .wtr { fill: var(--water); transition: fill .35s var(--ease); }
+.city-svg .zone-fx .wtr-line { stroke: rgba(255, 255, 255, .5); stroke-width: 1.2; fill: none; stroke-dasharray: 6 12; stroke-linecap: round; animation: dash-flow 2.2s linear infinite; }
+.city-svg .zone .sheen { fill: url(#water-sheen); }
+.city-svg .zone .bank { fill: var(--left); opacity: .6; }
+.city-svg .zone .flood { opacity: 0; transition: opacity 3s var(--ease); }
+.city-svg .zone .pool { opacity: .85; }
+.city-svg .zone .lane { fill: #0c3330; }
+.city-svg .zone .track, .city-svg .zone .siteroad, .city-svg .zone .yard { fill: rgba(255, 255, 255, .05); }
+.city-svg .zone .ground2 { fill: rgba(255, 255, 255, .03); }
+.city-svg .zone .plaza, .city-svg .zone .platform, .city-svg .zone .drive { fill: rgba(255, 255, 255, .07); }
+.city-svg .zone .park { fill: var(--tree-2); opacity: .5; }
+.city-svg .zone .zone-line { fill: none; stroke: var(--amber); stroke-width: 1; stroke-dasharray: 3 3; opacity: .6; }
+.city-svg .zone .contour, .city-svg .zone .fence, .city-svg .zone .path { fill: none; stroke: rgba(255, 255, 255, .1); stroke-width: 1; stroke-dasharray: 3 4; }
+.city-svg .zone .door { fill: rgba(4, 21, 19, .5); }
+.city-svg .zone .ao { fill: rgba(0, 0, 0, .28); }
+.city-svg .zone .mh { fill: #06201e; stroke: var(--aqua); stroke-width: 1.2; }
+.city-svg .zone .mh-ring { fill: none; stroke: rgba(95, 180, 166, .5); stroke-width: .8; }
+.city-svg .zone .mh-open { fill: #020c0b; }
+.city-svg .zone .lit { fill: var(--aqua); opacity: .55; transition: opacity .35s var(--ease), fill .35s var(--ease); }
+.city-svg .zone .lit.sky { opacity: .35; }
+.city-svg .zone-fx .foam { fill: none; stroke: rgba(255, 255, 255, .75); stroke-width: 1.4; stroke-dasharray: 2 3; animation: dash-flow 1s linear infinite; }
+.city-svg .zone .funnel { fill: #0b302d; stroke: var(--detail); stroke-width: 1; }
+.city-svg .zone .deck { fill: #2a7a70; }
+.city-svg .zone .fl.fork { fill: #8a6414; }
+.city-svg .zone .fr.fork { fill: #b8891c; }
+.city-svg .zone .fl.red { fill: #8f1d1d; }
+.city-svg .zone .fr.red { fill: #b91c1c; }
+.city-svg .zone .ft.red { fill: var(--red); }
+.city-svg .zone .flume { opacity: .9; transition: translate .8s var(--ease); }
+.city-svg .zone .stair, .city-svg .zone .ladder { fill: none; stroke: rgba(255, 255, 255, .35); stroke-width: 1; }
+.city-svg .zone-fx .screen { fill: #7dd3fc; opacity: .45; }
+.city-svg .zone-fx .hub { fill: url(#hub-glow); opacity: .35; transition: opacity .4s var(--ease); }
+.city-svg .zone-fx .beacon { fill: #fff; opacity: 0; transform-box: fill-box; transform-origin: center; }
+.city-svg .zone-fx .blink { fill: var(--red); animation: blink 2s steps(1) infinite; }
+.city-svg .zone-fx .smoke { fill: rgba(255, 255, 255, .5); animation: smoke 3.6s linear infinite; }
+.city-svg .zone-fx .smoke.steam { fill: rgba(255, 255, 255, .3); }
 @keyframes smoke { 0% { translate: 0 0; opacity: 0; scale: .5; } 15% { opacity: .55; } 100% { translate: 10px -34px; opacity: 0; scale: 1.7; } }
-#city .zone .arm { stroke: rgba(255, 255, 255, .75); stroke-width: 1.4; }
-#city .zone .well { animation: well 6s var(--ease) infinite; transform-box: fill-box; transform-origin: 50% 50%; }
-@keyframes well { 0%, 100% { scale: 1; } 50% { scale: .62; } }
-#city .ping { fill: none; stroke: var(--aqua); stroke-width: 1.4; transform-box: fill-box; transform-origin: center; animation: ping 2.6s var(--ease-out) infinite; animation-delay: calc(var(--d, 0) * 1s); }
-#city .ping-dot { fill: var(--aqua); }
+.city-svg .zone-fx .arm { stroke: rgba(255, 255, 255, .75); stroke-width: 1.4; }
+.city-svg .zone .well { transform-box: fill-box; transform-origin: 50% 50%; scale: .8; transition: scale 2s var(--ease); }
+.city-svg .zone-fx .bubble { fill: rgba(255, 255, 255, .6); animation: rise 2.4s linear infinite; animation-delay: calc(var(--d, 0) * -1s); }
+.city-svg .zone-fx .flare { fill: var(--amber); opacity: .85; transform-box: fill-box; transform-origin: 50% 100%; animation: flicker .5s ease-in-out infinite alternate; }
+.city-svg .zone-fx .meter { animation: lower 8s var(--ease) infinite; }
+.city-svg .zone-fx .run { fill: #24413d; stroke: rgba(255, 255, 255, .3); stroke-width: .6; transition: fill .4s var(--ease); }
+.city-svg .zone .fx > .run:first-child { fill: var(--green); }
+.city-svg .zone-fx .tip { fill: var(--water); opacity: 0; }
+.city-svg .zone-fx .spill { fill: var(--water); opacity: 0; transform-box: fill-box; transform-origin: center; scale: 0; transition: scale 1.2s var(--ease-out), opacity .6s var(--ease); }
+.city-svg .zone-fx .ripple { fill: none; stroke: var(--water); stroke-width: 1; opacity: 0; transform-box: fill-box; transform-origin: center; }
+.city-svg .zone-fx .runoff { fill: none; stroke: var(--water); stroke-width: 2; stroke-dasharray: 3 6; stroke-linecap: round; opacity: 0; transition: opacity .6s var(--ease); animation: dash-flow 1s linear infinite; }
+.city-svg .zone .cut { opacity: 0; transition: opacity .35s var(--ease) .2s; }
+.city-svg .zone.active .cut { opacity: 1; }
+.city-svg .cut-pipe { fill: #06201e; stroke: var(--aqua); stroke-width: 1; }
+.city-svg .cut-water { fill: var(--water); transform-box: fill-box; transform-origin: 50% 100%; transition: scale 2s var(--ease); }
+.city-svg .cut-well { fill: var(--water); transform-box: fill-box; transform-origin: 50% 100%; scale: 1 .7; transition: scale 2s var(--ease); }
+.city-svg .cut-bed { fill: #0b302d; }
+/* sensors: pings, hit targets, callouts and the alarm */
+.city-svg .ping { fill: none; stroke: var(--aqua); stroke-width: 1.4; transform-box: fill-box; transform-origin: center; animation: ping 2.6s var(--ease-out) infinite; animation-delay: calc(var(--d, 0) * -1s); }
+.city-svg .ping-dot { fill: var(--aqua); transition: fill .3s var(--ease); }
 @keyframes ping { 0% { scale: .3; opacity: .95; } 70%, 100% { scale: 2.6; opacity: 0; } }
-#city.has-active .zone:not(.active) { opacity: .78; }
-#city .zone.active {
+.city-svg .ping.wake { animation: wake .7s var(--ease-out) 1; animation-delay: calc(var(--i, 0) * 80ms); }
+.city-svg .hit { fill: none; pointer-events: all; cursor: pointer; }
+@media (pointer: coarse) { .city-svg .hit { r: 15px; } }
+.city-svg .sensor.hi .ping-dot { fill: #fff; }
+.city-svg .sensor.hi .ping { stroke: #fff; }
+.city-svg .callout { opacity: 0; translate: 0 6px; transition: opacity .3s var(--ease), translate .3s var(--ease-out); pointer-events: none; }
+.city-svg .zone-fx.active .callout { opacity: 1; translate: 0 0; transition-delay: calc(120ms + var(--i, 0) * 60ms); }
+.city-svg .callout rect { fill: rgba(4, 21, 19, .86); stroke: var(--line-dark-strong); }
+.city-svg .callout text { fill: #fff; font: 600 10px var(--font-body); letter-spacing: .01em; }
+.city-svg .callout-line { stroke: var(--line-dark-strong); }
+.city-svg .callout .cs-state { fill: var(--on-dark-faint); }
+.city-svg.lidott-high .callout .cs-state { fill: var(--amber); }
+.city-svg.lidott-highhigh .callout .cs-state { fill: #fca5a5; }
+.city-svg .alarm { fill: none; stroke: var(--amber); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; opacity: 0; transition: opacity .3s var(--ease); }
+.city-svg.lidott-high .alarm { opacity: 1; }
+.city-svg.lidott-highhigh .alarm { stroke: var(--red); animation: blink .6s steps(1) infinite; }
+.city-svg.lidott-high .sensor[data-sensor="lidott"] .ping { stroke: var(--amber); animation-duration: 1.2s; }
+.city-svg.lidott-high .sensor[data-sensor="lidott"] .ping-dot { fill: var(--amber); }
+.city-svg.lidott-highhigh .sensor[data-sensor="lidott"] .ping { stroke: var(--red); animation-duration: .9s; }
+.city-svg.lidott-highhigh .sensor[data-sensor="lidott"] .ping-dot { fill: var(--red); }
+/* the lift */
+.city-svg.has-active .zone:not(.active) { opacity: .78; }
+.city-svg .zone.active {
   --top: #dbf0ec; --left: #479086; --right: #6fb8ad; --ground: #14605a; --detail: rgba(4, 32, 29, .32); --water: #38bdf8; --tree: #5fb4a6; --tree-2: #479086;
-  translate: 0 -14px; scale: 1.07; filter: drop-shadow(0 22px 26px rgba(0, 0, 0, .4));
+  translate: 0 -14px; scale: 1.07;
 }
-#city .zone.active .g { stroke: var(--aqua); stroke-width: 1.6; }
-#city .zone.active .lit { opacity: 1; fill: #fff; }
-#city .zone.active .mh { fill: #fff; }
-#city .link { fill: none; stroke: var(--aqua); stroke-width: 1.6; stroke-dasharray: 2 7; stroke-linecap: round; opacity: 0; transition: opacity .4s var(--ease); animation: dash-flow 1s linear infinite; pointer-events: none; }
-#city .link.on { opacity: .9; }
-#city .zlabel { pointer-events: none; transition: translate .55s var(--ease-spring), opacity .3s var(--ease); }
-#city .zlabel rect { fill: rgba(4, 21, 19, .78); stroke: var(--line-dark-strong); transition: fill .3s var(--ease), stroke .3s var(--ease); }
-#city .zlabel text { fill: var(--on-dark-soft); font: 600 10.5px var(--font-body); letter-spacing: .02em; transition: fill .3s var(--ease); }
-#city .zlabel line { stroke: var(--line-dark-strong); }
-#city .zlabel { opacity: 0; }
-#city .zlabel.active, #city:not(.has-active) .zlabel { opacity: 1; }
-#city .zlabel.active { translate: 0 -20px; }
-#city .zlabel.active rect { fill: var(--aqua); stroke: var(--aqua); }
-#city .zlabel.active text { fill: #04201d; }
-#city .zlabel.active line { stroke: var(--aqua); }
+.city-svg .zone.active .g { stroke: var(--aqua); stroke-width: 1.6; }
+/* keyboard focus: a white edge round the district, heavier than the selection's */
+.city-svg .zone:focus-visible > .g, .city-svg .zone.active:focus-visible > .g { stroke: #fff; stroke-width: 2.8; }
+.city-svg .zone.active .lit { opacity: 1; fill: #fff; }
+.city-svg .zone.active .mh { fill: #fff; }
+.city-svg .zone.active .pod { fill: rgba(4, 21, 19, .35); }
+.city-svg .zone.active .win { opacity: .7; }
+.city-svg .shadow { fill: url(#lift-shadow); opacity: 0; transition: opacity .45s var(--ease); }
+.city-svg .shadow.on { opacity: 1; }
+/* data links and packets */
+.city-svg .link { fill: none; stroke: var(--aqua); stroke-width: 1.6; stroke-dasharray: 2 7; stroke-linecap: round; opacity: 0; transition: opacity .4s var(--ease), stroke .4s var(--ease); animation: dash-flow 1s linear infinite; pointer-events: none; }
+.city-svg .link.on { opacity: .9; }
+.city-svg.lidott-highhigh #link-sewer { stroke: var(--red); opacity: 1; }
+.city-svg .pkt { fill: var(--aqua); opacity: .3; }
+.city-svg .pkt-hand { fill: #fff; opacity: 0; transition: opacity .2s var(--ease); }
+.city-svg .pkt-hand.on { opacity: 1; }
+.city-svg .pkt-sms { fill: #04201d; stroke: var(--red); stroke-width: 1.2; opacity: 0; transition: opacity .2s var(--ease); }
+.city-svg .pkt-sms.on { opacity: 1; }
+.city-svg .pkt-sms.ok { stroke: var(--green); }
+.city-svg.beacon-on .zone-fx .beacon { animation: beacon .4s var(--ease-out) 1; }
+.city-svg.beacon-on .zone-fx .hub { opacity: 1; }
+/* labels */
+.city-svg .zlabel { pointer-events: none; opacity: 0; transition: translate .55s var(--ease-spring), opacity .3s var(--ease); }
+.city-svg .zlabel rect { fill: rgba(4, 21, 19, .78); stroke: var(--line-dark-strong); transition: fill .3s var(--ease), stroke .3s var(--ease); }
+.city-svg .zlabel text { fill: var(--on-dark-soft); font: 600 10.5px var(--font-body); letter-spacing: .02em; transition: fill .3s var(--ease); }
+.city-svg .zlabel line { stroke: var(--line-dark-strong); }
+.city-svg .zlabel.active, .city-svg:not(.has-active) .zlabel { opacity: 1; }
+.city-svg .zlabel.active { translate: 0 -20px; }
+.city-svg .zlabel.active rect { fill: var(--aqua); stroke: var(--aqua); }
+.city-svg .zlabel.active text { fill: #04201d; }
+.city-svg .zlabel.active line { stroke: var(--aqua); }
+/* the storm */
+.city-svg .sky { fill: url(#sky); opacity: 0; transition: opacity 2s var(--ease); pointer-events: none; }
+.city-svg.is-storm .sky { opacity: 1; }
+.city-svg .cloud ellipse { fill: rgba(255, 255, 255, .05); }
+.city-svg .cloud { translate: 0 -150px; opacity: 0; transition: translate 2.2s var(--ease-out), opacity 1.5s var(--ease); transition-delay: calc(var(--i, 0) * .25s); pointer-events: none; }
+.city-svg.is-storm .cloud { translate: 0 0; opacity: 1; }
+.city-svg .rain-fill { fill: url(#rain); }
+.city-svg .rain { opacity: 0; transition: opacity 1s var(--ease); pointer-events: none; }
+.city-svg.is-storm .rain { opacity: 1; animation: rain-fall .45s linear infinite; }
+.city-svg.is-storm .zone .flood { opacity: .85; }
+.city-svg.is-storm .wtr-line { animation-duration: 1.1s; }
+.city-svg.is-storm .tip { animation: tip-drop 1.2s linear infinite; }
+.city-svg.is-storm .base use { --pool: url(#pool-bright); }
+.city-svg.is-storm .zone-fx .hub { opacity: .8; }
+.city-svg.storm-2 .puddle { opacity: .7; }
+.city-svg.storm-2 .gully { --gully: var(--water); }
+.city-svg.storm-2 .pipe.lat { opacity: .6; }
+.city-svg.storm-2 .downpipe, .city-svg.storm-2 .downpipe-dot { opacity: 1; }
+.city-svg.storm-2 .pipe-flow { animation-duration: .55s; stroke: var(--amber); }
+.city-svg.storm-2 .pipe-glow { opacity: .18; }
+.city-svg.storm-2 .cut-water { scale: 1 1.9; }
+.city-svg.storm-3 .spill { opacity: .9; scale: .6; }
+.city-svg.storm-3b .spill { scale: 1; }
+.city-svg.storm-3b .ripple { animation: ripple 1.6s linear infinite; animation-delay: calc(var(--i, 0) * -.5s); }
+.city-svg.storm-3b .runoff { opacity: 1; }
+.city-svg.storm-4 .screen { animation: blink 1s steps(1) infinite; animation-delay: calc(var(--i, 0) * .2s); }
+.city-svg.storm-5 .run { fill: var(--green); }
+.city-svg.storm-5 .well { scale: 1; }
+.city-svg.storm-5 .cut-well { scale: 1 1.6; }
+.city-svg.storm-5 .pipe-rising { opacity: 1; animation-duration: .5s; }
+.city-svg.storm-6 .flume { translate: 0 -2px; }
+.city-svg.storm-6 .bubble { animation-duration: 1.2s; }
+.city-svg.storm-7 .sensor[data-sensor="turb"] .ping, .city-svg.storm-7 .sensor[data-sensor="aquamonitrix"] .ping { stroke: var(--amber); }
+.city-svg.storm-7 .sensor[data-sensor="turb"] .ping-dot, .city-svg.storm-7 .sensor[data-sensor="aquamonitrix"] .ping-dot { fill: var(--amber); }
+.city-svg.storm-7 .pipe-out { opacity: 1; animation-duration: .8s; }
+.city-svg.storm-8 .rain { opacity: 0; }
+.city-svg.storm-8 .cloud { translate: 0 -150px; }
+.city-svg.storm-8 .sky { opacity: 0; }
+.city-svg.storm-8 .zone .flood { opacity: 0; transition-duration: 4s; }
+.city-svg.storm-8 .puddle { opacity: 0; }
+.city-svg.storm-8 .gully { --gully: #06201e; }
+.city-svg.storm-8 .pipe.lat { opacity: 0; }
+.city-svg.storm-8 .pipe-flow { animation-duration: 1.6s; stroke: var(--aqua); }
+.city-svg.storm-8 .pipe-glow { opacity: .05; }
+.city-svg.storm-8 .downpipe, .city-svg.storm-8 .downpipe-dot { opacity: 0; }
+.city-svg.storm-8 .seep { opacity: .6; }
+.city-svg.storm-8 .base use { --pool: url(#pool); }
+.city-svg.storm-8b .spill { opacity: 0; scale: 0; }
+.city-svg.storm-8b .ripple { animation: none; }
+.city-svg.storm-8b .runoff { opacity: 0; }
+.city-svg.storm-8b .sensor[data-sensor="turb"] .ping, .city-svg.storm-8b .sensor[data-sensor="aquamonitrix"] .ping { stroke: var(--aqua); }
+.city-svg.storm-8b .sensor[data-sensor="turb"] .ping-dot, .city-svg.storm-8b .sensor[data-sensor="aquamonitrix"] .ping-dot { fill: var(--aqua); }
+.city-svg.storm-9 .zone-fx .hub { opacity: 1; }
+.city-svg.storm-9 .run { fill: #24413d; }
+.city-svg.storm-9 .run-a { fill: var(--green); }
+.city-svg.storm-9 .cut-water { scale: 1 1.3; }
+/* nothing moves while the stage is off screen */
+.city-svg.is-offscreen * { animation-play-state: paused !important; }
+@keyframes wake { 0% { scale: .3; opacity: 1; stroke: #fff; } 100% { scale: 2.2; opacity: 0; stroke: var(--aqua); } }
+@keyframes rise { 0% { translate: 0 0; opacity: 0; } 20% { opacity: .8; } 100% { translate: 2px -14px; opacity: 0; } }
+@keyframes flicker { from { scale: 1 .8; } to { scale: 1.15 1.1; } }
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: .15; } }
+@keyframes lower { 0%, 10% { translate: 0 0; } 50%, 60% { translate: 0 11px; } 100% { translate: 0 0; } }
+@keyframes rain-fall { to { translate: 0 24px; } }
+@keyframes ripple { 0% { scale: .6; opacity: .8; } 100% { scale: 2.6; opacity: 0; } }
+@keyframes seep { to { stroke-dashoffset: -16; } }
+@keyframes pulse { 0%, 100% { opacity: .45; } 50% { opacity: 1; } }
+@keyframes beacon { 0% { opacity: 1; scale: .5; } 100% { opacity: 0; scale: 3; } }
+@keyframes tip-drop { 0% { translate: 0 0; opacity: 0; } 20% { opacity: 1; } 100% { translate: 0 9px; opacity: 0; } }
+
 
 .city-tabs { grid-area: tabs; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
 .city-tab { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line-dark); font-size: .85rem; font-weight: 600; color: var(--on-dark-soft); transition: all .2s var(--ease); }
@@ -398,6 +621,86 @@ ul { margin: 0; padding: 0; list-style: none; }
 .city-list li:last-child a { border-bottom: 0; }
 .city-list a:hover { color: var(--aqua); padding-left: 6px; }
 .city-list a .icon { color: var(--aqua); font-size: 16px; }
+
+/* the bar under the stage: the controls, the caption the tour and storm
+   speak through, the readings tiles, the illustrative note and the key */
+.city-bar { grid-area: bar; display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "tools caption" "hud hud" "legend legend" "note note"; gap: 10px 16px; align-items: center; padding: 12px 0 0; min-width: 0; }
+.city-toolbar { grid-area: tools; display: flex; align-items: center; gap: 8px; }
+.city-btn { touch-action: manipulation; }
+.btn.city-btn { padding: .72em 1.05em; font-size: .88rem; }
+.btn.city-btn .icon { font-size: 16px; }
+.btn.city-btn[aria-pressed="true"] { background: var(--aqua); border-color: var(--aqua); color: #04201d; }
+.btn.city-btn[aria-pressed="true"]:hover { background: #7bc1b5; border-color: #7bc1b5; }
+/* the tour button carries both glyphs; the pressed state (paused) shows play */
+.city-caption { grid-area: caption; margin: 0; min-width: 0; min-height: 2.6em; font-size: .92rem; font-weight: 550; line-height: 1.35; color: #fff; text-wrap: pretty; transition: opacity .25s var(--ease); }
+.city-caption:empty { opacity: 0; }
+.city-hud { grid-area: hud; display: flex; flex-wrap: wrap; gap: 8px; min-width: 0; }
+/* one tile per reading, in the readout look: label, Geist value, unit */
+.city-tile { flex: none; display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 4px; min-width: 76px; padding: 9px 12px 8px; border-radius: 14px; background: rgba(2, 12, 11, .45); border: 1px solid var(--line-dark); transition: border-color .3s var(--ease), background-color .3s var(--ease); }
+.city-tile > span { flex-basis: 100%; font-size: .72rem; color: var(--on-dark-faint); white-space: nowrap; }
+.city-tile [data-value] { font-family: var(--font-display); font-size: 1.25rem; font-weight: 620; letter-spacing: -.02em; line-height: 1.1; color: #fff; font-variant-numeric: tabular-nums; }
+.city-tile small { font-size: .72rem; color: var(--on-dark-faint); white-space: nowrap; }
+.city-tile .icon { display: none; margin-left: auto; align-self: center; font-size: 15px; color: var(--amber); }
+.city-tile[data-alarm] { border-color: var(--amber); background: rgba(245, 158, 11, .08); }
+.city-tile[data-alarm] small { color: var(--amber); }
+.city-tile[data-alarm] .icon { display: block; }
+.city-tile-spark { flex: 1 1 150px; min-width: 150px; }
+.city-spark { display: block; width: 100%; height: 30px; margin-top: 3px; overflow: visible; }
+.city-spark path { fill: none; stroke: var(--aqua); stroke-width: 1.5; stroke-linejoin: round; opacity: 0; transition: opacity .4s var(--ease); }
+.city-spark path.on { opacity: 1; }
+.city-spark path.area { fill: var(--aqua); stroke: none; opacity: 0; }
+.city-spark path.area.on { opacity: .12; }
+.city-spark path.dwf { stroke: rgba(255, 255, 255, .5); stroke-width: 1; stroke-dasharray: 3 4; opacity: 1; }
+.city-spark rect { fill: var(--water); opacity: .35; }
+.city-spark circle { fill: #fff; }
+.city-note { grid-area: note; display: flex; align-items: flex-start; gap: 8px; margin: 0; color: var(--on-dark-faint); text-wrap: pretty; }
+.city-note .icon { flex: none; font-size: 15px; margin-top: .15em; }
+.city-legend { grid-area: legend; display: flex; flex-wrap: wrap; justify-content: flex-start; gap: 6px 16px; font-size: .76rem; color: var(--on-dark-faint); }
+.city-legend li { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.city-legend .icon { font-size: 14px; color: var(--aqua); }
+.city-legend li:nth-child(2) .icon { color: var(--amber); }
+.city-legend li:nth-child(4) .icon { color: var(--water); }
+/* the tour's progress: one segment per district under the tabs, the running
+   one filling over the 5.2 s the tour dwells there */
+/* the sensors on the map, listed in the card with their illustrative reading */
+.city-sensors { display: grid; gap: 2px; }
+.city-sensors button { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px; width: 100%; padding: 8px 10px; border-radius: 12px; text-align: left; font-size: .9rem; font-weight: 550; color: #fff; transition: background-color .2s var(--ease), color .2s var(--ease); }
+.city-sensors button .icon { font-size: 16px; color: var(--aqua); }
+.city-sensors .cs-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.city-sensors .cs-read { font-size: .78rem; color: var(--on-dark-faint); white-space: nowrap; }
+.city-sensors .cs-read b { font-family: var(--font-display); font-size: .92rem; font-weight: 620; color: #fff; font-variant-numeric: tabular-nums; }
+.city-sensors button:hover, .city-sensors button.hi { background: rgba(255, 255, 255, .08); }
+.city-sensors button.hi .icon { color: #fff; }
+.city-sensors button:focus-visible { outline: 2px solid var(--aqua); outline-offset: -2px; border-radius: 12px; }
+.city-sensors + .note { margin-top: 8px; }
+/* why a storm step matters: shown in the district's card as the storm reaches it */
+.city-why { padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(245, 158, 11, .35); background: rgba(245, 158, 11, .08); font-size: .9rem; color: var(--on-dark-soft); }
+.city-why a { display: inline-flex; align-items: center; gap: 4px; margin-left: 4px; font-weight: 600; color: #fff; white-space: nowrap; }
+.city-why a:hover { color: var(--aqua); }
+.city-why a .icon { font-size: 14px; color: var(--aqua); }
+.city-log { min-height: 0; margin-top: 0; }
+/* the sensor readout: the lab's tip, parked over the stage by the pointer; on
+   touch screens it docks under the stage instead, with a close button */
+.city-tip { position: absolute; top: 0; left: 0; z-index: 2; margin-left: 14px; min-width: 180px; max-width: 250px; padding: 10px 12px; border-radius: 12px; pointer-events: none;
+  background: rgba(4, 21, 19, .92); border: 1px solid var(--line-dark-strong); box-shadow: 0 10px 30px rgba(0, 0, 0, .35); backdrop-filter: blur(8px);
+  font-size: .76rem; color: var(--on-dark-soft); opacity: 0; transition: opacity .125s var(--ease-out); }
+.city-tip.on { opacity: 1; }
+.city-tip.flip { translate: -100% 0; margin-left: -14px; }
+.city-tip b { display: block; font-family: var(--font-display); font-size: .88rem; font-weight: 620; color: #fff; }
+.city-tip small { display: block; margin-bottom: 7px; font-size: .72rem; color: var(--on-dark-faint); }
+.city-tip dl { display: grid; grid-template-columns: auto auto; gap: 4px 14px; margin: 0; }
+.city-tip dt { color: var(--on-dark-faint); }
+.city-tip dd { margin: 0; text-align: right; font-weight: 600; color: #fff; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.city-tip-close { display: none; width: 32px; height: 32px; border-radius: 50%; align-items: center; justify-content: center; border: 1px solid var(--line-dark-strong); color: #fff; background: rgba(255, 255, 255, .05); touch-action: manipulation; }
+.city-tip-close .icon { font-size: 16px; }
+@media (hover: none) {
+  .city-tip { position: static; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; column-gap: 12px; max-width: none; margin: 10px calc(var(--gutter) * .5) 0; translate: none; pointer-events: auto; }
+  .city-tip.flip { translate: none; margin-left: calc(var(--gutter) * .5); }
+  .city-tip-body { min-width: 0; }
+  .city-tip-close { display: inline-flex; }
+  /* opened from a row in the card, the readout sits under that list */
+  .city-panel .city-card .city-tip { margin: 12px 0 0; }
+}
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 999px; font-size: .83rem; font-weight: 550; background: rgba(255, 255, 255, .07); border: 1px solid var(--line-dark); color: #fff; transition: background-color .2s var(--ease), border-color .2s var(--ease); }
 a.chip:hover { background: var(--aqua-soft); border-color: rgba(95, 180, 166, .5); }
@@ -1421,9 +1724,21 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: 6
   .ind { grid-template-columns: 1fr 1fr; }
   .ind > div:nth-child(3) { border-left: 0; }
   .ind > div:nth-child(n + 3) { border-top: 1px solid var(--border); }
-  .city-grid { grid-template-areas: "stage" "tabs" "panel"; row-gap: 20px; }
+  .city-grid { grid-template-areas: "stage" "bar" "tabs" "panel"; row-gap: 20px; }
   .city-card { display: none; }
   .city-card.active { display: flex; }
+  /* the bar stacks; the tiles and the tabs scroll sideways, the progress
+     strip keeping its row under the tabs */
+  .city-bar { grid-template-columns: 1fr; grid-template-areas: "tools" "caption" "hud" "note" "legend"; gap: 12px; padding-top: 0; }
+  .city-bar .btn.city-btn { min-height: 44px; }
+  .city-caption { min-height: 0; }
+  .city-hud, .city-tabs { overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: none; margin-inline: calc(var(--gutter) * -1); padding-inline: var(--gutter); }
+  .city-hud::-webkit-scrollbar, .city-tabs::-webkit-scrollbar { display: none; }
+  .city-hud { padding-bottom: 2px; }
+  .city-tile { scroll-snap-align: start; }
+  .city-tabs { flex-wrap: nowrap; justify-content: flex-start; }
+  .city-tab { flex: none; white-space: nowrap; scroll-snap-align: center; }
+  .city-legend { justify-content: flex-start; }
   .section-head.split { grid-template-columns: 1fr; }
   .section-head.split > .btn, .section-head.split > .rail-nav { justify-self: start; }
 }
@@ -1457,7 +1772,16 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: 6
   .compare th, .compare td { padding: 11px 12px; font-size: .86rem; }
   .chart-box { min-height: 260px; }
   .city-stage { margin-inline: calc(var(--gutter) * -1); }
+  .city-sensors { max-height: 126px; overflow-y: auto; overscroll-behavior: contain; }
+  .city-tile-spark { flex-basis: 130px; min-width: 130px; }
 }
+@media (max-width: 700px) and (hover: none) {
+  .city-tip, .city-tip.flip { margin-inline: var(--gutter); }
+}
+
+@media (max-width: 700px) { .city-svg .callout { display: none; } }
+@media (max-width: 600px) { .city-svg .fine { display: none; } }
+@media (max-width: 560px) { .city-svg .zlabel { display: none; } }
 
 /* ---------- responsive: search, heroes, products, quick actions ---------- */
 @media (max-width: 1360px) {

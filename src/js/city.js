@@ -1,326 +1,438 @@
-// The interactive city: an isometric town drawn in SVG. Hovering (or tapping,
-// or tabbing to) a district lifts it out and shows what EDS does there.
+// The interactive city: selection, the storm, the underground view, the
+// sensor readouts and the HUD. city-scene.js draws the
+// scene as two SVGs (the still city and an overlay of everything that moves);
+// every visible word comes from the JSON block the build writes from
+// content.mjs (city, cityUi and cityStorm).
+//
+// Nothing changes by itself or on hover alone: a district lifts on a click,
+// a tap or keyboard focus (or when the visitor runs the storm), and a
+// sensor's readout opens on a click. Hovering only brightens what would be
+// picked. The ambient animation (traffic, pings, flows) always runs.
 (() => {
-  const svg = document.getElementById("city");
-  if (!svg) return;
-  const NS = "http://www.w3.org/2000/svg";
-  const TW = 56, TH = 28; // one ground tile, in px
-  const P = (x, y, z = 0) => [(x - y) * TW / 2, (x + y) * TH / 2 - z];
-  const pts = (a) => a.map((p) => `${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(" ");
-  const el = (tag, attrs = {}, parent) => {
-    const n = document.createElementNS(NS, tag);
-    for (const k in attrs) n.setAttribute(k, attrs[k]);
-    parent?.appendChild(n);
-    return n;
-  };
-  const poly = (cls, a) => el("polygon", { class: cls, points: pts(a) });
+  const svg = document.getElementById("city"), dataEl = document.getElementById("city-data");
+  if (!svg || !dataEl || !window.CityScene) return;
+  const data = JSON.parse(dataEl.textContent);
+  const { ui, storm: stormData, zones: zoneData } = data;
+  const sc = CityScene.build(svg, data);
+  const layers = [svg, sc.fx];
+  const cls = (name, on) => layers.forEach((s) => s.classList.toggle(name, on));
+  const $ = (s, el = document) => el.querySelector(s), $$ = (s, el = document) => [...el.querySelectorAll(s)];
+  const section = svg.closest(".city-section"), stage = svg.closest(".city-stage");
+  const cards = $$(".city-card"), tabs = $$(".city-tab"), caption = $(".city-caption"), liveEl = $("#city-live");
+  const btn = { storm: $('.city-btn[data-act="storm"]'), under: $('.city-btn[data-act="under"]') };
+  const tiles = Object.fromEntries($$(".city-tile[data-tile]").map((t) => [t.dataset.tile, t]));
+  const tip = $(".city-tip"), tipBody = $(".city-tip-body"), tipClose = $(".city-tip-close");
+  const zoneOf = Object.fromEntries(zoneData.map((z) => [z.id, z]));
+  const sensorOf = {};
+  zoneData.forEach((z) => z.sensors.forEach((s) => { sensorOf[s.id] = { ...s, zone: z.id }; }));
+  const fine = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+  const order = zoneData.map((z) => z.id);
+  const ZONE_IDS = Object.keys(sc.zones);
 
-  /* ---- primitives: each returns { d: depth, nodes: [...] } ---- */
-  function box(x, y, w, d, h, o = {}) {
-    const z = o.z || 0, nodes = [];
-    nodes.push(poly("fl", [P(x, y + d, z), P(x + w, y + d, z), P(x + w, y + d, z + h), P(x, y + d, z + h)]));
-    nodes.push(poly("fr", [P(x + w, y, z), P(x + w, y + d, z), P(x + w, y + d, z + h), P(x + w, y, z + h)]));
-    nodes.push(poly(o.top || "ft", [P(x, y, z + h), P(x + w, y, z + h), P(x + w, y + d, z + h), P(x, y + d, z + h)]));
-    if (o.windows) {
-      for (let zz = z + 8; zz < z + h - 3; zz += o.windows) {
-        const a = P(x, y + d, zz), b = P(x + w, y + d, zz), c = P(x + w, y, zz);
-        nodes.push(el("polyline", { class: "det", points: pts([a, b, c]) }));
-      }
+  const state = { active: null, under: false, inView: false, storm: null };
+  let liveTimer = 0;
+  const announce = (text) => {
+    if (!liveEl || !text) return;
+    clearTimeout(liveTimer);
+    liveTimer = setTimeout(() => { liveEl.textContent = ""; liveEl.textContent = text; }, 250);
+  };
+  const fill = (tpl, vars) => String(tpl || "").replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? "");
+  const setCaption = (text) => { if (caption) caption.textContent = text || caption.dataset.rest || ""; };
+  const cardOf = (id) => cards.find((c) => c.dataset.zone === id);
+
+  /* ---- selection ---- */
+  // The active district (and its overlay twin) moves to the end of its layer
+  // the frame before it lifts, so it paints over taller neighbours; the
+  // previous one goes back to its slot in depth order.
+  const restoreSlot = (id) => {
+    for (const [layer, map] of [[sc.zoneLayer, sc.zones], [sc.zoneFxLayer, sc.zoneFx]]) {
+      const g = map[id], mine = sc.slots[id];
+      const next = [...layer.children].find((c) => c !== g && sc.slots[c.dataset.zone] > mine);
+      layer.insertBefore(g, next || null);
     }
-    return { d: x + w + y + d + (o.bias || 0), nodes };
+  };
+  let handTimers = [];
+  function handOff(id) {
+    handTimers.forEach(clearTimeout); handTimers = [];
+    const pings = $$(".ping", sc.zoneFx[id]);
+    pings.forEach((p) => p.classList.remove("wake"));
+    requestAnimationFrame(() => pings.forEach((p) => p.classList.add("wake")));
+    handTimers.push(setTimeout(() => pings.forEach((p) => p.classList.remove("wake")), 1200));
+    if (id !== "ops") handTimers.push(setTimeout(() => {
+      sc.handMotion.setAttribute("path", sc.links[id].getAttribute("d"));
+      sc.hand.classList.add("on");
+      sc.handMotion.beginElement();
+      handTimers.push(setTimeout(() => { cls("beacon-on", true); handTimers.push(setTimeout(() => cls("beacon-on", false), 400)); }, 780));
+      handTimers.push(setTimeout(() => sc.hand.classList.remove("on"), 1000));
+    }, 220));
   }
-  function roof(x, y, w, d, z, rh) {
-    const A = P(x + w / 2, y + d / 2, z + rh);
-    return [
-      poly("ft", [P(x, y, z), P(x, y + d, z), A]),
-      poly("ft", [P(x, y, z), P(x + w, y, z), A]),
-      poly("fr", [P(x, y + d, z), P(x + w, y + d, z), A]),
-      poly("ft", [P(x + w, y, z), P(x + w, y + d, z), A]),
-    ];
-  }
-  function house(x, y, w, d, h, rh) {
-    const b = box(x, y, w, d, h);
-    b.nodes.pop(); // the roof covers the top face
-    b.nodes.push(...roof(x, y, w, d, h, rh));
-    return b;
-  }
-  function cyl(cx, cy, r, h, o = {}) {
-    const z = o.z || 0, rx = r * TW / Math.SQRT2, ry = r * TH / Math.SQRT2;
-    const [bx, by] = P(cx, cy, z), [, ty] = P(cx, cy, z + h);
-    const f = (n) => n.toFixed(1);
-    const nodes = [
-      el("path", { class: "fr", d: `M${f(bx - rx)} ${f(ty)}L${f(bx - rx)} ${f(by)}A${f(rx)} ${f(ry)} 0 0 0 ${f(bx + rx)} ${f(by)}L${f(bx + rx)} ${f(ty)}Z` }),
-      el("path", { class: "fl", d: `M${f(bx - rx)} ${f(ty)}L${f(bx - rx)} ${f(by)}A${f(rx)} ${f(ry)} 0 0 0 ${f(bx)} ${f(by + ry)}L${f(bx)} ${f(ty + ry)}A${f(rx)} ${f(ry)} 0 0 1 ${f(bx - rx)} ${f(ty)}Z` }),
-      el("ellipse", { class: "ft", cx: f(bx), cy: f(ty), rx: f(rx), ry: f(ry) }),
-    ];
-    if (o.water) nodes.push(el("ellipse", { class: `wtr ${o.water === true ? "" : o.water}`, cx: f(bx), cy: f(ty), rx: f(rx * 0.82), ry: f(ry * 0.82) }));
-    if (o.arm) {
-      const arm = el("line", { class: "arm" });
-      arms.push({ arm, cx, cy, r: r * 0.8, z: z + h, phase: Math.random() * 6 });
-      nodes.push(arm);
+  // Moving a focused district in the DOM blurs it; the refocus that follows
+  // must not count as the visitor picking it again.
+  let reparenting = false;
+  const tabsEl = $(".city-tabs");
+  function setActive(id, { announceIt = false } = {}) {
+    if (!sc.zones[id]) return;
+    const prev = state.active;
+    state.active = id;
+    if (prev !== id) {
+      const focused = document.activeElement;
+      reparenting = true;
+      if (prev) restoreSlot(prev);
+      sc.zoneLayer.appendChild(sc.zones[id]);
+      sc.zoneFxLayer.appendChild(sc.zoneFx[id]);
+      if (focused && (focused === sc.zones[prev] || focused === sc.zones[id])) focused.focus({ preventScroll: true });
+      reparenting = false;
+      requestAnimationFrame(apply);
+      handOff(id);
+      hideTip();
+    } else apply();
+    const z = zoneOf[id];
+    if (!state.storm) setCaption(z?.line);
+    if (announceIt && z) announce(fill(ui.live.select, { name: z.name, services: $$(".city-list a", cardOf(id)).length, products: $$(".chip", cardOf(id)).length }));
+    // Where the tabs scroll sideways (phones), bring the selected one into
+    // the row. Only the row scrolls: a selection never moves the page.
+    const tab = tabs.find((t) => t.dataset.zone === id);
+    if (tab && tabsEl && tabsEl.scrollWidth > tabsEl.clientWidth + 1) {
+      const off = tab.getBoundingClientRect().left - tabsEl.getBoundingClientRect().left;
+      tabsEl.scrollTo({ left: tabsEl.scrollLeft + off - (tabsEl.clientWidth - tab.offsetWidth) / 2, behavior: "smooth" });
     }
-    return { d: cx + cy + r * 1.42, nodes };
   }
-  function tree(x, y, s = 1) {
-    const [a, b] = P(x, y, 9 * s), [c, d] = P(x, y, 13 * s);
-    const [tx, ty] = P(x, y);
-    return {
-      d: x + y + 0.1,
-      nodes: [
-        el("line", { class: "det", x1: tx, y1: ty, x2: tx, y2: ty - 6 * s }),
-        el("circle", { class: "tree-2", cx: a.toFixed(1), cy: b.toFixed(1), r: 7 * s }),
-        el("circle", { class: "tree", cx: (c - 1.5).toFixed(1), cy: d.toFixed(1), r: 5 * s }),
-      ],
-    };
-  }
-  function ping(x, y, z = 0, delay = 0) {
-    const [cx, cy] = P(x, y, z);
-    return {
-      d: 99, // sensors always sit on top of their district
-      nodes: [
-        el("circle", { class: "ping", cx, cy, r: 5, style: `--d:${delay}` }),
-        el("circle", { class: "ping-dot", cx, cy, r: 2.4 }),
-      ],
-    };
-  }
-  function manhole(x, y, delay = 0) {
-    const [cx, cy] = P(x, y);
-    const p = ping(x, y, 0, delay);
-    return { d: x + y, nodes: [el("ellipse", { class: "mh", cx, cy, rx: 6, ry: 3 }), ...p.nodes] };
-  }
-  const flat = (cls, a, d) => ({ d, nodes: [poly(cls, a)] });
-  const line = (cls, a, d) => ({ d, nodes: [el("polyline", { class: cls, points: pts(a) })] });
-
-  const arms = [];
-
-  /* ---- districts ---- */
-  const ZONES = {
-    river: {
-      rect: [0, 0, 4.6, 4.6], h: 34, build() {
-        const c = [[0, 1.0], [1.2, 1.4], [2.3, 2.3], [3.4, 3.2], [4.6, 3.6]];
-        const up = c.map(([x, y]) => P(x, y - 0.42)), lo = c.map(([x, y]) => P(x, y + 0.42)).reverse();
-        return [
-          flat("wtr", [...up, ...lo], 0),
-          line("wtr-line", c.map(([x, y]) => P(x, y - 0.12)), 0.01),
-          line("wtr-line", c.map(([x, y]) => P(x, y + 0.16)), 0.02),
-          ...[[0.6, 3.1], [1.3, 3.8], [2.2, 4.1], [0.5, 4.1], [3.5, 0.6], [4.1, 1.3], [2.6, 0.5], [4.15, 2.3], [3.1, 1.5]].map(([x, y], i) => tree(x, y, i % 3 ? 1 : 1.25)),
-          box(1.45, 0.45, 0.1, 0.1, 30), // weather station mast
-          box(1.3, 0.3, 0.4, 0.4, 5, { z: 30, top: "lit" }),
-          cyl(0.75, 0.75, 0.16, 9), // rain gauge
-          ping(2.3, 2.3, 0, 0.2), ping(1.5, 0.5, 37, 1.1), ping(3.7, 3.35, 0, 1.7),
-        ];
-      },
-    },
-    sewer: {
-      rect: [5.4, 0, 9.6, 4.6], h: 26, build() {
-        const out = [];
-        for (const x of [5.7, 7.05, 8.4]) for (const y of [0.4, 1.9, 3.4]) out.push(house(x, y, 0.8, 0.8, 12, 9));
-        for (const x of [6.78, 8.13]) out.push(line("pipe-flow", [P(x, 0.3), P(x, 4.5)], 0.01));
-        out.push(manhole(6.78, 1.55, 0), manhole(8.13, 3.05, 0.8), manhole(6.78, 3.05, 1.5));
-        return out;
-      },
-    },
-    cbd: {
-      rect: [10.4, 0, 15, 4.6], h: 122, build() {
-        return [
-          box(10.8, 0.5, 1.1, 1.1, 86, { windows: 9 }),
-          box(12.4, 0.4, 1.0, 1.0, 118, { windows: 9 }),
-          box(12.75, 0.75, 0.3, 0.3, 10, { z: 118, top: "lit" }),
-          box(13.9, 0.6, 0.8, 0.9, 64, { windows: 9 }),
-          box(10.9, 2.4, 1.2, 0.9, 46, { windows: 9 }),
-          box(12.6, 2.2, 1.0, 1.2, 72, { windows: 9 }),
-          box(14.0, 2.5, 0.7, 0.8, 54, { windows: 9 }),
-          box(11.0, 3.75, 0.9, 0.6, 18),
-          box(12.9, 3.8, 1.5, 0.55, 12, { top: "lit" }),
-          ping(11.35, 1.05, 88, 0.3), ping(13.1, 2.8, 74, 1.2), ping(14.6, 4.2, 0, 1.9),
-        ];
-      },
-    },
-    plant: {
-      rect: [0, 5.4, 4.6, 10], h: 40, build() {
-        return [
-          cyl(1.1, 6.55, 0.78, 5, { water: true, arm: true }),
-          cyl(1.1, 8.65, 0.78, 5, { water: true, arm: true }),
-          cyl(3.0, 6.3, 0.55, 30),
-          cyl(4.0, 7.0, 0.45, 22),
-          box(2.3, 8.2, 1.5, 1.3, 5),
-          flat("wtr", [P(2.42, 8.32, 5), P(3.68, 8.32, 5), P(3.68, 9.38, 5), P(2.42, 9.38, 5)], 2.3 + 1.5 + 8.2 + 1.3 + 0.01),
-          line("wtr-line", [P(2.5, 8.85, 5), P(3.6, 8.85, 5)], 2.3 + 1.5 + 8.2 + 1.3 + 0.02),
-          box(4.0, 8.4, 0.42, 1.0, 14),
-          ping(2.3, 5.75, 0, 0.5), ping(3.05, 8.85, 5, 1.4), ping(0.4, 9.6, 0, 2.1),
-        ];
-      },
-    },
-    pump: {
-      rect: [5.4, 5.4, 7.2, 10], h: 34, build() {
-        return [
-          house(5.7, 5.8, 1.15, 1.2, 20, 8),
-          line("det", [P(6.3, 7.0), P(6.3, 7.5)], 13.4),
-          cyl(6.3, 8.05, 0.56, 4, { water: "well" }),
-          box(5.75, 9.1, 0.4, 0.4, 12, { top: "lit" }),
-          ping(6.3, 8.05, 5, 0.4), ping(5.95, 9.3, 14, 1.6),
-        ];
-      },
-    },
-    ops: {
-      rect: [8.0, 5.4, 9.6, 10], h: 84, build() {
-        const mast = [P(8.8, 6.5, 44), P(8.8, 6.5, 76)];
-        return [
-          box(8.25, 5.8, 1.1, 2.3, 44, { windows: 7 }),
-          { d: 8.25 + 1.1 + 5.8 + 2.3 + 0.01, nodes: [el("line", { class: "det", x1: mast[0][0], y1: mast[0][1], x2: mast[1][0], y2: mast[1][1], style: "stroke-width:2" })] },
-          ping(8.8, 6.5, 76, 0), ping(8.8, 6.5, 76, 1.3),
-          box(8.3, 8.8, 1.0, 0.8, 13, { top: "lit" }),
-        ];
-      },
-    },
-    industry: {
-      rect: [10.4, 5.4, 15, 10], h: 66, build() {
-        const out = [
-          box(10.8, 5.8, 2.6, 1.6, 22),
-          ...[0, 1, 2].map((i) => box(10.95 + i * 0.85, 5.95, 0.55, 1.3, 6, { z: 22, bias: 0.02 + i * 0.001 })),
-          cyl(13.95, 6.2, 0.17, 58),
-          cyl(14.45, 6.7, 0.17, 46),
-          cyl(11.3, 8.7, 0.5, 18),
-          cyl(12.5, 8.7, 0.5, 18),
-          box(13.3, 7.9, 1.3, 1.7, 16, { windows: 5 }),
-          manhole(10.85, 7.8, 0.6),
-          ping(11.9, 9.6, 0, 1.5),
-        ];
-        const smoke = [];
-        [[13.95, 6.2, 58], [14.45, 6.7, 46]].forEach(([x, y, z], k) => {
-          const [cx, cy] = P(x, y, z + 3);
-          for (let i = 0; i < 3; i++) smoke.push(el("circle", { class: "smoke", cx, cy, r: 4, style: `animation-delay:${(i * 1.2 + k * 0.5).toFixed(1)}s;transform-box:fill-box;transform-origin:center` }));
-        });
-        out.push({ d: 98, nodes: smoke });
-        return out;
-      },
-    },
-  };
-
-  /* ---- assemble ---- */
-  svg.setAttribute("viewBox", "-330 -52 800 448");
-  const base = el("g", {}, svg);
-  const S = [-0.6, -0.6, 15.6, 10.6], T = 14;
-  base.append(
-    poly("slab-l", [P(S[0], S[3]), P(S[2], S[3]), P(S[2], S[3], -T), P(S[0], S[3], -T)]),
-    poly("slab-r", [P(S[2], S[1]), P(S[2], S[3]), P(S[2], S[3], -T), P(S[2], S[1], -T)]),
-    poly("slab-top", [P(S[0], S[1]), P(S[2], S[1]), P(S[2], S[3]), P(S[0], S[3])])
-  );
-  // road centre lines, then the trunk sewer and laterals glowing beneath them
-  for (const a of [[P(-0.4, 5), P(15.4, 5)], [P(5, -0.4), P(5, 10.4)], [P(10, -0.4), P(10, 10.4)], [P(7.6, 5.2), P(7.6, 10.4)]]) {
-    el("polyline", { class: "road-line", points: pts(a) }, base);
-  }
-  const pipes = [
-    [P(15.3, 5.18), P(2.3, 5.18), P(2.3, 5.5)],
-    [P(5.18, 0.2), P(5.18, 5.18)], [P(5.18, 10.2), P(5.18, 5.18)],
-    [P(10.18, 0.2), P(10.18, 5.18)], [P(10.18, 10.2), P(10.18, 5.18)],
-  ];
-  for (const cls of ["pipe-glow", "pipe", "pipe-flow"]) for (const a of pipes) el("polyline", { class: cls, points: pts(a) }, base);
-  [[5.18, 5.18, 0], [10.18, 5.18, 0.7], [7.6, 5.18, 1.3], [12.6, 5.18, 2], [5.18, 2.4, 0.4], [10.18, 7.8, 1.1], [3.4, 5.18, 1.8]].forEach(([x, y, d]) => manhole(x, y, d).nodes.forEach((n) => base.appendChild(n)));
-
-  // EDS service vans doing the rounds, moved along the roads with SMIL
-  const van = (alongX, route, dur, begin) => {
-    const g = el("g", { class: "van" }, base);
-    const b = alongX ? box(-0.17, -0.09, 0.34, 0.18, 5) : box(-0.09, -0.17, 0.18, 0.34, 5);
-    b.nodes.forEach((n) => g.appendChild(n));
-    el("animateMotion", { dur: `${dur}s`, begin: `${begin}s`, repeatCount: "indefinite", path: "M" + route.map((p) => `${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join("L") }, g);
-  };
-  van(true, [P(-0.5, 4.8), P(15.5, 4.8)], 16, 0);
-  van(true, [P(-0.5, 4.8), P(15.5, 4.8)], 16, -9);
-  van(false, [P(4.8, -0.5), P(4.8, 10.5)], 13, -4);
-  van(false, [P(9.8, 10.5), P(9.8, -0.5)], 12, -7);
-
-  const zoneLayer = el("g", {}, svg), linkLayer = el("g", {}, svg), labelLayer = el("g", {}, svg);
-  const cards = [...document.querySelectorAll(".city-card")];
-  const tabs = [...document.querySelectorAll(".city-tab")];
-  const names = Object.fromEntries(cards.map((c) => [c.dataset.zone, c.dataset.name]));
-  const zones = {}, labels = {}, links = {}, anchors = {};
-
-  Object.entries(ZONES)
-    .sort((a, b) => a[1].rect[2] + a[1].rect[3] - (b[1].rect[2] + b[1].rect[3]))
-    .forEach(([id, z]) => {
-      const [x0, y0, x1, y1] = z.rect;
-      const g = el("g", { class: "zone", "data-zone": id, role: "button", tabindex: "0", "aria-label": `${names[id] || id}: show EDS services and products` }, zoneLayer);
-      g.append(
-        poly("ge-l", [P(x0, y1), P(x1, y1), P(x1, y1, -6), P(x0, y1, -6)]),
-        poly("ge-r", [P(x1, y0), P(x1, y1), P(x1, y1, -6), P(x1, y0, -6)]),
-        poly("g", [P(x0, y0), P(x1, y0), P(x1, y1), P(x0, y1)])
-      );
-      z.build().sort((a, b) => a.d - b.d).forEach((p) => p.nodes.forEach((n) => g.appendChild(n)));
-      zones[id] = g;
-
-      // label, floating above the district
-      const a = P((x0 + x1) / 2, (y0 + y1) / 2, z.h + 18);
-      anchors[id] = a;
-      const text = names[id] || id, wpx = text.length * 6.1 + 22;
-      const lg = el("g", { class: "zlabel", "data-zone": id }, labelLayer);
-      el("line", { x1: a[0], y1: a[1] + 9, x2: a[0], y2: a[1] + 20 }, lg);
-      el("rect", { x: a[0] - wpx / 2, y: a[1] - 11, width: wpx, height: 21, rx: 10.5 }, lg);
-      el("text", { x: a[0], y: a[1] + 3.5, "text-anchor": "middle" }, lg).textContent = text;
-      labels[id] = lg;
-    });
-
-  // data links: every district reports to the operations centre mast
-  const hub = P(8.8, 6.5, 78);
-  Object.keys(ZONES).forEach((id) => {
-    if (id === "ops") return;
-    const a = anchors[id], mx = (a[0] + hub[0]) / 2, my = Math.min(a[1], hub[1]) - 46;
-    links[id] = el("path", { class: "link", d: `M${a[0].toFixed(1)} ${(a[1] + 12).toFixed(1)}Q${mx.toFixed(1)} ${my.toFixed(1)} ${hub[0].toFixed(1)} ${hub[1].toFixed(1)}` }, linkLayer);
-  });
-
-  /* ---- interaction ---- */
-  let active = null, touched = false;
-  function setActive(id) {
-    if (id === active) return;
-    active = id;
-    svg.classList.toggle("has-active", !!id);
-    for (const k in zones) {
-      zones[k].classList.toggle("active", k === id);
-      labels[k].classList.toggle("active", k === id);
-      links[k]?.classList.toggle("on", k === id || id === "ops");
+  function apply() {
+    const id = state.active;
+    cls("has-active", !!id);
+    cls("is-underground", state.under);
+    for (const k of ZONE_IDS) {
+      const on = k === id;
+      sc.zones[k].classList.toggle("active", on);
+      sc.zoneFx[k].classList.toggle("active", on);
+      sc.zones[k].setAttribute("tabindex", on ? "0" : "-1");
+      sc.labels[k].classList.toggle("active", on);
+      sc.shadows[k].classList.toggle("on", on);
+      sc.links[k]?.classList.toggle("on", on || id === "ops");
     }
     cards.forEach((c) => c.classList.toggle("active", c.dataset.zone === id));
-    tabs.forEach((t) => t.setAttribute("aria-selected", String(t.dataset.zone === id)));
+    tabs.forEach((t) => { const on = t.dataset.zone === id; t.setAttribute("aria-selected", String(on)); t.setAttribute("tabindex", on ? "0" : "-1"); });
+    if (btn.under) { btn.under.setAttribute("aria-pressed", String(state.under)); $("span", btn.under).textContent = state.under ? ui.toolbar.underOn : ui.toolbar.under; }
+    drawSpark();
   }
-  const user = (id) => { touched = true; setActive(id); };
-  Object.entries(zones).forEach(([id, g]) => {
-    g.addEventListener("pointerenter", () => user(id));
-    g.addEventListener("click", () => user(id));
-    g.addEventListener("focus", () => user(id));
+  // A visitor's own pick. Mid-storm, the storm stops moving the selection
+  // from then on.
+  const user = (id, announceIt) => {
+    if (state.storm) state.storm.userTookOver = true;
+    setActive(id, { announceIt });
+  };
+
+  // Hover only brightens a district's ground and shows its label. It is a
+  // class rather than :hover so that crossing one of the district's sensors
+  // (which sit in the overlay) does not switch it off and on.
+  const setHover = (id, on) => { sc.zones[id]?.classList.toggle("hover", on); sc.labels[id]?.classList.toggle("hover", on); };
+  const hitZone = (el) => { const s = el?.closest?.(".sensor"); return s ? sensorOf[s.dataset.sensor]?.zone : null; };
+  Object.entries(sc.zones).forEach(([id, g]) => {
+    g.addEventListener("pointerenter", (e) => { if (e.pointerType === "mouse") setHover(id, true); });
+    g.addEventListener("pointerleave", (e) => { if (hitZone(e.relatedTarget) !== id) setHover(id, false); });
+    g.addEventListener("click", () => user(id, true));
+    g.addEventListener("focus", () => { if (!reparenting) user(id, true); });
     g.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); document.querySelector(`.city-card[data-zone="${id}"] a`)?.focus(); }
+      const i = order.indexOf(state.active);
+      const by = (dx, dy) => { // nearest district in that direction by rect centre
+        const c = (k) => { const [x0, y0, x1, y1] = sc.ZONES[k].rect; return [(x0 + x1) / 2, (y0 + y1) / 2]; };
+        const [cx, cy] = c(state.active);
+        const cand = ZONE_IDS.filter((k) => k !== state.active).map((k) => { const [x, y] = c(k); const sx = (x - y) - (cx - cy), sy = (x + y) - (cx + cy); return { k, sx, sy }; })
+          .filter((o) => (dx && Math.sign(o.sx) === dx && Math.abs(o.sx) > Math.abs(o.sy) * 0.6) || (dy && Math.sign(o.sy) === dy && Math.abs(o.sy) > Math.abs(o.sx) * 0.6))
+          .sort((a, b) => Math.hypot(a.sx, a.sy) - Math.hypot(b.sx, b.sy));
+        return cand[0]?.k;
+      };
+      const next = { ArrowRight: order[(i + 1) % order.length], ArrowLeft: order[(i - 1 + order.length) % order.length], ArrowDown: by(0, 1), ArrowUp: by(0, -1), Home: order[0], End: order[order.length - 1] }[e.key];
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); $("a", cardOf(state.active))?.focus(); return; }
+      if (!next) return;
+      e.preventDefault();
+      user(next, true);
+      sc.zones[next].focus({ preventScroll: true });
     });
   });
-  tabs.forEach((t) => {
-    t.addEventListener("click", () => user(t.dataset.zone));
-    t.addEventListener("pointerenter", (e) => e.pointerType === "mouse" && user(t.dataset.zone));
+  tabs.forEach((t) => t.addEventListener("click", () => user(t.dataset.zone, true)));
+
+  /* ---- the sensors: hover brightens, a click opens the readout ---- */
+  let openTip = null;
+  const tipDocked = () => !fine;
+  const highlight = (id) => {
+    $$(".city-sensors button").forEach((b) => b.classList.toggle("hi", b.dataset.sensor === id));
+    Object.entries(sc.sensors).forEach(([k, n]) => n.classList.toggle("hi", k === id));
+  };
+  function readValue(s, r, t) {
+    if (r.text) return ui.text[r.text] || r.text;
+    const level = stormLevel(), phase = (s.id.length * 1.3) % 6.28;
+    const v = r.base + (r.swing || 0) * Math.sin(t / 9 + phase) + (r.storm - r.base) * level;
+    return v.toFixed(r.decimals || 0);
+  }
+  // units follow the site's style: "72%" but "41.8 L/s"
+  const withUnit = (v, unit) => (unit ? (unit === "%" ? `${v}%` : `${v} ${unit}`) : String(v));
+  function fillTip(id) {
+    const s = sensorOf[id]; if (!s || !tipBody) return;
+    const t = performance.now() / 1000;
+    tipBody.innerHTML = `<b></b><small></small><dl>${s.reads.map(() => "<dt></dt><dd></dd>").join("")}</dl>`;
+    $("b", tipBody).textContent = s.name; $("small", tipBody).textContent = s.instrument || "";
+    const dts = $$("dt", tipBody), dds = $$("dd", tipBody);
+    s.reads.forEach((r, i) => { dts[i].textContent = r.label; dds[i].textContent = withUnit(s.id === "lidott" && r.text ? ui.states[lidottState] : readValue(s, r, t), r.unit); });
+  }
+  // On a mouse the readout floats beside the sensor on the map. On a touch
+  // screen it docks in the page: under the map when a sensor on the map was
+  // tapped, under the list when a row in the card was tapped, so it always
+  // opens where the visitor is looking.
+  const tipHome = { parent: tip?.parentNode, next: tip?.nextSibling };
+  function showTip(id, fromRow) {
+    const g = sc.sensors[id]; if (!g || !tip) return;
+    openTip = id; fillTip(id);
+    if (tipDocked()) {
+      if (fromRow) fromRow.closest("ul").after(tip);
+      else if (tip.parentNode !== tipHome.parent) tipHome.parent.insertBefore(tip, tipHome.next);
+      tip.hidden = false;
+      tip.classList.add("docked");
+    } else {
+      if (tip.parentNode !== tipHome.parent) tipHome.parent.insertBefore(tip, tipHome.next);
+      tip.hidden = false;
+      const r = $(".hit", g).getBoundingClientRect(), s = stage.getBoundingClientRect();
+      const x = r.left + r.width / 2 - s.left, y = r.top - s.top;
+      tip.classList.toggle("flip", x > s.width * 0.6);
+      tip.style.left = `${x.toFixed(0)}px`; tip.style.top = `${Math.max(0, y - 10).toFixed(0)}px`;
+    }
+    requestAnimationFrame(() => tip.classList.add("on"));
+    $$(".city-sensors button").forEach((b) => b.setAttribute("aria-expanded", String(b.dataset.sensor === id)));
+    highlight(id);
+  }
+  function hideTip() {
+    if (!tip || !openTip) return;
+    openTip = null;
+    tip.classList.remove("on", "docked");
+    setTimeout(() => { if (!openTip) tip.hidden = true; }, 150);
+    $$(".city-sensors button[aria-expanded=true]").forEach((b) => b.setAttribute("aria-expanded", "false"));
+    highlight(null);
+  }
+  Object.entries(sc.sensors).forEach(([id, g]) => {
+    const hit = $(".hit", g), zone = sensorOf[id].zone;
+    hit.addEventListener("pointerenter", (e) => { if (e.pointerType !== "mouse") return; setHover(zone, true); if (!openTip) highlight(id); });
+    hit.addEventListener("pointerleave", (e) => { if (e.pointerType !== "mouse") return; if (!sc.zones[zone].contains(e.relatedTarget)) setHover(zone, false); if (!openTip) highlight(null); });
+    hit.addEventListener("click", (e) => { e.stopPropagation(); const was = openTip; if (state.active !== zone) user(zone); if (was !== id) showTip(id); else hideTip(); });
   });
-  document.querySelector(".city-panel")?.addEventListener("pointerenter", () => { touched = true; });
+  $$(".city-sensors button").forEach((b) => {
+    const id = b.dataset.sensor;
+    b.addEventListener("pointerenter", (e) => { if (e.pointerType === "mouse" && !openTip) highlight(id); });
+    b.addEventListener("pointerleave", (e) => { if (e.pointerType === "mouse" && !openTip) highlight(null); });
+    b.addEventListener("focus", () => { if (!openTip) highlight(id); });
+    b.addEventListener("blur", () => { if (!openTip) highlight(null); });
+    b.addEventListener("click", () => (openTip === id ? hideTip() : showTip(id, b)));
+  });
+  tipClose?.addEventListener("click", hideTip);
+  svg.addEventListener("click", hideTip);
 
-  // Until someone takes over, tour the districts so the page is never still.
-  const order = ["sewer", "pump", "plant", "industry", "river", "cbd", "ops"];
-  let tour = 0, inView = false;
-  new IntersectionObserver(([en]) => { inView = en.isIntersecting; }, { threshold: 0.3 }).observe(svg);
-  setActive(order[0]);
-  setInterval(() => {
-    if (touched || !inView || document.hidden) return;
-    tour = (tour + 1) % order.length;
-    setActive(order[tour]);
-  }, 3400);
+  /* ---- the HUD: four tiles and the hydrograph ---- */
+  const hudRest = Object.fromEntries((ui.hud.tiles || []).map((t) => [t.key, parseFloat(t.rest)]));
+  const hudDec = { rain: 0, primary: 0, well: 2, alarms: 0 };
+  let hudCur = { ...hudRest }, hudFrom = { ...hudRest }, hudTo = { ...hudRest }, hudT0 = 0, hudRaf = 0;
+  function hudTarget(v) {
+    hudFrom = { ...hudCur }; hudTo = { ...hudTo, ...v }; hudT0 = performance.now();
+    if (!hudRaf) hudRaf = requestAnimationFrame(hudStep);
+  }
+  function hudStep(now) {
+    const p = Math.min(1, (now - hudT0) / 480), e = 1 - Math.pow(1 - p, 3);
+    for (const k in hudTo) hudCur[k] = hudFrom[k] + (hudTo[k] - hudFrom[k]) * e;
+    paintHud();
+    hudRaf = p < 1 ? requestAnimationFrame(hudStep) : 0;
+  }
+  function paintHud(drift = 0) {
+    for (const k in tiles) {
+      if (k === "spark" || !(k in hudCur)) continue;
+      const v = hudCur[k] + (k === "primary" || k === "well" ? drift * (k === "well" ? 0.01 : 2) : 0);
+      const out = $("[data-value]", tiles[k]);
+      if (out) out.textContent = k === "alarms" ? String(Math.round(v)) : v.toFixed(hudDec[k] ?? 0);
+    }
+    const alarms = Math.round(hudCur.alarms || 0), at = tiles.alarms;
+    if (at) { at.toggleAttribute("data-alarm", alarms > 0); const sm = $("small", at); if (sm) sm.textContent = alarms > 0 ? ui.hud.alarmWord : (ui.hud.tiles.find((t) => t.key === "alarms")?.unit || ""); }
+  }
 
-  // clarifier scraper arms turn (true rotation in the ground plane)
+  // one 24 h trace per district, drawn once from a seed; the storm trace
+  // swaps in while a storm runs
+  const spark = $(".city-spark");
+  const traces = {};
+  function makeTrace(seed, stormy) {
+    const rnd = (() => { let s = seed * 9301 + 49297; return () => { s = (s * 9301 + 49297) % 233280; return s / 233280; }; })();
+    const pts = [];
+    for (let i = 0; i < 48; i++) {
+      const h = i / 2, diurnal = 0.55 + 0.35 * Math.sin((h - 9) / 24 * Math.PI * 2) + 0.12 * Math.sin((h - 19) / 24 * Math.PI * 4);
+      let v = diurnal + (rnd() - 0.5) * 0.06;
+      if (stormy && h > 13 && h < 22) v += Math.max(0, 1.1 * Math.sin((h - 13) / 9 * Math.PI)) * (h < 17 ? 1 : 0.6);
+      pts.push(v);
+    }
+    const max = Math.max(...pts) * 1.08;
+    const X = (i) => (i / 47 * 216 + 2).toFixed(1), Y = (v) => (46 - v / max * 40).toFixed(1);
+    const line = pts.map((v, i) => `${i ? "L" : "M"}${X(i)} ${Y(v)}`).join("");
+    const dwf = pts.map((v, i) => { const h = i / 2; return `${i ? "L" : "M"}${X(i)} ${Y(0.55 + 0.35 * Math.sin((h - 9) / 24 * Math.PI * 2) + 0.12 * Math.sin((h - 19) / 24 * Math.PI * 4))}`; }).join("");
+    const rain = stormy ? [26, 27, 28, 29, 30, 31, 32, 33].map((i) => `<rect x="${X(i)}" y="2" width="3.5" height="${(4 + Math.sin((i - 25) / 9 * Math.PI) * 9).toFixed(1)}"/>`).join("") : "";
+    return { line, area: `${line}L218 46L2 46Z`, dwf, rain, end: [X(47), Y(pts[47])] };
+  }
+  if (spark) {
+    spark.innerHTML = `<defs><linearGradient id="city-spark-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5fb4a6" stop-opacity=".35"/><stop offset="1" stop-color="#5fb4a6" stop-opacity="0"/></linearGradient></defs><g class="rain"></g><path class="dwf"/><path class="area on" fill="url(#city-spark-fill)"/><path class="trace on"/><circle class="dot" r="2.6"/>`;
+    zoneData.forEach((z, i) => { traces[z.id] = { rest: makeTrace(i + 3, false), storm: makeTrace(i + 3, true) }; });
+  }
+  function drawSpark() {
+    if (!spark || !state.active) return;
+    const t = traces[state.active]?.[state.storm ? "storm" : "rest"]; if (!t) return;
+    $(".trace", spark).setAttribute("d", t.line); $(".area", spark).setAttribute("d", t.area); $(".dwf", spark).setAttribute("d", t.dwf);
+    $(".rain", spark).innerHTML = (state.active === "river" || state.active === "sewer" || state.storm) ? t.rain : "";
+    const dot = $(".dot", spark); dot.setAttribute("cx", t.end[0]); dot.setAttribute("cy", t.end[1]);
+  }
+
+  /* ---- the readout ticker: twice a second, only what is on screen ---- */
+  let tick = 0, lidottState = "normal";
+  function stormLevel() {
+    if (!state.storm) return 0;
+    const t = stormElapsed();
+    return t < 8 ? t / 8 : t < 22 ? 1 : Math.max(0, 1 - (t - 22) / 7);
+  }
+  function tickReadouts() {
+    const t = performance.now() / 1000, card = cardOf(state.active);
+    if (card) $$("[data-read]", card).forEach((b) => { const s = sensorOf[b.dataset.read]; if (!s) return; const r = s.reads[0]; b.textContent = r.text ? (s.id === "lidott" ? ui.states[lidottState] : readValue(s, r, t)) : readValue(s, r, t); });
+    if (openTip) fillTip(openTip);
+    if (!hudRaf) paintHud(Math.sin(t / 7));
+  }
+  const startTicker = () => { if (!tick) { tickReadouts(); tick = setInterval(tickReadouts, 500); } };
+  const stopTicker = () => { clearInterval(tick); tick = 0; };
+
+  /* ---- the storm: a scripted event, driven by classes on both layers ---- */
+  const steps = [];
+  stormData.steps.forEach((s) => {
+    steps.push({ at: s.at, run: () => stepMain(s) });
+    (s.sub || []).forEach((sub) => steps.push({ at: sub.at, run: () => stepSub(s, sub) }));
+  });
+  steps.push({ at: stormData.duration, run: () => finishStorm(false) });
+  steps.sort((a, b) => a.at - b.at);
+  const log = $(".city-log");
+  function addLog(stamp, text) {
+    if (!log) return;
+    const d = document.createElement("div");
+    const sm = document.createElement("small"); sm.textContent = stamp; d.append(sm, document.createTextNode(text));
+    log.appendChild(d);
+    while (log.children.length > 3) log.firstElementChild.remove();
+  }
+  function stepMain(s) {
+    cls(`storm-${s.n}`, true);
+    if (!state.storm.userTookOver) setActive(s.zone);
+    setCaption(s.caption);
+    $$(`.city-why[data-step="${s.n}"]`).forEach((p) => { p.hidden = false; });
+    if (s.log) addLog(s.logStamp || "", s.log);
+    if (s.hud) hudTarget(s.hud);
+    if (s.announce) announce(s.announceText);
+    if (s.n === 3) setLidott("high");
+    drawSpark();
+  }
+  function stepSub(s, sub) {
+    cls(`storm-${s.n}b`, true);
+    if (sub.caption) setCaption(sub.caption);
+    if (sub.state) setLidott(sub.state);
+    if (sub.log) addLog(sub.logStamp || "", sub.log);
+    if (sub.sms) sendSms(sub.sms === "ok");
+  }
+  function setLidott(st) {
+    lidottState = st;
+    cls("lidott-high", st === "high");
+    cls("lidott-highhigh", st === "highHigh");
+    const sp = $('.sensor[data-sensor="lidott"] .cs-state', sc.fx);
+    if (sp) sp.textContent = ` · ${ui.states[st]}`;
+  }
+  function sendSms(ok) {
+    sc.sms.classList.toggle("ok", !!ok); sc.sms.classList.add("on");
+    sc.smsMotion.beginElement();
+    setTimeout(() => { cls("beacon-on", true); setTimeout(() => cls("beacon-on", false), 400); }, 1050);
+    setTimeout(() => sc.sms.classList.remove("on"), 1400);
+  }
+  const stormElapsed = () => state.storm ? state.storm.elapsed + (state.storm.running ? (performance.now() - state.storm.t0) / 1000 : 0) : 0;
+  function scheduleStorm() {
+    const st = state.storm, now = stormElapsed();
+    st.timers = steps.filter((s) => !st.done.has(s)).map((s) => setTimeout(() => { st.done.add(s); s.run(); }, Math.max(0, (s.at - now) * 1000)));
+    st.t0 = performance.now(); st.running = true;
+  }
+  function suspendStorm() {
+    const st = state.storm; if (!st || !st.running) return;
+    st.timers.forEach(clearTimeout); st.elapsed = stormElapsed(); st.running = false;
+  }
+  function startStorm() {
+    if (state.storm) return finishStorm(true);
+    hideTip();
+    state.storm = { elapsed: 0, t0: performance.now(), running: false, timers: [], done: new Set(), prevActive: state.active, userTookOver: false };
+    cls("is-storm", true);
+    btn.storm?.setAttribute("aria-pressed", "true"); $("span", btn.storm).textContent = ui.toolbar.stormBusy;
+    announce(ui.live.stormStart);
+    scheduleStorm();
+    drawSpark();
+  }
+  function clearStormClasses() {
+    layers.forEach((s) => [...s.classList].filter((c) => /^storm-|^lidott-|^is-storm$/.test(c)).forEach((c) => s.classList.remove(c)));
+    setLidott("normal");
+    sc.sms.classList.remove("on");
+    $$(".city-why").forEach((p) => { p.hidden = true; });
+  }
+  function finishStorm(cancelled) {
+    const st = state.storm; if (!st) return;
+    st.timers.forEach(clearTimeout);
+    state.storm = null;
+    clearStormClasses();
+    hudTarget(hudRest);
+    btn.storm?.setAttribute("aria-pressed", "false"); $("span", btn.storm).textContent = ui.toolbar.storm;
+    if (cancelled) { setCaption(ui.toolbar.stormCancelled); announce(ui.live.stormCancelled); }
+    else announce(ui.live.stormEnd);
+    setTimeout(() => { if (!state.storm) setCaption(zoneOf[state.active]?.line); }, cancelled ? 2500 : 3000);
+    // the district the visitor had picked comes back, unless they picked
+    // another one during the storm
+    if (!st.userTookOver) setActive(st.prevActive);
+    else apply();
+    drawSpark();
+  }
+  btn.storm?.addEventListener("click", startStorm);
+  // Escape stops a storm or closes a readout from anywhere on the page, and
+  // a click anywhere else closes the readout
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") { if (state.storm) finishStorm(true); else if (openTip) hideTip(); } });
+  document.addEventListener("pointerdown", (e) => { if (openTip && !e.target.closest?.(".city-tip, .hit, .city-sensors")) hideTip(); });
+
+  /* ---- the underground view ---- */
+  btn.under?.addEventListener("click", () => {
+    state.under = !state.under;
+    apply();
+    announce(state.under ? ui.live.underOn : ui.live.underOff);
+  });
+
+  /* ---- clarifier scraper arms turn (true rotation in the ground plane) ---- */
+  const P = CityScene.P;
   let raf = 0;
   const spin = (now) => {
-    for (const a of arms) {
+    for (const a of sc.arms) {
       const t = now / 2600 + a.phase, dx = Math.cos(t) * a.r, dy = Math.sin(t) * a.r;
       const [x1, y1] = P(a.cx - dx, a.cy - dy, a.z), [x2, y2] = P(a.cx + dx, a.cy + dy, a.z);
       a.arm.setAttribute("x1", x1.toFixed(1)); a.arm.setAttribute("y1", y1.toFixed(1));
       a.arm.setAttribute("x2", x2.toFixed(1)); a.arm.setAttribute("y2", y2.toFixed(1));
     }
-    raf = inView ? requestAnimationFrame(spin) : 0;
+    raf = state.inView && !document.hidden ? requestAnimationFrame(spin) : 0;
   };
   spin(0);
   const kick = () => { if (!raf) raf = requestAnimationFrame(spin); };
-  window.addEventListener("scroll", kick, { passive: true });
-  kick();
+
+  /* ---- gating: nothing runs while the stage is off screen or the tab hidden ---- */
+  function sync() {
+    const on = state.inView && !document.hidden;
+    cls("is-offscreen", !on);
+    if (on) {
+      layers.forEach((s) => { try { s.unpauseAnimations(); } catch {} });
+      startTicker(); kick();
+      if (state.storm && !state.storm.running) scheduleStorm();
+    } else {
+      layers.forEach((s) => { try { s.pauseAnimations(); } catch {} });
+      stopTicker(); suspendStorm();
+    }
+  }
+  new IntersectionObserver(([en]) => { state.inView = en.isIntersecting; sync(); }, { threshold: 0.3 }).observe(svg);
+  document.addEventListener("visibilitychange", sync);
+
+  /* ---- go ---- */
+  // start on the district the page was built with (the first card)
+  setActive(cards.find((c) => c.classList.contains("active"))?.dataset.zone || order[0]);
+  paintHud();
 })();

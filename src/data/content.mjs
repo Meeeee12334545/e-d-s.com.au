@@ -2398,14 +2398,31 @@ export const downloads = [
 /* ------------------------------------------------------------------ */
 // Each district lists what EDS does there. `s:` links a service, `o:` a
 // solution, `p:` a product brand; plain strings are shown as chips.
+// `line` is shown under the map while the district is picked, and
+// `sensors` are the instruments drawn
+// on the map: `at` is the tile position (x, y, height), `major` ones carry a
+// name pill in the scene, `alarm` marks the one that raises the storm alarm,
+// and each `reads` entry drifts about `base` by `swing` and moves to `storm`
+// during the storm. Every figure is illustrative, none is live data.
 export const city = [
   {
     id: "sewer",
     name: "Sewer network",
     icon: "waves",
-    blurb: "Under every street, flow and depth are measured at the manhole and sent in over 4G.",
+    blurb: "Under every street, flow and depth are measured at the maintenance hole and sent in over 4G.",
     services: ["s:sewer-flow-monitoring", "s:inflow-infiltration-studies", "s:blockage-overflow-alarms", "s:sewer-model-calibration"],
     products: [["Detectronic MSFM flow meter", "p:detectronic"], ["LIDoTT Alarm", "lidott"], ["Hach Flo-Dar", "p:hach-flow"]],
+    line: "Under every street, depth and velocity are measured at the maintenance hole and sent in over 4G.",
+    sensors: [
+      { id: "msfm", name: "Detectronic MSFM", instrument: "Area velocity flow meter", ref: "p:detectronic", icon: "gauge", at: [6.78, 3.05, 0], major: true,
+        reads: [{ label: "Depth", unit: "mm", base: 212, swing: 6, storm: 1480, decimals: 0 }, { label: "Velocity", unit: "m/s", base: 0.76, swing: 0.03, storm: 1.9, decimals: 2 }, { label: "Flow", unit: "L/s", base: 41.8, swing: 1.2, storm: 310, decimals: 1 }] },
+      { id: "lidott", name: "LIDoTT Alarm", instrument: "Level alarm, MH 14", ref: "lidott", icon: "siren", at: [8.13, 3.05, 0], major: true, alarm: true,
+        reads: [{ label: "Level", unit: "m", base: 0.91, swing: 0.02, storm: 3.04, decimals: 2 }, { label: "State", unit: "", text: "normal" }] },
+      { id: "flodar", name: "Hach Flo-Dar", instrument: "Radar velocity", ref: "p:hach-flow", icon: "radio", at: [6.78, 0.5, 0],
+        reads: [{ label: "Flow", unit: "L/s", base: 12.4, swing: 0.6, storm: 96, decimals: 1 }] },
+      { id: "lidott-smart", name: "LIDoTT Smart", instrument: "Depth logger", ref: "lidott", icon: "activity", at: [8.13, 1.0, 0],
+        reads: [{ label: "Depth", unit: "mm", base: 160, swing: 4, storm: 1120, decimals: 0 }] },
+    ],
   },
   {
     id: "pump",
@@ -2414,6 +2431,15 @@ export const city = [
     blurb: "Wet well levels, pump runs and alarms, watched around the clock.",
     services: ["s:pump-station-monitoring", "s:real-time-monitoring", "s:scada-telemetry-integration", "s:network-assessment"],
     products: [["EDS Pump Station Manager", "p:eds"], ["EMS data loggers", "p:eds"], ["LIDoTT R level sensor", "p:detectronic"]],
+    line: "The wet well fills, the pumps run, and every start, stop and alarm is watched around the clock.",
+    sensors: [
+      { id: "psm", name: "Pump Station Manager", instrument: "Wet well level and pump runs", ref: "p:eds", icon: "cpu", at: [5.95, 9.3, 14], major: true,
+        reads: [{ label: "Wet well", unit: "m", base: 1.12, swing: 0.18, storm: 2.61, decimals: 2 }, { label: "Pumps running", unit: "of 2", base: 1, swing: 0, storm: 2, decimals: 0 }] },
+      { id: "lidott-r", name: "LIDoTT R", instrument: "Radar and pressure level", ref: "p:detectronic", icon: "waves", at: [6.3, 8.05, 7], major: true,
+        reads: [{ label: "Level", unit: "m", base: 1.12, swing: 0.18, storm: 2.61, decimals: 2 }] },
+      { id: "ems", name: "EMS data logger", instrument: "Data logger", ref: "p:eds", icon: "radio-tower", at: [6.1, 9.15, 32],
+        reads: [{ label: "Reported", unit: "", text: "reported" }] },
+    ],
   },
   {
     id: "plant",
@@ -2422,6 +2448,17 @@ export const city = [
     blurb: "Flow, quality and sampling through every stage of treatment.",
     services: ["s:water-quality-monitoring", "o:wastewater-monitoring", "s:closed-channel-flow", "s:auditing-calibration"],
     products: [["Aquamonitrix nitrate analyser", "p:aquamonitrix"], ["ORI samplers", "p:ori"], ["Dynaflox ultrasonic meters", "p:dynaflox"]],
+    line: "Flow, quality and samples are taken through every stage of treatment, from inlet to outfall.",
+    sensors: [
+      { id: "dynaflox", name: "Dynaflox ultrasonic meter", instrument: "Closed channel flow", ref: "p:dynaflox", icon: "gauge", at: [0.9, 5.75, 6], major: true,
+        reads: [{ label: "Inlet flow", unit: "L/s", base: 180, swing: 8, storm: 420, decimals: 0 }] },
+      { id: "aquamonitrix", name: "Aquamonitrix analyser", instrument: "Nitrate and nitrite", ref: "p:aquamonitrix", icon: "flask-conical", at: [1.95, 7.6, 0], major: true,
+        reads: [{ label: "Nitrate", unit: "ppm", base: 2.1, swing: 0.1, storm: 3.4, decimals: 1 }] },
+      { id: "ori-plant", name: "ORI sampler", instrument: "Composite sampling", ref: "p:ori", icon: "test-tube", at: [3.3, 9.65, 7],
+        reads: [{ label: "Sample", unit: "of 24", base: 14, swing: 0, storm: 19, decimals: 0 }] },
+      { id: "sludge", name: "EDS ultrasonic level sensor", instrument: "Tank level", ref: "p:eds", icon: "activity", at: [3.0, 6.3, 30],
+        reads: [{ label: "Level", unit: "%", base: 71, swing: 1, storm: 74, decimals: 0 }] },
+    ],
   },
   {
     id: "industry",
@@ -2430,6 +2467,17 @@ export const city = [
     blurb: "Discharge measured and sampled, so trade waste stays compliant.",
     services: ["s:trade-waste", "s:sampling-programs", "s:equipment-rental", "s:auditing-calibration"],
     products: [["ORI ATEX samplers", "p:ori"], ["MicroLevel MICROSAMPLER", "p:microlevel"], ["Dynaflox flow meters", "p:dynaflox"]],
+    line: "Trade waste is metered and sampled at the discharge point, so what leaves the site is known.",
+    sensors: [
+      { id: "ori-atex", name: "ORI ATEX sampler", instrument: "Hazardous-area sampling", ref: "p:ori", icon: "shield-check", at: [10.6, 7.6, 12], major: true,
+        reads: [{ label: "Bottle", unit: "of 24", base: 9, swing: 0, storm: 11, decimals: 0 }] },
+      { id: "dynaflox-tw", name: "Dynaflox flow meter", instrument: "Discharge flow", ref: "p:dynaflox", icon: "gauge", at: [11.6, 7.95, 7], major: true,
+        reads: [{ label: "Flow", unit: "L/s", base: 3.2, swing: 0.2, storm: 3.6, decimals: 1 }] },
+      { id: "ph-tw", name: "EDS pH sensor", instrument: "Discharge quality", ref: "p:eds", icon: "flask-conical", at: [10.85, 7.8, 0],
+        reads: [{ label: "pH", unit: "", base: 7.4, swing: 0.05, storm: 7.1, decimals: 1 }] },
+      { id: "microsampler", name: "MicroLevel MICROSAMPLER", instrument: "Refrigerated composite", ref: "p:microlevel", icon: "test-tube", at: [11.9, 9.6, 0],
+        reads: [{ label: "Sample", unit: "of 24", base: 6, swing: 0, storm: 8, decimals: 0 }] },
+    ],
   },
   {
     id: "river",
@@ -2438,6 +2486,17 @@ export const city = [
     blurb: "Water quality, rainfall and temperature, from baseline to compliance.",
     services: ["o:environmental-monitoring", "s:water-quality-monitoring", "s:rainfall-monitoring", "o:network-thermal-monitoring"],
     products: [["iLab multi-parameter sonde", "p:eds"], ["Beadedstream thermistor strings", "p:beadedstream"], ["EDS pH, EC and turbidity sensors", "p:eds"]],
+    line: "Rain is logged in the catchment and the river is read for level, quality and temperature.",
+    sensors: [
+      { id: "rimco", name: "RIMCO 7499 rain gauge", instrument: "Tipping bucket", ref: "s:rainfall-monitoring", icon: "cloud-rain", at: [0.75, 0.75, 9], major: true,
+        reads: [{ label: "Rain", unit: "mm/h", base: 0, swing: 0, storm: 18, decimals: 0 }, { label: "Last 24 h", unit: "mm", base: 2, swing: 0, storm: 24, decimals: 0 }] },
+      { id: "ilab", name: "iLab 901", instrument: "Multi-parameter analytical sensor", ref: "p:eds", icon: "flask-conical", at: [2.3, 2.3, 0], major: true,
+        reads: [{ label: "Turbidity", unit: "NTU", base: 8, swing: 1.5, storm: 140, decimals: 0 }, { label: "EC", unit: "µS/cm", base: 410, swing: 6, storm: 230, decimals: 0 }, { label: "Temperature", unit: "°C", base: 17.2, swing: 0.2, storm: 15.9, decimals: 1 }] },
+      { id: "therm", name: "Beadedstream thermistor string", instrument: "Temperature profile", ref: "p:beadedstream", icon: "thermometer", at: [3.7, 3.35, 0],
+        reads: [{ label: "Bed temperature", unit: "°C", base: 16.8, swing: 0.1, storm: 15.4, decimals: 1 }] },
+      { id: "turb", name: "EDS turbidity sensor", instrument: "At the outfall", ref: "p:eds", icon: "droplets", at: [1.6, 2.5, 4],
+        reads: [{ label: "Turbidity", unit: "NTU", base: 6, swing: 1, storm: 95, decimals: 0 }] },
+    ],
   },
   {
     id: "cbd",
@@ -2446,6 +2505,17 @@ export const city = [
     blurb: "Buildings and structures scored 24/7 and managed as one service.",
     services: ["s:facility-management", "o:structure-performance", "o:asset-network-assessment"],
     products: [["EDS Asset Score (EAS)", "o:structure-performance"], ["EPM-2 pressure logger", "p:eds"], ["Metalog 4G logger", "p:eds"]],
+    line: "Buildings and structures are scored around the clock and the water network's pressure is logged.",
+    sensors: [
+      { id: "eas", name: "EDS Asset Score", instrument: "Light, moisture, seismic and temperature sensors", ref: "o:structure-performance", icon: "building-2", at: [11.35, 1.05, 88], major: true,
+        reads: [{ label: "Score", unit: "/ 1000", base: 930, swing: 2, storm: 928, decimals: 0 }] },
+      { id: "epm2", name: "EPM-2 pressure logger", instrument: "Water main pressure", ref: "p:eds", icon: "gauge", at: [14.6, 4.2, 0], major: true,
+        reads: [{ label: "Pressure", unit: "m head", base: 52, swing: 0.8, storm: 50, decimals: 0 }] },
+      { id: "eas2", name: "EDS Asset Score", instrument: "Light, moisture, seismic and temperature sensors", ref: "o:structure-performance", icon: "building-2", at: [13.1, 2.8, 74],
+        reads: [{ label: "Score", unit: "/ 1000", base: 962, swing: 2, storm: 961, decimals: 0 }] },
+      { id: "metalog-cbd", name: "Metalog 4G logger", instrument: "Telemetry", ref: "p:eds", icon: "radio-tower", at: [12.1, 4.3, 6],
+        reads: [{ label: "Reported", unit: "", text: "reported" }] },
+    ],
   },
   {
     id: "ops",
@@ -2454,8 +2524,77 @@ export const city = [
     blurb: "Every reading arrives in one place: EDS FlowSense.",
     services: ["flowsense", "s:data-analysis-reporting", "s:real-time-monitoring", "s:data-as-a-service"],
     products: [["EDS FlowSense platform", "flowsense"], ["SCADA connection", "flowsense"], ["Alarms by SMS and email", "flowsense"]],
+    line: "Every reading arrives in one place, EDS FlowSense, with alarms by SMS and email and a feed to SCADA.",
+    sensors: [
+      { id: "flowsense", name: "EDS FlowSense", instrument: "Platform", ref: "flowsense", icon: "monitor-dot", at: [8.8, 6.5, 78], major: true,
+        reads: [{ label: "Sites online", unit: "", base: 24, swing: 0, storm: 24, decimals: 0 }, { label: "Open alarms", unit: "", base: 0, swing: 0, storm: 1, decimals: 0 }, { label: "Availability", unit: "%", base: 99.95, swing: 0, storm: 99.95, decimals: 2 }] },
+      { id: "scada", name: "SCADA connection", instrument: "Telemetry integration", ref: "s:scada-telemetry-integration", icon: "plug-zap", at: [8.3, 8.3, 18],
+        reads: [{ label: "Link", unit: "", text: "connected" }] },
+    ],
   },
 ];
+
+// Every word the city's controls, readings bar, captions, key and screen
+// reader announcements use. `{name}`, `{services}` and `{products}` are
+// filled in by city.js; `states` are the LIDoTT alarm words shown in the
+// scene, and `text` the words a sensor shows instead of a number.
+export const cityUi = {
+  stageLabel: "Interactive map of an illustrative city. Each district shows the EDS services and products used there.",
+  zoneLabel: "{name}: show EDS services and products",
+  tabsLabel: "City districts",
+  toolbarLabel: "City controls",
+  toolbar: { storm: "Send a storm", stormBusy: "Stop the storm", stormCancelled: "Storm stopped.", under: "Show the sewer", underOn: "Show the surface", close: "Close" },
+  captionRest: "Pick a district, send a storm, or show the sewer beneath the streets.",
+  sensorsHeading: "Sensors on the map",
+  tipLabel: "Sensor readings",
+  readingsNote: "Illustrative readings, not live data.",
+  note: "An illustrative city. The readings, alarms and storm are a simulation, not a real network or live data.",
+  hud: {
+    label: "Illustrative network readings",
+    sparkLabel: "Last 24 h",
+    alarmWord: "alarm",
+    tiles: [
+      { key: "rain", label: "Rain", unit: "mm/h", rest: "0" },
+      { key: "primary", label: "Trunk depth", unit: "mm", rest: "212" },
+      { key: "well", label: "Wet well", unit: "m", rest: "1.12" },
+      { key: "alarms", label: "Alarms", unit: "", rest: "0" },
+    ],
+  },
+  states: { normal: "Normal", high: "High", highHigh: "High-high" },
+  text: { reported: "2 min ago", connected: "Connected", normal: "Normal" },
+  legend: { label: "Key", items: [["circle-dot", "Sensor"], ["siren", "Alarm"], ["route", "Data link to the operations centre"], ["droplets", "Overflow"]] },
+  logLabel: "Operations messages", logStamp: "06:40 · heartbeat", heartbeat: "Daily heartbeat: 24 sensors operational",
+  live: {
+    select: "{name} selected. {services} services and {products} products.",
+    stormStart: "Storm started. Illustrative rain of 18 millimetres an hour over the catchment.",
+    stormEnd: "Storm over. Flows returning to normal and the storm scored in FlowSense.",
+    stormCancelled: "Storm stopped.",
+    underOn: "Showing the sewer beneath the city.",
+    underOff: "Showing the city surface.",
+  },
+};
+
+// The storm the city can be sent: an illustrative 29 second event, one step
+// at a time. Each step lifts a district at `at` seconds, shows its `caption`,
+// adds a "why this matters" line (`why`, linking the EDS service that answers
+// it) to that district's card, moves the readings bar to `hud`, and may add a
+// message to the operations log (`log`) or be read out (`announceText`).
+// `sub` steps change the LIDoTT alarm `state` part way through a step. The
+// alarm levels (High 2.0 m, High-high 3.0 m) match the LIDoTT Alarm demo.
+export const cityStorm = {
+  duration: 29,
+  steps: [
+    { n: 1, at: 0, zone: "river", caption: "Rain starts. The RIMCO 7499 gauge tips at 18 mm/h.", why: "Rain data shows why the network changed.", link: "s:rainfall-monitoring", hud: { rain: 18, primary: 212, well: 1.12, alarms: 0 }, announce: true, announceText: "Rain gauge tipping, 18 millimetres an hour." },
+    { n: 2, at: 4, zone: "sewer", caption: "Gully pits and three connected downpipes push inflow into the sewer.", why: "Inflow and infiltration studies find where the rain gets in.", link: "s:inflow-infiltration-studies", hud: { rain: 18, primary: 640, well: 1.38, alarms: 0 } },
+    { n: 3, at: 8, zone: "sewer", caption: "Level passes 2.0 m at MH 14. LIDoTT Alarm: High.", sub: [{ at: 10, state: "highHigh", caption: "3.0 m. High-high. An SMS and email go out.", log: "ALARM High-high level 3.04 m · MH 14 · LIDoTT Alarm", logStamp: "06:52 · SMS and email", sms: true }], why: "Level alarms warn before a surcharge becomes a spill.", link: "s:blockage-overflow-alarms", hud: { rain: 22, primary: 1480, well: 1.62, alarms: 1 }, announce: true, announceText: "Maintenance hole 14 surcharging. LIDoTT Alarm high-high. SMS sent to the operations centre." },
+    { n: 4, at: 12, zone: "ops", caption: "FlowSense receives the alarm and raises it with the crew.", why: "Every alarm lands in one place.", link: "flowsense", hud: { rain: 22, primary: 2030, well: 2.05, alarms: 1 } },
+    { n: 5, at: 15, zone: "pump", caption: "Both pumps run as the wet well reaches 2.61 m.", why: "Pump station monitoring shows whether start and stop levels suit the flows arriving.", link: "s:pump-station-monitoring", hud: { rain: 20, primary: 1900, well: 2.61, alarms: 1 }, log: "Pump station: both pumps running, wet well 2.61 m", logStamp: "06:58 · FlowSense", announce: true, announceText: "Pump station running both pumps." },
+    { n: 6, at: 18, zone: "plant", caption: "The plant inlet spikes to 420 L/s on the Dynaflox meter.", why: "Closed channel flow metered without cutting the pipe.", link: "s:closed-channel-flow", hud: { rain: 14, primary: 1600, well: 2.40, alarms: 1 } },
+    { n: 7, at: 20.5, zone: "river", caption: "At the river outfall the turbidity sensor reads 95 NTU.", why: "Water quality monitoring, from baseline to compliance.", link: "s:water-quality-monitoring", hud: { rain: 8, primary: 1320, well: 2.10, alarms: 1 } },
+    { n: 8, at: 23, zone: "sewer", caption: "The rain stops. Inflow drains in minutes; the infiltration tail lingers.", sub: [{ at: 24.5, state: "normal", caption: "Return to normal: 0.98 m.", log: "Return to normal: 0.98 m · MH 14", logStamp: "07:21 · SMS and email", sms: "ok" }], why: "Thermal surveys locate the infiltration that keeps flowing after the rain.", link: "s:thermal-infiltration-surveys", hud: { rain: 0, primary: 760, well: 1.44, alarms: 0 }, announce: true, announceText: "Storm passing. Flow returning to normal." },
+    { n: 9, at: 26.5, zone: "ops", caption: "Storm scored in FlowSense: peak 310 L/s on 24 mm of rain.", why: "Scored storms calibrate the sewer model.", link: "s:sewer-model-calibration", hud: { rain: 0, primary: 420, well: 1.12, alarms: 0 }, log: "Storm 1 scored: peak 310 L/s, 24 mm rain", logStamp: "07:30 · FlowSense" },
+  ],
+};
 
 /* ------------------------------------------------------------------ */
 /* Old page addresses                                                  */
