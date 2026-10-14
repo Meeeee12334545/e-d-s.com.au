@@ -140,15 +140,17 @@
     const [x, y, z] = s.at, [cx, cy] = P(x, y, z), g = el("g", { class: "sensor", "data-sensor": s.id, style: `--i:${i}` });
     el("circle", { class: "ping", cx: f(cx), cy: f(cy), r: 5, style: `--d:${(i * 0.45 + x * 0.1) % 2.6}` }, g);
     el("circle", { class: "ping-dot", cx: f(cx), cy: f(cy), r: 2.4 }, g);
-    if (s.major) {
-      const name = s.name, w = Math.round(name.length * 5.6 + 20) + (s.alarm ? 46 : 0);
-      const c = el("g", { class: "callout" }, g);
-      c.append(seg("callout-line", [cx, cy - 4], [cx, cy - 15]));
-      el("rect", { x: f(cx - w / 2), y: f(cy - 33), width: w, height: 18, rx: 9 }, c);
-      const t = el("text", { x: f(cx), y: f(cy - 20.5), "text-anchor": "middle" }, c);
-      t.textContent = name;
-      if (s.alarm) { const sp = el("tspan", { class: "cs-state" }, t); sp.textContent = ` · ${ui.states.normal}`; }
-    }
+    // every instrument gets a name pill. The main ones show whenever the
+    // district is lifted; the rest only in the expanded view, where each
+    // pill also carries its latest reading (city.js fills and fits them).
+    const w = Math.round(s.name.length * 5.6 + 20) + (s.alarm ? 46 : 0);
+    const c = el("g", { class: `callout${s.major ? "" : " minor"}` }, g);
+    c.append(seg("callout-line", [cx, cy - 4], [cx, cy - 15]));
+    el("rect", { x: f(cx - w / 2), y: f(cy - 33), width: w, height: 18, rx: 9 }, c);
+    const t = el("text", { x: f(cx), y: f(cy - 20.5), "text-anchor": "middle" }, c);
+    el("tspan", { class: "cs-name" }, t).textContent = s.name;
+    if (s.alarm) el("tspan", { class: "cs-state" }, t).textContent = ` · ${ui.states.normal}`;
+    el("tspan", { class: "cs-val" }, t);
     if (s.alarm) {
       // a siren above the unit, drawn in the Lucide stroke style
       const a = el("g", { class: "alarm", transform: `translate(${f(cx)} ${f(cy - 44)})` }, g);
@@ -238,8 +240,18 @@
       const lit = { a: ["00", "11"], b: ["10"], c: ["00", "01", "10"] }[v];
       for (const cx of [0, 1]) for (const cy of [0, 1]) el("rect", { x: 1.5 + cx * 7, y: 1.5 + cy * 6, width: 4, height: 3, style: F(lit.includes(`${cx}${cy}`) ? "rgba(255,255,255,.24)" : "rgba(0,0,0,.3)") }, p);
     }
-    const rain = el("pattern", { id: "rain", width: 24, height: 24, patternUnits: "userSpaceOnUse" }, D);
-    for (const [x, y] of [[4, 0], [14, 8], [21, 16]]) rain.append(seg("", [x, y], [x - 2.5, y + 9], { style: "stroke:rgba(56,189,248,.5);stroke-width:1" }));
+    // Rain in three sheets. Each is a tall tile of scattered drops, the
+    // tiles repeating on different periods so no grid shows, every drop
+    // slanted one way by the wind and moving along its own slant.
+    let seed = 7;
+    const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+    [["rain-1", 29, 116, 8, 4, 7, .55, .32], ["rain-2", 37, 148, 7, 8, 12, .8, .42], ["rain-3", 47, 188, 5, 14, 20, 1.1, .55]].forEach(([id, w, h, n, l0, l1, sw, op]) => {
+      const p = el("pattern", { id, width: w, height: h, patternUnits: "userSpaceOnUse" }, D);
+      for (let i = 0; i < n; i++) {
+        const x = rnd() * w, y = rnd() * h, len = l0 + rnd() * (l1 - l0);
+        p.append(seg("", [x, y], [x - len * w / h, y + len], { style: `stroke:rgba(190,230,255,${op});stroke-width:${sw};stroke-linecap:round` }));
+      }
+    });
     const bays = el("pattern", { id: "bays", width: 8, height: 8, patternUnits: "userSpaceOnUse", patternTransform: "rotate(26.565)" }, D);
     bays.append(seg("", [0, 0], [0, 8], { style: "stroke:rgba(255,255,255,.12);stroke-width:1" }));
     const grid = el("pattern", { id: "grid", width: TW, height: TH, patternUnits: "userSpaceOnUse" }, D);
@@ -731,7 +743,8 @@
         const a = P((x0 + x1) / 2, (y0 + y1) / 2, z.h + (id === "cbd" ? 22 : 18));
         anchors[id] = a;
         const text = zd.name, wpx = text.length * 6.1 + 22;
-        const lg = el("g", { class: "zlabel", "data-zone": id }, labelLayer);
+        // in the expanded view the labels of the other districts drop onto their own tiles
+        const lg = el("g", { class: "zlabel", "data-zone": id, style: `--drop:${f(z.h + 4)}px` }, labelLayer);
         el("line", { x1: f(a[0]), y1: f(a[1] + 9), x2: f(a[0]), y2: f(a[1] + 20) }, lg);
         el("rect", { x: f(a[0] - wpx / 2), y: f(a[1] - 11), width: f(wpx), height: 21, rx: 10.5 }, lg);
         el("text", { x: f(a[0]), y: f(a[1] + 3.5), "text-anchor": "middle" }, lg).textContent = text;
@@ -761,8 +774,8 @@
     storm.append(poly("sky", slabTop));
     const clouds = el("g", { class: "clouds" }, storm);
     [[-300, -40], [120, -60], [360, -20]].forEach(([x, y], k) => { const c = el("g", { class: "cloud", style: `--i:${k}` }, clouds); [[0, 0, 42, 14], [30, -8, 36, 13], [-28, -4, 30, 11], [58, 2, 28, 10]].forEach(([dx, dy, rx, ry]) => el("ellipse", { cx: x + dx, cy: y + dy, rx, ry }, c)); });
-    const rain = el("g", { class: "rain", "clip-path": "url(#clip-slab)" }, storm);
-    el("rect", { class: "rain-fill", x: -340, y: -120, width: 820, height: 560 }, rain);
+    const rains = el("g", { class: "rains", "clip-path": "url(#clip-slab)" }, storm);
+    for (const k of [1, 2, 3]) { const g = el("g", { class: `rain rain-${k}` }, rains); el("rect", { class: "rain-fill", x: -400, y: -260, width: 940, height: 760, style: `fill:url(#rain-${k})` }, g); }
 
     return { svg, fx, base: baseLayer, under: underLayer, zoneLayer, zoneFxLayer, linkLayer, packetLayer, labelLayer, storm, zones, zoneFx, labels, links, shadows, anchors, slots, sensors: sensorNodes, arms, hand, handMotion, sms, smsMotion, ZONES };
   }
