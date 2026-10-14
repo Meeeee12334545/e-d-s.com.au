@@ -27,6 +27,7 @@
   const sensorOf = {};
   zoneData.forEach((z) => z.sensors.forEach((s) => { sensorOf[s.id] = { ...s, zone: z.id }; }));
   const fine = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+  const calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const order = zoneData.map((z) => z.id);
   const ZONE_IDS = Object.keys(sc.zones);
 
@@ -296,7 +297,7 @@
   /* ---- under a mouse the whole city tilts a little toward the pointer ---- */
   // The stylesheet grows and lifts it on hover; this sets the tilt as an
   // axis and angle, a few degrees at most, throttled to one update a frame.
-  if (fine) {
+  if (fine && !calm) {
     let box = null, raf = 0, px = 0, py = 0;
     const setTilt = (rx, ry) => {
       const a = Math.hypot(rx, ry);
@@ -310,7 +311,7 @@
       py = (e.clientY - box.top) / box.height - 0.5;
       if (!raf) raf = requestAnimationFrame(() => { raf = 0; setTilt(-py * 4, px * 5); });
     });
-    stage.addEventListener("pointerleave", () => { box = null; setTilt(0, 0); });
+    stage.addEventListener("pointerleave", () => { if (raf) cancelAnimationFrame(raf); raf = 0; box = null; setTilt(0, 0); });
   }
   svg.addEventListener("click", hideTip);
 
@@ -479,9 +480,9 @@
     drawSpark();
   }
   btn.storm?.addEventListener("click", startStorm);
-  // Escape stops a storm or closes a readout from anywhere on the page, and
+  // Escape closes the expanded view, stops a storm or closes a readout, and
   // a click anywhere else closes the readout
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape") { if (state.storm) finishStorm(true); else if (openTip) hideTip(); else if (state.expanded) setExpanded(false); } });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") { if (state.expanded) setExpanded(false); else if (state.storm) finishStorm(true); else if (openTip) hideTip(); } });
   document.addEventListener("pointerdown", (e) => { if (openTip && !e.target.closest?.(".city-tip, .hit, .city-sensors")) hideTip(); });
 
   /* ---- the underground view ---- */
