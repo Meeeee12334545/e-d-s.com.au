@@ -153,7 +153,22 @@
       sc.zones[next].focus({ preventScroll: true });
     });
   });
-  tabs.forEach((t) => t.addEventListener("click", () => user(t.dataset.zone, true)));
+  tabs.forEach((t) => {
+    t.addEventListener("click", () => user(t.dataset.zone, true));
+    t.addEventListener("keydown", (e) => {
+      const i = tabs.indexOf(t);
+      const next = {
+        ArrowRight: tabs[(i + 1) % tabs.length],
+        ArrowLeft: tabs[(i - 1 + tabs.length) % tabs.length],
+        Home: tabs[0],
+        End: tabs[tabs.length - 1],
+      }[e.key];
+      if (!next) return;
+      e.preventDefault();
+      user(next.dataset.zone, true);
+      next.focus();
+    });
+  });
 
   /* ---- the sensors: hover brightens, a click opens the readout ---- */
   let openTip = null;
@@ -164,6 +179,15 @@
   };
   function readValue(s, r, t) {
     if (r.text) return ui.text[r.text] || r.text;
+    if (r.stormKeyframes && state.storm) {
+      const elapsed = stormElapsed(), frames = r.stormKeyframes;
+      let from = frames[0], to = frames[frames.length - 1];
+      for (let i = 1; i < frames.length; i++) {
+        if (elapsed <= frames[i][0]) { from = frames[i - 1]; to = frames[i]; break; }
+      }
+      const p = Math.max(0, Math.min(1, (elapsed - from[0]) / (to[0] - from[0])));
+      return (from[1] + (to[1] - from[1]) * p).toFixed(r.decimals || 0);
+    }
     const level = stormLevel(), phase = (s.id.length * 1.3) % 6.28;
     const v = r.base + (r.swing || 0) * Math.sin(t / 9 + phase) + (r.storm - r.base) * level;
     return v.toFixed(r.decimals || 0);
@@ -421,6 +445,7 @@
     if (sub.state) setLidott(sub.state);
     if (sub.log) addLog(sub.logStamp || "", sub.log);
     if (sub.sms) sendSms(sub.sms === "ok");
+    if (sub.announceText) announce(sub.announceText);
   }
   function setLidott(st) {
     lidottState = st;
@@ -432,23 +457,48 @@
   function sendSms(ok) {
     sc.sms.classList.toggle("ok", !!ok); sc.sms.classList.add("on");
     sc.smsMotion.beginElement();
-    setTimeout(() => { cls("beacon-on", true); setTimeout(() => cls("beacon-on", false), 400); }, 1050);
-    setTimeout(() => sc.sms.classList.remove("on"), 1400);
+    scheduleStormEffect(() => {
+      cls("beacon-on", true);
+      scheduleStormEffect(() => cls("beacon-on", false), 400);
+    }, 1050);
+    scheduleStormEffect(() => sc.sms.classList.remove("on"), 1400);
   }
   const stormElapsed = () => state.storm ? state.storm.elapsed + (state.storm.running ? (performance.now() - state.storm.t0) / 1000 : 0) : 0;
+  function runStormEffect(st, effect) {
+    effect.startedAt = performance.now();
+    effect.timer = setTimeout(() => {
+      if (state.storm !== st || !st.running) return;
+      effect.timer = 0;
+      st.effects = st.effects.filter((item) => item !== effect);
+      effect.run();
+    }, effect.remaining);
+  }
+  function scheduleStormEffect(run, delay) {
+    const st = state.storm;
+    if (!st) return;
+    const effect = { run, remaining: delay, startedAt: 0, timer: 0 };
+    st.effects.push(effect);
+    if (st.running) runStormEffect(st, effect);
+  }
   function scheduleStorm() {
     const st = state.storm, now = stormElapsed();
-    st.timers = steps.filter((s) => !st.done.has(s)).map((s) => setTimeout(() => { st.done.add(s); s.run(); }, Math.max(0, (s.at - now) * 1000)));
     st.t0 = performance.now(); st.running = true;
+    st.timers = steps.filter((s) => !st.done.has(s)).map((s) => setTimeout(() => { st.done.add(s); s.run(); }, Math.max(0, (s.at - now) * 1000)));
+    st.effects.forEach((effect) => runStormEffect(st, effect));
   }
   function suspendStorm() {
     const st = state.storm; if (!st || !st.running) return;
     st.timers.forEach(clearTimeout); st.elapsed = stormElapsed(); st.running = false;
+    st.effects.forEach((effect) => {
+      clearTimeout(effect.timer);
+      effect.remaining = Math.max(0, effect.remaining - (performance.now() - effect.startedAt));
+      effect.timer = 0;
+    });
   }
   function startStorm() {
     if (state.storm) return finishStorm(true);
     hideTip();
-    state.storm = { elapsed: 0, t0: performance.now(), running: false, timers: [], done: new Set(), prevActive: state.active, userTookOver: false };
+    state.storm = { elapsed: 0, t0: performance.now(), running: false, timers: [], effects: [], done: new Set(), prevActive: state.active, userTookOver: false };
     cls("is-storm", true);
     btn.storm?.setAttribute("aria-pressed", "true"); $("span", btn.storm).textContent = ui.toolbar.stormBusy;
     announce(ui.live.stormStart);
@@ -459,11 +509,13 @@
     layers.forEach((s) => [...s.classList].filter((c) => /^storm-|^lidott-|^is-storm$/.test(c)).forEach((c) => s.classList.remove(c)));
     setLidott("normal");
     sc.sms.classList.remove("on");
+    cls("beacon-on", false);
     $$(".city-why").forEach((p) => { p.hidden = true; });
   }
   function finishStorm(cancelled) {
     const st = state.storm; if (!st) return;
     st.timers.forEach(clearTimeout);
+    st.effects.forEach((effect) => clearTimeout(effect.timer));
     state.storm = null;
     clearStormClasses();
     hudTarget(hudRest);
