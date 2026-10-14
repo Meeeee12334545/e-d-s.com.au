@@ -2539,7 +2539,7 @@ export const cityUi = {
   zoneLabel: "{name}: show EDS services and products",
   tabsLabel: "City districts",
   toolbarLabel: "City controls",
-  toolbar: { storm: "Send a storm", stormBusy: "Stop the storm", stormCancelled: "Storm stopped.", under: "Show the sewer", underOn: "Show the surface", close: "Close" },
+  toolbar: { storm: "Send a storm", stormBusy: "Stop the storm", stormCancelled: "Storm stopped.", under: "Show the sewer", underOn: "Show the surface", expand: "Expand the city", collapse: "Back to the page", close: "Close" },
   captionRest: "Pick a district, send a storm, or show the sewer beneath the streets.",
   sensorsHeading: "Sensors on the map",
   tipLabel: "Sensor readings",
@@ -2558,7 +2558,10 @@ export const cityUi = {
   },
   states: { normal: "Normal", high: "High", highHigh: "High-high" },
   text: { reported: "2 min ago", connected: "Connected", normal: "Normal" },
-  legend: { label: "Key", items: [["circle-dot", "Sensor"], ["siren", "Alarm"], ["route", "Data link to the operations centre"], ["droplets", "Overflow"]] },
+  legend: { label: "Key", items: [["circle-dot", "Sensor"], ["siren", "Alarm"], ["route", "Data link to the operations centre"], ["droplets", "Overflow"]],
+    // shown while the sewer is on view
+    underItems: [["gauge", "Area velocity flow meter"], ["waves", "Level sensor"], ["radio-tower", "Data logger"]] },
+  expandedLabel: "The city, expanded",
   logLabel: "Operations messages", logStamp: "06:40 · heartbeat", heartbeat: "Daily heartbeat: 24 sensors operational",
   live: {
     select: "{name} selected. {services} services and {products} products.",
@@ -2567,6 +2570,8 @@ export const cityUi = {
     stormCancelled: "Storm stopped.",
     underOn: "Showing the sewer beneath the city.",
     underOff: "Showing the city surface.",
+    expanded: "City expanded. Press Escape to close it.",
+    collapsed: "City closed.",
   },
 };
 

@@ -19,7 +19,8 @@
   const $ = (s, el = document) => el.querySelector(s), $$ = (s, el = document) => [...el.querySelectorAll(s)];
   const section = svg.closest(".city-section"), stage = svg.closest(".city-stage");
   const cards = $$(".city-card"), tabs = $$(".city-tab"), caption = $(".city-caption"), liveEl = $("#city-live");
-  const btn = { storm: $('.city-btn[data-act="storm"]'), under: $('.city-btn[data-act="under"]') };
+  const btn = { storm: $('.city-btn[data-act="storm"]'), under: $('.city-btn[data-act="under"]'), expand: $('.city-btn[data-act="expand"]') };
+  const grid = $("#city-grid"), closeBtn = $(".city-close");
   const tiles = Object.fromEntries($$(".city-tile[data-tile]").map((t) => [t.dataset.tile, t]));
   const tip = $(".city-tip"), tipBody = $(".city-tip-body"), tipClose = $(".city-tip-close");
   const zoneOf = Object.fromEntries(zoneData.map((z) => [z.id, z]));
@@ -29,7 +30,7 @@
   const order = zoneData.map((z) => z.id);
   const ZONE_IDS = Object.keys(sc.zones);
 
-  const state = { active: null, under: false, inView: false, storm: null };
+  const state = { active: null, under: false, expanded: false, inView: false, storm: null };
   let liveTimer = 0;
   const announce = (text) => {
     if (!liveEl || !text) return;
@@ -100,6 +101,9 @@
     const id = state.active;
     cls("has-active", !!id);
     cls("is-underground", state.under);
+    cls("is-expanded", state.expanded);
+    section.classList.toggle("is-underground", state.under);
+    section.classList.toggle("is-expanded", state.expanded);
     for (const k of ZONE_IDS) {
       const on = k === id;
       sc.zones[k].classList.toggle("active", on);
@@ -166,6 +170,72 @@
   }
   // units follow the site's style: "72%" but "41.8 L/s"
   const withUnit = (v, unit) => (unit ? (unit === "%" ? `${v}%` : `${v} ${unit}`) : String(v));
+  // the name pills in the scene are sized to their text; in the expanded
+  // view the pills of the picked district also carry a reading
+  const fitPill = (g) => {
+    const t = $(".callout text", g), r = $(".callout rect", g);
+    if (!t || !r) return;
+    const w = t.getComputedTextLength() + 20;
+    if (!(w > 20)) return;
+    r.setAttribute("width", w.toFixed(1)); r.setAttribute("x", (+t.getAttribute("x") - w / 2).toFixed(1));
+  };
+  const fitAll = () => Object.values(sc.sensors).forEach(fitPill);
+  function fillPills() {
+    const t = performance.now() / 1000;
+    for (const [id, g] of Object.entries(sc.sensors)) {
+      const s = sensorOf[id], val = $(".cs-val", g);
+      if (!val) continue;
+      const show = state.expanded && s.zone === state.active, r = s.reads[0];
+      const text = show ? ` · ${withUnit(r.text ? (id === "lidott" ? ui.states[lidottState] : readValue(s, r, t)) : readValue(s, r, t), r.unit)}` : "";
+      if (val.textContent !== text) { val.textContent = text; fitPill(g); }
+    }
+    layoutPills();
+  }
+  // In the expanded view the picked district's pills can collide, so each
+  // one that would sit on another is lifted above it, its leader line
+  // lengthened to match. Everything goes back to its own spot otherwise.
+  function layoutPills() {
+    const placed = [];
+    const pills = state.active ? $$(".zone-fx.active .callout", sc.fx) : [];
+    for (const c of Object.values(sc.sensors).map((g) => $(".callout", g))) {
+      if (!c || pills.includes(c)) continue;
+      resetPill(c);
+    }
+    pills.sort((a, b) => +$("rect", a).dataset.y0 - +$("rect", b).dataset.y0 || 0);
+    // The district's own name label (raised 20 px while active) is an
+    // obstacle too. It sits outside the lifted group, which is scaled 1.07
+    // about its origin and raised 14 px, so the label is mapped into the
+    // group's own coordinates first.
+    const lr = state.expanded && state.active ? $("rect", sc.labels[state.active]) : null;
+    if (lr) {
+      const [ox, oy] = (sc.zoneFx[state.active].style.transformOrigin || "0px 0px").split(" ").map(parseFloat);
+      const x = +lr.getAttribute("x"), y = +lr.getAttribute("y") - 20, w = +lr.getAttribute("width");
+      placed.push({ x: ox + (x - ox) / 1.07, w: w / 1.07, y: oy + (y - oy + 14) / 1.07 });
+    }
+    for (const c of pills) {
+      const r = $("rect", c), t = $("text", c), l = $("line", c);
+      if (!r.dataset.y0) { r.dataset.y0 = r.getAttribute("y"); t.dataset.y0 = t.getAttribute("y"); l.dataset.y0 = l.getAttribute("y2"); }
+      let y = +r.dataset.y0;
+      const x0 = +r.getAttribute("x"), w = +r.getAttribute("width");
+      // lift it until it clears every pill already placed (a lift can land
+      // it on another, so look again until nothing moves)
+      for (let guard = 0, moved = state.expanded; moved && guard < 12; guard++) {
+        moved = false;
+        for (const p of placed) {
+          const overlapX = x0 < p.x + p.w + 6 && p.x < x0 + w + 6;
+          if (overlapX && Math.abs(y - p.y) < 22) { y = p.y - 22; moved = true; }
+        }
+      }
+      const dy = y - +r.dataset.y0;
+      r.setAttribute("y", y.toFixed(1)); t.setAttribute("y", (+t.dataset.y0 + dy).toFixed(1)); l.setAttribute("y2", (+l.dataset.y0 + dy).toFixed(1));
+      placed.push({ x: x0, w, y });
+    }
+  }
+  function resetPill(c) {
+    const r = $("rect", c), t = $("text", c), l = $("line", c);
+    if (!r.dataset.y0 || r.getAttribute("y") === r.dataset.y0) return;
+    r.setAttribute("y", r.dataset.y0); t.setAttribute("y", t.dataset.y0); l.setAttribute("y2", l.dataset.y0);
+  }
   function fillTip(id) {
     const s = sensorOf[id]; if (!s || !tipBody) return;
     const t = performance.now() / 1000;
@@ -222,6 +292,26 @@
     b.addEventListener("click", () => (openTip === id ? hideTip() : showTip(id, b)));
   });
   tipClose?.addEventListener("click", hideTip);
+
+  /* ---- under a mouse the whole city tilts a little toward the pointer ---- */
+  // The stylesheet grows and lifts it on hover; this sets the tilt as an
+  // axis and angle, a few degrees at most, throttled to one update a frame.
+  if (fine) {
+    let box = null, raf = 0, px = 0, py = 0;
+    const setTilt = (rx, ry) => {
+      const a = Math.hypot(rx, ry);
+      stage.style.setProperty("--tilt", `${a.toFixed(2)}deg`);
+      if (a > 0.01) { stage.style.setProperty("--ax", (rx / a).toFixed(3)); stage.style.setProperty("--ay", (ry / a).toFixed(3)); }
+    };
+    stage.addEventListener("pointerenter", (e) => { if (e.pointerType === "mouse") box = stage.getBoundingClientRect(); });
+    stage.addEventListener("pointermove", (e) => {
+      if (e.pointerType !== "mouse" || !box) return;
+      px = (e.clientX - box.left) / box.width - 0.5;
+      py = (e.clientY - box.top) / box.height - 0.5;
+      if (!raf) raf = requestAnimationFrame(() => { raf = 0; setTilt(-py * 4, px * 5); });
+    });
+    stage.addEventListener("pointerleave", () => { box = null; setTilt(0, 0); });
+  }
   svg.addEventListener("click", hideTip);
 
   /* ---- the HUD: four tiles and the hydrograph ---- */
@@ -292,6 +382,7 @@
     const t = performance.now() / 1000, card = cardOf(state.active);
     if (card) $$("[data-read]", card).forEach((b) => { const s = sensorOf[b.dataset.read]; if (!s) return; const r = s.reads[0]; b.textContent = r.text ? (s.id === "lidott" ? ui.states[lidottState] : readValue(s, r, t)) : readValue(s, r, t); });
     if (openTip) fillTip(openTip);
+    fillPills();
     if (!hudRaf) paintHud(Math.sin(t / 7));
   }
   const startTicker = () => { if (!tick) { tickReadouts(); tick = setInterval(tickReadouts, 500); } };
@@ -390,10 +481,45 @@
   btn.storm?.addEventListener("click", startStorm);
   // Escape stops a storm or closes a readout from anywhere on the page, and
   // a click anywhere else closes the readout
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape") { if (state.storm) finishStorm(true); else if (openTip) hideTip(); } });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") { if (state.storm) finishStorm(true); else if (openTip) hideTip(); else if (state.expanded) setExpanded(false); } });
   document.addEventListener("pointerdown", (e) => { if (openTip && !e.target.closest?.(".city-tip, .hit, .city-sensors")) hideTip(); });
 
   /* ---- the underground view ---- */
+  /* ---- the expanded view: the city nearly full screen, with every pill ---- */
+  // The grid becomes a fixed, modal panel; focus stays inside it until it
+  // closes with the button or Escape, and goes back to the expand button.
+  let lastFocus = null;
+  function setExpanded(on) {
+    if (state.expanded === on || !grid) return;
+    state.expanded = on;
+    hideTip();
+    document.body.classList.toggle("city-lock", on);
+    if (closeBtn) closeBtn.hidden = !on;
+    if (on) { grid.setAttribute("role", "dialog"); grid.setAttribute("aria-modal", "true"); grid.setAttribute("aria-label", ui.expandedLabel); }
+    else { grid.removeAttribute("role"); grid.removeAttribute("aria-modal"); grid.removeAttribute("aria-label"); }
+    btn.expand?.setAttribute("aria-pressed", String(on));
+    if (btn.expand) $("span", btn.expand).textContent = on ? ui.toolbar.collapse : ui.toolbar.expand;
+    apply();
+    fillPills();
+    requestAnimationFrame(() => { fitAll(); layoutPills(); });
+    if (on) { lastFocus = document.activeElement; closeBtn?.focus({ preventScroll: true }); announce(ui.live.expanded); }
+    else { (lastFocus?.isConnected ? lastFocus : btn.expand)?.focus({ preventScroll: true }); announce(ui.live.collapsed); }
+  }
+  btn.expand?.addEventListener("click", () => setExpanded(!state.expanded));
+  closeBtn?.addEventListener("click", () => setExpanded(false));
+  grid?.addEventListener("keydown", (e) => {
+    if (!state.expanded || e.key !== "Tab") return;
+    // only what a visitor can actually reach: the hidden cards' links and the
+    // tabs that are out of the tab order do not count
+    const items = $$("button:not([tabindex='-1']), a[href], [tabindex='0']", grid).filter((el) => el instanceof SVGElement || (!el.hidden && el.getClientRects().length && getComputedStyle(el).visibility !== "hidden"));
+    if (!items.length) return;
+    const first = items[0], last = items[items.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  });
+  fitAll();
+  document.fonts?.ready?.then(fitAll);
+
   btn.under?.addEventListener("click", () => {
     state.under = !state.under;
     apply();

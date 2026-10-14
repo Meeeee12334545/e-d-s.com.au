@@ -927,7 +927,8 @@ add({
     </div>
   </div>
   <div class="wrap wide">
-    <div class="city-grid">
+    <div class="city-grid" id="city-grid">
+      <button type="button" class="city-close" aria-label="${esc(C.cityUi.toolbar.close)}" hidden>${icon("x", false)}</button>
       <div class="city-stage" data-reveal="scale">
         <svg id="city" role="group" aria-label="${esc(C.cityUi.stageLabel)}"></svg>
         <div class="city-tip" id="city-tip" role="group" aria-label="${esc(C.cityUi.tipLabel)}" hidden><div class="city-tip-body"></div><button type="button" class="city-tip-close" aria-label="${esc(C.cityUi.toolbar.close)}">${icon("x", false)}</button></div>
@@ -937,6 +938,7 @@ add({
         <div class="city-toolbar" role="toolbar" aria-label="${esc(C.cityUi.toolbarLabel)}">
           <button type="button" class="btn btn-ghost city-btn" data-act="storm" aria-pressed="false" aria-describedby="city-note">${icon("cloud-rain")}<span>${esc(C.cityUi.toolbar.storm)}</span></button>
           <button type="button" class="btn btn-ghost city-btn" data-act="under" aria-pressed="false">${icon("layers")}<span>${esc(C.cityUi.toolbar.under)}</span></button>
+          <button type="button" class="btn btn-ghost city-btn" data-act="expand" aria-pressed="false">${icon("maximize-2")}${icon("minimize-2", false)}<span>${esc(C.cityUi.toolbar.expand)}</span></button>
         </div>
         <p class="city-caption" aria-live="off" data-rest="${esc(C.cityUi.captionRest)}">${esc(C.cityUi.captionRest)}</p>
         <div class="city-hud" aria-label="${esc(C.cityUi.hud.label)}">
@@ -946,7 +948,7 @@ add({
         <p class="sr-only" id="city-live" aria-live="polite"></p>
         <p class="note city-note" id="city-note">${icon("info", false)}${esc(C.cityUi.note)}</p>
         <ul class="city-legend" aria-label="${esc(C.cityUi.legend.label)}">
-          ${C.cityUi.legend.items.map(([ic, label]) => `<li>${icon(ic, false)}${esc(label)}</li>`).join("")}
+          ${C.cityUi.legend.items.map(([ic, label]) => `<li>${icon(ic, false)}${esc(label)}</li>`).join("")}${C.cityUi.legend.underItems.map(([ic, label]) => `<li class="for-under">${icon(ic, false)}${esc(label)}</li>`).join("")}
         </ul>
       </div>
 
