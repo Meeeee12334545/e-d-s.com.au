@@ -222,6 +222,26 @@
     b.addEventListener("click", () => (openTip === id ? hideTip() : showTip(id, b)));
   });
   tipClose?.addEventListener("click", hideTip);
+
+  /* ---- under a mouse the whole city tilts a little toward the pointer ---- */
+  // The stylesheet grows and lifts it on hover; this sets the tilt as an
+  // axis and angle, a few degrees at most, throttled to one update a frame.
+  if (fine) {
+    let box = null, raf = 0, px = 0, py = 0;
+    const setTilt = (rx, ry) => {
+      const a = Math.hypot(rx, ry);
+      stage.style.setProperty("--tilt", `${a.toFixed(2)}deg`);
+      if (a > 0.01) { stage.style.setProperty("--ax", (rx / a).toFixed(3)); stage.style.setProperty("--ay", (ry / a).toFixed(3)); }
+    };
+    stage.addEventListener("pointerenter", (e) => { if (e.pointerType === "mouse") box = stage.getBoundingClientRect(); });
+    stage.addEventListener("pointermove", (e) => {
+      if (e.pointerType !== "mouse" || !box) return;
+      px = (e.clientX - box.left) / box.width - 0.5;
+      py = (e.clientY - box.top) / box.height - 0.5;
+      if (!raf) raf = requestAnimationFrame(() => { raf = 0; setTilt(-py * 4, px * 5); });
+    });
+    stage.addEventListener("pointerleave", () => { box = null; setTilt(0, 0); });
+  }
   svg.addEventListener("click", hideTip);
 
   /* ---- the HUD: four tiles and the hydrograph ---- */
