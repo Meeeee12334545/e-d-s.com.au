@@ -1021,8 +1021,8 @@ export const services = [
         items: [
           ["Scheduled files", "CSV files delivered to your server over SFTP or FTPS, for SCADA file importers and historians."],
           ["MQTT", "Messages to your broker as JSON or CSV. The closest thing to live."],
-          ["Read API", "Pulled over HTTPS on your own schedule, into tools such as Power BI, Excel, Grafana or ArcGIS. Read only."],
-          ["Webhooks", "Signed messages posted when an alarm, an overflow or a forecast risk is recorded."],
+          ["Read API", "Pulled over HTTPS on your own schedule, into tools such as Power BI, Excel, Grafana or ArcGIS. Read only, except that a key can be granted one write operation: recording what a crew found on a work order."],
+          ["Webhooks", "Signed messages posted when an alarm is raised or cleared, a forecast puts a site at risk, or Blockage Watch flags a blockage."],
         ],
       },
       {
@@ -2121,13 +2121,15 @@ export const flowsense = {
     ["Do we need to install anything?", "No. FlowSense runs in the browser on desktop, tablet and phone. Connecting your SCADA needs no agent, connector or gateway on your systems, and FlowSense has no control path into them."],
     ["Does it only work with EDS instruments?", "No. FlowSense is vendor independent. Alongside the instruments EDS installs, it can collect from your own loggers, or take data from your SCADA by HTTPS, MQTT, API, SFTP or FTPS."],
     ["Where is the data hosted, and how is it secured?", "In Australia, in DigitalOcean's Sydney region. Sign-in supports two-factor codes, access is set per person down to individual sites and channels, and every sign-in, view, change and export is recorded in an audit trail."],
-    ["Can the data go back into our SCADA or historian?", "Yes. As scheduled CSV files over SFTP or FTPS, as MQTT messages to your broker, through a read-only API, and as signed webhooks when an alarm, an overflow or a forecast risk is recorded."],
+    ["Can the data go back into our SCADA or historian?", "Yes. As scheduled CSV files over SFTP or FTPS, as MQTT messages to your broker, through a read API, and as signed webhooks when an alarm is raised or cleared, a forecast puts a site at risk, or Blockage Watch flags a blockage."],
     ["How many people can use it?", "Unlimited users, with role based access and administration that can be delegated to your own team."],
     ["How do we get started?", "Send us the flow history you already hold and EDS will set up a 90 day trial of the whole platform on it. Or ask for a walkthrough using your own sites."],
   ],
   docs: [
     { label: "Platform overview", note: "The short introduction: what FlowSense does, from the instrument in the pipe to the board paper.", href: localDoc("eds-flowsense-platform-overview.pdf") },
-    { label: "Platform brochure", note: "The whole platform in sixteen pages: the screens, the standards it follows and the pricing.", href: localDoc("eds-flowsense-brochure.pdf") },
+    { label: "Platform brochure", note: "The whole platform at a glance, in sixteen pages: the screens, the standards it follows and the pricing.", href: localDoc("eds-flowsense-brochure.pdf") },
+    { label: "Detailed brochure", note: "The longer read: each screen explained, how Blockage Watch and the Pump Station Manager reach a verdict, and the pricing terms in full.", href: localDoc("eds-flowsense-platform-brochure.pdf") },
+    { label: "Platform datasheet", note: "The technical reference: every way data gets in and out, with its limits, the engineering tools, the standards and where the boundaries sit.", href: localDoc("eds-flowsense-datasheet.pdf") },
     { label: "Features and benefits", note: "What FlowSense does to monitor, analyse and engineer a sewer network.", href: localDoc("eds-flowsense-features-and-benefits.pdf") },
     { label: "The value case", note: "Monitoring, modelling, alerting and the infiltration study in one subscription, priced against what the market publishes.", href: localDoc("eds-flowsense-value-case.pdf") },
     { label: "Competitive brochure", note: "Why depth and velocity together matter, and how FlowSense compares with ADS, StormHarvester and Kallipr.", href: localDoc("eds-flowsense-competitive-brochure.pdf") },
@@ -2352,6 +2354,8 @@ export const downloads = [
     items: [
       ["FlowSense platform overview", localDoc("eds-flowsense-platform-overview.pdf")],
       ["FlowSense platform brochure", localDoc("eds-flowsense-brochure.pdf")],
+      ["FlowSense detailed brochure", localDoc("eds-flowsense-platform-brochure.pdf")],
+      ["FlowSense platform datasheet", localDoc("eds-flowsense-datasheet.pdf")],
       ["FlowSense features and benefits", localDoc("eds-flowsense-features-and-benefits.pdf")],
       ["FlowSense value case", localDoc("eds-flowsense-value-case.pdf")],
       ["FlowSense competitive brochure", localDoc("eds-flowsense-competitive-brochure.pdf")],
