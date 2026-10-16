@@ -240,18 +240,6 @@
       const lit = { a: ["00", "11"], b: ["10"], c: ["00", "01", "10"] }[v];
       for (const cx of [0, 1]) for (const cy of [0, 1]) el("rect", { x: 1.5 + cx * 7, y: 1.5 + cy * 6, width: 4, height: 3, style: F(lit.includes(`${cx}${cy}`) ? "rgba(255,255,255,.24)" : "rgba(0,0,0,.3)") }, p);
     }
-    // Rain in three sheets. Each is a tall tile of scattered drops, the
-    // tiles repeating on different periods so no grid shows, every drop
-    // slanted one way by the wind and moving along its own slant.
-    let seed = 7;
-    const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
-    [["rain-1", 29, 116, 8, 4, 7, .55, .32], ["rain-2", 37, 148, 7, 8, 12, .8, .42], ["rain-3", 47, 188, 5, 14, 20, 1.1, .55]].forEach(([id, w, h, n, l0, l1, sw, op]) => {
-      const p = el("pattern", { id, width: w, height: h, patternUnits: "userSpaceOnUse" }, D);
-      for (let i = 0; i < n; i++) {
-        const x = rnd() * w, y = rnd() * h, len = l0 + rnd() * (l1 - l0);
-        p.append(seg("", [x, y], [x - len * w / h, y + len], { style: `stroke:rgba(190,230,255,${op});stroke-width:${sw};stroke-linecap:round` }));
-      }
-    });
     const bays = el("pattern", { id: "bays", width: 8, height: 8, patternUnits: "userSpaceOnUse", patternTransform: "rotate(26.565)" }, D);
     bays.append(seg("", [0, 0], [0, 8], { style: "stroke:rgba(255,255,255,.12);stroke-width:1" }));
     const grid = el("pattern", { id: "grid", width: TW, height: TH, patternUnits: "userSpaceOnUse" }, D);
@@ -266,7 +254,6 @@
     grad("hub-glow", "radialGradient", [[0, "rgba(95,180,166,.55)"], [1, "rgba(95,180,166,0)"]]);
     grad("water-sheen", "linearGradient", [[0, "rgba(255,255,255,.2)"], [1, "rgba(255,255,255,0)"]], { x1: 0, y1: 0, x2: 0, y2: 1 });
     grad("solar-grad", "linearGradient", [[0, "#2b5c8a"], [1, "#6fa6e0"]]);
-    grad("sky", "linearGradient", [[0, "rgba(4,21,19,.0)"], [1, "rgba(4,21,19,.55)"]], { x1: 0, y1: 0, x2: 0, y2: 1 });
     return D;
   }
 
@@ -696,10 +683,10 @@
 
   /* ---- assemble ---- */
   // Two SVGs share one viewBox: the still city (districts, slab, pipes) and,
-  // over it, everything that moves (traffic, pings, flows, packets, labels,
-  // the storm). The browser then repaints only the overlay each frame. A
-  // district's moving parts sit in a matching group in the overlay that lifts
-  // with it.
+  // over it, everything that moves (traffic, pings, flows, packets, labels).
+  // The browser then repaints only the overlay each frame. A district's
+  // moving parts sit in a matching group in the overlay that lifts with it.
+  // The storm's weather is a canvas between the two (city-weather.js).
   const VB = "-330 -52 800 448";
   const MOVING = ".arm,.meter,.blink,.hub,.beacon,.screen,.bead,.wtr-line,.foam,.pipe-flow";
   function build(svg, data) {
@@ -709,7 +696,6 @@
     svg.after(fx);
     const ui = data.ui, byZone = Object.fromEntries(data.zones.map((z) => [z.id, z]));
     const D = defs(svg, data);
-    el("clipPath", { id: "clip-slab" }, D).append(poly("", slabTop));
     el("clipPath", { id: "clip-roads" }, D).append(...ROADS.map(([x0, y0, x1, y1]) => poly("", [P(x0, y0), P(x1, y0), P(x1, y1), P(x0, y1)])));
     const baseLayer = base(svg, fx); BASE_DETAIL(baseLayer); const underLayer = under(svg, fx);
     const shadowLayer = el("g", { class: "shadows" }, svg), zoneLayer = el("g", { class: "zones" }, svg);
@@ -769,16 +755,8 @@
     const sms = el("rect", { class: "pkt-sms", width: 9, height: 6, rx: 2, x: -4.5, y: -3 }, packetLayer);
     const smsMotion = el("animateMotion", { dur: "1.1s", begin: "indefinite", fill: "freeze", path: links.sewer.getAttribute("d") }, sms);
 
-    // the storm: a darker sky, cloud banks and rain, all clipped to the slab
-    const storm = el("g", { class: "storm" }, fx);
-    storm.append(poly("sky", slabTop));
-    const clouds = el("g", { class: "clouds" }, storm);
-    [[-300, -40], [120, -60], [360, -20]].forEach(([x, y], k) => { const c = el("g", { class: "cloud", style: `--i:${k}` }, clouds); [[0, 0, 42, 14], [30, -8, 36, 13], [-28, -4, 30, 11], [58, 2, 28, 10]].forEach(([dx, dy, rx, ry]) => el("ellipse", { cx: x + dx, cy: y + dy, rx, ry }, c)); });
-    const rains = el("g", { class: "rains", "clip-path": "url(#clip-slab)" }, storm);
-    for (const k of [1, 2, 3]) { const g = el("g", { class: `rain rain-${k}` }, rains); el("rect", { class: "rain-fill", x: -400, y: -260, width: 940, height: 760, style: `fill:url(#rain-${k})` }, g); }
-
-    return { svg, fx, base: baseLayer, under: underLayer, zoneLayer, zoneFxLayer, linkLayer, packetLayer, labelLayer, storm, zones, zoneFx, labels, links, shadows, anchors, slots, sensors: sensorNodes, arms, hand, handMotion, sms, smsMotion, ZONES };
+    return { svg, fx, base: baseLayer, under: underLayer, zoneLayer, zoneFxLayer, linkLayer, packetLayer, labelLayer, zones, zoneFx, labels, links, shadows, anchors, slots, sensors: sensorNodes, arms, hand, handMotion, sms, smsMotion, ZONES };
   }
 
-  window.CityScene = { TW, TH, P, build };
+  window.CityScene = { TW, TH, P, S, build };
 })();

@@ -360,15 +360,17 @@ ul { margin: 0; padding: 0; list-style: none; }
 /* Under a mouse the whole city comes forward a little and tilts toward the
    pointer, like a model on a table (city.js sets the tilt). Nothing in it
    changes, so it is motion, not a pick; on touch screens it stays put. */
-.city-stage .city-svg { rotate: var(--ax, 1) var(--ay, 0) 0 var(--tilt, 0deg); transition: scale .9s var(--ease-out), translate .9s var(--ease-out), rotate .5s var(--ease-out); }
+.city-stage :is(.city-svg, .city-weather) { rotate: var(--ax, 1) var(--ay, 0) 0 var(--tilt, 0deg); transition: scale .9s var(--ease-out), translate .9s var(--ease-out), rotate .5s var(--ease-out), filter 2.4s var(--ease); }
 @media (hover: hover) and (pointer: fine) {
   .city-stage:hover { --glow: .16; }
-  .city-stage:hover .city-svg { scale: 1.045; translate: 0 -8px; }
+  .city-stage:hover :is(.city-svg, .city-weather) { scale: 1.045; translate: 0 -8px; }
 }
 .city-svg { width: 100%; height: auto; overflow: visible; position: relative; touch-action: pan-y; -webkit-user-select: none; user-select: none; }
 /* The city is two SVGs on one viewBox: the still districts, and over them an
    overlay holding everything that moves, so only the overlay repaints. */
 .city-fx { position: absolute; inset: 0; pointer-events: none; will-change: transform; }
+/* the storm's rain, cloud and lightning (city-weather.js), between the two */
+.city-weather { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 .city-svg .zone-fx { transform-box: view-box; transition: translate .55s var(--ease-spring), scale .55s var(--ease-spring), opacity .35s var(--ease); }
 .city-svg .zone-fx.active { translate: 0 -14px; scale: 1.07; }
 .city-svg.has-active .zone-fx:not(.active) { opacity: .78; }
@@ -582,28 +584,11 @@ ul { margin: 0; padding: 0; list-style: none; }
 .city-svg .zlabel.active rect { fill: var(--aqua); stroke: var(--aqua); }
 .city-svg .zlabel.active text { fill: #04201d; }
 .city-svg .zlabel.active line { stroke: var(--aqua); }
-/* the storm */
-.city-svg .sky { fill: url(#sky); opacity: 0; transition: opacity 2s var(--ease); pointer-events: none; }
-.city-svg.is-storm .sky { opacity: 1; }
-.city-svg .cloud ellipse { fill: rgba(255, 255, 255, .05); }
-.city-svg .cloud { translate: 0 -150px; opacity: 0; transition: translate 2.2s var(--ease-out), opacity 1.5s var(--ease); transition-delay: calc(var(--i, 0) * .25s); pointer-events: none; }
-.city-svg.is-storm .cloud { translate: 0 0; opacity: 1; }
-.city-svg.is-storm .clouds { animation: drift 16s ease-in-out infinite alternate; }
-/* the rain: far, mid and near sheets, each on its own slant and speed, the
-   whole gusting; the sheets come in one after another and the near one
-   leaves first, so the storm builds and eases rather than switching on */
-.city-svg .rain { opacity: 0; transition: opacity 1.4s var(--ease); pointer-events: none; }
-.city-svg .rains { pointer-events: none; }
-.city-svg.is-storm .rains { animation: gust 4.6s ease-in-out infinite; }
-.city-svg.is-storm .rain-1 { opacity: .7; animation: rain-fall-1 .9s linear infinite; }
-.city-svg.is-storm .rain-2 { opacity: .35; animation: rain-fall-2 .62s linear infinite; }
-.city-svg.is-storm .rain-3 { opacity: 0; animation: rain-fall-3 .42s linear infinite; }
-.city-svg.storm-2 .rain-2 { opacity: .8; }
-.city-svg.storm-2 .rain-3 { opacity: .45; }
-.city-svg.storm-3 .rain-3 { opacity: .95; }
-.city-svg.storm-6 .rain-3 { opacity: .5; }
-.city-svg.storm-7 .rain-3 { opacity: .15; }
-.city-svg.storm-7 .rain-2 { opacity: .4; }
+/* the storm: city-weather.js draws the rain, cloud and lightning; under it
+   the city goes dim and grey while the cloud is overhead, and brightens again
+   as the rain stops */
+#city.is-storm { filter: brightness(.74) saturate(.72); }
+#city.storm-8 { filter: brightness(.9) saturate(.88); }
 .city-svg.is-storm .zone .flood { opacity: .85; }
 .city-svg.is-storm .wtr-line { animation-duration: 1.1s; }
 .city-svg.is-storm .tip { animation: tip-drop 1.2s linear infinite; }
@@ -630,9 +615,6 @@ ul { margin: 0; padding: 0; list-style: none; }
 .city-svg.storm-7 .sensor[data-sensor="turb"] .ping, .city-svg.storm-7 .sensor[data-sensor="aquamonitrix"] .ping { stroke: var(--amber); }
 .city-svg.storm-7 .sensor[data-sensor="turb"] .ping-dot, .city-svg.storm-7 .sensor[data-sensor="aquamonitrix"] .ping-dot { fill: var(--amber); }
 .city-svg.storm-7 .pipe-out { opacity: 1; animation-duration: .8s; }
-.city-svg.storm-8 .rain { opacity: 0; transition-duration: 2.5s; }
-.city-svg.storm-8 .cloud { translate: 0 -150px; }
-.city-svg.storm-8 .sky { opacity: 0; }
 .city-svg.storm-8 .zone .flood { opacity: 0; transition-duration: 4s; }
 .city-svg.storm-8 .puddle { opacity: 0; }
 .city-svg.storm-8 .gully { --gully: #06201e; }
@@ -658,11 +640,6 @@ ul { margin: 0; padding: 0; list-style: none; }
 @keyframes flicker { from { scale: 1 .8; } to { scale: 1.15 1.1; } }
 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: .15; } }
 @keyframes lower { 0%, 10% { translate: 0 0; } 50%, 60% { translate: 0 11px; } 100% { translate: 0 0; } }
-@keyframes rain-fall-1 { to { translate: -29px 116px; } }
-@keyframes rain-fall-2 { to { translate: -37px 148px; } }
-@keyframes rain-fall-3 { to { translate: -47px 188px; } }
-@keyframes gust { 0%, 100% { opacity: .7; } 35% { opacity: 1; } 60% { opacity: .8; } }
-@keyframes drift { from { translate: -18px 0; } to { translate: 22px 0; } }
 @keyframes ripple { 0% { scale: .6; opacity: .8; } 100% { scale: 2.6; opacity: 0; } }
 @keyframes seep { to { stroke-dashoffset: -16; } }
 @keyframes pulse { 0%, 100% { opacity: .45; } 50% { opacity: 1; } }
@@ -738,7 +715,7 @@ ul { margin: 0; padding: 0; list-style: none; }
 body.city-lock { overflow: hidden; }
 .city-section.is-expanded .city-grid { position: fixed; inset: 0; z-index: 150; overflow: auto; background: var(--deep); padding: 14px 72px 18px 24px; grid-template-columns: minmax(0, 1fr) 380px; grid-template-rows: auto minmax(0, 1fr) auto; grid-template-areas: "bar bar" "stage panel" "tabs tabs"; gap: 10px 24px; align-items: stretch; animation: dlg-fade .3s var(--ease); }
 .city-section.is-expanded .city-stage { margin: auto; width: min(100%, calc((100vh - 230px) * 800 / 448)); aspect-ratio: 800 / 448; }
-.city-section.is-expanded .city-stage:hover .city-svg { scale: 1; translate: 0 0; }
+.city-section.is-expanded .city-stage:hover :is(.city-svg, .city-weather) { scale: 1; translate: 0 0; }
 .city-section.is-expanded .city-bar { padding: 0; grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "tools hud" "caption caption" "legend note"; }
 .city-section.is-expanded .city-hud { justify-content: flex-end; flex-wrap: nowrap; }
 .city-section.is-expanded .city-tile-spark { flex: 0 1 260px; }

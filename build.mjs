@@ -855,7 +855,7 @@ add({
   title: "EDS | Environmental Data Services: water, wastewater and environmental monitoring",
   description: "Environmental Data Services (EDS) has been a trusted leader in advanced monitoring solutions and specialised services since 1991, serving government, utilities, councils, consultants and industry across Australia.",
   current: "home",
-  scripts: ["city-scene.js", "city.js"],
+  scripts: ["city-scene.js", "city-weather.js", "city.js"],
   body: (r) => {
     const words = ["Every", "drop,", "measured."];
     // The page tells one story in ten bands. Dark bands run on a schedule:
