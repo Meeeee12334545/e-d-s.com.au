@@ -782,9 +782,9 @@
   function noteButton(it, i) {
     const b = document.createElement("button");
     b.type = "button";
-    b.className = `city-note is-${it.kind}${it.eds ? " eds" : ""}`;
+    b.className = `city-label is-${it.kind}${it.eds ? " eds" : ""}`;
     if (it.kind === "stratum" || it.kind === "part") b.setAttribute("aria-pressed", "false");
-    const n = document.createElement("span"); n.className = "city-note-n"; n.textContent = String(i + 1); n.setAttribute("aria-hidden", "true");
+    const n = document.createElement("span"); n.className = "city-label-n"; n.textContent = String(i + 1); n.setAttribute("aria-hidden", "true");
     const nm = document.createElement("b"); nm.textContent = it.name;
     const sm = document.createElement("small"); sm.textContent = it.sub || "";
     b.append(n);
@@ -939,7 +939,7 @@
     }
     // focus goes back where the visitor came from; a label's button is
     // rebuilt with the district's labels, so find its new copy
-    const back = a.trigger?.isConnected && !a.trigger.closest("[hidden]") ? a.trigger : state.view === "district" ? [...document.querySelectorAll(".city-note.is-inside")].find((n) => n.offsetParent) : null;
+    const back = a.trigger?.isConnected && !a.trigger.closest("[hidden]") ? a.trigger : state.view === "district" ? [...document.querySelectorAll(".city-label.is-inside")].find((n) => n.offsetParent) : null;
     if (refocus) (back || btn.explode)?.focus({ preventScroll: true });
     announce(fill(X.live.assetClosed, { name: a.data.name }));
   }

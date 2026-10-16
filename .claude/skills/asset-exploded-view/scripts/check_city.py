@@ -33,7 +33,7 @@ FRAMES = """() => new Promise((done) => {
 # labels that overlap one another or leave the stage, and leaders with no mark
 LABELS = """() => {
   const view = document.querySelector('.city-view').getBoundingClientRect();
-  const btns = [...document.querySelectorAll('#city-notes .city-note')].filter((b) => b.offsetParent);
+  const btns = [...document.querySelectorAll('#city-notes .city-label')].filter((b) => b.offsetParent);
   const boxes = btns.map((b) => [b, b.getBoundingClientRect()]);
   const out = [];
   boxes.forEach(([b, r], i) => {
@@ -84,7 +84,7 @@ def run(url, out, only, phone):
             report[f"{zone}-apart{sfx}"] = page.evaluate(LABELS)
             if not phone and zone == only[0]:
                 report["apart_ms"] = median_ms(page)
-            page.locator('.city-note.is-inside:visible').first.click()
+            page.locator('.city-label.is-inside:visible').first.click()
             page.wait_for_timeout(1400)
             shot = page.locator(".city-stage") if phone else view
             shot.screenshot(path=f"{out}/{zone}-asset{sfx}.png")
