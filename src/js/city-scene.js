@@ -1,4 +1,4 @@
-// The isometric city: drawing only. city.js owns selection, the tour, the
+// The isometric city: drawing only. city.js owns selection, the
 // storm, the underground view and the readouts; this file builds the SVG and
 // hands back the groups and nodes those need.
 //

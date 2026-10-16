@@ -506,7 +506,7 @@ ul { margin: 0; padding: 0; list-style: none; }
 .city-svg .zone-fx .flare { fill: var(--amber); opacity: .85; transform-box: fill-box; transform-origin: 50% 100%; animation: flicker .5s ease-in-out infinite alternate; }
 .city-svg .zone-fx .meter { animation: lower 8s var(--ease) infinite; }
 .city-svg .zone-fx .run { fill: #24413d; stroke: rgba(255, 255, 255, .3); stroke-width: .6; transition: fill .4s var(--ease); }
-.city-svg .zone .fx > .run:first-child { fill: var(--green); }
+.city-svg .zone-fx .run-a { fill: var(--green); }
 .city-svg .zone-fx .tip { fill: var(--water); opacity: 0; }
 .city-svg .zone-fx .spill { fill: var(--water); opacity: 0; transform-box: fill-box; transform-origin: center; scale: 0; transition: scale 1.2s var(--ease-out), opacity .6s var(--ease); }
 .city-svg .zone-fx .ripple { fill: none; stroke: var(--water); stroke-width: 1; opacity: 0; transform-box: fill-box; transform-origin: center; }
