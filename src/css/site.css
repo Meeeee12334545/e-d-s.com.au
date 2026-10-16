@@ -363,6 +363,8 @@ ul { margin: 0; padding: 0; list-style: none; }
 .city-stage .city-svg { rotate: var(--ax, 1) var(--ay, 0) 0 var(--tilt, 0deg); transition: scale .9s var(--ease-out), translate .9s var(--ease-out), rotate .5s var(--ease-out); }
 @media (hover: hover) and (pointer: fine) {
   .city-stage:hover { --glow: .16; }
+}
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
   .city-stage:hover .city-svg { scale: 1.045; translate: 0 -8px; }
 }
 .city-svg { width: 100%; height: auto; overflow: visible; position: relative; touch-action: pan-y; -webkit-user-select: none; user-select: none; }
@@ -1881,9 +1883,9 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: 6
   .city-tip, .city-tip.flip { margin-inline: var(--gutter); }
 }
 
-@media (max-width: 700px) { .city-svg .callout { display: none; } }
+@media (max-width: 700px) { .city-svg:not(.is-expanded) .callout { display: none; } }
 @media (max-width: 600px) { .city-svg .fine { display: none; } }
-@media (max-width: 560px) { .city-svg .zlabel { display: none; } }
+@media (max-width: 560px) { .city-svg:not(.is-expanded) .zlabel { display: none; } }
 
 /* ---------- responsive: search, heroes, products, quick actions ---------- */
 @media (max-width: 1360px) {
