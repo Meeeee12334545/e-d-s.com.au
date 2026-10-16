@@ -436,6 +436,8 @@
     setTimeout(() => sc.sms.classList.remove("on"), 1400);
   }
   const stormElapsed = () => state.storm ? state.storm.elapsed + (state.storm.running ? (performance.now() - state.storm.t0) / 1000 : 0) : 0;
+  // the rain, cloud and lightning, painted between the two layers
+  const weather = window.CityWeather ? CityWeather(sc, { clock: () => (state.storm ? stormElapsed() : null), script: stormData }) : null;
   function scheduleStorm() {
     const st = state.storm, now = stormElapsed();
     st.timers = steps.filter((s) => !st.done.has(s)).map((s) => setTimeout(() => { st.done.add(s); s.run(); }, Math.max(0, (s.at - now) * 1000)));
@@ -453,6 +455,7 @@
     btn.storm?.setAttribute("aria-pressed", "true"); $("span", btn.storm).textContent = ui.toolbar.stormBusy;
     announce(ui.live.stormStart);
     scheduleStorm();
+    weather?.start();
     drawSpark();
   }
   function clearStormClasses() {
@@ -466,6 +469,7 @@
     st.timers.forEach(clearTimeout);
     state.storm = null;
     clearStormClasses();
+    weather?.end(cancelled);
     hudTarget(hudRest);
     btn.storm?.setAttribute("aria-pressed", "false"); $("span", btn.storm).textContent = ui.toolbar.storm;
     if (cancelled) { setCaption(ui.toolbar.stormCancelled); announce(ui.live.stormCancelled); }
@@ -549,9 +553,11 @@
       layers.forEach((s) => { try { s.unpauseAnimations(); } catch {} });
       startTicker(); kick();
       if (state.storm && !state.storm.running) scheduleStorm();
+      weather?.run(true);
     } else {
       layers.forEach((s) => { try { s.pauseAnimations(); } catch {} });
       stopTicker(); suspendStorm();
+      weather?.run(false);
     }
   }
   new IntersectionObserver(([en]) => { state.inView = en.isIntersecting; sync(); }, { threshold: 0.3 }).observe(svg);
