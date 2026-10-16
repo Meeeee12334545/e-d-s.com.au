@@ -1619,7 +1619,7 @@ ${pageHero(r, { crumbs: [["Resources"]], title: "White papers, downloads and sup
     <span class="card-icon">${icon("search-x")}</span>
     <h3>No documents match</h3>
     <p>Try another word, or ask our service department for the file you need.</p>
-    <div class="hero-actions"><button class="btn btn-outline" type="button" data-lib-reset>Show all documents</button><a class="btn btn-brand" href="${contactHref(r, { topic: "Service and support" })}">Ask for a document ${icon("arrow-right")}</a></div>
+    <div class="hero-actions"><button class="btn btn-outline" type="button" data-lib-reset>Show all documents</button><a class="btn btn-brand" href="${contactHref(r, { topic: "General enquiry" })}">Ask for a document ${icon("arrow-right")}</a></div>
   </div>
   <p class="lib-more"><button class="btn btn-outline" type="button" data-lib-more>Show all ${library.length} documents ${icon("chevron-down")}</button></p>
   <p class="note" style="margin-top:18px;font-size:.9rem;max-width:72ch">${C.downloads.find((g) => g.note).note}</p>
@@ -1900,8 +1900,11 @@ for (const p of pages) {
 }
 // Forwarding pages for the old site's addresses. GitHub Pages serves
 // /hach-flow from hach-flow.html, so each sits at the root.
+// A target may carry its own query (an enquiry topic); then that query is
+// kept rather than the visitor's.
 for (const [from, to] of Object.entries(C.oldPages)) {
-  if (!pages.some((p) => p.file === to)) throw new Error(`oldPages: "${from}" points at missing page ${to}`);
+  const file = to.split("?")[0];
+  if (!pages.some((p) => p.file === file)) throw new Error(`oldPages: "${from}" points at missing page ${to}`);
   if (pages.some((p) => p.file === `${from}.html`)) throw new Error(`oldPages: "${from}" would overwrite a page`);
   await writeFile(
     path.join(DIST, `${from}.html`),
@@ -1911,11 +1914,11 @@ for (const [from, to] of Object.entries(C.oldPages)) {
 <meta charset="utf-8">
 <title>Page moved</title>
 <meta name="robots" content="noindex">
-<link rel="canonical" href="${pageUrl(to)}">
-<meta http-equiv="refresh" content="0; url=${to}">
-<script>location.replace("${to}" + location.search + location.hash)</script>
+<link rel="canonical" href="${pageUrl(file)}">
+<meta http-equiv="refresh" content="0; url=${esc(to)}">
+<script>location.replace("${to}"${file === to ? " + location.search" : ""} + location.hash)</script>
 </head>
-<body><p>This page has moved to <a href="${to}">${pageUrl(to)}</a>.</p></body>
+<body><p>This page has moved to <a href="${esc(to)}">${pageUrl(file)}</a>.</p></body>
 </html>
 `
   );

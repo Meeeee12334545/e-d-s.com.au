@@ -26,8 +26,8 @@ export const site = {
   service: "service@e-d-s.com.au",
   // Web3Forms access key (https://web3forms.com). The enquiry and sign-up
   // forms send through it to the address the key was created for, which
-  // should be eds@e-d-s.com.au. It is safe to publish. Left empty, the forms
-  // open the visitor's email program instead.
+  // should be eds@e-d-s.com.au. It is safe to publish. The build stops if it
+  // is empty.
   formKey: "4fd0d5e0-cb94-40ad-adda-7c634e765045",
   address: ["13/20-22 Ellerslie Road", "Meadowbrook QLD 4131", "Australia"],
   hours: "Monday to Friday, 7:30am to 4:30pm",
@@ -2612,6 +2612,17 @@ export const oldPages = {
   "contact-2": "contact.html",
   "contact-eds": "contact.html",
   // The old /enquire is served by the enquiry page itself, enquire.html.
+  // The old site's other enquiry forms open the form on the matching topic.
+  "contact-sales": "enquire.html?topic=Product+pricing",
+  "contact-eds-for-price-and-availability": "enquire.html?topic=Product+pricing",
+  "get-a-quote": "enquire.html?topic=Product+pricing",
+  "e-flow-enquiry": "enquire.html?topic=Product+pricing&product=E-Flow+3+%28EDS%29",
+  "request-lidott-price": "enquire.html?topic=Product+pricing&product=LIDoTT+Alarm+%28Detectronic%29",
+  "lidott-request-for-proposal": "enquire.html?topic=Product+pricing&product=LIDoTT+Alarm+%28Detectronic%29",
+  "trade-waste-enquiry": "enquire.html?topic=Trade+Waste+Monitoring",
+  "free-30-minute-discovery-call": "enquire.html",
+  feedback: "enquire.html",
+  "sign-up-newsletter": "contact.html",
   "eds-privacy-statement": "privacy.html",
   downloads: "resources.html",
   "download-and-support": "resources.html",

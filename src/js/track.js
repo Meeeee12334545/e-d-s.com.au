@@ -161,14 +161,12 @@
   }, true);
 
   /* ---- forms ---- */
-  document.addEventListener("submit", (e) => {
-    const f = e.target;
-    // The enquiry form is novalidate, so it fires submit while incomplete;
-    // site.js stops those, and so do we.
-    if (f.checkValidity && !f.checkValidity()) return;
-    const subject = f.elements?.subject?.value;
-    send({ type: "form", label: `${f.dataset.track || "Form"}${subject ? ` · ${subject}` : ""}`, area: areaOf(f) });
-  }, true);
+  // Recorded once site.js knows whether Web3Forms took it, so a form that
+  // failed to send shows as such rather than as sent.
+  document.addEventListener("eds:form", (e) => {
+    const f = e.target, { sent, subject } = e.detail;
+    send({ type: "form", label: `${f.dataset.track || "Form"}${subject ? ` · ${subject}` : ""}${sent ? "" : " · NOT SENT"}`, area: areaOf(f) });
+  });
   window.addEventListener("pagehide", flushSearch);
 
   pageview();

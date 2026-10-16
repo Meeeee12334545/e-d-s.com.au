@@ -345,7 +345,9 @@
     if (data.get("subject")) body.set("Interested in", data.get("subject"));
     data.forEach((v, k) => { if (!UNSENT.has(k) && String(v).trim()) body.append(k, v); });
     try {
-      const res = await fetch("https://api.web3forms.com/submit", { method: "POST", body, headers: { Accept: "application/json" }, signal: AbortSignal.timeout(20000) });
+      // AbortSignal.timeout is missing before Safari 16; there, send without a limit
+      // rather than fail every time.
+      const res = await fetch("https://api.web3forms.com/submit", { method: "POST", body, headers: { Accept: "application/json" }, signal: AbortSignal.timeout?.(20000) });
       return (await res.json()).success === true;
     } catch {
       return false;
@@ -460,7 +462,10 @@
       btn.disabled = true;
       if (label) label.textContent = "Submitting…";
       const summary = isEnquiry && summarise();
+      const subject = form.elements.subject?.value;
       const sent = await send(form);
+      // For the analytics dashboard (track.js): whether it actually went.
+      form.dispatchEvent(new CustomEvent("eds:form", { bubbles: true, detail: { sent, subject } }));
       form.removeAttribute("aria-busy");
       btn.disabled = false;
       if (label) label.textContent = was;
