@@ -120,6 +120,9 @@ buttons. A notes layer over the stage holds them plus one SVG of leader lines in
   camera in close, clip the view or the city spills past its frame.
 - Labels are rebuilt when a view changes, so focus that should return to a label has to find
   the new copy.
+- Grep `site.css` for a class name before using it. The labels were first called `city-note`, the
+  class the disclaimer under the map already had, and its absolute positioning stretched the
+  disclaimer across the page.
 - Keep left: in this projection +x is east and +y is south, so an eastbound lane sits at a
   smaller y and a southbound lane at a larger x.
 
