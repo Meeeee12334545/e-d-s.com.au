@@ -982,8 +982,9 @@
   // roadster comes up behind a slower car on a random road, fires its
   // compressed-air thrusters and barrel-rolls over it: one turn about its
   // long axis while it swings out to one side, over the top of the car
-  // (upside down at the top) and down the other side. Under reduced motion it
-  // hops straight over without the roll.
+  // (upside down at the top) and down the other side. It rolls under reduced
+  // motion too: the site keeps its motion for those visitors (the owner's own
+  // Mac reports reduced motion), and the roll is the point.
   const LANES = [
     { from: [-0.9, 4.85], to: [15.9, 4.85], dir: "e" }, { from: [15.9, 5.15], to: [-0.9, 5.15], dir: "w" },
     { from: [5.15, -0.9], to: [5.15, 10.9], dir: "s" }, { from: [9.85, 10.9], to: [9.85, -0.9], dir: "n" },
@@ -1017,7 +1018,7 @@
       const t = (now - t0) / 1000, dC = head + vCar * t, dR = vR * t;
       // take off so that the top of the roll comes right over the car
       if (jumpAt === null && dC - dR <= 0.65) jumpAt = t;
-      const u = jumpAt === null ? 0 : Math.min(1, (t - jumpAt) / air), flying = u > 0 && u < 1, rolling = flying && !reduced;
+      const u = jumpAt === null ? 0 : Math.min(1, (t - jumpAt) / air), flying = u > 0 && u < 1, rolling = flying;
       const roll = flying ? 2 * Math.PI * u : 0, lift = flying ? R * (1 - Math.cos(roll)) : 0, out = rolling ? swing * Math.sin(roll) : 0;
       const [cx, cy] = at(dC), [gx, gy] = at(dR), rx = gx + perpX * out, ry = gy + perpY * out;
       car.setAttribute("transform", `translate(${cx.toFixed(1)} ${cy.toFixed(1)})`);
