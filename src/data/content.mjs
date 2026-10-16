@@ -2406,7 +2406,15 @@ export const downloads = [
 // (x, y, height), `major` ones carry a name pill in the scene, `alarm` marks
 // the one that raises the storm alarm, and each `reads` entry drifts about
 // `base` by `swing` and moves to `storm` during the storm. Every figure is
-// illustrative, none is live data.
+// illustrative, none is live data. A sensor's `layer` (above, street or
+// below) is the layer it travels with when the district is taken apart.
+// `strata` says what each of those three layers holds, and `asset` is the
+// one asset in the district that can be opened and taken apart (`pin` is the
+// sensor its way in is drawn from when the district is apart): its `parts`
+// run top to bottom, `eds` marks the ones EDS supplies (each fact in their
+// `note` is from the datasheets in src/assets/docs or the pages above), and
+// `sensor` ties a part to the reading it shows. city-scene.js draws each part
+// by its id.
 export const city = [
   {
     id: "sewer",
@@ -2416,15 +2424,34 @@ export const city = [
     services: ["s:sewer-flow-monitoring", "s:inflow-infiltration-studies", "s:blockage-overflow-alarms", "s:sewer-model-calibration"],
     products: [["Detectronic MSFM flow meter", "p:detectronic"], ["LIDoTT Alarm", "lidott"], ["Hach Flo-Dar", "p:hach-flow"]],
     sensors: [
-      { id: "msfm", name: "Detectronic MSFM", instrument: "Area velocity flow meter", ref: "p:detectronic", icon: "gauge", at: [6.78, 3.05, 0], major: true,
+      { id: "msfm", layer: "below", name: "Detectronic MSFM", instrument: "Area velocity flow meter", ref: "p:detectronic", icon: "gauge", at: [6.78, 3.05, 0], major: true,
         reads: [{ label: "Depth", unit: "mm", base: 212, swing: 6, storm: 1480, decimals: 0 }, { label: "Velocity", unit: "m/s", base: 0.76, swing: 0.03, storm: 1.9, decimals: 2 }, { label: "Flow", unit: "L/s", base: 41.8, swing: 1.2, storm: 310, decimals: 1 }] },
-      { id: "lidott", name: "LIDoTT Alarm", instrument: "Level alarm, MH 14", ref: "lidott", icon: "siren", at: [8.13, 3.05, 0], major: true, alarm: true,
+      { id: "lidott", layer: "below", name: "LIDoTT Alarm", instrument: "Level alarm, MH 14", ref: "lidott", icon: "siren", at: [8.13, 3.05, 0], major: true, alarm: true,
         reads: [{ label: "Level", unit: "m", base: 0.91, swing: 0.02, storm: 3.04, decimals: 2 }, { label: "State", unit: "", text: "normal" }] },
-      { id: "flodar", name: "Hach Flo-Dar", instrument: "Radar velocity", ref: "p:hach-flow", icon: "radio", at: [6.78, 0.5, 0],
+      { id: "flodar", layer: "below", name: "Hach Flo-Dar", instrument: "Radar velocity", ref: "p:hach-flow", icon: "radio", at: [6.78, 0.5, 0],
         reads: [{ label: "Flow", unit: "L/s", base: 12.4, swing: 0.6, storm: 96, decimals: 1 }] },
-      { id: "lidott-smart", name: "LIDoTT Smart", instrument: "Depth logger", ref: "lidott", icon: "activity", at: [8.13, 1.0, 0],
+      { id: "lidott-smart", layer: "below", name: "LIDoTT Smart", instrument: "Depth logger", ref: "lidott", icon: "activity", at: [8.13, 1.0, 0],
         reads: [{ label: "Depth", unit: "mm", base: 160, swing: 4, storm: 1120, decimals: 0 }] },
     ],
+    strata: {
+      above: "Eleven homes, each draining through its own lateral.",
+      street: "Two lanes, six maintenance holes and the EDS crew at MH 9.",
+      below: "Two lane mains, the house laterals and a cracked joint letting groundwater in.",
+    },
+    asset: {
+      id: "mh9", pin: "msfm", name: "Maintenance hole 9", button: "See inside maintenance hole 9",
+      caption: "How the Detectronic MSFM is installed: the sensor rides a ring locked inside the pipe, and the logger is fixed to the step irons.",
+      parts: [
+        { id: "cover", name: "Cover and frame", note: "At road level. The only part a passer-by sees." },
+        { id: "unit", name: "MSFM S2.5T logger", eds: true, ref: "p:detectronic", note: "Fixed to the step irons. Logs every 1 to 60 minutes and sends over 2G, LTE-M or NB-IoT." },
+        { id: "battery", name: "ATEX battery pack", eds: true, ref: "p:detectronic", note: "12 V rechargeable lithium-ion: 30 weeks or more at a 5 minute logging rate." },
+        { id: "shaft", name: "Shaft rings and step irons", note: "The way down for the crew, and the fixing for the logger." },
+        { id: "base", name: "Base and benching", note: "Shapes the flow through the chamber." },
+        { id: "pipe", name: "Sewer pipe", note: "The flow being measured." },
+        { id: "ring", name: "Stainless fixing ring", eds: true, ref: "p:detectronic", note: "A scissor expander locks it inside the pipe; the cable is tied along its trailing edge." },
+        { id: "sensor", name: "Area velocity sensor", eds: true, ref: "p:detectronic", sensor: "msfm", note: "Velocity from dual piezoelectric elements, depth from hydrostatic pressure, and temperature." },
+      ],
+    },
   },
   {
     id: "pump",
@@ -2434,13 +2461,30 @@ export const city = [
     services: ["s:pump-station-monitoring", "s:real-time-monitoring", "s:scada-telemetry-integration", "s:network-assessment"],
     products: [["EDS Pump Station Manager", "p:eds"], ["EMS data loggers", "p:eds"], ["LIDoTT R level sensor", "p:detectronic"]],
     sensors: [
-      { id: "psm", name: "Pump Station Manager", instrument: "Wet well level and pump runs", ref: "p:eds", icon: "cpu", at: [5.95, 9.3, 14], major: true,
+      { id: "psm", layer: "above", name: "Pump Station Manager", instrument: "Wet well level and pump runs", ref: "p:eds", icon: "cpu", at: [5.95, 9.3, 14], major: true,
         reads: [{ label: "Wet well", unit: "m", base: 1.12, swing: 0.18, storm: 2.61, decimals: 2 }, { label: "Pumps running", unit: "of 2", base: 1, swing: 0, storm: 2, decimals: 0 }] },
-      { id: "lidott-r", name: "LIDoTT R", instrument: "Radar and pressure level", ref: "p:detectronic", icon: "waves", at: [6.3, 8.05, 7], major: true,
+      { id: "lidott-r", layer: "below", name: "LIDoTT R", instrument: "Radar and pressure level", ref: "p:detectronic", icon: "waves", at: [6.3, 8.05, 7], major: true,
         reads: [{ label: "Level", unit: "m", base: 1.12, swing: 0.18, storm: 2.61, decimals: 2 }] },
-      { id: "ems", name: "EMS data logger", instrument: "Data logger", ref: "p:eds", icon: "radio-tower", at: [6.1, 9.15, 32],
+      { id: "ems", layer: "above", name: "EMS data logger", instrument: "Data logger", ref: "p:eds", icon: "radio-tower", at: [6.1, 9.15, 32],
         reads: [{ label: "Reported", unit: "", text: "reported" }] },
     ],
+    strata: {
+      above: "The pump house and the control cabinet with the Pump Station Manager.",
+      street: "The fenced compound, the wet well lid and the service van.",
+      below: "The wet well, its two pumps and the rising main to the trunk sewer.",
+    },
+    asset: {
+      id: "wetwell", pin: "lidott-r", name: "Wet well", button: "See inside the wet well",
+      caption: "Wet well level from a LIDoTT R at the top of the chamber, and pump runs read by the Pump Station Manager.",
+      parts: [
+        { id: "cabinet", name: "Pump Station Manager", eds: true, ref: "p:eds", sensor: "psm", note: "The EDS flagship since 1991, designed and built by EDS." },
+        { id: "hatch", name: "Access hatch", note: "Opened to lift the pumps or service the sensor." },
+        { id: "radar", name: "LIDoTT R", eds: true, ref: "p:detectronic", sensor: "lidott-r", note: "Radar to 7 m below the sensor; its pressure sensor takes over up to 10 m above, with no gap." },
+        { id: "well", name: "Wet well", note: "Where the flow collects between pump runs." },
+        { id: "pumps", name: "Two submersible pumps", note: "On guide rails, so either can be lifted out." },
+        { id: "rising", name: "Rising main", note: "Carries the pumped flow to the trunk sewer." },
+      ],
+    },
   },
   {
     id: "plant",
@@ -2450,15 +2494,31 @@ export const city = [
     services: ["s:water-quality-monitoring", "o:wastewater-monitoring", "s:closed-channel-flow", "s:auditing-calibration"],
     products: [["Aquamonitrix nitrate analyser", "p:aquamonitrix"], ["ORI samplers", "p:ori"], ["Dynaflox ultrasonic meters", "p:dynaflox"]],
     sensors: [
-      { id: "dynaflox", name: "Dynaflox ultrasonic meter", instrument: "Closed channel flow", ref: "p:dynaflox", icon: "gauge", at: [0.9, 5.75, 6], major: true,
+      { id: "dynaflox", layer: "above", name: "Dynaflox ultrasonic meter", instrument: "Closed channel flow", ref: "p:dynaflox", icon: "gauge", at: [0.9, 5.75, 6], major: true,
         reads: [{ label: "Inlet flow", unit: "L/s", base: 180, swing: 8, storm: 420, decimals: 0 }] },
-      { id: "aquamonitrix", name: "Aquamonitrix analyser", instrument: "Nitrate and nitrite", ref: "p:aquamonitrix", icon: "flask-conical", at: [1.95, 7.6, 0], major: true,
+      { id: "aquamonitrix", layer: "street", name: "Aquamonitrix analyser", instrument: "Nitrate and nitrite", ref: "p:aquamonitrix", icon: "flask-conical", at: [1.95, 7.6, 0], major: true,
         reads: [{ label: "Nitrate", unit: "ppm", base: 2.1, swing: 0.1, storm: 3.4, decimals: 1 }] },
-      { id: "ori-plant", name: "ORI sampler", instrument: "Composite sampling", ref: "p:ori", icon: "test-tube", at: [3.3, 9.65, 7],
+      { id: "ori-plant", layer: "above", name: "ORI sampler", instrument: "Composite sampling", ref: "p:ori", icon: "test-tube", at: [3.3, 9.65, 7],
         reads: [{ label: "Sample", unit: "of 24", base: 14, swing: 0, storm: 19, decimals: 0 }] },
-      { id: "sludge", name: "EDS ultrasonic level sensor", instrument: "Tank level", ref: "p:eds", icon: "activity", at: [3.0, 6.3, 30],
+      { id: "sludge", layer: "above", name: "EDS ultrasonic level sensor", instrument: "Tank level", ref: "p:eds", icon: "activity", at: [3.0, 6.3, 30],
         reads: [{ label: "Level", unit: "%", base: 71, swing: 1, storm: 74, decimals: 0 }] },
     ],
+    strata: {
+      above: "Screens, clarifiers, the aeration basin and two digesters.",
+      street: "Site roads, walkways and the fenced boundary.",
+      below: "The inlet sewer arriving, and the outfall leaving for the river.",
+    },
+    asset: {
+      id: "inlet", pin: "dynaflox", name: "Plant inlet main", button: "See inside the plant inlet",
+      caption: "Flow into the plant, metered from outside the pipe: no cut into the line and nothing in the flow.",
+      parts: [
+        { id: "transmitter", name: "Dynaflox flow transmitter", eds: true, ref: "p:dynaflox", sensor: "dynaflox", note: "Wall mounted, with a keypad and display. Works out the flow from the transducers." },
+        { id: "cable", name: "Transducer cables", note: "One to each transducer." },
+        { id: "transducers", name: "Ultrasonic transducers", eds: true, ref: "p:dynaflox", note: "A pair strapped to the pipe, timing sound pulses with and against the flow." },
+        { id: "straps", name: "Mounting straps", note: "Hold the transducers at their set spacing." },
+        { id: "pipe", name: "Inlet main", note: "Full of flow, and never cut for the meter." },
+      ],
+    },
   },
   {
     id: "industry",
@@ -2468,15 +2528,33 @@ export const city = [
     services: ["s:trade-waste", "s:sampling-programs", "s:equipment-rental", "s:auditing-calibration"],
     products: [["ORI ATEX samplers", "p:ori"], ["MicroLevel MICROSAMPLER", "p:microlevel"], ["Dynaflox flow meters", "p:dynaflox"]],
     sensors: [
-      { id: "ori-atex", name: "ORI ATEX sampler", instrument: "Hazardous-area sampling", ref: "p:ori", icon: "shield-check", at: [10.6, 7.6, 12], major: true,
+      { id: "ori-atex", layer: "above", name: "ORI ATEX sampler", instrument: "Hazardous-area sampling", ref: "p:ori", icon: "shield-check", at: [10.6, 7.6, 12], major: true,
         reads: [{ label: "Bottle", unit: "of 24", base: 9, swing: 0, storm: 11, decimals: 0 }] },
-      { id: "dynaflox-tw", name: "Dynaflox flow meter", instrument: "Discharge flow", ref: "p:dynaflox", icon: "gauge", at: [11.6, 7.95, 7], major: true,
+      { id: "dynaflox-tw", layer: "above", name: "Dynaflox flow meter", instrument: "Discharge flow", ref: "p:dynaflox", icon: "gauge", at: [11.6, 7.95, 7], major: true,
         reads: [{ label: "Flow", unit: "L/s", base: 3.2, swing: 0.2, storm: 3.6, decimals: 1 }] },
-      { id: "ph-tw", name: "EDS pH sensor", instrument: "Discharge quality", ref: "p:eds", icon: "flask-conical", at: [10.85, 7.8, 0],
+      { id: "ph-tw", layer: "below", name: "EDS pH sensor", instrument: "Discharge quality", ref: "p:eds", icon: "flask-conical", at: [10.85, 7.8, 0],
         reads: [{ label: "pH", unit: "", base: 7.4, swing: 0.05, storm: 7.1, decimals: 1 }] },
-      { id: "microsampler", name: "MicroLevel MICROSAMPLER", instrument: "Refrigerated composite", ref: "p:microlevel", icon: "test-tube", at: [11.9, 9.6, 0],
+      { id: "microsampler", layer: "street", name: "MicroLevel MICROSAMPLER", instrument: "Refrigerated composite", ref: "p:microlevel", icon: "test-tube", at: [11.9, 9.6, 0],
         reads: [{ label: "Sample", unit: "of 24", base: 6, swing: 0, storm: 8, decimals: 0 }] },
     ],
+    strata: {
+      above: "The shed, the sawtooth works, two stacks and the tank farm.",
+      street: "Loading docks, the weighbridge and the trade-waste point.",
+      below: "The trade-waste connection into the sewer main.",
+    },
+    asset: {
+      id: "tradewaste", pin: "ph-tw", name: "Trade-waste point", button: "See inside the trade-waste point",
+      caption: "Where the estate's discharge is measured and sampled before it reaches the sewer.",
+      parts: [
+        { id: "sampler", name: "ORI ATEX sampler", eds: true, ref: "p:ori", sensor: "ori-atex", note: "Certified for hazardous areas. Fills one bottle at a time from a rack of 24." },
+        { id: "meter", name: "Dynaflox flow meter", eds: true, ref: "p:dynaflox", sensor: "dynaflox-tw", note: "Measures the discharge leaving the site." },
+        { id: "cover", name: "Inspection chamber cover", note: "Lifted to service the sensor and the suction line." },
+        { id: "hose", name: "Suction line", note: "Draws each sample from the flow." },
+        { id: "ph", name: "EDS pH sensor", eds: true, ref: "p:eds", sensor: "ph-tw", note: "Hung in the flow. EDS makes its own pH, EC and turbidity sensors." },
+        { id: "chamber", name: "Inspection chamber", note: "The last access point before the public sewer." },
+        { id: "pipe", name: "Discharge pipe", note: "To the sewer main under the road." },
+      ],
+    },
   },
   {
     id: "river",
@@ -2486,33 +2564,64 @@ export const city = [
     services: ["o:environmental-monitoring", "s:water-quality-monitoring", "s:rainfall-monitoring", "o:network-thermal-monitoring"],
     products: [["iLab multi-parameter sonde", "p:eds"], ["Beadedstream thermistor strings", "p:beadedstream"], ["EDS pH, EC and turbidity sensors", "p:eds"]],
     sensors: [
-      { id: "rimco", name: "RIMCO 7499 rain gauge", instrument: "Tipping bucket", ref: "s:rainfall-monitoring", icon: "cloud-rain", at: [0.75, 0.75, 9], major: true,
+      { id: "rimco", layer: "above", name: "RIMCO 7499 rain gauge", instrument: "Tipping bucket", ref: "s:rainfall-monitoring", icon: "cloud-rain", at: [0.75, 0.75, 9], major: true,
         reads: [{ label: "Rain", unit: "mm/h", base: 0, swing: 0, storm: 18, decimals: 0 }, { label: "Last 24 h", unit: "mm", base: 2, swing: 0, storm: 24, decimals: 0 }] },
-      { id: "ilab", name: "iLab 901", instrument: "Multi-parameter analytical sensor", ref: "p:eds", icon: "flask-conical", at: [2.3, 2.3, 0], major: true,
+      { id: "ilab", layer: "street", name: "iLab 901", instrument: "Multi-parameter analytical sensor", ref: "p:eds", icon: "flask-conical", at: [2.3, 2.3, 0], major: true,
         reads: [{ label: "Turbidity", unit: "NTU", base: 8, swing: 1.5, storm: 140, decimals: 0 }, { label: "EC", unit: "µS/cm", base: 410, swing: 6, storm: 230, decimals: 0 }, { label: "Temperature", unit: "°C", base: 17.2, swing: 0.2, storm: 15.9, decimals: 1 }] },
-      { id: "therm", name: "Beadedstream thermistor string", instrument: "Temperature profile", ref: "p:beadedstream", icon: "thermometer", at: [3.7, 3.35, 0],
+      { id: "therm", layer: "below", name: "Beadedstream thermistor string", instrument: "Temperature profile", ref: "p:beadedstream", icon: "thermometer", at: [3.7, 3.35, 0],
         reads: [{ label: "Bed temperature", unit: "°C", base: 16.8, swing: 0.1, storm: 15.4, decimals: 1 }] },
-      { id: "turb", name: "EDS turbidity sensor", instrument: "At the outfall", ref: "p:eds", icon: "droplets", at: [1.6, 2.5, 4],
+      { id: "turb", layer: "street", name: "EDS turbidity sensor", instrument: "At the outfall", ref: "p:eds", icon: "droplets", at: [1.6, 2.5, 4],
         reads: [{ label: "Turbidity", unit: "NTU", base: 6, swing: 1, storm: 95, decimals: 0 }] },
     ],
+    strata: {
+      above: "The weather station on its mast and the gauging weir.",
+      street: "The river, its banks, a footbridge and the reed bed.",
+      below: "The river bed, the thermistor string and the plant outfall.",
+    },
+    asset: {
+      id: "raingauge", pin: "rimco", name: "Rain gauge", button: "See inside the rain gauge",
+      caption: "A RIMCO 7499 tipping bucket gauge: each tip is counted, so the logger knows how hard it is raining.",
+      parts: [
+        { id: "funnel", name: "Bronze funnel", note: "Collects the rain and feeds it to the bucket." },
+        { id: "bucket", name: "Tipping bucket", eds: true, ref: "s:rainfall-monitoring", sensor: "rimco", note: "Tips each time one side fills, and every tip is counted." },
+        { id: "body", name: "Stainless steel cylinder", note: "Keeps wind and debris away from the bucket." },
+        { id: "base", name: "Levelling base", note: "Sets the bucket level so every tip holds the same rain." },
+      ],
+    },
   },
   {
     id: "cbd",
-    name: "City & facilities",
+    name: "CBD & facilities",
     icon: "building-2",
     blurb: "Buildings and structures scored 24/7 and managed as one service.",
     services: ["s:facility-management", "o:structure-performance", "o:asset-network-assessment"],
     products: [["EDS Asset Score (EAS)", "o:structure-performance"], ["EPM-2 pressure logger", "p:eds"], ["Metalog 4G logger", "p:eds"]],
     sensors: [
-      { id: "eas", name: "EDS Asset Score", instrument: "Light, moisture, seismic and temperature sensors", ref: "o:structure-performance", icon: "building-2", at: [11.35, 1.05, 88], major: true,
+      { id: "eas", layer: "above", name: "EDS Asset Score", instrument: "Light, moisture, seismic and temperature sensors", ref: "o:structure-performance", icon: "building-2", at: [11.35, 1.05, 88], major: true,
         reads: [{ label: "Score", unit: "/ 1000", base: 930, swing: 2, storm: 928, decimals: 0 }] },
-      { id: "epm2", name: "EPM-2 pressure logger", instrument: "Water main pressure", ref: "p:eds", icon: "gauge", at: [14.6, 4.2, 0], major: true,
+      { id: "epm2", layer: "below", name: "EPM-2 pressure logger", instrument: "Water main pressure", ref: "p:eds", icon: "gauge", at: [14.6, 4.2, 0], major: true,
         reads: [{ label: "Pressure", unit: "m head", base: 52, swing: 0.8, storm: 50, decimals: 0 }] },
-      { id: "eas2", name: "EDS Asset Score", instrument: "Light, moisture, seismic and temperature sensors", ref: "o:structure-performance", icon: "building-2", at: [13.1, 2.8, 74],
+      { id: "eas2", layer: "above", name: "EDS Asset Score", instrument: "Light, moisture, seismic and temperature sensors", ref: "o:structure-performance", icon: "building-2", at: [13.1, 2.8, 74],
         reads: [{ label: "Score", unit: "/ 1000", base: 962, swing: 2, storm: 961, decimals: 0 }] },
-      { id: "metalog-cbd", name: "Metalog 4G logger", instrument: "Telemetry", ref: "p:eds", icon: "radio-tower", at: [12.1, 4.3, 6],
+      { id: "metalog-cbd", layer: "above", name: "Metalog 4G logger", instrument: "Telemetry", ref: "p:eds", icon: "radio-tower", at: [12.1, 4.3, 6],
         reads: [{ label: "Reported", unit: "", text: "reported" }] },
     ],
+    strata: {
+      above: "Towers scored around the clock by the EDS Asset Score.",
+      street: "The plaza, its fountain and the transit canopy.",
+      below: "Tower foundations and the water main the EPM-2 logger watches.",
+    },
+    asset: {
+      id: "tower", pin: "eas", name: "Scored tower", button: "See inside the tower",
+      caption: "Light, moisture, seismic and temperature sensors at critical structure points, combined into one score from 0 to 1000.",
+      parts: [
+        { id: "roof", name: "Roof and plant", note: "Plant room, air handling units and the mast." },
+        { id: "upper", name: "Upper floors", note: "Offices." },
+        { id: "eas", name: "EDS Asset Score sensors", eds: true, ref: "o:structure-performance", sensor: "eas", note: "Placed at critical structure points and scored 0 to 1000, 24/7." },
+        { id: "lower", name: "Lower floors", note: "Offices and the lobby." },
+        { id: "base", name: "Basement and foundations", note: "Where the structure meets the ground." },
+      ],
+    },
   },
   {
     id: "ops",
@@ -2522,11 +2631,28 @@ export const city = [
     services: ["flowsense", "s:data-analysis-reporting", "s:real-time-monitoring", "s:data-as-a-service"],
     products: [["EDS FlowSense platform", "flowsense"], ["SCADA connection", "flowsense"], ["Alarms by SMS and email", "flowsense"]],
     sensors: [
-      { id: "flowsense", name: "EDS FlowSense", instrument: "Platform", ref: "flowsense", icon: "monitor-dot", at: [8.8, 6.5, 78], major: true,
+      { id: "flowsense", layer: "above", name: "EDS FlowSense", instrument: "Platform", ref: "flowsense", icon: "monitor-dot", at: [8.8, 6.5, 78], major: true,
         reads: [{ label: "Sites online", unit: "", base: 24, swing: 0, storm: 24, decimals: 0 }, { label: "Open alarms", unit: "", base: 0, swing: 0, storm: 1, decimals: 0 }, { label: "Availability", unit: "%", base: 99.95, swing: 0, storm: 99.95, decimals: 2 }] },
-      { id: "scada", name: "SCADA connection", instrument: "Telemetry integration", ref: "s:scada-telemetry-integration", icon: "plug-zap", at: [8.3, 8.3, 18],
+      { id: "scada", layer: "above", name: "SCADA connection", instrument: "Telemetry integration", ref: "s:scada-telemetry-integration", icon: "plug-zap", at: [8.3, 8.3, 18],
         reads: [{ label: "Link", unit: "", text: "connected" }] },
     ],
+    strata: {
+      above: "The operations centre, its wall of screens and the telemetry mast.",
+      street: "The yard and the EDS service fleet.",
+      below: "No pipes here. Readings arrive over 4G, not under the ground.",
+    },
+    asset: {
+      id: "datapath", pin: "flowsense", name: "How a reading travels", button: "See how a reading travels",
+      caption: "From the instrument in the network to the people who act on it. Every reading arrives in one place: EDS FlowSense.",
+      parts: [
+        { id: "people", name: "Alarms by SMS and email", eds: true, ref: "flowsense", note: "The crew and the operators hear about it first." },
+        { id: "scada", name: "SCADA connection", eds: true, ref: "s:scada-telemetry-integration", sensor: "scada", note: "Readings into the SCADA system the utility already runs." },
+        { id: "flowsense", name: "EDS FlowSense", eds: true, ref: "flowsense", sensor: "flowsense", note: "Every reading arrives in one place." },
+        { id: "network", name: "4G network", note: "Loggers send their readings in real time." },
+        { id: "loggers", name: "Loggers", eds: true, ref: "p:eds", note: "EDS EMS data loggers, the 4G Metalog, and the modem built into each LIDoTT Alarm." },
+        { id: "instruments", name: "Instruments in the network", note: "Flow meters, level sensors, samplers and analysers." },
+      ],
+    },
   },
 ];
 
@@ -2535,7 +2661,7 @@ export const city = [
 // filled in by city.js; `states` are the LIDoTT alarm words shown in the
 // scene, and `text` the words a sensor shows instead of a number.
 export const cityUi = {
-  stageLabel: "Interactive map of an illustrative city. Each district shows the EDS services and products used there.",
+  stageLabel: "Interactive map of an illustrative Australian capital city. Each district shows the EDS services and products used there.",
   zoneLabel: "{name}: show EDS services and products",
   tabsLabel: "City districts",
   toolbarLabel: "City controls",
@@ -2544,7 +2670,7 @@ export const cityUi = {
   sensorsHeading: "Sensors on the map",
   tipLabel: "Sensor readings",
   readingsNote: "Illustrative readings, not live data.",
-  note: "An illustrative city. The readings, alarms and storm are a simulation, not a real network or live data.",
+  note: "An illustrative Australian capital city. The readings, alarms, crews and storm are a simulation, not a real network or live data.",
   hud: {
     label: "Illustrative network readings",
     sparkLabel: "Last 24 h",
@@ -2562,6 +2688,22 @@ export const cityUi = {
     // shown while the sewer is on view
     underItems: [["gauge", "Area velocity flow meter"], ["waves", "Level sensor"], ["radio-tower", "Data logger"]] },
   expandedLabel: "The city, expanded",
+  // taking a district apart into its three layers, and opening its asset
+  explode: {
+    take: "Take it apart", put: "Put it back together", back: "Back to the district", backCity: "Back to the city",
+    strata: { above: "Above ground", street: "Street level", below: "Below ground" },
+    layersLabel: "Layers of {name}", partsLabel: "Parts of {name}", partsHeading: "Parts, top to bottom",
+    caption: "{name}, taken apart. Pick a layer to see what it holds.",
+    assetCaption: "Pick a part to read about it.",
+    productLink: "About this product",
+    live: {
+      district: "{name} taken apart into three layers.",
+      districtBack: "{name} put back together.",
+      asset: "{name} opened and taken apart into {n} parts.",
+      assetTogether: "{name} put back together.",
+      assetClosed: "{name} closed.",
+    },
+  },
   logLabel: "Operations messages", logStamp: "06:40 · heartbeat", heartbeat: "Daily heartbeat: 24 sensors operational",
   live: {
     select: "{name} selected. {services} services and {products} products.",
@@ -2588,7 +2730,7 @@ export const cityStorm = {
     { n: 1, at: 0, zone: "river", caption: "Rain starts. The RIMCO 7499 gauge tips at 18 mm/h.", why: "Rain data shows why the network changed.", link: "s:rainfall-monitoring", hud: { rain: 18, primary: 212, well: 1.12, alarms: 0 }, announce: true, announceText: "Rain gauge tipping, 18 millimetres an hour." },
     { n: 2, at: 4, zone: "sewer", caption: "Gully pits and three connected downpipes push inflow into the sewer.", why: "Inflow and infiltration studies find where the rain gets in.", link: "s:inflow-infiltration-studies", hud: { rain: 18, primary: 640, well: 1.38, alarms: 0 } },
     { n: 3, at: 8, zone: "sewer", caption: "Level passes 2.0 m at MH 14. LIDoTT Alarm: High.", sub: [{ at: 10, state: "highHigh", caption: "3.0 m. High-high. An SMS and email go out.", log: "ALARM High-high level 3.04 m · MH 14 · LIDoTT Alarm", logStamp: "06:52 · SMS and email", sms: true }], why: "Level alarms warn before a surcharge becomes a spill.", link: "s:blockage-overflow-alarms", hud: { rain: 22, primary: 1480, well: 1.62, alarms: 1 }, announce: true, announceText: "Maintenance hole 14 surcharging. LIDoTT Alarm high-high. SMS sent to the operations centre." },
-    { n: 4, at: 12, zone: "ops", caption: "FlowSense receives the alarm and raises it with the crew.", why: "Every alarm lands in one place.", link: "flowsense", hud: { rain: 22, primary: 2030, well: 2.05, alarms: 1 } },
+    { n: 4, at: 12, zone: "ops", caption: "FlowSense receives the alarm and sends an EDS crew to MH 14.", why: "Every alarm lands in one place.", link: "flowsense", hud: { rain: 22, primary: 2030, well: 2.05, alarms: 1 }, log: "Crew dispatched to MH 14", logStamp: "06:54 · FlowSense" },
     { n: 5, at: 15, zone: "pump", caption: "Both pumps run as the wet well reaches 2.61 m.", why: "Pump station monitoring shows whether start and stop levels suit the flows arriving.", link: "s:pump-station-monitoring", hud: { rain: 20, primary: 1900, well: 2.61, alarms: 1 }, log: "Pump station: both pumps running, wet well 2.61 m", logStamp: "06:58 · FlowSense", announce: true, announceText: "Pump station running both pumps." },
     { n: 6, at: 18, zone: "plant", caption: "The plant inlet spikes to 420 L/s on the Dynaflox meter.", why: "Closed channel flow metered without cutting the pipe.", link: "s:closed-channel-flow", hud: { rain: 14, primary: 1600, well: 2.40, alarms: 1 } },
     { n: 7, at: 20.5, zone: "river", caption: "At the river outfall the turbidity sensor reads 95 NTU.", why: "Water quality monitoring, from baseline to compliance.", link: "s:water-quality-monitoring", hud: { rain: 8, primary: 1320, well: 2.10, alarms: 1 } },
