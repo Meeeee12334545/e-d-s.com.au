@@ -976,12 +976,14 @@
     openAsset(id, from, b);
   }));
 
-  /* ---- now and then, a red roadster jumps the car in front ---- */
+  /* ---- every so often, a white roadster barrel-rolls over the car in front ---- */
   // Ambient, like the rest of the traffic: it never picks or opens anything.
-  // Every minute or so, while the whole city is on screen, a low white
+  // Every 15 to 30 seconds, while the whole city is on screen, a low white
   // roadster comes up behind a slower car on a random road, fires its
-  // compressed-air thrusters, kickflips over the car on them and drives off.
-  // Under reduced motion it hops without the flip.
+  // compressed-air thrusters and barrel-rolls over it: one turn about its
+  // long axis while it swings out to one side, over the top of the car
+  // (upside down at the top) and down the other side. Under reduced motion it
+  // hops straight over without the roll.
   const LANES = [
     { from: [-0.9, 4.85], to: [15.9, 4.85], dir: "e" }, { from: [15.9, 5.15], to: [-0.9, 5.15], dir: "w" },
     { from: [5.15, -0.9], to: [5.15, 10.9], dir: "s" }, { from: [9.85, 10.9], to: [9.85, -0.9], dir: "n" },
@@ -1004,24 +1006,31 @@
     const live = [];
     let lastPuff = 0, nextPuff = 0;
     trafficLayer.appendChild(g);
-    const vCar = 1.0, vR = 2.4, head = 3.2, air = 0.8, H = 17, t0 = performance.now();
+    // The roll: the car turns once about its long axis while its path circles
+    // the line of travel, R px high at the side and 2R at the top, and `swing`
+    // tiles out to the side along the lane's perpendicular on the ground.
+    const vCar = 1.0, vR = 2.4, head = 3.2, air = 0.95, R = 13, swing = 0.36, t0 = performance.now();
+    const lx = (fx1 - fx0) / L, ly = (fy1 - fy0) / L, [perpX, perpY] = CityScene.P(-ly, lx), pl = Math.hypot(perpX, perpY);
+    const angle = Math.atan2(dyu, dxu) * 180 / Math.PI;
     let jumpAt = null;
     const step = (now) => {
       const t = (now - t0) / 1000, dC = head + vCar * t, dR = vR * t;
-      if (jumpAt === null && dC - dR <= 0.9) jumpAt = t;
-      const u = jumpAt === null ? 0 : Math.min(1, (t - jumpAt) / air), flying = u > 0 && u < 1;
-      const [cx, cy] = at(dC), [rx, ry] = at(dR), lift = flying ? 4 * H * u * (1 - u) : 0;
+      // take off so that the top of the roll comes right over the car
+      if (jumpAt === null && dC - dR <= 0.65) jumpAt = t;
+      const u = jumpAt === null ? 0 : Math.min(1, (t - jumpAt) / air), flying = u > 0 && u < 1, rolling = flying && !reduced;
+      const roll = flying ? 2 * Math.PI * u : 0, lift = flying ? R * (1 - Math.cos(roll)) : 0, out = rolling ? swing * Math.sin(roll) : 0;
+      const [cx, cy] = at(dC), [gx, gy] = at(dR), rx = gx + perpX * out, ry = gy + perpY * out;
       car.setAttribute("transform", `translate(${cx.toFixed(1)} ${cy.toFixed(1)})`);
-      // the flip: a full turn about the car's long axis, drawn as a vertical squash through zero
-      const sy = flying && !reduced ? Math.cos(2 * Math.PI * u) : 1, tilt = flying && !reduced ? Math.sin(2 * Math.PI * u) * 10 : 0;
-      rs.setAttribute("transform", `translate(${rx.toFixed(1)} ${(ry - lift).toFixed(1)}) translate(0 -2) rotate(${tilt.toFixed(1)}) scale(1 ${sy.toFixed(3)}) translate(0 2)`);
+      // turning about its long axis: squashed across its length through zero, mirrored when upside down
+      const sy = rolling ? Math.cos(roll) : 1;
+      rs.setAttribute("transform", `translate(${rx.toFixed(1)} ${(ry - lift).toFixed(1)}) translate(0 -2.6) rotate(${angle.toFixed(1)}) scale(1 ${sy.toFixed(3)}) rotate(${(-angle).toFixed(1)}) translate(0 2.6)`);
       shadow.setAttribute("cx", rx.toFixed(1)); shadow.setAttribute("cy", ry.toFixed(1));
-      shadow.setAttribute("opacity", flying ? (0.5 * (1 - lift / H / 1.4)).toFixed(2) : "0");
+      shadow.setAttribute("opacity", flying ? (0.5 * (1 - lift / (2 * R) / 1.3)).toFixed(2) : "0");
       // the thrusters fire from just before take-off until the car lands
-      const firing = jumpAt !== null ? t - jumpAt < air + 0.04 : dC - dR <= 1.25;
-      const roll = flying && !reduced ? 2 * Math.PI * u : 0;
-      // the underside's direction on screen: down at rest, up when the car is upside down
-      let jx = -dyu * Math.sin(roll) * 0.85, jy = Math.cos(roll);
+      const firing = jumpAt !== null ? t - jumpAt < air + 0.04 : dC - dR <= 1.0;
+      // the underside's direction on screen: down on the road, out to the side
+      // through the roll, up when the car is upside down
+      let jx = rolling ? (perpX / pl) * Math.sin(roll) * 0.9 : 0, jy = (rolling ? (perpY / pl) * Math.sin(roll) * 0.9 : 0) + Math.cos(rolling ? roll : 0);
       const jl = Math.hypot(jx, jy) || 1; jx /= jl; jy /= jl;
       const bodyX = rx, bodyY = ry - lift - 2.6;
       jets.forEach((jet, k) => {
@@ -1042,16 +1051,16 @@
         p.setAttribute("cx", (p.x + p.vx * k / 4).toFixed(1)); p.setAttribute("cy", (p.y + p.vy * k / 4).toFixed(1));
         p.setAttribute("r", (1.6 + age * 11).toFixed(1)); p.setAttribute("opacity", (0.88 * (1 - age / 0.7)).toFixed(2));
       }
-      if (dR > L + 1 && dC > L + 1) { g.remove(); stunting = false; scheduleStunt(40000 + Math.random() * 50000); return; }
+      if (dR > L + 1 && dC > L + 1) { g.remove(); stunting = false; scheduleStunt(15000 + Math.random() * 15000); return; }
       requestAnimationFrame(step);
     };
     requestAnimationFrame(step);
   }
   function scheduleStunt(ms) {
     clearTimeout(stuntTimer);
-    stuntTimer = setTimeout(() => (state.inView && !document.hidden && state.view === "city" ? stunt() : scheduleStunt(8000)), ms);
+    stuntTimer = setTimeout(() => (state.inView && !document.hidden && state.view === "city" ? stunt() : scheduleStunt(4000)), ms);
   }
-  scheduleStunt(15000 + Math.random() * 20000);
+  scheduleStunt(5000 + Math.random() * 5000);
   // a hook for checking it without waiting: svg.dispatchEvent(new Event("citystunt"))
   svg.addEventListener("citystunt", stunt);
 
