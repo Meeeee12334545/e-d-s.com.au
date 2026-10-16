@@ -930,13 +930,23 @@ add({
     <div class="city-grid" id="city-grid">
       <button type="button" class="city-close" aria-label="${esc(C.cityUi.toolbar.close)}" hidden>${icon("x", false)}</button>
       <div class="city-stage" data-reveal="scale">
+        <div class="city-view">
         <svg id="city" role="group" aria-label="${esc(C.cityUi.stageLabel)}"></svg>
+        <div class="city-asset" id="city-asset" role="group" hidden>
+          <svg class="city-asset-svg" aria-hidden="true" focusable="false"></svg>
+          <div class="city-asset-bar"><button type="button" class="btn btn-ghost city-btn" data-act="asset-back">${icon("arrow-left")}<span></span></button><button type="button" class="btn btn-ghost city-btn" data-act="asset-toggle" aria-pressed="true">${icon("unfold-vertical")}${icon("fold-vertical", false)}<span></span></button></div>
+          <p class="city-asset-detail" aria-live="polite"></p>
+        </div>
+        <div class="city-notes" id="city-notes" role="group" hidden><svg class="city-leaders" aria-hidden="true" focusable="false"></svg><div class="city-notes-col" data-side="left"></div><div class="city-notes-col" data-side="right"></div></div>
         <div class="city-tip" id="city-tip" role="group" aria-label="${esc(C.cityUi.tipLabel)}" hidden><div class="city-tip-body"></div><button type="button" class="city-tip-close" aria-label="${esc(C.cityUi.toolbar.close)}">${icon("x", false)}</button></div>
+        </div>
+        <ol class="city-notes-list" id="city-notes-list" hidden></ol>
       </div>
 
       <div class="city-bar">
         <div class="city-toolbar" role="toolbar" aria-label="${esc(C.cityUi.toolbarLabel)}">
           <button type="button" class="btn btn-ghost city-btn" data-act="storm" aria-pressed="false" aria-describedby="city-note">${icon("cloud-rain")}<span>${esc(C.cityUi.toolbar.storm)}</span></button>
+          <button type="button" class="btn btn-ghost city-btn" data-act="explode" aria-pressed="false">${icon("unfold-vertical")}${icon("fold-vertical", false)}<span>${esc(C.cityUi.explode.take)}</span></button>
           <button type="button" class="btn btn-ghost city-btn" data-act="under" aria-pressed="false">${icon("layers")}<span>${esc(C.cityUi.toolbar.under)}</span></button>
           <button type="button" class="btn btn-ghost city-btn" data-act="expand" aria-pressed="false">${icon("maximize-2")}${icon("minimize-2", false)}<span>${esc(C.cityUi.toolbar.expand)}</span></button>
         </div>
@@ -961,6 +971,7 @@ add({
         <article class="city-card${i === 0 ? " active" : ""}" id="city-card-${z.id}" role="tabpanel" aria-labelledby="city-tab-${z.id}" data-zone="${z.id}" data-name="${esc(z.name)}">
           <div class="city-card-head" style="--i:0"><span class="city-badge holder">${icon(z.icon)}</span><h3>${z.name}</h3></div>
           <p style="--i:1">${z.blurb}</p>
+          <button type="button" class="city-inside" style="--i:1" data-asset="${z.asset.id}" data-zone="${z.id}">${icon("scan-eye")}<span>${esc(z.asset.button)}</span>${icon("arrow-right", false)}</button>
           <div style="--i:2"><h4>Services</h4><ul class="city-list">${z.services.map((s) => `<li><a href="${cityHref(r, s)}">${cityLabel(s)}${icon("arrow-right")}</a></li>`).join("")}</ul></div>
           <div style="--i:3"><h4>Products</h4><div class="chips">${z.products.map(([label, ref]) => `<a class="chip" href="${cityHref(r, ref)}">${esc(label)}</a>`).join("")}</div></div>
           <div style="--i:4"><h4>${esc(C.cityUi.sensorsHeading)}</h4>
@@ -972,7 +983,7 @@ add({
       </div>
     </div>
   </div>
-  <script type="application/json" id="city-data">${JSON.stringify({ ui: C.cityUi, storm: C.cityStorm, zones: C.city.map(({ id, name, sensors }) => ({ id, name, sensors })) }).replace(/</g, "\\u003c")}</script>
+  <script type="application/json" id="city-data">${JSON.stringify({ ui: C.cityUi, storm: C.cityStorm, zones: C.city.map(({ id, name, sensors, strata, asset }) => ({ id, name, sensors, strata, asset: { ...asset, parts: asset.parts.map((p) => ({ ...p, href: p.ref ? cityHref(r, p.ref) : "" })) } })) }).replace(/</g, "\\u003c")}</script>
 </section>
 
 ${waysSection(r)}

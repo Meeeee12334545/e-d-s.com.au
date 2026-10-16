@@ -98,16 +98,20 @@
     }
     return { d: cx + cy + r * 1.42 + (o.bias || 0), nodes };
   }
-  const slab = (x, y, w, d, cls, z = 0, extra) => item(x + w + y + d - 0.5, poly(cls, [P(x, y, z), P(x + w, y, z), P(x + w, y + d, z), P(x, y + d, z)], extra));
+  const slab = (x, y, w, d, cls, z = 0, extra) => lo(item(x + w + y + d - 0.5, poly(cls, [P(x, y, z), P(x + w, y, z), P(x + w, y + d, z), P(x, y + d, z)], extra)));
   // contact shadow under a tall block: the footprint nudged toward the light's far side
   const ao = (x, y, w, d, h) => {
     const o = Math.min(14, h * 0.18), k = [P(x, y), P(x + w, y), P(x + w, y + d), P(x, y + d)].map(([a, b]) => [a + o, b + o * 0.45]);
     return item(0, poly("ao", k));
   };
+  // `s` says which layer a part travels with when its district is taken
+  // apart: "lo" stays at street level (trees, lamps, cars, fences), anything
+  // else lifts with the structures. Symbols placed on a roof lift too.
   const use = (sym, x, y, z = 0, o = {}) => {
     const [px, py] = P(x, y, z);
-    return item(o.d ?? x + y + 0.05, el("use", { href: `#${sym}`, class: o.cls, transform: `translate(${f(px)} ${f(py)})`, style: o.style }));
+    return { ...item(o.d ?? x + y + 0.05, el("use", { href: `#${sym}`, class: o.cls, transform: `translate(${f(px)} ${f(py)})`, style: o.style })), s: z > 0.5 ? "hi" : "lo" };
   };
+  const lo = (it) => ({ ...it, s: "lo" });
   // a fence or railing: the top rail at height z, a post every `posts` tiles
   function rail(points, z, o = {}) {
     const c = o.cls ? ` ${o.cls}` : "", nodes = [pl("rail" + c, points.map(([x, y]) => P(x, y, z)))];
@@ -118,18 +122,20 @@
         nodes.push(seg("post" + c, P(x, y), P(x, y, z)));
       }
     }
-    return { d: o.d ?? Math.max(...points.map(([x, y]) => x + y)), nodes };
+    return { d: o.d ?? Math.max(...points.map(([x, y]) => x + y)), nodes, s: /fence/.test(o.cls || "") ? "lo" : "hi" };
   }
   const pipeline = (points, z, cls, d) => item(d ?? Math.max(...points.map(([x, y]) => x + y)), pl(cls, points.map(([x, y]) => P(x, y, z))));
   const line = (cls, a, d) => item(d, pl(cls, a));
   const flat = (cls, a, d, extra) => item(d, poly(cls, a, extra));
   const tree = (x, y, s = "m", o = {}) => use(`tree-${s}`, x, y, 0, { d: x + y + 0.1, ...o });
+  const gum = (x, y) => use("tree-gum", x, y, 0, { d: x + y + 0.1 });
+  const jac = (x, y) => use("tree-jac", x, y, 0, { d: x + y + 0.1 });
   const manhole = (x, y, o = {}) => {
     const [cx, cy] = P(x, y);
-    return item(x + y, el("ellipse", { class: "mh", cx: f(cx), cy: f(cy), rx: 6, ry: 3 }), el("ellipse", { class: "mh-ring", cx: f(cx), cy: f(cy), rx: 3.4, ry: 1.7 }), o.open && [
+    return lo(item(x + y, el("ellipse", { class: "mh", cx: f(cx), cy: f(cy), rx: 6, ry: 3 }), el("ellipse", { class: "mh-ring", cx: f(cx), cy: f(cy), rx: 3.4, ry: 1.7 }), o.open && [
       el("ellipse", { class: "mh-open", cx: f(cx), cy: f(cy), rx: 5, ry: 2.5 }),
       ...[0, 1, 2].map((i) => seg("det fine", [cx - 4 + i * 4, cy - 1 + i * 0.4], [cx - 4 + i * 4, cy + 1.6 + i * 0.4])),
-    ]);
+    ]));
   };
 
   /* ---- sensors ---- */
@@ -137,7 +143,7 @@
   // the main instruments and the alarm glyph for the level alarm
   const sensorNodes = {};
   function sensor(s, i, ui) {
-    const [x, y, z] = s.at, [cx, cy] = P(x, y, z), g = el("g", { class: "sensor", "data-sensor": s.id, style: `--i:${i}` });
+    const [x, y, z] = s.at, [cx, cy] = P(x, y, z), g = el("g", { class: "sensor", "data-sensor": s.id, "data-layer": s.layer || "street", style: `--i:${i}` });
     el("circle", { class: "ping", cx: f(cx), cy: f(cy), r: 5, style: `--d:${(i * 0.45 + x * 0.1) % 2.6}` }, g);
     el("circle", { class: "ping-dot", cx: f(cx), cy: f(cy), r: 2.4 }, g);
     // every instrument gets a name pill. The main ones show whenever the
@@ -200,17 +206,91 @@
       const b = box(x, y, w, d, h);
       b.nodes[0].style.fill = cols[1]; b.nodes[1].style.fill = cols[2]; b.nodes[2].style.fill = cols[0];
       g.append(...b.nodes);
-      if (o.light) el("circle", { cx: 0, cy: f(P(0, 0, h)[1]), r: 1.3, style: F("var(--aqua)") }, g);
+      if (o.eds) {
+        // EDS livery: a teal band along both sides, and a roof beacon whose
+        // colour is --vb, which flashes amber while a storm is on (site.css)
+        g.append(poly("", [P(x, y + d, h * 0.35), P(x + w, y + d, h * 0.35), P(x + w, y + d, h * 0.62), P(x, y + d, h * 0.62)], { style: F("#0d7c72") }), poly("", [P(x + w, y, h * 0.35), P(x + w, y + d, h * 0.35), P(x + w, y + d, h * 0.62), P(x + w, y, h * 0.62)], { style: F("#119284") }));
+        const [, by] = P(0, 0, h);
+        el("rect", { x: -2, y: f(by - 2.4), width: 4, height: 2.2, rx: 0.9, style: F("var(--vb, #6fcfc1)") }, g);
+      }
       const tail = { e: [[x, y + d * 0.25], [x, y + d * 0.75]], w: [[x + w, y + d * 0.25], [x + w, y + d * 0.75]], s: [[x + w * 0.25, y], [x + w * 0.75, y]], n: [[x + w * 0.25, y + d], [x + w * 0.75, y + d]] }[dir];
       if (tail) for (const [tx, ty] of tail) { const [a, c] = P(tx, ty, h * 0.5); el("circle", { cx: f(a), cy: f(c), r: 0.9, style: F("var(--red)") }, g); }
     });
     const CAR = ["var(--car, #2f8d84)", "#123b37", "#1c5a54"], VAN = ["#f1fffc", "#6fcfc1", "#a9ebe1"], TRK = ["#8ea9a5", "#2a4744", "#40645f"];
     vehicle("car-e", 0.3, 0.16, 4, CAR, "e"); vehicle("car-w", 0.3, 0.16, 4, CAR, "w"); vehicle("car-s", 0.16, 0.3, 4, CAR, "s"); vehicle("car-n", 0.16, 0.3, 4, CAR, "n");
-    vehicle("van-e", 0.34, 0.18, 5, VAN, "e", { light: true }); vehicle("van-s", 0.18, 0.34, 5, VAN, "s", { light: true }); vehicle("van-n", 0.18, 0.34, 5, VAN, "n", { light: true });
-    vehicle("van-x", 0.34, 0.18, 5, VAN, "", { light: true }); vehicle("van-y", 0.18, 0.34, 5, VAN, "", { light: true });
+    vehicle("van-e", 0.34, 0.18, 5, VAN, "e", { eds: true }); vehicle("van-w", 0.34, 0.18, 5, VAN, "w", { eds: true }); vehicle("van-s", 0.18, 0.34, 5, VAN, "s", { eds: true }); vehicle("van-n", 0.18, 0.34, 5, VAN, "n", { eds: true });
+    vehicle("van-x", 0.34, 0.18, 5, VAN, "", { eds: true }); vehicle("van-y", 0.18, 0.34, 5, VAN, "", { eds: true });
+    // light rail: a two-car tram with a dark window band and a pantograph
+    for (const dir of ["e", "w"]) sym(`tram-${dir}`, (g) => {
+      const b = box(-0.55, -0.1, 1.1, 0.2, 8);
+      b.nodes[0].style.fill = "#c9dbd7"; b.nodes[1].style.fill = "#dfeae8"; b.nodes[2].style.fill = "#eef6f4";
+      g.append(...b.nodes, poly("", [P(-0.55, 0.1, 4.2), P(0.55, 0.1, 4.2), P(0.55, 0.1, 6.6), P(-0.55, 0.1, 6.6)], { style: F("#123b37") }), seg("", P(0, 0.1, 0.6), P(0, 0.1, 7.6), { style: "stroke:#8aa7a2;stroke-width:1" }));
+      g.append(pl("", [P(-0.08, 0, 8), P(0.02, 0, 12.5), P(0.12, 0, 8)], { style: "fill:none;stroke:rgba(255,255,255,.6);stroke-width:.9" }));
+      const [lx, ly] = P(dir === "e" ? 0.55 : -0.55, 0, 3); el("circle", { cx: f(lx), cy: f(ly), r: 1.1, style: F("#fff7d6") }, g);
+    });
     vehicle("truck-n", 0.2, 0.5, 8, TRK, "n"); vehicle("truck-x", 0.5, 0.2, 7, TRK, "");
+    // A low white roadster, unbadged, for the occasional stunt (city.js),
+    // drawn in full rather than as a box: a wedge body lower at the nose, a
+    // glasshouse with a raked windscreen, four wheels with rims and hubs, a
+    // shoulder line and door seam, a full-width light bar across the nose
+    // and a red one across the tail. `at(t, s, z)` places a point by length
+    // (0 tail to 1 nose), across (0 far side to 1 near side) and height, so
+    // one drawing serves all four directions.
+    const roadster = (dir) => sym(`roadster-${dir}`, (g) => {
+      const ew = dir === "e" || dir === "w", fwd = dir === "e" || dir === "s", L = 0.44, W = 0.19;
+      const at = (t, s, z) => { const u = (fwd ? t : 1 - t) * L - L / 2, v = s * W - W / 2; return ew ? P(u, v, z) : P(v, u, z); };
+      const h = (t) => 3.4 - 1.7 * t, end = fwd ? 1 : 0, put = (pts, fill, extra = "") => g.append(poly("", pts, { style: `fill:${fill};${extra}` }));
+      const line = (a, b, stroke, w = 0.7) => g.append(seg("", a, b, { style: `stroke:${stroke};stroke-width:${w};stroke-linecap:round` }));
+      // the beam on the road ahead
+      put([at(1, -0.1, 0), at(1.9, -0.25, 0), at(1.9, 1.25, 0), at(1, 1.1, 0)], fwd === ew ? "url(#beam)" : "url(#beam-r)", "opacity:.8");
+      // the body: the visible end, the near side, the wedge top
+      put([at(end, 0, 0), at(end, 1, 0), at(end, 1, h(end)), at(end, 0, h(end))], "#dfe9e7");
+      put([at(0, 1, 0), at(1, 1, 0), at(1, 1, h(1)), at(0, 1, h(0))], "#c3d0ce");
+      put([at(0.03, 1, 0), at(0.97, 1, 0), at(0.97, 1, 0.8), at(0.03, 1, 0.8)], "#33403f");
+      put([at(0, 0, h(0)), at(1, 0, h(1)), at(1, 1, h(1)), at(0, 1, h(0))], "#f7fbfa");
+      line(at(0.05, 1, h(0.05) - 0.7), at(0.95, 1, h(0.95) - 0.45), "#eef5f4", 0.5);
+      line(at(0.5, 1, 0.9), at(0.5, 1, h(0.5) - 0.5), "rgba(40,60,58,.45)", 0.4);
+      // the glasshouse: roof and raked windscreen (whichever faces away goes first), then the side glass
+      const roofT = 2.3, r0 = 0.3, r1 = 0.55, w1 = 0.74, glass = "#0f1f1e";
+      const roof = () => put([at(r0, 0.17, h(r0) + roofT), at(r1, 0.17, h(r1) + roofT), at(r1, 0.83, h(r1) + roofT), at(r0, 0.83, h(r0) + roofT)], "#1b2e2c");
+      const screen = () => { put([at(r1, 0.17, h(r1) + roofT), at(w1, 0.12, h(w1)), at(w1, 0.88, h(w1)), at(r1, 0.83, h(r1) + roofT)], glass); line(at(r1 + 0.04, 0.3, h(r1) + roofT - 0.4), at(w1 - 0.05, 0.42, h(w1) + 0.3), "rgba(160,205,198,.7)", 0.45); };
+      fwd ? (roof(), screen()) : (screen(), roof());
+      put([at(r0 - 0.05, 0.83, h(r0 - 0.05)), at(w1, 0.88, h(w1)), at(r1, 0.83, h(r1) + roofT), at(r0, 0.83, h(r0) + roofT)], glass);
+      line(at(r0 + 0.02, 0.84, h(r0) + roofT - 0.5), at(r1 - 0.02, 0.84, h(r1) + roofT - 0.5), "rgba(160,205,198,.55)", 0.4);
+      // the wheels on the near side: tyre, rim, hub
+      const ring = (t0, z0, r, n = 18) => Array.from({ length: n }, (_, i) => { const a = i / n * Math.PI * 2; return at(t0 + Math.cos(a) * r / 31.3 / L, 1.02, z0 + Math.sin(a) * r); });
+      for (const t0 of [0.2, 0.8]) { put(ring(t0, 1.9, 1.9), "#0a1211"); put(ring(t0, 1.9, 1.15), "#a9b8b6"); put(ring(t0, 1.9, 0.45), "#2a3635"); }
+      // the light bars: white across the nose, red across the tail, wrapping round the near side
+      // the nose's bar sits in a dark band so it reads as light against the white body
+      if (fwd) put([at(1, 0.05, 0.55), at(1, 0.95, 0.55), at(1, 0.95, 1.7), at(1, 0.05, 1.7)], "#14201f");
+      line(at(end, 0.08, fwd ? 1.12 : 2.7), at(end, 0.92, fwd ? 1.12 : 2.7), fwd ? "#f2fffc" : "#ff3b4a", fwd ? 0.7 : 0.9);
+      line(at(0.94, 1, 1.15), at(1, 1, 1.15), "#ffffff", 0.9);
+      line(at(0, 1, 2.7), at(0.06, 1, 2.7), "#ff3b4a", 0.9);
+    });
+    for (const dir of ["e", "w", "n", "s"]) roadster(dir);
     sym("cone", (g) => { g.append(poly("", [[-2.2, 0], [2.2, 0], [0, -6]], { style: F("var(--amber)") }), seg("", [-3, 0.5], [3, 0.5], { style: "stroke:#06201e;stroke-width:1.2" })); });
     sym("person", (g) => { el("rect", { x: -1.4, y: -6, width: 2.8, height: 6, rx: 1.2, style: F("#f2c14e") }, g); el("circle", { cx: 0, cy: -7.6, r: 1.7, style: F("#ffe3b3") }, g); });
+    // an EDS crew member: hi-vis orange with a reflective band and a white hard hat
+    sym("crew", (g) => { el("rect", { x: -1.5, y: -6.2, width: 3, height: 6.2, rx: 1.2, style: F("#f97316") }, g); el("rect", { x: -1.5, y: -3.7, width: 3, height: 0.9, style: F("#fff4e5") }, g); el("circle", { cx: 0, cy: -7.8, r: 1.6, style: F("#ffe3b3") }, g); el("path", { d: "M-2.1 -8.3a2.1 1.8 0 0 1 4.2 0z", style: F("#ffffff") }, g); });
+    // a gum tree: pale trunk, open clumps of grey-green leaves; and a jacaranda
+    sym("tree-gum", (g) => {
+      const bark = "fill:none;stroke:var(--bark,#c9c1ad);stroke-linecap:round;stroke-width:";
+      g.append(pl("", [[0, 0], [0.5, -7], [0.2, -13.5]], { style: `${bark}1.4` }), seg("", [0.4, -8], [-2.8, -12.6], { style: `${bark}.9` }), seg("", [0.3, -10.5], [3, -14.2], { style: `${bark}.9` }));
+      [[-3.1, -14.6, 3.8, 2.6, "--gum-2"], [3.3, -15.6, 3.6, 2.5, "--gum-2"], [0.4, -18.6, 4.3, 3, "--gum"], [-2.3, -17.2, 2.8, 2, "--gum"], [2.6, -13.3, 2.4, 1.7, "--gum"]].forEach(([cx, cy, rx, ry, v]) => el("ellipse", { cx, cy, rx, ry, style: F(`var(${v})`) }, g));
+    });
+    sym("tree-jac", (g) => { g.append(seg("", [0, 0], [0, -6], { style: "stroke:var(--detail);stroke-width:1.1" })); el("ellipse", { cx: 0, cy: -9, rx: 7.6, ry: 4.6, style: F("var(--jac-2)") }, g); el("ellipse", { cx: -1, cy: -11, rx: 5.4, ry: 3.4, style: F("var(--jac)") }, g); });
+    sym("tank-rw", (g) => {
+      const c = cyl(0, 0, 0.11, 9);
+      ["#8fa5a1", "#b6c8c5", "#dfe9e7"].forEach((col, i) => (c.nodes[i].style.fill = col));
+      g.append(...c.nodes);
+      const rx = 0.11 * TW / Math.SQRT2, ry = 0.11 * TH / Math.SQRT2;
+      for (const z of [3, 6]) el("path", { d: `M${f(-rx)} ${-z}a${f(rx)} ${f(ry)} 0 0 0 ${f(2 * rx)} 0`, style: "fill:none;stroke:rgba(0,0,0,.22);stroke-width:.7" }, g);
+    });
+    sym("hoist", (g) => {
+      const st = "stroke:#b9cfcb;stroke-width:.8;fill:none", top = [0, -9], tips = [P(0.17, 0), P(0, 0.17), P(-0.17, 0), P(0, -0.17)].map(([a, b]) => [a, b - 9]);
+      g.append(seg("", [0, 0], top, { style: "stroke:#b9cfcb;stroke-width:1" }), ...tips.map((t) => seg("", top, t, { style: st })), pl("", [...tips, tips[0]], { style: st }));
+      g.append(poly("", [[tips[0][0] - 3, tips[0][1]], [tips[0][0] - 1, tips[0][1]], [tips[0][0] - 1.4, tips[0][1] + 3], [tips[0][0] - 3.2, tips[0][1] + 2.6]], { style: F("#e7fff9") }));
+    });
     sym("dish", (g) => { g.append(seg("", [0, 0], [0, -3], { style: "stroke:rgba(255,255,255,.6)" })); el("ellipse", { cx: 0, cy: -5, rx: 2.4, ry: 3.4, style: F("rgba(255,255,255,.7)") }, g); });
     sym("solar", (g) => { g.append(poly("", [P(0, 0, 1), P(0.3, 0, 1), P(0.3, 0.22, 3), P(0, 0.22, 3)], { style: F("url(#solar-grad)") })); });
     sym("ac", (g) => { const b = box(0, 0, 0.14, 0.14, 3); b.nodes.forEach((n, i) => (n.style.fill = ["#8fbfb8", "#2a5955", "#3f7a73"][[2, 0, 1][i]])); g.append(...b.nodes); });
@@ -304,20 +384,29 @@
     // traffic: vans and cars on straight routes, moved with SMIL in the overlay
     // so the slab underneath is never repainted for them
     const t = el("g", { class: "traffic" }, fx);
-    const vehicle = (sym, route, dur, begin) => {
-      const v = el("g", { class: "veh" }, t);
+    const vehicle = (sym, route, dur, begin, cls) => {
+      const v = el("g", { class: `veh${sym.startsWith("van") ? " eds" : ""}${cls ? ` ${cls}` : ""}` }, t);
       el("use", { href: `#${sym}` }, v);
       el("animateMotion", { dur: `${dur}s`, begin: `${begin}s`, repeatCount: "indefinite", path: "M" + route.map((p) => `${f(p[0])} ${f(p[1])}`).join("L") }, v);
     };
     vehicle("van-e", [P(-0.9, 4.85), P(15.9, 4.85)], 17, 0);
     vehicle("van-e", [P(-0.9, 4.85), P(15.9, 4.85)], 17, -9);
     vehicle("car-w", [P(15.9, 5.15), P(-0.9, 5.15)], 19, -3);
-    vehicle("van-s", [P(4.85, -0.9), P(4.85, 10.9)], 13, -4);
-    vehicle("car-n", [P(5.15, 10.9), P(5.15, -0.9)], 17, -11);
+    // Australian roads: everyone keeps left
+    vehicle("van-s", [P(5.15, -0.9), P(5.15, 10.9)], 13, -4);
+    vehicle("car-n", [P(4.85, 10.9), P(4.85, -0.9)], 17, -11);
     vehicle("van-n", [P(9.85, 10.9), P(9.85, -0.9)], 12, -7);
     vehicle("car-s", [P(10.15, -0.9), P(10.15, 10.9)], 15, -6);
-    vehicle("truck-n", [P(10.15, 10.9), P(10.15, -0.9)], 23, -1);
+    vehicle("truck-n", [P(9.85, 10.9), P(9.85, -0.9)], 23, -1);
     vehicle("car-s", [P(7.6, 5.0), P(7.6, 10.9)], 9, -2);
+    // light rail along the main road, one tram each way
+    vehicle("tram-e", [P(-1.6, 4.97), P(16.6, 4.97)], 34, -8);
+    vehicle("tram-w", [P(16.6, 5.03), P(-1.6, 5.03)], 34, -25);
+    // in a storm more of the EDS fleet is on the road, and moving faster
+    vehicle("van-e", [P(-0.9, 4.85), P(15.9, 4.85)], 9, -2, "patrol");
+    vehicle("van-s", [P(10.15, -0.9), P(10.15, 10.9)], 8, -5, "patrol");
+    vehicle("van-n", [P(4.85, 10.9), P(4.85, -0.9)], 8, -1, "patrol");
+    vehicle("van-w", [P(15.9, 5.15), P(-0.9, 5.15)], 10, -6, "patrol");
     return g;
   }
 
@@ -328,12 +417,24 @@
     const g = el("g", { class: "under", id: "under" }, svg);
     const a = el("g", { class: "under-fx" }, fx);
     g.append(poly("ugrid", slabTop));
-    const pipes = [
-      [P(15.3, 5.18), P(2.3, 5.18), P(2.3, 5.5)],
-      [P(5.18, 0.2), P(5.18, 5.18)], [P(5.18, 10.2), P(5.18, 5.18)],
-      [P(10.18, 0.2), P(10.18, 5.18)], [P(10.18, 10.2), P(10.18, 5.18)],
-      [P(6.78, 0.3), P(6.78, 5.18)], [P(8.13, 0.3), P(8.13, 5.18)],
-    ];
+    drawUnder(g, a);
+    return g;
+  }
+  // The network itself, drawn into a still group and an animated one. The
+  // whole-city underground uses it once; a district taken apart draws it
+  // again, clipped to its own below-ground block.
+  // mains and lane sewers in tile coordinates; CONDUITS adds the rising
+  // main, the outfall, the trade-waste connection and the culvert, for the
+  // pipe ends cut through a below-ground block's faces
+  const MAINS = [
+    [[15.3, 5.18], [2.3, 5.18], [2.3, 5.5]],
+    [[5.18, 0.2], [5.18, 5.18]], [[5.18, 10.2], [5.18, 5.18]],
+    [[10.18, 0.2], [10.18, 5.18]], [[10.18, 10.2], [10.18, 5.18]],
+    [[6.78, 0.3], [6.78, 5.18]], [[8.13, 0.3], [8.13, 5.18]],
+  ];
+  const CONDUITS = [...MAINS, [[6.3, 8.05], [6.3, 7.6], [5.18, 7.6]], [[0.6, 5.6], [0.6, 3.1], [1.45, 2.4]], [[10.85, 7.8], [10.18, 7.8]], [[5.4, 3.9], [9.6, 4.3]]];
+  function drawUnder(g, a) {
+    const pipes = MAINS.map((p) => p.map(([x, y]) => P(x, y)));
     for (const cls of ["pipe-glow", "pipe"]) for (const p of pipes) g.append(pl(cls, p));
     for (const p of pipes) a.append(pl("pipe-flow", p));
     // house laterals into the lane mains, the rising main from the pump
@@ -376,7 +477,6 @@
       ping(x, y, k + 10);
     });
     { const [sx, sy] = P(10.6, 7.8, Z); ins.append(pl("ucable", [[sx, sy], [sx + 6, sy - 3], [sx + 6, sy - 14]])); el("rect", { class: "ulevel", x: f(sx + 4), y: f(sy - 20), width: 4, height: 6, rx: .8 }, ins); }
-    return g;
   }
 
   /* ---- districts ---- */
@@ -394,7 +494,7 @@
           flat("wtr pool", [P(3.25, 0.75), P(3.95, 0.75), P(4.1, 1.15), P(3.6, 1.45), P(3.1, 1.2)]),
         ];
         const vol = [
-          ...[[0.6, 3.1, "m"], [1.3, 3.8, "l"], [2.2, 4.1, "m"], [0.5, 4.1, "s"], [3.5, 0.6, "l"], [4.1, 1.3, "m"], [2.6, 0.5, "m"], [4.15, 2.3, "s"], [3.1, 1.5, "m"], [0.3, 2.9, "s"], [0.9, 3.4, "m"], [1.6, 4.25, "s"], [0.25, 3.7, "m"], [3.9, 0.3, "s"], [4.35, 0.9, "s"], [2.0, 0.45, "s"], [3.75, 2.05, "m"], [1.0, 2.5, "s"], [0.45, 1.85, "s"]].map(([x, y, s]) => tree(x, y, s)),
+          ...[[0.6, 3.1, "m"], [1.3, 3.8, "l"], [2.2, 4.1, "m"], [0.5, 4.1, "s"], [3.5, 0.6, "l"], [4.1, 1.3, "m"], [2.6, 0.5, "m"], [4.15, 2.3, "s"], [3.1, 1.5, "m"], [0.3, 2.9, "s"], [0.9, 3.4, "m"], [1.6, 4.25, "s"], [0.25, 3.7, "m"], [3.9, 0.3, "s"], [4.35, 0.9, "s"], [2.0, 0.45, "s"], [3.75, 2.05, "m"], [1.0, 2.5, "s"], [0.45, 1.85, "s"]].map(([x, y, s]) => (s === "s" ? tree(x, y, s) : gum(x, y))),
           ...[[3.3, 0.9], [3.55, 0.85], [3.8, 1.0], [3.95, 1.2], [3.45, 1.3], [3.2, 1.05]].map(([x, y]) => use("reed", x, y, 0, { cls: "fine" })),
           use("bench", 0.7, 3.55, 0, { cls: "fine" }), use("bench", 1.15, 4.3, 0, { cls: "fine" }),
           // weather station: mast, instrument box, solar panel, rain gauge
@@ -409,7 +509,7 @@
           rail([[1.05, 0.85], [1.05, 2.0]], 8, { posts: 0.3, cls: "fine", d: 3.31 }), rail([[1.23, 0.85], [1.23, 2.0]], 8, { posts: 0.3, cls: "fine", d: 3.32 }),
           // the plant outfall headwall on the south bank, and a thermistor string in the lower reach
           box(1.38, 2.15, 0.32, 0.2, 4), item(3.75, el("ellipse", { class: "mh", cx: f(P(1.54, 2.35, 2)[0]), cy: f(P(1.54, 2.35, 2)[1]), rx: 2.6, ry: 2 })),
-          line("therm", [P(3.4, 3.85), P(3.4, 3.25)], 7.3), item(7.31, ...[0, 1, 2, 3].map((i) => { const [cx, cy] = P(3.4, 3.8 - i * 0.18); return el("circle", { class: "bead", cx: f(cx), cy: f(cy), r: 1.5, style: `--i:${i}` }); })),
+          lo(line("therm", [P(3.4, 3.85), P(3.4, 3.25)], 7.3)), lo(item(7.31, ...[0, 1, 2, 3].map((i) => { const [cx, cy] = P(3.4, 3.8 - i * 0.18); return el("circle", { class: "bead", cx: f(cx), cy: f(cy), r: 1.5, style: `--i:${i}` }); }))),
         ];
         const [tx, ty] = P(0.75, 0.75, 11);
         const fx = [...S, el("circle", { class: "tip", cx: f(tx), cy: f(ty), r: 1.6 })];
@@ -422,7 +522,9 @@
         const decals = [
           slab(6.6, 0.3, 0.35, 4.15, "lane"), slab(7.95, 0.3, 0.35, 4.15, "lane"),
           ...["pipe-glow", "pipe", "pipe-flow"].flatMap((cls) => [6.78, 8.13].map((x) => line(cls, [P(x, 0.3), P(x, 4.45)]))),
-          slab(8.5, 0.3, 1.0, 1.0, "park"), line("path fine", [P(8.55, 0.8), P(9.45, 0.8)]),
+          slab(8.5, 0.3, 1.0, 1.0, "park"),
+          // the local oval: boundary line, the cricket pitch in the middle
+          flat("oval", ringZ(9.0, 0.8, 0, 0.44, 40)), flat("pitch", [P(8.97, 0.66), P(9.03, 0.66), P(9.03, 0.94), P(8.97, 0.94)]),
           ...[[5.7, 1.1], [5.7, 2.1], [7.05, 2.1], [7.05, 3.1], [8.4, 2.1], [8.4, 3.1]].map(([x, y]) => slab(x + 0.5, y + 0.05, 0.25, 0.22, "drive fine")),
           ...[[5.65, 0.3, 5.65, 4.4], [7.0, 1.3, 7.0, 4.4], [8.35, 1.3, 8.35, 4.4]].map(([a, b, c2, d2]) => line("fence fine", [P(a, b), P(c2, d2)])),
           ao(7.05, 1.4, 0.75, 0.75, 18), ao(8.4, 2.4, 0.75, 0.75, 18),
@@ -447,7 +549,7 @@
           item(9.84, ...[[-0.14, 0.12], [0.14, 0.1], [0.02, -0.16]].map(([dx, dy]) => seg("det", P(6.78 + dx, 3.05 + dy), P(6.78, 3.05, 17)))),
           item(9.85, ...cyl(6.78, 3.05, 0.055, 3, { z: 7 }).nodes.map((n, i) => (n.classList.add("meter"), (n.style.fill = ["#6fb8ad", "#479086", "#dbf0ec"][i]), n))),
           use("cone", 6.56, 3.3, 0, { d: 9.88 }), use("cone", 7.0, 2.82, 0, { d: 9.84 }),
-          use("person", 6.6, 2.86, 0, { d: 9.47 }), use("person", 7.0, 3.26, 0, { d: 10.27 }),
+          use("crew", 6.6, 2.86, 0, { d: 9.47 }), use("crew", 7.0, 3.26, 0, { d: 10.27 }),
           use("van-y", 6.78, 3.95, 0, { d: 10.75 }),
           // the LIDoTT alarm unit on the next manhole
           box(8.06, 2.98, 0.14, 0.14, 5, { top: "lit", bias: 0.01 }), item(11.2, seg("det", P(8.13, 3.05, 5), P(8.13, 3.05, 14)))
@@ -476,7 +578,7 @@
           cyl(11.6, 0.6, 0.11, 6, { z: 86 }), item(14.9, seg("mast", P(14.3, 0.8, 64), P(14.3, 0.8, 78)), seg("mast", P(14.45, 2.65, 54), P(14.45, 2.65, 66))),
           // the plaza: fountain, trees, a kiosk with the Metalog logger, a transit canopy
           cyl(11.45, 4.1, 0.2, 2, { water: true, ring: true }),
-          ...[[10.98, 3.85, "s"], [11.9, 3.85, "s"], [10.98, 4.4, "s"], [11.9, 4.4, "s"]].map(([x, y, s]) => tree(x, y, s)),
+          ...[[10.98, 3.85], [11.9, 3.85], [10.98, 4.4], [11.9, 4.4]].map(([x, y]) => jac(x, y)),
           box(12.05, 4.2, 0.25, 0.25, 6, { top: "lit" }),
           slab(12.85, 3.75, 1.6, 0.65, "platform", 1, {}), box(12.9, 3.8, 1.5, 0.55, 12, { top: "lit" }),
           ...[[10.8, 1.6, 1.1], [12.4, 1.4, 1.0], [13.9, 1.5, 0.8]].map(([x, y, w]) => flat("lit shop", [P(x, y, 0.4), P(x + w, y, 0.4), P(x + w, y, 4), P(x, y, 4)], x + w + y + 0.002)),
@@ -521,7 +623,7 @@
           rail([[0.15, 5.5], [4.5, 5.5], [4.5, 9.95]], 5, { posts: 0.55, cls: "fence fine", d: 4.2 }),
           rail([[0.15, 5.5], [0.15, 9.95], [4.5, 9.95]], 5, { posts: 0.55, cls: "fence fine", d: 14.5 }),
           ...[[0.3, 7.6], [1.95, 7.5], [2.0, 9.75], [4.4, 7.9]].map(([x, y]) => use("lamp", x, y, 0, { d: x + y + 0.06 })),
-          ...[[0.2, 9.9, "s"], [4.45, 5.6, "s"], [4.45, 9.85, "s"]].map(([x, y, s]) => tree(x, y, s)),
+          gum(0.2, 9.9), ...[[4.45, 5.6, "s"], [4.45, 9.85, "s"]].map(([x, y, s]) => tree(x, y, s)),
           use("van-x", 4.05, 9.65, 0, { d: 13.8 }),
         ];
         const [fx0, fy0] = P(4.45, 6.2, 36), bubbles = [0, 1, 2, 3, 4, 5, 6, 7].map((i) => { const [cx, cy] = P(ax + 0.25 + (i % 4) * 0.33, ay + 0.3 + Math.floor(i / 4) * 0.6, 5); return el("circle", { class: "bubble", cx: f(cx), cy: f(cy), r: 1.4, style: `--d:${(i * 0.37) % 2.4}` }); });
@@ -545,7 +647,7 @@
           box(6.4, 9.3, 0.5, 0.3, 7),
           // the control cabinet with the Pump Station Manager, its antenna and solar panel
           box(5.75, 9.1, 0.4, 0.4, 12, { top: "lit" }), item(15.66, seg("mast", P(6.1, 9.15, 12), P(6.1, 9.15, 32)), el("circle", { class: "blink", cx: f(P(6.1, 9.15, 33)[0]), cy: f(P(6.1, 9.15, 33)[1]), r: 1.6 })), use("solar", 5.78, 9.2, 12, { d: 15.67 }),
-          use("van-y", 5.62, 9.5, 0, { d: 15.2 }), use("person", 5.95, 9.6, 0, { d: 15.6 }),
+          use("van-y", 5.62, 9.5, 0, { d: 15.2 }), use("crew", 5.95, 9.6, 0, { d: 15.6 }),
           tree(5.5, 6.9, "s"), tree(7.1, 9.6, "s"),
         ];
         const run = [[6.12, 7.92], [6.48, 8.18]].map(([x, y], i) => { const [cx, cy] = P(x, y, 10); return el("circle", { class: i ? "run" : "run run-a", cx: f(cx), cy: f(cy), r: 1.4, style: `--i:${i}` }); });
@@ -567,7 +669,7 @@
           use("dish", 8.8, 6.5, 62, { d: 16.96 }), use("dish", 8.86, 6.56, 70, { d: 16.97 }),
           item(16.98, el("ellipse", { class: "hub", cx: f(hub[0]), cy: f(hub[1]), rx: 16, ry: 10 }), el("circle", { class: "beacon", cx: f(hub[0]), cy: f(hub[1]), r: 4 }), el("circle", { class: "blink", cx: f(hub[0]), cy: f(hub[1] - 2), r: 1.8 })),
           box(8.3, 8.3, 0.9, 0.8, 18, { top: "lit" }), flat("door fine", [P(8.55, 9.1, 0), P(8.95, 9.1, 0), P(8.95, 9.1, 11), P(8.55, 9.1, 11)], 8.3 + 0.9 + 8.3 + 0.8 + 0.001),
-          ...[[8.38, 9.3], [8.72, 9.3], [9.06, 9.3]].map(([x, y]) => use("van-x", x, y, 0, { d: x + y + 0.2 })), use("car-e", 8.5, 9.68, 0, { d: 18.4 }), use("car-e", 8.9, 9.68, 0, { d: 18.8 }),
+          ...[[8.38, 9.3], [8.72, 9.3], [9.06, 9.3]].map(([x, y], i) => use("van-x", x, y, 0, { d: x + y + 0.2, cls: i === 2 ? "yard-van" : undefined })), use("car-e", 8.5, 9.68, 0, { d: 18.4 }), use("car-e", 8.9, 9.68, 0, { d: 18.8 }),
           item(19.3, ...[[-0.1, -0.1], [0.1, -0.1], [0.1, 0.1], [-0.1, 0.1]].map(([dx, dy]) => seg("mast", P(9.4 + dx, 9.7 + dy), P(9.4, 9.7, 40))), ...[12, 24, 34].map((z) => pl("mast fine", [P(9.3, 9.6, z), P(9.5, 9.6, z), P(9.5, 9.8, z), P(9.3, 9.8, z), P(9.3, 9.6, z)])), el("circle", { class: "blink", cx: f(P(9.4, 9.7, 41)[0]), cy: f(P(9.4, 9.7, 41)[1]), r: 1.6 })),
           ...[[8.15, 5.6], [9.5, 8.6], [8.1, 9.6]].map(([x, y]) => use("lamp", x, y, 0, { d: x + y + 0.06 })),
           tree(9.5, 5.6, "s"), tree(8.1, 8.2, "s"),
@@ -604,7 +706,7 @@
           manhole(10.85, 7.8), box(10.45, 7.45, 0.3, 0.3, 12, { top: "lit" }), box(11.5, 7.85, 0.2, 0.2, 7),
           ...[[10.7, 9.45], [10.95, 9.45], [11.2, 9.45], [11.45, 9.45]].map(([x, y]) => use("car-s", x, y, 0, { d: x + y + 0.2 })),
           ...[[10.6, 5.6], [14.8, 7.9], [12.7, 9.9]].map(([x, y]) => use("lamp", x, y, 0, { d: x + y + 0.06 })),
-          tree(14.85, 9.4, "s"), tree(10.5, 8.6, "s"), tree(12.0, 5.55, "s"),
+          gum(14.85, 9.4), tree(10.5, 8.6, "s"), tree(12.0, 5.55, "s"),
         ];
         const smoke = [];
         [[13.95, 6.2, 58], [14.45, 6.7, 46], [14.55, 9.45, 14]].forEach(([x, y, z], k) => {
@@ -622,12 +724,12 @@
     river: () => [
       ...many("rock", [[0.35, 1.7], [0.9, 0.55], [1.7, 0.95], [2.0, 2.95], [2.9, 2.55], [3.9, 2.85], [4.3, 4.2], [1.45, 2.05], [3.05, 3.85]], { cls: "fine" }),
       ...many("reed", [[0.55, 1.55], [2.85, 3.75], [3.15, 3.95], [4.4, 4.25], [0.2, 1.45]], { cls: "fine" }),
-      ...[[2.35, 0.3, "s"], [4.45, 1.85, "s"], [0.75, 4.4, "s"], [2.55, 4.4, "s"], [1.75, 3.55, "s"]].map(([x, y, k]) => tree(x, y, k)),
+      ...[[2.35, 0.3, "s"], [4.45, 1.85, "s"], [0.75, 4.4, "s"]].map(([x, y, k]) => tree(x, y, k)), gum(2.55, 4.4), gum(1.75, 3.55),
       house(3.95, 4.05, 0.3, 0.3, 5, 4), slab(4.1, 2.9, 0.45, 0.5, "track"), use("car-s", 4.2, 3.0, 0, { d: 7.4 }), use("car-s", 4.4, 3.15, 0, { d: 7.75 }),
       rail([[0.5, 0.45], [1.75, 0.45], [1.75, 1.05], [0.5, 1.05], [0.5, 0.45]], 4, { posts: 0.3, cls: "fence fine", d: 2.9 }),
       use("antenna", 1.95, 1.25, 12, { d: 3.3 }), ...many("bollard", [[0.95, 2.25], [1.15, 2.25], [1.35, 2.25]], { cls: "fine" }),
       ...many("sign", [[4.45, 2.35], [0.4, 0.4]], { cls: "fine" }), use("bench", 2.75, 1.65, 0, { cls: "fine" }),
-      flat("bank", [P(2.75, 2.75), P(3.1, 2.85), P(3.2, 3.05), P(2.8, 3.0)]),
+      lo(flat("bank", [P(2.75, 2.75), P(3.1, 2.85), P(3.2, 3.05), P(2.8, 3.0)])),
     ],
     sewer: () => [
       ...many("solar", [[5.85, 0.55, 14], [7.2, 2.55, 14], [8.55, 3.55, 14], [5.85, 2.55, 14]]),
@@ -636,8 +738,13 @@
       ...many("bin", [[6.55, 0.55], [6.55, 2.6], [7.9, 1.6], [7.9, 3.6], [9.25, 1.6], [9.25, 3.65]], { cls: "fine" }),
       ...many("car-s", [[6.6, 1.1], [7.95, 3.1], [9.3, 2.1]], { d: 0 }).map((u) => ({ ...u, d: 99 })),
       ...many("hedge", [[5.7, 1.25], [7.05, 2.25], [8.4, 3.25], [5.7, 3.25], [7.05, 1.25]], { cls: "fine" }),
-      ...many("sign", [[6.6, 4.45], [8.0, 4.45]], { cls: "fine" }), use("swing", 8.95, 0.75, 0, { cls: "fine" }), use("bench", 9.3, 1.1, 0, { cls: "fine" }),
-      ...[[6.35, 0.95, "s"], [6.35, 2.95, "s"], [7.75, 1.0, "s"], [7.75, 2.95, "s"], [9.15, 2.95, "s"], [9.1, 0.4, "s"], [9.5, 0.95, "s"]].map(([x, y, k]) => tree(x, y, k)),
+      ...many("sign", [[6.6, 4.45], [8.0, 4.45]], { cls: "fine" }), use("bench", 9.38, 1.18, 0, { cls: "fine" }),
+      // Australian backyards: rainwater tanks, Hills Hoists, a pool
+      ...many("tank-rw", [[6.32, 1.26], [7.67, 2.26], [9.02, 3.26], [6.32, 3.26], [7.67, 0.26]]),
+      ...many("hoist", [[6.3, 0.2], [7.45, 1.2], [8.8, 2.2]], { cls: "fine" }),
+      slab(5.78, 0.05, 0.3, 0.2, "pool-b"),
+      ...[[6.35, 2.95, "s"], [7.75, 1.0, "s"], [9.15, 2.95, "s"], [9.1, 0.4, "s"], [9.5, 0.95, "s"]].map(([x, y, k]) => tree(x, y, k)),
+      jac(6.35, 0.95), jac(7.75, 2.95),
       ...many("lamp", [[6.78, 4.3], [8.13, 0.55]]),
     ],
     cbd: () => [
@@ -694,6 +801,377 @@
     for (const [x, y] of [[7.84, 6.2], [7.36, 8.8], [14.2, 4.72], [1.4, 5.28], [4.72, 9.6]]) g.append(...use("gully", x, y, 0, { cls: "gully" }).nodes);
   };
 
+  /* ---- a district taken apart ---- */
+  // Three layers: the structures lift, the street stays, and a block of the
+  // ground beneath (with half of each road beside it) drops out below. The
+  // block is cut open: its pipes, chambers and instruments show through the
+  // top as an x-ray, and the pipes it carries are cut where they leave
+  // through its faces. Built the first time the district is opened.
+  const DZ = 30, SINK = 60;
+  const LIFT = { river: 62, sewer: 58, cbd: 88, plant: 56, pump: 54, ops: 74, industry: 66 };
+  const noTop = (b) => b.nodes.slice(0, 2);
+  // what a block holds besides the shared network: deep parts, seen through
+  // the top, and extra pipes or instruments drawn over it
+  const BELOW = {
+    pump: { deep: () => [cyl(6.3, 8.05, 0.6, DZ - 4, { z: 4 - DZ, water: "well" }).nodes, cyl(6.8, 6.6, 0.35, 8, { z: -8 }).nodes] },
+    cbd: {
+      deep: () => [[10.8, 0.5, 1.1, 1.1], [12.4, 0.4, 1.0, 1.0], [13.9, 0.6, 0.8, 0.9], [10.9, 2.4, 1.2, 0.9], [12.6, 2.2, 1.0, 1.2], [14.0, 2.5, 0.7, 0.8]].map(([x, y, w, d]) => noTop(box(x, y, w, d, 18, { z: -18, cls: "found" }))),
+      net: (g) => { g.append(pl("water-main", [P(10.4, 4.42), P(15.2, 4.42)]), pl("water-main", [P(14.6, 4.42), P(14.6, 4.2)])); const [hx, hy] = P(14.6, 4.2); el("circle", { class: "hydrant", cx: f(hx), cy: f(hy), r: 2.6 }, g); },
+    },
+    plant: {
+      deep: () => [cyl(1.1, 6.55, 0.78, 12, { z: -12, top: "found" }).nodes, cyl(1.1, 8.65, 0.78, 12, { z: -12, top: "found" }).nodes, noTop(box(2.3, 8.2, 1.5, 1.3, 10, { z: -10, cls: "found" })), cyl(3.0, 6.3, 0.55, 14, { z: -14, top: "found" }).nodes],
+      net: (g) => { for (const cls of ["pipe-glow", "pipe"]) g.append(pl(cls, [P(2.3, 5.5), P(2.3, 5.95), P(1.5, 5.95)])); },
+    },
+    industry: { deep: () => [noTop(box(10.8, 5.8, 2.6, 1.6, 10, { z: -10, cls: "found" })), cyl(11.3, 8.7, 0.5, 8, { z: -8, top: "found" }).nodes, cyl(12.5, 8.7, 0.5, 8, { z: -8, top: "found" }).nodes] },
+    ops: { deep: () => [noTop(box(8.25, 5.8, 1.1, 2.3, 14, { z: -14, cls: "found" })), noTop(box(8.3, 8.3, 0.9, 0.8, 8, { z: -8, cls: "found" }))] },
+    river: {
+      net: (g, a) => {
+        const c = [[-0.6, 0.85], [0, 1.0], [1.2, 1.4], [2.3, 2.3], [3.4, 3.2], [4.6, 3.6]];
+        g.append(poly("bed", [...c.map(([x, y]) => P(x, y - 0.42)), ...c.map(([x, y]) => P(x, y + 0.42)).reverse()]));
+        g.append(pl("therm", [P(3.4, 3.85), P(3.4, 3.25)]));
+        [0, 1, 2, 3].forEach((i) => { const [cx, cy] = P(3.4, 3.8 - i * 0.18); el("circle", { class: "bead", cx: f(cx), cy: f(cy), r: 1.6, style: `--i:${i}` }, a); });
+      },
+    },
+  };
+  function belowBlock(id, D) {
+    const [x0, y0, x1, y1] = ZONES[id].rect, e = 0.62;
+    const X0 = Math.max(S[0], x0 - e), Y0 = Math.max(S[1], y0 - e), X1 = Math.min(S[2], x1 + e), Y1 = Math.min(S[3], y1 + e);
+    const top = [P(X0, Y0), P(X1, Y0), P(X1, Y1), P(X0, Y1)];
+    const g = el("g", { class: "below-block" }), a = el("g", { class: "below-fx" });
+    const clip = `below-clip-${id}`;
+    el("clipPath", { id: clip }, D).append(poly("", top));
+    (BELOW[id]?.deep?.() || []).flat(Infinity).filter(Boolean).forEach((n) => g.appendChild(n));
+    g.append(poly("bb-top", top));
+    const net = el("g", { class: "bb-net", "clip-path": `url(#${clip})` }, g), netFx = el("g", { "clip-path": `url(#${clip})` }, a);
+    drawUnder(net, netFx);
+    BELOW[id]?.net?.(net, netFx);
+    g.append(poly("bb-l", [P(X0, Y1), P(X1, Y1), P(X1, Y1, -DZ), P(X0, Y1, -DZ)]), poly("bb-r", [P(X1, Y0), P(X1, Y1), P(X1, Y1, -DZ), P(X1, Y0, -DZ)]));
+    for (const zz of [-11, -21]) g.append(poly("strata", [P(X0, Y1, zz), P(X1, Y1, zz), P(X1, Y1, zz - 1.5), P(X0, Y1, zz - 1.5)]), poly("strata", [P(X1, Y0, zz), P(X1, Y1, zz), P(X1, Y1, zz - 1.5), P(X1, Y0, zz - 1.5)]));
+    // the pipes it carries, cut where they leave through the two front faces
+    const cuts = [];
+    for (const c of CONDUITS) for (let i = 0; i < c.length - 1; i++) {
+      const [ax, ay] = c[i], [bx, by] = c[i + 1];
+      if (ay !== by && (ay - Y1) * (by - Y1) <= 0) { const x = ax + (bx - ax) * (Y1 - ay) / (by - ay); if (x > X0 && x < X1) cuts.push(P(x, Y1, -9)); }
+      if (ax !== bx && (ax - X1) * (bx - X1) <= 0) { const y = ay + (by - ay) * (X1 - ax) / (bx - ax); if (y > Y0 && y < Y1) cuts.push(P(X1, y, -9)); }
+    }
+    for (const [cx, cy] of cuts) g.append(el("circle", { class: "cut-pipe", cx: f(cx), cy: f(cy), r: 4.2 }), el("ellipse", { class: "cut-water", cx: f(cx), cy: f(cy + 1.8), rx: 3, ry: 1.6 }));
+    g.append(pl("bb-rim", [P(X0, Y1), P(X1, Y1), P(X1, Y0)]), pl("bb-edge", [P(X0, Y1), P(X0, Y0), P(X1, Y0)]));
+    return { g, a, rect: [X0, Y0, X1, Y1] };
+  }
+  // Everything city.js needs to take a district apart: the block, the dashed
+  // guides at the footprint's corners, a ghost floor under the lifted
+  // structures, marks the layer labels point at, and the box the camera frames.
+  function explodeKit(id, zone, zoneFx, D) {
+    const [x0, y0, x1, y1] = ZONES[id].rect, rise = LIFT[id];
+    const b = belowBlock(id, D);
+    zone.insertBefore(b.g, zone.firstChild);
+    const fxl = { below: zoneFx.querySelector(".fx-below"), lo: zoneFx.querySelector(".fx-lo"), hi: zoneFx.querySelector(".fx-hi") };
+    fxl.below.prepend(b.a);
+    const ghost = poly("ghost", [P(x0, y0), P(x1, y0), P(x1, y1), P(x0, y1)]);
+    fxl.hi.prepend(ghost);
+    const gg = el("g", { class: "guides" });
+    zoneFx.prepend(gg);
+    const guides = [[x0, y1], [x1, y1], [x1, y0]].map(([x, y]) => ({ p: P(x, y), el: el("line", { class: "guide" }, gg) }));
+    const mark = (p, parent) => el("circle", { class: "mark", cx: f(p[0]), cy: f(p[1]), r: 0.6 }, parent);
+    const marks = { above: mark(P(x0, y1, 6), fxl.hi), street: mark(P(x0, y1, -5), fxl.lo), below: mark(P(b.rect[0], b.rect[3], -DZ / 2), fxl.below) };
+    // the box the camera frames: the lifted structures down to the block's
+    // underside, through the district's lift (scaled 1.07, raised 14)
+    const [cx, cy] = P((x0 + x1) / 2, (y0 + y1) / 2), h = ZONES[id].h + rise + 14;
+    const pts = [[x0, y0], [x1, y0], [x1, y1], [x0, y1]].flatMap(([x, y]) => [P(x, y, h), P(x, y, -10)])
+      .concat([[b.rect[0], b.rect[1]], [b.rect[2], b.rect[1]], [b.rect[2], b.rect[3]], [b.rect[0], b.rect[3]]].map(([x, y]) => { const [px, py] = P(x, y, -DZ); return [px, py + SINK + 4]; }))
+      .map(([px, py]) => [cx + (px - cx) * 1.07, cy + (py - cy) * 1.07 - 14]);
+    const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]);
+    return { block: b.g, blockFx: b.a, fxl, ghost, guides, marks, rise, sink: SINK, box: [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)] };
+  }
+
+  /* ---- assets, taken apart ---- */
+  // Each asset is drawn in its own SVG with the scene's projection, as a
+  // set of parts (content.mjs names them; these draw them by id). A part's
+  // `off` is where it moves when the asset is apart, in drawing units; the
+  // assembled asset is every part at offset zero. Sections follow drawing
+  // convention: the front half is cut away, the cut faces are hatched and the
+  // removed material is shown as a dashed phantom line.
+  const SQ = Math.SQRT2;
+  function hull(pts) {
+    const p = pts.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+    const cross = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+    const lo = [], hi = [];
+    for (const q of p) { while (lo.length > 1 && cross(lo[lo.length - 2], lo[lo.length - 1], q) <= 0) lo.pop(); lo.push(q); }
+    for (let i = p.length - 1; i >= 0; i--) { const q = p[i]; while (hi.length > 1 && cross(hi[hi.length - 2], hi[hi.length - 1], q) <= 0) hi.pop(); hi.push(q); }
+    return lo.slice(0, -1).concat(hi.slice(0, -1));
+  }
+  // a circle across a pipe running along x (radius in px), and one lying flat
+  const ringX = (x, y, z, r, t0 = 0, t1 = Math.PI * 2, n = 32) => Array.from({ length: n + 1 }, (_, i) => { const t = t0 + (t1 - t0) * i / n; return P(x, y + Math.cos(t) * r / 31.3, z + Math.sin(t) * r); });
+  const ringZ = (x, y, z, r, n = 32) => Array.from({ length: n }, (_, i) => { const t = i / n * Math.PI * 2; return P(x + Math.cos(t) * r, y + Math.sin(t) * r, z); });
+  const cutFace = (pts) => [poly("cut", pts), poly("cut-h", pts)];
+  // a pipe along x; `end` cuts its near end open to show the bore and the flow
+  function hpipe(x0, x1, y, z, r, o = {}) {
+    const nodes = [poly(o.cls || "fr", hull([...ringX(x0, y, z, r), ...ringX(x1, y, z, r)]))];
+    const ty = -0.407 * r / 31.3, tz = 0.913 * r;
+    nodes.push(pl("pipe-hi", [P(x0, y + ty, z + tz), P(x1, y + ty, z + tz)]));
+    if (o.end) {
+      nodes.push(...cutFace(ringX(x1, y, z, r)), poly("bore", ringX(x1, y, z, r * 0.8)));
+      if (o.water) { const s = Math.min(1, -1 + 2 * o.water), a = Math.asin(s); nodes.push(poly("water", ringX(x1, y, z, r * 0.8, Math.PI - a, Math.PI * 2 + a, 24))); }
+    }
+    return nodes;
+  }
+  // a cylinder or cone (radius r0 at z0, r1 at z1) in half section
+  function shell(cx, cy, r0, r1, z0, z1, o = {}) {
+    const t = o.t ?? 5, k = TW / SQ, q = TH / SQ, [bx, by] = P(cx, cy, z0), ty = by - (z1 - z0);
+    const a0 = r0 * k, b0 = r0 * q, a1 = r1 * k, b1 = r1 * q, i0 = a0 - t, j0 = b0 - t / 2, i1 = a1 - t, j1 = b1 - t / 2;
+    const arc = (cx2, y, a, b, sweep) => `${f(cx2 - a)} ${f(y)}A${f(a)} ${f(b)} 0 0 ${sweep} ${f(cx2 + a)} ${f(y)}`;
+    const nodes = [];
+    if (o.floor) nodes.push(el("ellipse", { class: "in-floor", cx: f(bx), cy: f(by), rx: f(i0), ry: f(j0) }));
+    nodes.push(el("path", { class: "in", d: `M${arc(bx, ty, i1, j1, 1)}L${f(bx + i0)} ${f(by)}A${f(i0)} ${f(j0)} 0 0 0 ${f(bx - i0)} ${f(by)}Z` }));
+    for (const zj of o.joints || []) { const s = (zj - z0) / (z1 - z0); nodes.push(el("path", { class: "joint", d: `M${arc(bx, by - (zj - z0), i0 + (i1 - i0) * s, j0 + (j1 - j0) * s, 1)}` })); }
+    if (o.inside) nodes.push(...o.inside);
+    for (const sg of [-1, 1]) nodes.push(...cutFace([[bx + sg * a1, ty], [bx + sg * i1, ty], [bx + sg * i0, by], [bx + sg * a0, by]]));
+    nodes.push(el("path", { class: "ft", d: `M${arc(bx, ty, a1, b1, 1)}L${f(bx + i1)} ${f(ty)}A${f(i1)} ${f(j1)} 0 0 0 ${f(bx - i1)} ${f(ty)}Z` }));
+    nodes.push(el("path", { class: "phantom", d: `M${arc(bx, ty, a1, b1, 0)}M${arc(bx, by, a0, b0, 0)}` }));
+    return nodes;
+  }
+  // a rectangular chamber in section: the two front walls removed
+  function rshell(x0, y0, w, d, z0, z1, t = 0.12) {
+    const x1 = x0 + w, y1 = y0 + d;
+    return [
+      poly("in-floor", [P(x0, y0, z0), P(x1, y0, z0), P(x1, y1, z0), P(x0, y1, z0)]),
+      poly("in", [P(x0, y0, z0), P(x0, y1, z0), P(x0, y1, z1), P(x0, y0, z1)]),
+      poly("in in-2", [P(x0, y0, z0), P(x1, y0, z0), P(x1, y0, z1), P(x0, y0, z1)]),
+      ...cutFace([P(x1, y0 - t, z0), P(x1, y0, z0), P(x1, y0, z1), P(x1, y0 - t, z1)]),
+      ...cutFace([P(x0 - t, y1, z0), P(x0, y1, z0), P(x0, y1, z1), P(x0 - t, y1, z1)]),
+      poly("ft", [P(x0 - t, y0 - t, z1), P(x1, y0 - t, z1), P(x1, y0, z1), P(x0, y0, z1), P(x0, y1, z1), P(x0 - t, y1, z1)]),
+      pl("phantom", [P(x0, y1, z1), P(x1, y1, z1), P(x1, y0, z1)]), pl("phantom", [P(x0, y1, z0), P(x1, y1, z0), P(x1, y0, z0)]), seg("phantom", P(x1, y1, z0), P(x1, y1, z1)),
+    ];
+  }
+  const plain = (nodes) => nodes.flat(Infinity).filter(Boolean).map((n) => (n.classList.add("plain"), n));
+  const lit = (pts, cls = "screen-lit") => poly(cls, pts);
+  // a small box's front-left face, inset, for displays and labels
+  const faceL = (x, y, z, w, h, inset = 0.04) => [P(x + inset, y, z + h - 3), P(x + w - inset, y, z + h - 3), P(x + w - inset, y, z + 3), P(x + inset, y, z + 3)];
+
+  const ASSETS = {
+    // Maintenance hole 9 and the Detectronic MSFM S2.5T (DNS 51 manual):
+    // the sensor on its mounting plate, the stainless ring locked in the
+    // pipe by a scissor expander, the cable tied along the ring's trailing
+    // edge, the logger fixed to the step irons, the ATEX battery pack beside it.
+    mh9() {
+      const ringPts = ringX(2.15, 0, 14, 10.5);
+      const steps = [38, 52, 66, 80].map((z) => pl("step", [P(0.1, -1.06, z - 3), P(0.1, -1.06, z), P(0.45, -1.0, z), P(0.45, -1.0, z - 3)]));
+      // the logger, battery and sensor are drawn larger than life so they read
+      const unit = box(-0.86, -0.6, 0.56, 0.42, 32, { z: 62 });
+      return {
+        paint: [
+          ["pipe", hpipe(-2.9, -1.3, 0, 14, 12)],
+          ["pipe", hpipe(-1.3, 1.3, 0, 14, 12), { fade: true }],
+          ["base", [cyl(0, 0, 1.3, 26).nodes, el("path", { class: "channel", d: `M${P(-1.24, -0.2, 26).map(f).join(" ")}L${P(1.24, -0.2, 26).map(f).join(" ")}L${P(1.24, 0.2, 26).map(f).join(" ")}L${P(-1.24, 0.2, 26).map(f).join(" ")}Z` }), poly("water", [P(-1.2, -0.11, 26), P(1.2, -0.11, 26), P(1.2, 0.11, 26), P(-1.2, 0.11, 26)])]],
+          ["pipe", hpipe(1.3, 2.9, 0, 14, 12, { end: true, water: 0.36 })],
+          ["ring", [pl("ring", [...ringPts]), seg("ring-x", P(2.15, -0.22, 6), P(2.15, 0.22, 11)), seg("ring-x", P(2.15, 0.22, 6), P(2.15, -0.22, 11)), pl("ring", ringPts, { class: "ring-hi" })]],
+          ["sensor", [box(1.95, -0.12, 0.44, 0.24, 8, { z: 3 }).nodes, el("circle", { class: "port", cx: f(P(2.17, 0.12, 7)[0]), cy: f(P(2.17, 0.12, 7)[1]), r: 1.3 })]],
+          ["shaft", [shell(0, 0, 1.15, 1.15, 26, 96, { joints: [49, 72], inside: steps }), shell(0, 0, 1.15, 0.62, 96, 116)]],
+          ["battery", [box(-0.8, -0.56, 0.4, 0.32, 20, { z: 36 }).nodes, seg("det", P(-0.7, -0.24, 50), P(-0.5, -0.24, 50))]],
+          ["unit", [unit.nodes, lit(faceL(-0.86, -0.18, 62, 0.56, 32, 0.09)), seg("frame", P(-0.88, -0.17, 62), P(-0.88, -0.17, 96)), seg("frame", P(-0.28, -0.17, 62), P(-0.28, -0.17, 96))]],
+          ["cover", [cyl(0, 0, 0.74, 3, { z: 116 }).nodes, cyl(0, 0, 0.62, 3, { z: 119 }).nodes, ...[-0.3, 0, 0.3].map((d) => seg("det", P(-0.45 + d, -0.45 - d, 122), P(0.45 + d, 0.45 - d, 122)))]],
+        ],
+        off: { cover: [0, -166], unit: [0, -162], battery: [0, -150], shaft: [0, -56], base: [0, 0], pipe: [0, 42], ring: [52, 68], sensor: [104, 96] },
+        anchor: { cover: P(0.52, 0.52, 122), unit: P(-0.58, -0.18, 80), battery: P(-0.6, -0.24, 46), shaft: P(0.81, -0.81, 76), base: P(0.92, 0.92, 13), pipe: P(-2.5, 0, 26), ring: P(2.15, -0.25, 24), sensor: P(2.17, 0.12, 9) },
+        cables: [
+          [["sensor", 1.98, 0.06, 8], ["ring", 1.95, 0.14, 6], ["pipe", 1.4, 0.16, 6], ["base", 0.9, -0.1, 26], ["base", 0.25, -0.85, 26], ["shaft", -0.05, -1.0, 30], ["shaft", -0.45, -0.92, 58], ["unit", -0.6, -0.62, 62]],
+          [["battery", -0.6, -0.4, 56], ["unit", -0.6, -0.4, 62]],
+        ],
+        axis: [P(0, 0, -36), P(0, 0, 330)],
+        guides: [["pipe", P(2.9, 0, 14), P(6.4, 0, 14)]],
+      };
+    },
+    // The wet well: the LIDoTT R at the top of the chamber (radar down to
+    // 7 m, pressure above), two pumps on guide rails, the rising main, and the
+    // Pump Station Manager in its cabinet.
+    wetwell() {
+      const lvl = 38, k = TW / SQ, q = TH / SQ, [bx, by] = P(0, 0, 0), wy = by - lvl, ia = 1.3 * k - 5, ib = 1.3 * q - 2.5;
+      const water = [el("path", { class: "water", d: `M${f(bx - ia)} ${f(wy)}L${f(bx + ia)} ${f(wy)}L${f(bx + ia)} ${f(by)}L${f(bx - ia)} ${f(by)}Z` }), el("path", { class: "water-top", d: `M${f(bx - ia)} ${f(wy)}A${f(ia)} ${f(ib)} 0 0 1 ${f(bx + ia)} ${f(wy)}Z` })];
+      const rails = [[-0.55, -0.1], [-0.1, -0.55]].flatMap(([x, y]) => [seg("rail-g", P(x - 0.1, y - 0.14, 4), P(x - 0.1, y - 0.14, 98)), seg("rail-g", P(x + 0.06, y - 0.16, 4), P(x + 0.06, y - 0.16, 98))]);
+      const pump = (x, y) => [cyl(x, y, 0.2, 14).nodes, cyl(x, y, 0.15, 12, { z: 14, dome: true }).nodes];
+      const cab = box(-3.3, 0.35, 0.7, 0.45, 30, { z: 104 });
+      return {
+        paint: [
+          ["well", [hpipe(-2.9, -1.25, 0.3, 62, 8), cyl(0, 0, 1.3, 8, { z: -8 }).nodes, shell(0, 0, 1.3, 1.3, 0, 100, { joints: [34, 67], floor: true, inside: [...rails, ...water] })]],
+          ["pumps", [pump(-0.55, -0.1), pump(-0.1, -0.55)]],
+          ["rising", [cyl(-0.1, -0.55, 0.08, 40, { z: 30 }).nodes, hpipe(-0.1, 2.9, -0.55, 70, 6, { end: true })]],
+          ["radar", [seg("bracket", P(0.45, -1.1, 98), P(0.2, -0.55, 98)), cyl(0.2, -0.55, 0.13, 12, { z: 84 }).nodes]],
+          ["hatch", [box(-0.5, -0.4, 1.0, 0.8, 4, { z: 100 }).nodes, seg("det", P(-0.35, 0.4, 102), P(0.35, 0.4, 102))]],
+          ["cabinet", [plain(box(-3.35, 0.3, 0.8, 0.55, 4, { z: 100 }).nodes), cab.nodes, lit(faceL(-3.3, 0.8, 112, 0.7, 14, 0.12)), seg("mast-a", P(-2.95, 0.6, 134), P(-2.95, 0.6, 176)), poly("solar", [P(-3.1, 0.65, 150), P(-2.8, 0.65, 150), P(-2.8, 0.9, 158), P(-3.1, 0.9, 158)])]],
+        ],
+        off: { cabinet: [0, -36], hatch: [0, -108], radar: [0, -64], well: [0, 0], pumps: [0, 76], rising: [62, 31] },
+        anchor: { cabinet: P(-2.95, 0.8, 122), hatch: P(0.5, 0.0, 104), radar: P(0.33, -0.42, 90), well: P(0.92, -0.92, 50), pumps: P(-0.1, -0.35, 14), rising: P(2.6, -0.4, 76) },
+        cables: [[["radar", 0.2, -0.55, 96], ["well", -0.6, -1.05, 99], ["well", -1.6, 0.0, 100], ["cabinet", -2.7, 0.55, 104]]],
+        axis: [P(0, 0, -90), P(0, 0, 250)],
+        guides: [["rising", P(1.2, -0.55, 70), P(-0.4, -0.55, 70)]],
+      };
+    },
+    // The plant inlet main and a clamp-on ultrasonic meter: a pair of
+    // transducers strapped to the pipe, cabled to a wall mounted transmitter
+    // with a keypad and display.
+    inlet() {
+      const tx = box(-1.15, -2.24, 0.56, 0.12, 30, { z: 40 });
+      return {
+        paint: [
+          ["transmitter", [plain(box(-1.6, -2.42, 1.4, 0.16, 92).nodes), tx.nodes, lit(faceL(-1.15, -2.12, 54, 0.56, 14, 0.08)), ...[0, 1, 2].map((i) => seg("keys", P(-1.04 + i * 0.12, -2.12, 47), P(-0.98 + i * 0.12, -2.12, 47)))]],
+          ["pipe", [box(-2.2, -0.32, 0.34, 0.64, 12).nodes, box(1.9, -0.32, 0.34, 0.64, 12).nodes, hpipe(-3.0, 3.0, 0, 32, 21, { end: true, water: 1 })]],
+          ["straps", [-0.8, 0.8].map((x) => [pl("strap", ringX(x, 0, 32, 22.5, 0, Math.PI * 2, 40))])],
+          ["transducers", [-0.8, 0.8].map((x) => box(x - 0.14, -0.4, 0.28, 0.22, 7, { z: 50 }).nodes)],
+          ["cable", []],
+        ],
+        off: { transmitter: [0, -76], transducers: [0, -62], straps: [0, -30], pipe: [0, 0], cable: [0, 0] },
+        anchor: { transmitter: P(-0.86, -2.12, 64), transducers: P(0.8, -0.18, 56), straps: P(-0.8, 0.5, 18), pipe: P(-2.7, 0, 52), cable: null },
+        cables: [[["transducers", -0.8, -0.3, 57], ["transducers", -0.8, -0.9, 62], ["transmitter", -0.95, -2.12, 40]], [["transducers", 0.8, -0.3, 57], ["transducers", 0.6, -1.0, 64], ["transmitter", -0.75, -2.12, 40]]],
+        cableAnchor: { cable: 1 },
+        axis: [P(0, 0, 10), P(0, 0, 170)],
+      };
+    },
+    // The trade-waste point: an inspection chamber on the discharge pipe,
+    // the ORI ATEX sampler's suction line in the flow, an EDS pH sensor on a
+    // pole, and a Dynaflox meter strapped to the pipe downstream.
+    tradewaste() {
+      const sam = box(-3.2, 0.35, 0.62, 0.5, 48, { z: 70 });
+      return {
+        paint: [
+          ["pipe", hpipe(-2.6, -0.7, 0, 9, 9)],
+          ["pipe", hpipe(-0.7, 0.7, 0, 9, 9), { fade: true }],
+          ["chamber", [rshell(-0.7, -0.7, 1.4, 1.4, 0, 70), poly("water", [P(-0.7, -0.12, 1), P(0.7, -0.12, 1), P(0.7, 0.12, 1), P(-0.7, 0.12, 1)])]],
+          ["pipe", hpipe(0.7, 2.8, 0, 9, 9, { end: true, water: 0.4 })],
+          ["meter", [[1.5, 2.2].map((x) => box(x - 0.1, -0.25, 0.2, 0.16, 5, { z: 17 }).nodes), seg("mast-a", P(1.9, -1.4, 70), P(1.9, -1.4, 100)), box(1.72, -1.5, 0.36, 0.1, 18, { z: 92 }).nodes, lit(faceL(1.72, -1.4, 92, 0.36, 18, 0.06))]],
+          ["hose", [cyl(0.15, -0.3, 0.05, 6, { z: 2 }).nodes]],
+          ["ph", [seg("mast-a", P(-0.35, 0.25, 12), P(-0.35, 0.25, 74)), cyl(-0.35, 0.25, 0.07, 12, { z: 2 }).nodes]],
+          ["sampler", [sam.nodes, lit(faceL(-3.2, 0.85, 100, 0.62, 12, 0.14)), seg("det", P(-2.89, 0.85, 72), P(-2.89, 0.85, 96))]],
+          ["cover", [box(-0.58, -0.58, 1.16, 1.16, 4, { z: 70 }).nodes, ...[-0.3, 0, 0.3].map((d) => seg("det", P(-0.5, d, 74), P(0.5, d, 74)))]],
+        ],
+        off: { cover: [0, -124], sampler: [0, -34], meter: [0, -40], hose: [0, -76], ph: [0, -82], chamber: [0, 0], pipe: [0, 44] },
+        anchor: { cover: P(0.55, 0.55, 74), sampler: P(-2.9, 0.85, 108), meter: P(1.9, -1.4, 102), hose: P(0.15, -0.25, 5), ph: P(-0.33, 0.32, 9), chamber: P(0.7, -0.76, 40), pipe: P(-2.3, 0, 18) },
+        cables: [[["hose", 0.15, -0.3, 8], ["hose", 0.15, -0.45, 60], ["chamber", -0.76, -0.2, 70], ["chamber", -1.6, 0.4, 70], ["sampler", -2.6, 0.6, 76]]],
+        axis: [P(0, 0, -60), P(0, 0, 210)],
+      };
+    },
+    // The RIMCO 7499: a bronze funnel on a stainless steel cylinder over a
+    // levelling base, the tipping bucket inside.
+    raingauge() {
+      const tilt = 0.16, piv = 34, rot = ([x, z]) => { const px = x * 31.3, c = Math.cos(tilt), s = Math.sin(tilt); return [(px * c - z * s) / 31.3, px * s + z * c + piv]; };
+      const vee = [[-0.58, 13], [0, -3], [0.58, 13], [0.5, 14.5], [0, 1.5], [-0.5, 14.5]].map(rot);
+      const face = (y, cls) => poly(cls, vee.map(([x, z]) => P(x, y, z)));
+      // the funnel's cone sits down inside the cylinder, under a short collar
+      const fun = [...ringZ(0, 0, 100, 0.84), ...ringZ(0, 0, 60, 0.1)];
+      return {
+        paint: [
+          ["base", [[[0.8, 0], [-0.4, 0.69], [-0.4, -0.69]].map(([x, y]) => cyl(x, y, 0.07, 6, { z: -6 }).nodes), cyl(0, 0, 1.1, 6).nodes, el("circle", { class: "bubble-lvl", cx: f(P(0.6, 0.6, 6)[0]), cy: f(P(0.6, 0.6, 6)[1]), r: 2.2 })]],
+          ["body", shell(0, 0, 0.82, 0.82, 6, 92, { joints: [] })],
+          ["bucket", [seg("post", P(-0.16, -0.32, 12), P(-0.16, -0.32, piv)), seg("post", P(0.16, -0.32, 12), P(0.16, -0.32, piv)), face(-0.28, "fr"), ...vee.map(([x, z]) => seg("rim-l", P(x, -0.28, z), P(x, 0.28, z))), face(0.28, "fl"), seg("post", P(0, -0.36, piv), P(0, 0.36, piv)), seg("det", P(rot([0, 1.5])[0], 0.28, rot([0, 1.5])[1]), P(rot([0, 13])[0], 0.28, rot([0, 13])[1]))]],
+          ["funnel", [cyl(0, 0, 0.04, 6, { z: 54, cls: "bronze" }).nodes, poly("bronze", hull(fun)), cyl(0, 0, 0.86, 8, { z: 96, cls: "bronze" }).nodes, el("ellipse", { class: "bore", cx: f(P(0, 0, 104)[0]), cy: f(P(0, 0, 104)[1] + 1), rx: f(0.74 * TW / SQ), ry: f(0.74 * TH / SQ) })]],
+        ],
+        off: { funnel: [0, -126], bucket: [0, -96], body: [0, 0], base: [0, 40] },
+        anchor: { funnel: P(0.6, 0.6, 100), bucket: P(0.5, 0.28, rot([0.58, 13])[1]), body: P(0.58, -0.58, 64), base: P(0.8, 0.8, 4) },
+        cables: [[["bucket", 0, 0.28, piv], ["body", 0.42, 0.62, 14], ["base", 0.95, 0.75, 4], ["base", 2.3, 1.45, 0]]],
+        axis: [P(0, 0, -50), P(0, 0, 240)],
+      };
+    },
+    // A tower in floors, the Asset Score sensors at critical structure points.
+    tower() {
+      const W = 0.66, floor = (z, h, v) => box(-W, -W, 2 * W, 2 * W, h, { z, win: v }).nodes;
+      const node = (x, y, z) => [box(x - 0.06, y - 0.06, 0.12, 0.12, 4, { z }).nodes, el("circle", { class: "ax-ping", cx: f(P(x, y, z + 4)[0]), cy: f(P(x, y, z + 4)[1]), r: 3 })];
+      return {
+        paint: [
+          ["base", [[[-W, W], [W, W], [W, -W], [0, 0]].map(([x, y]) => seg("pile", P(x * 0.8, y * 0.8, -30), P(x * 0.8, y * 0.8, -62))), box(-W, -W, 2 * W, 2 * W, 30, { z: -30, cls: "found" }).nodes]],
+          ["lower", [floor(0, 52, "a"), poly("lobby", [P(-W + 0.1, W, 2), P(W - 0.1, W, 2), P(W - 0.1, W, 12), P(-W + 0.1, W, 12)])]],
+          ["eas", [plain(floor(52, 52, "b")), node(-W + 0.1, W - 0.1, 104), node(W - 0.1, W - 0.1, 104), node(W - 0.1, -W + 0.1, 104)]],
+          ["upper", floor(104, 52, "c")],
+          ["roof", [box(-W - 0.02, -W - 0.02, 2 * W + 0.04, 2 * W + 0.04, 4, { z: 156 }).nodes, box(-0.35, -0.4, 0.4, 0.35, 10, { z: 160 }).nodes, box(0.15, 0.05, 0.3, 0.3, 7, { z: 160 }).nodes, seg("mast-a", P(0.3, -0.35, 160), P(0.3, -0.35, 196))]],
+        ],
+        off: { roof: [0, -112], upper: [0, -74], eas: [0, -38], lower: [0, 0], base: [0, 46] },
+        anchor: { roof: P(0.6, 0.68, 162), upper: P(W, 0.1, 130), eas: P(W - 0.1, W - 0.1, 108), lower: P(W, 0.2, 26), base: P(W, 0.1, -15) },
+        axis: [P(0, 0, -110), P(0, 0, 330)],
+      };
+    },
+    // How a reading travels: a stack of plates, instruments at the bottom
+    // and the people who act on it at the top.
+    datapath() {
+      const ids = ["instruments", "loggers", "network", "flowsense", "scada", "people"], plate = (z) => box(-1.1, -1.1, 2.2, 2.2, 6, { z }).nodes;
+      const ico = {
+        instruments: (z) => [cyl(-0.5, -0.3, 0.18, 14, { z }).nodes, box(0.15, -0.65, 0.36, 0.3, 18, { z }).nodes, cyl(0.45, 0.4, 0.14, 8, { z, dome: true }).nodes],
+        loggers: (z) => [[-0.55, -0.1], [0.05, -0.55], [0.45, 0.25]].map(([x, y]) => [box(x - 0.13, y - 0.1, 0.26, 0.2, 10, { z }).nodes, seg("mast-a", P(x, y, z + 10), P(x, y, z + 24))]),
+        network: (z) => [[[-0.18, -0.18], [0.18, -0.18], [0.18, 0.18], [-0.18, 0.18]].map(([x, y]) => seg("mast-a", P(x, y, z), P(0, 0, z + 46))), ...[14, 28].map((h) => pl("mast-a", [P(-0.12, -0.12, z + h), P(0.12, -0.12, z + h), P(0.12, 0.12, z + h), P(-0.12, 0.12, z + h), P(-0.12, -0.12, z + h)])), ...[9, 15].map((r) => el("path", { class: "wave", d: `M${f(P(0, 0, z + 46)[0] - r)} ${f(P(0, 0, z + 46)[1] - 2)}a${r} ${r * 0.7} 0 0 1 ${2 * r} 0` }))],
+        flowsense: (z) => [box(-0.75, -0.06, 1.5, 0.1, 30, { z: z + 4 }).nodes, seg("mast-a", P(0, 0, z), P(0, 0, z + 4)), pl("chart", [P(-0.62, 0.04, z + 12), P(-0.35, 0.04, z + 18), P(-0.1, 0.04, z + 15), P(0.15, 0.04, z + 25), P(0.4, 0.04, z + 21), P(0.62, 0.04, z + 28)])],
+        scada: (z) => [box(-0.3, -0.5, 0.6, 0.4, 30, { z }).nodes, ...[6, 12, 18, 24].map((h) => seg("det", P(-0.26, -0.1, z + h), P(0.26, -0.1, z + h)))],
+        people: (z) => [[-0.35, 0.25].map((x) => [box(x, -0.1, 0.24, 0.05, 20, { z }).nodes, lit([P(x + 0.03, -0.05, z + 17), P(x + 0.21, -0.05, z + 17), P(x + 0.21, -0.05, z + 3), P(x + 0.03, -0.05, z + 3)])]), poly("mail", [P(-0.2, 0.35, z), P(0.4, 0.35, z), P(0.4, 0.75, z), P(-0.2, 0.75, z)]), pl("det", [P(-0.2, 0.35, z), P(0.1, 0.55, z), P(0.4, 0.35, z)])],
+      };
+      const paint = [], off = {}, anchor = {};
+      ids.forEach((id, i) => {
+        const z = i * 7;
+        paint.push([id, plate(z)], [id, ico[id](z + 6), { fade: true }]);
+        off[id] = [0, -i * 66];
+        anchor[id] = i % 2 ? P(1.1, -1.1, z + 3) : P(-1.1, 1.1, z + 3);
+      });
+      return { paint, off, anchor, axis: [P(0, 0, 0), P(0, 0, 400)], packets: true };
+    },
+  };
+
+  // Draw an asset into its SVG. Returns the parts in content order, each
+  // with its groups, offset and the mark its label points at, and apply(kp),
+  // which places every part for a progress kp(index) from 0 (assembled) to 1
+  // (apart), and redraws the cables and guides to match.
+  function buildAsset(svg, data) {
+    const make = ASSETS[data.id];
+    if (!make) return null;
+    while (svg.firstChild) svg.firstChild.remove();
+    const spec = make(), D = el("defs", {}, svg);
+    const hatch = el("pattern", { id: "ax-hatch", width: 4, height: 4, patternUnits: "userSpaceOnUse", patternTransform: "rotate(45)" }, D);
+    hatch.append(seg("", [0, 0], [0, 4], { style: "stroke:rgba(255,255,255,.28);stroke-width:1" }));
+    const root = el("g", { class: "ax-root" }, svg);
+    const axis = spec.axis ? seg("ax-axis", spec.axis[0], spec.axis[1]) : null;
+    if (axis) root.append(axis);
+    const guideLayer = el("g", { class: "ax-guides" }, root);
+    const byId = {};
+    data.parts.forEach((p, i) => { byId[p.id] = { id: p.id, i, eds: !!p.eds, groups: [], fades: [], off: spec.off[p.id] || [0, 0], at: spec.anchor[p.id] }; });
+    for (const [id, nodes, o = {}] of spec.paint) {
+      const part = byId[id]; if (!part) continue;
+      const g = el("g", { class: `part${part.eds ? " eds" : ""}`, "data-part": id }, root);
+      [nodes].flat(Infinity).filter(Boolean).forEach((n) => g.appendChild(n));
+      part.groups.push(g);
+      if (o.fade) part.fades.push(g);
+    }
+    const cableLayer = el("g", { class: "ax-cables" }, root);
+    const cables = (spec.cables || []).map((pts) => ({ pts, el: el("polyline", { class: "ax-cable" }, cableLayer) }));
+    const guides = (spec.guides || []).map(([id, a, b]) => ({ id, a, b, el: seg("ax-guide", a, b) }));
+    guides.forEach((gd) => guideLayer.append(gd.el));
+    const parts = data.parts.map((p) => byId[p.id]).filter((p) => p.groups.length || spec.cableAnchor?.[p.id] !== undefined);
+    for (const p of parts) {
+      const host = p.groups[p.groups.length - 1] || cableLayer;
+      p.mark = el("circle", { class: "ax-mark", r: 0.6, cx: p.at ? f(p.at[0]) : 0, cy: p.at ? f(p.at[1]) : 0 }, host);
+      p.cable = spec.cableAnchor?.[p.id];
+    }
+    let pk = null;
+    if (spec.packets) {
+      const top = byId.people, a = P(0, 0, 8), b = P(0, 0, 7 * 5 + 10);
+      const path = `M${f(a[0])} ${f(a[1])}L${f(b[0] + top.off[0])} ${f(b[1] + top.off[1])}`;
+      pk = el("g", { class: "ax-packets" }, root);
+      for (let i = 0; i < 4; i++) { const c = el("circle", { class: "ax-pkt", r: 2.4 }, pk); el("animateMotion", { dur: "3.2s", begin: `${-i * 0.8}s`, repeatCount: "indefinite", path }, c); }
+    }
+    const pos = (id, x, y, z, kp) => { const p = byId[id], [px, py] = P(x, y, z), t = kp(p.i); return [px + p.off[0] * t, py + p.off[1] * t]; };
+    function apply(kp) {
+      for (const p of parts) {
+        const t = kp(p.i), tr = `translate(${f(p.off[0] * t)} ${f(p.off[1] * t)})`;
+        p.groups.forEach((g) => g.setAttribute("transform", tr));
+        p.fades.forEach((g) => (g.style.opacity = t.toFixed(3)));
+      }
+      cables.forEach((c) => c.el.setAttribute("points", c.pts.map(([id, x, y, z]) => pos(id, x, y, z, kp).map(f).join(",")).join(" ")));
+      guides.forEach((gd) => { const p = byId[gd.id], t = kp(p.i); gd.el.style.opacity = t.toFixed(3); gd.el.setAttribute("transform", `translate(${f(p.off[0] * t)} ${f(p.off[1] * t)})`); });
+      const all = Math.min(...parts.map((p) => kp(p.i)));
+      if (axis) axis.style.opacity = (all * 0.9).toFixed(3);
+      if (pk) pk.style.opacity = all > 0.98 ? "1" : "0";
+      // a part named for a cable points at the middle of that cable
+      for (const p of parts) if (p.cable !== undefined) {
+        const pts = cables[p.cable].el.getAttribute("points").split(" ").map((s) => s.split(",").map(Number)), m = pts[Math.floor(pts.length / 2)];
+        p.mark.setAttribute("cx", f(m[0])); p.mark.setAttribute("cy", f(m[1]));
+      }
+    }
+    return { svg, root, parts, apply };
+  }
+
   /* ---- assemble ---- */
   // Two SVGs share one viewBox: the still city (districts, slab, pipes) and,
   // over it, everything that moves (traffic, pings, flows, packets, labels,
@@ -701,7 +1179,7 @@
   // district's moving parts sit in a matching group in the overlay that lifts
   // with it.
   const VB = "-330 -52 800 448";
-  const MOVING = ".arm,.meter,.blink,.hub,.beacon,.screen,.bead,.wtr-line,.foam,.pipe-flow";
+  const MOVING = ".arm,.meter,.blink,.hub,.beacon,.screen,.bead,.wtr-line,.foam,.pipe-flow,.yard-van";
   function build(svg, data) {
     svg.setAttribute("viewBox", VB);
     svg.classList.add("city-svg");
@@ -733,10 +1211,16 @@
         parts.vol.push(...(DETAIL[id] ? DETAIL[id]() : []));
         const dec = el("g", { class: "decals" }, g), vol = el("g", { class: "vol" }, g), cut = el("g", { class: "cut" }, g);
         parts.decals.forEach((p) => p.nodes.forEach((n) => dec.appendChild(n)));
-        parts.vol.sort((a, b) => a.d - b.d).forEach((p) => p.nodes.forEach((n) => vol.appendChild(n)));
+        parts.vol.sort((a, b) => a.d - b.d).forEach((p) => p.nodes.forEach((n) => { n.setAttribute("data-s", p.s || "hi"); vol.appendChild(n); }));
         cutaway(z, parts.cut).forEach((n) => cut.appendChild(n));
-        [...g.querySelectorAll(MOVING)].forEach((n) => gf.appendChild(n));
-        parts.fx.forEach((n) => gf.appendChild(n));
+        // the overlay keeps one group per layer, so a district taken apart
+        // can move its moving parts with the layer they belong to
+        const fxl = { below: el("g", { class: "fx-below" }, gf), lo: el("g", { class: "fx-lo" }, gf), hi: el("g", { class: "fx-hi" }, gf) };
+        [...g.querySelectorAll(MOVING)].forEach((n) => fxl[n.getAttribute("data-s") || "lo"].appendChild(n));
+        parts.fx.forEach((n) => {
+          const layer = n.getAttribute("data-layer");
+          fxl[layer ? { above: "hi", street: "lo", below: "below" }[layer] : /spill|ripple|runoff/.test(n.getAttribute("class")) ? "lo" : "hi"].appendChild(n);
+        });
         zones[id] = g; zoneFx[id] = gf; slots[id] = order;
         // the shadow the lifted district casts, and its label floating above
         shadows[id] = el("ellipse", { class: "shadow", cx: f(cx), cy: f(cy + 10), rx: f((x1 - x0 + y1 - y0) * TW / 4 * 0.98), ry: f((x1 - x0 + y1 - y0) * TH / 4 * 0.98) }, shadowLayer);
@@ -750,6 +1234,24 @@
         el("text", { x: f(a[0]), y: f(a[1] + 3.5), "text-anchor": "middle" }, lg).textContent = text;
         labels[id] = lg;
       });
+
+    // EDS crews that turn out in a storm. Each stands in the street layer of
+    // its district, so it lifts and comes apart with it; city.js shows each
+    // crew as the storm reaches that district.
+    const CREWS = {
+      sewer: ["crew-mh14", [["van-y", 8.32, 3.45], ["crew", 8.34, 2.98], ["crew", 7.94, 2.9], ["cone", 8.42, 2.8], ["cone", 7.88, 3.28]]],
+      pump: ["crew-pump", [["crew", 6.78, 8.5], ["crew", 6.2, 9.15]]],
+      plant: ["crew-plant", [["crew", 2.05, 6.15], ["crew", 2.22, 5.92]]],
+      river: ["crew-river", [["crew", 1.72, 2.62], ["crew", 1.95, 2.52]]],
+    };
+    for (const [id, [cls, items]] of Object.entries(CREWS)) {
+      const g = el("g", { class: `crew ${cls}` }, zoneFx[id].querySelector(".fx-lo"));
+      items.sort((a, b) => a[1] + a[2] - b[1] - b[2]).forEach(([sym, x, y]) => g.append(...use(sym, x, y).nodes));
+    }
+    // the van FlowSense sends from the operations yard to MH 14 when the
+    // alarm goes out, driven along the roads (on the left) by city.js
+    const dispatch = { g: el("g", { class: "dispatch" }, fx.querySelector(".traffic")), route: [[9.06, 9.15], [7.45, 9.15], [7.45, 4.85], [8.13, 4.85], [8.13, 3.4]] };
+    dispatch.use = el("use", { href: "#van-w" }, dispatch.g);
 
     // data links: every district reports to the operations centre mast, and
     // a dim packet rides each one so the hub reads as the hub even at rest
@@ -777,7 +1279,10 @@
     const rains = el("g", { class: "rains", "clip-path": "url(#clip-slab)" }, storm);
     for (const k of [1, 2, 3]) { const g = el("g", { class: `rain rain-${k}` }, rains); el("rect", { class: "rain-fill", x: -400, y: -260, width: 940, height: 760, style: `fill:url(#rain-${k})` }, g); }
 
-    return { svg, fx, base: baseLayer, under: underLayer, zoneLayer, zoneFxLayer, linkLayer, packetLayer, labelLayer, storm, zones, zoneFx, labels, links, shadows, anchors, slots, sensors: sensorNodes, arms, hand, handMotion, sms, smsMotion, ZONES };
+    // a district's kit for taking it apart is made the first time it is asked for
+    const kits = {};
+    const explode = (id) => (kits[id] ||= explodeKit(id, zones[id], zoneFx[id], D));
+    return { svg, fx, base: baseLayer, under: underLayer, zoneLayer, zoneFxLayer, linkLayer, packetLayer, labelLayer, storm, zones, zoneFx, labels, links, shadows, anchors, slots, sensors: sensorNodes, arms, hand, handMotion, sms, smsMotion, ZONES, explode, buildAsset, VB, dispatch };
   }
 
   window.CityScene = { TW, TH, P, build };
