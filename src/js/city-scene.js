@@ -669,7 +669,7 @@
           item(16.98, el("ellipse", { class: "hub", cx: f(hub[0]), cy: f(hub[1]), rx: 16, ry: 10 }), el("circle", { class: "beacon", cx: f(hub[0]), cy: f(hub[1]), r: 4 }), el("circle", { class: "blink", cx: f(hub[0]), cy: f(hub[1] - 2), r: 1.8 })),
           box(8.3, 8.3, 0.9, 0.8, 18, { top: "lit" }), flat("door fine", [P(8.55, 9.1, 0), P(8.95, 9.1, 0), P(8.95, 9.1, 11), P(8.55, 9.1, 11)], 8.3 + 0.9 + 8.3 + 0.8 + 0.001),
           // the EDS fleet parked nose-in, side by side, so each van's logo shows
-          ...[[8.5, 9.4], [8.8, 9.4], [9.1, 9.4]].map(([x, y], i) => use("van-y", x, y, 0, { d: x + y + 0.2, cls: i === 2 ? "yard-van" : undefined })), use("car-e", 8.5, 9.68, 0, { d: 18.4 }), use("car-e", 8.9, 9.68, 0, { d: 18.8 }),
+          ...[[8.45, 9.4], [8.9, 9.4], [9.35, 9.4]].map(([x, y], i) => use("van-y", x, y, 0, { d: x + y + 0.2, cls: i === 2 ? "yard-van" : undefined })), use("car-e", 8.5, 9.68, 0, { d: 18.4 }), use("car-e", 8.9, 9.68, 0, { d: 18.8 }),
           item(19.3, ...[[-0.1, -0.1], [0.1, -0.1], [0.1, 0.1], [-0.1, 0.1]].map(([dx, dy]) => seg("mast", P(9.4 + dx, 9.7 + dy), P(9.4, 9.7, 40))), ...[12, 24, 34].map((z) => pl("mast fine", [P(9.3, 9.6, z), P(9.5, 9.6, z), P(9.5, 9.8, z), P(9.3, 9.8, z), P(9.3, 9.6, z)])), el("circle", { class: "blink", cx: f(P(9.4, 9.7, 41)[0]), cy: f(P(9.4, 9.7, 41)[1]), r: 1.6 })),
           ...[[8.15, 5.6], [9.5, 8.6], [8.1, 9.6]].map(([x, y]) => use("lamp", x, y, 0, { d: x + y + 0.06 })),
           tree(9.5, 5.6, "s"), tree(8.1, 8.2, "s"),
@@ -1251,7 +1251,7 @@
     }
     // the van FlowSense sends from the operations yard to MH 14 when the
     // alarm goes out, driven along the roads (on the left) by city.js
-    const dispatch = { g: el("g", { class: "dispatch" }, fx.querySelector(".traffic")), route: [[9.1, 9.4], [9.1, 9.12], [7.45, 9.12], [7.45, 4.85], [8.13, 4.85], [8.13, 3.4]] };
+    const dispatch = { g: el("g", { class: "dispatch" }, fx.querySelector(".traffic")), route: [[9.35, 9.4], [9.7, 9.4], [9.7, 5.5], [7.45, 5.5], [7.45, 4.85], [8.13, 4.85], [8.13, 3.4]] };
     dispatch.use = el("use", { href: "#van-w" }, dispatch.g);
 
     // data links: every district reports to the operations centre mast, and
