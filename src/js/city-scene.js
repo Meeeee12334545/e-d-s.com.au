@@ -207,9 +207,20 @@
       b.nodes[0].style.fill = cols[1]; b.nodes[1].style.fill = cols[2]; b.nodes[2].style.fill = cols[0];
       g.append(...b.nodes);
       if (o.eds) {
-        // EDS livery: a teal band along both sides, and a roof beacon whose
-        // colour is --vb, which flashes amber while a storm is on (site.css)
-        g.append(poly("", [P(x, y + d, h * 0.35), P(x + w, y + d, h * 0.35), P(x + w, y + d, h * 0.62), P(x, y + d, h * 0.62)], { style: F("#0d7c72") }), poly("", [P(x + w, y, h * 0.35), P(x + w, y + d, h * 0.35), P(x + w, y + d, h * 0.62), P(x + w, y, h * 0.62)], { style: F("#119284") }));
+        // EDS livery: a teal panel along the long side carrying the EDS logo
+        // (the sun-and-wave mark and the wordmark, drawn as vectors and skewed
+        // into the face, so they stay sharp at any zoom), a teal band across
+        // the end, and a roof beacon whose colour is --vb, which flashes amber
+        // while a storm is on (site.css)
+        const alongX = w >= d, z0 = 0.7, z1 = h - 1.15;
+        const face = alongX ? (t, z) => P(x + w * t, y + d, z) : (t, z) => P(x + w, y + d * (1 - t), z);
+        g.append(poly("", [face(0.05, z0), face(0.95, z0), face(0.95, z1), face(0.05, z1)], { style: F("#0d7c72") }));
+        g.append(poly("", alongX ? [P(x + w, y, z0), P(x + w, y + d, z0), P(x + w, y + d, z1), P(x + w, y, z1)] : [P(x, y + d, z0), P(x + w, y + d, z0), P(x + w, y + d, z1), P(x, y + d, z1)], { style: F("#119284") }));
+        const [ox, oy] = face(0.12, 1.2), logo = el("g", { transform: `matrix(0.894 ${alongX ? 0.447 : -0.447} 0 1 ${f(ox)} ${f(oy)})` }, g);
+        const ink = "fill:none;stroke:#ffffff;stroke-width:.42;stroke-linecap:round";
+        el("path", { d: "M.3 -1.5a1.05 1.05 0 0 1 2.1 0", style: ink }, logo);
+        el("path", { d: "M0 -.35q.55 -.5 1.1 0t1.1 0", style: ink }, logo);
+        el("text", { x: 3, y: 0, style: 'font:800 3.15px Geist, "Helvetica Neue", Arial, sans-serif;letter-spacing:-.06px;fill:#ffffff' }, logo).textContent = "EDS";
         const [, by] = P(0, 0, h);
         el("rect", { x: -2, y: f(by - 2.4), width: 4, height: 2.2, rx: 0.9, style: F("var(--vb, #6fcfc1)") }, g);
       }
@@ -218,8 +229,9 @@
     });
     const CAR = ["var(--car, #2f8d84)", "#123b37", "#1c5a54"], VAN = ["#f1fffc", "#6fcfc1", "#a9ebe1"], TRK = ["#8ea9a5", "#2a4744", "#40645f"];
     vehicle("car-e", 0.3, 0.16, 4, CAR, "e"); vehicle("car-w", 0.3, 0.16, 4, CAR, "w"); vehicle("car-s", 0.16, 0.3, 4, CAR, "s"); vehicle("car-n", 0.16, 0.3, 4, CAR, "n");
-    vehicle("van-e", 0.34, 0.18, 5, VAN, "e", { eds: true }); vehicle("van-w", 0.34, 0.18, 5, VAN, "w", { eds: true }); vehicle("van-s", 0.18, 0.34, 5, VAN, "s", { eds: true }); vehicle("van-n", 0.18, 0.34, 5, VAN, "n", { eds: true });
-    vehicle("van-x", 0.34, 0.18, 5, VAN, "", { eds: true }); vehicle("van-y", 0.18, 0.34, 5, VAN, "", { eds: true });
+    // the EDS vans, a little larger than the cars to carry the logo
+    vehicle("van-e", 0.4, 0.19, 5.6, VAN, "e", { eds: true }); vehicle("van-w", 0.4, 0.19, 5.6, VAN, "w", { eds: true }); vehicle("van-s", 0.19, 0.4, 5.6, VAN, "s", { eds: true }); vehicle("van-n", 0.19, 0.4, 5.6, VAN, "n", { eds: true });
+    vehicle("van-x", 0.4, 0.19, 5.6, VAN, "", { eds: true }); vehicle("van-y", 0.19, 0.4, 5.6, VAN, "", { eds: true });
     // light rail: a two-car tram with a dark window band and a pantograph
     for (const dir of ["e", "w"]) sym(`tram-${dir}`, (g) => {
       const b = box(-0.55, -0.1, 1.1, 0.2, 8);
@@ -656,7 +668,8 @@
           use("dish", 8.8, 6.5, 62, { d: 16.96 }), use("dish", 8.86, 6.56, 70, { d: 16.97 }),
           item(16.98, el("ellipse", { class: "hub", cx: f(hub[0]), cy: f(hub[1]), rx: 16, ry: 10 }), el("circle", { class: "beacon", cx: f(hub[0]), cy: f(hub[1]), r: 4 }), el("circle", { class: "blink", cx: f(hub[0]), cy: f(hub[1] - 2), r: 1.8 })),
           box(8.3, 8.3, 0.9, 0.8, 18, { top: "lit" }), flat("door fine", [P(8.55, 9.1, 0), P(8.95, 9.1, 0), P(8.95, 9.1, 11), P(8.55, 9.1, 11)], 8.3 + 0.9 + 8.3 + 0.8 + 0.001),
-          ...[[8.38, 9.3], [8.72, 9.3], [9.06, 9.3]].map(([x, y], i) => use("van-x", x, y, 0, { d: x + y + 0.2, cls: i === 2 ? "yard-van" : undefined })), use("car-e", 8.5, 9.68, 0, { d: 18.4 }), use("car-e", 8.9, 9.68, 0, { d: 18.8 }),
+          // the EDS fleet parked nose-in, side by side, so each van's logo shows
+          ...[[8.5, 9.4], [8.8, 9.4], [9.1, 9.4]].map(([x, y], i) => use("van-y", x, y, 0, { d: x + y + 0.2, cls: i === 2 ? "yard-van" : undefined })), use("car-e", 8.5, 9.68, 0, { d: 18.4 }), use("car-e", 8.9, 9.68, 0, { d: 18.8 }),
           item(19.3, ...[[-0.1, -0.1], [0.1, -0.1], [0.1, 0.1], [-0.1, 0.1]].map(([dx, dy]) => seg("mast", P(9.4 + dx, 9.7 + dy), P(9.4, 9.7, 40))), ...[12, 24, 34].map((z) => pl("mast fine", [P(9.3, 9.6, z), P(9.5, 9.6, z), P(9.5, 9.8, z), P(9.3, 9.8, z), P(9.3, 9.6, z)])), el("circle", { class: "blink", cx: f(P(9.4, 9.7, 41)[0]), cy: f(P(9.4, 9.7, 41)[1]), r: 1.6 })),
           ...[[8.15, 5.6], [9.5, 8.6], [8.1, 9.6]].map(([x, y]) => use("lamp", x, y, 0, { d: x + y + 0.06 })),
           tree(9.5, 5.6, "s"), tree(8.1, 8.2, "s"),
@@ -1238,7 +1251,7 @@
     }
     // the van FlowSense sends from the operations yard to MH 14 when the
     // alarm goes out, driven along the roads (on the left) by city.js
-    const dispatch = { g: el("g", { class: "dispatch" }, fx.querySelector(".traffic")), route: [[9.06, 9.15], [7.45, 9.15], [7.45, 4.85], [8.13, 4.85], [8.13, 3.4]] };
+    const dispatch = { g: el("g", { class: "dispatch" }, fx.querySelector(".traffic")), route: [[9.1, 9.4], [9.1, 9.12], [7.45, 9.12], [7.45, 4.85], [8.13, 4.85], [8.13, 3.4]] };
     dispatch.use = el("use", { href: "#van-w" }, dispatch.g);
 
     // data links: every district reports to the operations centre mast, and
