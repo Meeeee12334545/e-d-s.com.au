@@ -852,8 +852,8 @@ function cityLabel(ref) {
 
 add({
   file: "index.html",
-  title: "EDS | Environmental Data Services: water, wastewater and environmental monitoring",
-  description: "Environmental Data Services (EDS) has been a trusted leader in advanced monitoring solutions and specialised services since 1991, serving government, utilities, councils, consultants and industry across Australia.",
+  title: "Environmental Data Services | Water & Wastewater Monitoring",
+  description: "Environmental Data Services (EDS): monitoring instruments, field crews and data services for water and wastewater, across Australia since 1991.",
   current: "home",
   scripts: ["city-scene.js", "city-weather.js", "city.js"],
   body: (r) => {
@@ -1073,8 +1073,8 @@ ${ctaSection(r)}`;
 /* ---- services ---- */
 add({
   file: "services/index.html",
-  title: "Services | EDS",
-  description: `${C.services.length} services from EDS: sewer flow and I&I monitoring, blockage alarms, water quality, sampling, rainfall, pump stations, SCADA integration, data analysis, calibration and more.`,
+  title: "Water & Wastewater Monitoring Services | EDS",
+  description: `${C.services.length} services from EDS: sewer flow and I&I monitoring, blockage alarms, water quality, sampling, rainfall, pump stations, SCADA integration, calibration and more.`,
   current: "services",
   body: (r) => `
 ${pageHero(r, { crumbs: [["Services"]], title: "Specialised services for water and wastewater networks.", lede: "From a single audit to a national monitoring program, delivered by trained crews in every state.", actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${r}contact.html">Talk to our team ${icon("arrow-right")}</a><a class="btn btn-ghost btn-lg" href="${site.phoneHref}">${icon("phone")} ${site.phone}</a><div class="chips">${C.serviceGroups.map((g) => `<a class="chip" href="#${g.id}">${esc(g.title)}</a>`).join("")}</div>`, visual: heroToc(C.serviceGroups.map((g) => [g.id, g.title, C.services.filter((s) => s.group === g.id).length])) })}
@@ -1244,7 +1244,7 @@ ${groups.length ? band(relatedTone, `${relatedHead}<div class="related-grid">${g
 for (const s of C.services) {
   add({
     file: `services/${s.slug}.html`,
-    title: `${s.title} | EDS`,
+    title: s.pageTitle || `${s.title} | EDS`,
     description: s.summary,
     current: "services",
     menuTab: s.group,
@@ -1264,7 +1264,7 @@ ${ctaSection(r, { topic: s.title })}`,
 /* ---- solutions ---- */
 add({
   file: "solutions/index.html",
-  title: "Solutions | EDS",
+  title: "Wastewater & Environmental Monitoring Solutions | EDS",
   description: "Structure performance monitoring, asset and network assessment, thermal monitoring, wastewater monitoring, automatic sampling and environmental monitoring.",
   current: "solutions",
   menuTab: "solutions",
@@ -1278,7 +1278,7 @@ ${ctaSection(r)}`,
 for (const s of C.solutions) {
   add({
     file: `solutions/${s.slug}.html`,
-    title: `${s.title} | EDS`,
+    title: s.pageTitle || `${s.title} | EDS`,
     description: s.summary,
     current: "solutions",
     menuTab: "solutions",
@@ -1297,8 +1297,8 @@ ${ctaSection(r, { topic: s.title })}`,
 /* ---- products ---- */
 add({
   file: "products/index.html",
-  title: "Products | EDS",
-  description: "EDS manufactures and represents leading instruments for water supply, wastewater, flow monitoring and process control: EDS, Detectronic, ORI, Hach Flow, Beadedstream, MicroLevel, Aquamonitrix and Dynaflox.",
+  title: "Flow Meters, Samplers & Monitoring Instruments | EDS",
+  description: "Flow meters, loggers, samplers and sensors for water and wastewater, from EDS, Detectronic, Hach Flow, ORI, Beadedstream, MicroLevel, Aquamonitrix and Dynaflox.",
   current: "products",
   scripts: ["products.js"],
   body: (r) => {
@@ -1377,7 +1377,7 @@ for (const b of C.brands) {
   }
   add({
     file: `products/${b.slug}.html`,
-    title: `${b.title} | EDS Products`,
+    title: b.pageTitle || `${b.title} | EDS Products`,
     description: b.summary,
     current: "products",
     scripts: ["products.js"],
@@ -1411,7 +1411,7 @@ ${ctaSection(r, { title: `Ask us about ${b.name}.`, lede: "Pricing, availability
 
 add({
   file: "products/lidott-alarm.html",
-  title: "LIDoTT Alarm by Detectronic | EDS",
+  title: "LIDoTT Radar Level Alarm by Detectronic | EDS",
   description: "Self contained radar water level measurement and alarm device. ATEX and IECEx Zone 0 certified, measures up to 8.4 m, battery life up to 7 years.",
   current: "products",
   scripts: ["widgets.js"],
@@ -1758,7 +1758,7 @@ const enquiryForm = (r, reveal) => `
 
 add({
   file: "contact.html",
-  title: "Contact EDS | 1300 721 683",
+  title: "Contact EDS | Offices in QLD, NSW, VIC & SA | 1300 721 683",
   description: "Contact Environmental Data Services. Head office at Meadowbrook, Queensland, with offices in New South Wales, Victoria and South Australia.",
   current: "contact",
   scripts: ["widgets.js"],
@@ -1904,13 +1904,48 @@ await cp(path.join(ROOT, "src/assets/docs"), path.join(DIST, "assets/docs"), { r
 for (const [pkg, f] of [["geist", "geist-latin-wght-normal.woff2"], ["geist-mono", "geist-mono-latin-wght-normal.woff2"]]) {
   await cp(path.join(ROOT, `node_modules/@fontsource-variable/${pkg}/files/${f}`), path.join(DIST, "assets/fonts", f));
 }
+// Google shows about 60 characters of a title and 160 of a description, and
+// pages that share either are hard to tell apart in its results.
+for (const [i, p] of pages.entries()) {
+  if (p.file === "404.html") continue;
+  if (p.title.length > 60) console.warn(`${p.file}: the title is ${p.title.length} characters, and Google shows about 60`);
+  if (p.description.length > 160) console.warn(`${p.file}: the description is ${p.description.length} characters, and Google shows about 160`);
+  for (const key of ["title", "description"]) {
+    const twin = pages.slice(i + 1).find((q) => q[key] === p[key]);
+    if (twin) console.warn(`${p.file} and ${twin.file} have the same ${key}`);
+  }
+}
+// The sitemap dates each page by when its content last changed: its title,
+// description and everything in <main> (so a change to the menus or footer
+// does not count). PAGE_DATES names the dates file from the last publish,
+// which the publish workflow takes from the gh-pages branch. A page that
+// matches its fingerprint there keeps its date; any other page is dated
+// today. The new dates go out as assets/page-dates.json for the next build.
+const today = new Intl.DateTimeFormat("en-CA", { timeZone: site.openingHours.timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+let lastDates = {};
+if (process.env.PAGE_DATES && existsSync(process.env.PAGE_DATES)) {
+  const text = readFileSync(process.env.PAGE_DATES, "utf8").trim();
+  try {
+    if (text) lastDates = JSON.parse(text);
+  } catch {
+    console.warn(`${process.env.PAGE_DATES} is not JSON, so every page is dated today`);
+  }
+}
+const pageDates = {};
 for (const p of pages) {
   const out = path.join(DIST, p.file);
   await mkdir(path.dirname(out), { recursive: true });
-  await writeFile(out, layout(p));
+  const html = layout(p);
+  await writeFile(out, html);
+  const hash = createHash("sha1").update(`${p.title}\n${p.description}\n${html.match(/<main id="main">[\s\S]*<\/main>/)[0]}`).digest("hex").slice(0, 12);
+  pageDates[p.file] = { hash, date: lastDates[p.file]?.hash === hash ? lastDates[p.file].date : today };
 }
+await writeFile(path.join(DIST, "assets/page-dates.json"), `${JSON.stringify(pageDates, null, 1)}\n`);
 // Forwarding pages for the old site's addresses. GitHub Pages serves
-// /hach-flow from hach-flow.html, so each sits at the root.
+// /hach-flow from hach-flow.html, so each sits at the root. It cannot send
+// a real redirect, but Google takes an instant refresh as a permanent one and
+// passes the old address's standing to the new page, so these carry no
+// noindex (which would tell it to drop the address instead).
 // A target may carry its own query (an enquiry topic); then that query is
 // kept rather than the visitor's.
 for (const [from, to] of Object.entries(C.oldPages)) {
@@ -1924,7 +1959,6 @@ for (const [from, to] of Object.entries(C.oldPages)) {
 <head>
 <meta charset="utf-8">
 <title>Page moved</title>
-<meta name="robots" content="noindex">
 <link rel="canonical" href="${pageUrl(file)}">
 <meta http-equiv="refresh" content="0; url=${esc(to)}">
 <script>location.replace("${to}"${file === to ? " + location.search" : ""} + location.hash)</script>
@@ -1946,7 +1980,7 @@ await writeFile(
   path.join(DIST, "sitemap.xml"),
   `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${pages
     .filter((p) => p.file !== "404.html")
-    .map((p) => `  <url><loc>${pageUrl(p.file)}</loc></url>`)
+    .map((p) => `  <url><loc>${pageUrl(p.file)}</loc><lastmod>${pageDates[p.file].date}</lastmod></url>`)
     .join("\n")}\n</urlset>\n`
 );
 await writeFile(path.join(DIST, "robots.txt"), process.env.PREVIEW ? "User-agent: *\nDisallow: /\n" : `User-agent: *\nAllow: /\n\nSitemap: ${SITE_URL}/sitemap.xml\n`);
