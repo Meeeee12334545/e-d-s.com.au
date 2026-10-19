@@ -13,7 +13,9 @@
   const NS = "http://www.w3.org/2000/svg", XL = "http://www.w3.org/1999/xlink";
   const TW = 56, TH = 28;
   const P = (x, y, z = 0) => [(x - y) * TW / 2, (x + y) * TH / 2 - z];
-  const f = (n) => (+n).toFixed(1);
+  // two decimals: the camera zooms a district to two or three times its
+  // size, where a tenth of a unit is most of a device pixel
+  const f = (n) => (+n).toFixed(2);
   const pts = (a) => a.map((p) => `${f(p[0])},${f(p[1])}`).join(" ");
   const el = (tag, attrs = {}, parent) => {
     const n = document.createElementNS(NS, tag);
@@ -25,6 +27,17 @@
   const seg = (cls, a, b, extra) => el("line", { class: cls, x1: f(a[0]), y1: f(a[1]), x2: f(b[0]), y2: f(b[1]), ...extra });
   const pl = (cls, a, extra) => el("polyline", { class: cls, points: pts(a), ...extra });
   const item = (d, ...nodes) => ({ d, nodes: nodes.flat(Infinity).filter(Boolean) });
+  // Many small shapes of one kind (windows, joints, posts, roof courses) go
+  // into one path, so the fine detail costs one node per kind rather than
+  // one per shape: `shapes` closes each outline, `strokes` leaves it open.
+  const dOf = (list, close) => list.map((a) => "M" + a.map((p) => `${f(p[0])} ${f(p[1])}`).join("L") + (close ? "Z" : "")).join("");
+  const shapes = (cls, list, extra) => list.length ? el("path", { class: cls, d: dOf(list, true), ...extra }) : null;
+  const strokes = (cls, list, extra) => list.length ? el("path", { class: cls, d: dOf(list, false), ...extra }) : null;
+  // a rectangle on a wall: `L` is the face at y + d (facing left), `R` the
+  // face at x + w; a and b run along the wall in tiles, z0 and z1 up it
+  const onL = (x, yd, a, b, z0, z1) => [P(x + a, yd, z0), P(x + b, yd, z0), P(x + b, yd, z1), P(x + a, yd, z1)];
+  const onR = (xw, y, a, b, z0, z1) => [P(xw, y + a, z0), P(xw, y + b, z0), P(xw, y + b, z1), P(xw, y + a, z1)];
+  const mix = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
 
   /* ---- solids ---- */
   function box(x, y, w, d, h, o = {}) {
@@ -39,8 +52,17 @@
       const b = Math.min(7, h / 3);
       nodes.push(poly("pod", [P(x, y + d, z), P(x + w, y + d, z), P(x + w, y + d, z + b), P(x, y + d, z + b)]));
       nodes.push(poly("pod", [P(x + w, y, z), P(x + w, y + d, z), P(x + w, y + d, z + b), P(x + w, y, z + b)]));
+      // a parapet coping along the roofline, and a lit edge up the near corner
+      const c = Math.min(1.8, h / 10);
+      nodes.push(shapes("cope", [onL(x, y + d, 0, w, z + h - c, z + h), onR(x + w, y, 0, d, z + h - c, z + h)]), seg("edge", P(x + w, y + d, z + b), P(x + w, y + d, z + h - c)));
+      // a lit entrance in the middle of the left face
+      if (o.entry) nodes.push(poly("entry", onL(x, y + d, w / 2 - 0.07, w / 2 + 0.07, z, z + Math.min(5.5, b))));
     }
+    // corrugated cladding: ribs skewed to each face
+    if (o.clad) nodes.push(poly("clad", L, { style: "fill:url(#clad-l)" }), poly("clad", R, { style: "fill:url(#clad-r)" }));
     if (!o.noTop) nodes.push(poly((o.top || "ft") + c, [P(x, y, z + h), P(x + w, y, z + h), P(x + w, y + d, z + h), P(x, y + d, z + h)]));
+    // a windowed block's roof sits inside a parapet
+    if (o.win && !o.noTop && w > 0.3 && d > 0.3) { const i = 0.05; nodes.push(poly("roofin", [P(x + i, y + i, z + h), P(x + w - i, y + i, z + h), P(x + w - i, y + d - i, z + h), P(x + i, y + d - i, z + h)])); }
     return { d: x + w + y + d + (o.bias || 0), nodes };
   }
   function roof(x, y, w, d, z, rh) {
@@ -78,6 +100,58 @@
     }
     return b;
   }
+  // What makes a house read as one up close: windows with sills, a shadow
+  // under the eaves, tile courses on the roof planes facing the viewer and a
+  // light line along the ridge and hips. `roof` is "x" or "y" for a gable
+  // whose ridge runs along that axis, "h" for a hip. The windows leave room
+  // for a door a third of the way along the left face.
+  function homeDetail(x, y, w, d, h, rh, roof, seed = 0) {
+    const yd = y + d, xw = x + w, rows = h >= 16 ? [[3, 6.6], [10.6, 14.2]] : [[3.6, 7.6]];
+    const dark = [], lit = [], sills = [], tiles = [], ridge = [];
+    let n = 0;
+    const win = (q, a, b, z0, face) => {
+      ((seed * 3 + n++ * 5) % 7 < 2 ? lit : dark).push(q);
+      sills.push(face === "L" ? [P(x + a - 0.015, yd, z0 - 0.4), P(x + b + 0.015, yd, z0 - 0.4)] : [P(xw, y + a - 0.015, z0 - 0.4), P(xw, y + b + 0.015, z0 - 0.4)]);
+    };
+    rows.forEach(([z0, z1], r) => {
+      for (const [a, b] of r ? [[0.08, 0.26], [0.4, 0.58], [0.72, 0.9]] : [[0.08, 0.3], [0.62, 0.88]]) win(onL(x, yd, a * w, b * w, z0, z1), a * w, b * w, z0, "L");
+      for (const [a, b] of [[0.14, 0.4], [0.6, 0.86]]) win(onR(xw, y, a * d, b * d, z0, z1), a * d, b * d, z0, "R");
+    });
+    const eave = [onL(x, yd, 0, w, h - 1.4, h), onR(xw, y, 0, d, h - 1.4, h)];
+    const S = [0.25, 0.5, 0.75];
+    if (roof === "x") {
+      for (const s of S) tiles.push([P(x, yd - s * d / 2, h + s * rh), P(xw, yd - s * d / 2, h + s * rh)]);
+      ridge.push([P(x, y + d / 2, h + rh), P(xw, y + d / 2, h + rh)], [P(xw, yd, h), P(xw, y + d / 2, h + rh), P(xw, y, h)]);
+    } else if (roof === "y") {
+      for (const s of S) tiles.push([P(xw - s * w / 2, y, h + s * rh), P(xw - s * w / 2, yd, h + s * rh)]);
+      ridge.push([P(x + w / 2, y, h + rh), P(x + w / 2, yd, h + rh)], [P(x, yd, h), P(x + w / 2, yd, h + rh), P(xw, yd, h)]);
+    } else {
+      const A = P(x + w / 2, y + d / 2, h + rh), a = P(x, yd, h), b = P(xw, yd, h), c = P(xw, y, h);
+      for (const s of S) tiles.push([mix(a, A, s), mix(b, A, s), mix(c, A, s)]);
+      ridge.push([a, A, c], [A, b]);
+    }
+    return [shapes("eave", eave), shapes("hwin", dark), shapes("hwin hwin-lit", lit), strokes("sill", sills), strokes("tiles", tiles), strokes("ridge", ridge)];
+  }
+  // An open transit canopy on its platform (z 1): a glass wall at the back,
+  // posts front and back, benches, people waiting, a lit roof on top. It is
+  // street furniture, so it stays at street level when the district comes apart.
+  const canopy = (x, y, w, d) => {
+    const xs = [x + 0.05, x + w / 2, x + w - 0.05], post = (px, py) => seg("det", P(px, py, 1), P(px, py, 9));
+    return [
+      item(x + y + 0.1, xs.map((px) => post(px, y + 0.04)), poly("glass", [P(x + 0.05, y + 0.04, 1), P(x + w - 0.05, y + 0.04, 1), P(x + w - 0.05, y + 0.04, 8.4), P(x + 0.05, y + 0.04, 8.4)])),
+      use("bench", x + 0.3, y + 0.12, 1, { cls: "fine", d: x + y + 0.5 }), use("bench", x + w - 0.5, y + 0.12, 1, { cls: "fine", d: x + w + y - 0.2 }),
+      who(x + 0.55, y + 0.3, "#e7fff9", { z: 1 }), who(x + 0.68, y + 0.34, "#f2c14e", { z: 1 }), who(x + w - 0.3, y + 0.28, "#38bdf8", { z: 1 }),
+      item(x + w + y + d - 0.01, xs.map((px) => post(px, y + d - 0.04))),
+      box(x, y, w, d, 2.4, { z: 9, top: "lit" }),
+    ].map(lo);
+  };
+  // a flat roof in sheeting: ribs running across it, painted with the block
+  const ribbed = (b, x, y, w, d, h) => {
+    const ribs = [];
+    for (let k = x + 0.1; k < x + w - 0.02; k += 0.1) ribs.push([P(k, y, h), P(k, y + d, h)]);
+    b.nodes.push(strokes("ribs", ribs));
+    return b;
+  };
   const arms = [];
   function cyl(cx, cy, r, h, o = {}) {
     const z = o.z || 0, rx = r * TW / Math.SQRT2, ry = r * TH / Math.SQRT2, c = o.cls ? ` ${o.cls}` : "";
@@ -91,6 +165,11 @@
     if (o.cap) nodes.push(poly("fr", [[bx - rx, ty], [bx + rx, ty], [bx, ty - rx * 0.7]]));
     if (o.water) nodes.push(el("ellipse", { class: `wtr ${o.water === true ? "" : o.water}`, cx: f(bx), cy: f(ty), rx: f(rx * 0.82), ry: f(ry * 0.82) }));
     if (o.ring) nodes.push(el("ellipse", { class: "det", cx: f(bx), cy: f(ty), rx: f(rx * 0.6), ry: f(ry * 0.6) }));
+    // the front half of a ring round the shell at height zz above the base
+    const arc = (zz) => `M${f(bx - rx)} ${f(by - zz)}A${f(rx)} ${f(ry)} 0 0 0 ${f(bx + rx)} ${f(by - zz)}`;
+    if (o.bands) nodes.push(el("path", { class: "seam", d: Array.from({ length: o.bands }, (_, i) => arc(h * (i + 1) / (o.bands + 1))).join("") }));
+    if (o.stripes) nodes.push(el("path", { class: "stripe", d: o.stripes.map((zz) => arc(h - zz)).join("") }));
+    if (o.rail) nodes.push(el("ellipse", { class: "tank-rail", cx: f(bx), cy: f(ty - 3), rx: f(rx * 0.94), ry: f(ry * 0.94) }), el("path", { class: "tank-rail", d: [-0.7, -0.25, 0.25, 0.7].map((k) => `M${f(bx + rx * 0.94 * k)} ${f(ty + ry * 0.94 * Math.sqrt(1 - k * k))}v-3`).join("") }));
     if (o.arm) {
       const arm = el("line", { class: "arm" });
       arms.push({ arm, cx, cy, r: r * 0.8, z: z + h, phase: (cx * 7 + cy * 3) % 6 });
@@ -114,14 +193,17 @@
   const lo = (it) => ({ ...it, s: "lo" });
   // a fence or railing: the top rail at height z, a post every `posts` tiles
   function rail(points, z, o = {}) {
-    const c = o.cls ? ` ${o.cls}` : "", nodes = [pl("rail" + c, points.map(([x, y]) => P(x, y, z)))];
+    const c = o.cls ? ` ${o.cls}` : "", nodes = [pl("rail" + c, points.map(([x, y]) => P(x, y, z)))], posts = [];
     if (o.posts) for (let i = 0; i < points.length - 1; i++) {
       const [x0, y0] = points[i], [x1, y1] = points[i + 1], n = Math.max(1, Math.round(Math.hypot(x1 - x0, y1 - y0) / o.posts));
       for (let k = i ? 1 : 0; k <= n; k++) {
         const t = k / n, x = x0 + (x1 - x0) * t, y = y0 + (y1 - y0) * t;
-        nodes.push(seg("post" + c, P(x, y), P(x, y, z)));
+        posts.push([P(x, y), P(x, y, z)]);
       }
     }
+    // a mid rail halfway up, on fences and railings alike
+    if (o.posts && !/pipe-rack/.test(o.cls || "")) nodes.push(pl("rail mid" + c, points.map(([x, y]) => P(x, y, z / 2))));
+    nodes.push(strokes("post" + c, posts));
     return { d: o.d ?? Math.max(...points.map(([x, y]) => x + y)), nodes, s: /fence/.test(o.cls || "") ? "lo" : "hi" };
   }
   const pipeline = (points, z, cls, d) => item(d ?? Math.max(...points.map(([x, y]) => x + y)), pl(cls, points.map(([x, y]) => P(x, y, z))));
@@ -130,6 +212,8 @@
   const tree = (x, y, s = "m", o = {}) => use(`tree-${s}`, x, y, 0, { d: x + y + 0.1, ...o });
   const gum = (x, y) => use("tree-gum", x, y, 0, { d: x + y + 0.1 });
   const jac = (x, y) => use("tree-jac", x, y, 0, { d: x + y + 0.1 });
+  // a person, in their own --shirt
+  const who = (x, y, shirt, o = {}) => use("person", x, y, o.z || 0, { d: o.d ?? x + y + 0.06, style: `--shirt:${shirt}`, cls: "fine" });
   const manhole = (x, y, o = {}) => {
     const [cx, cy] = P(x, y);
     return lo(item(x + y, el("ellipse", { class: "mh", cx: f(cx), cy: f(cy), rx: 6, ry: 3 }), el("ellipse", { class: "mh-ring", cx: f(cx), cy: f(cy), rx: 3.4, ry: 1.7 }), o.open && [
@@ -185,15 +269,22 @@
     const D = el("defs", {}, svg);
     const sym = (id, fn) => { const g = el("g", { id }, D); fn(g); return g; };
     const F = (color) => `fill:${color}`;
+    // trees: a contact shadow on the ground, the canopy shaded on its far
+    // side and caught by the light on its near one
+    const SHADE = F("rgba(0,0,0,.2)"), SHEEN = F("rgba(255,255,255,.13)");
     for (const [k, s] of [["s", 0.72], ["m", 1], ["l", 1.3]]) sym(`tree-${k}`, (g) => {
+      el("ellipse", { cx: f(2 * s), cy: 0.6, rx: f(5.6 * s), ry: f(2.3 * s), style: SHADE }, g);
       g.append(seg("", [0, 0], [0, -6 * s], { style: "stroke:var(--detail);stroke-width:1" }));
       el("circle", { cx: 0, cy: f(-9 * s), r: f(7 * s), style: F("var(--tree-2)") }, g);
+      el("circle", { cx: f(2.8 * s), cy: f(-7.2 * s), r: f(4 * s), style: F("rgba(0,0,0,.12)") }, g);
       el("circle", { cx: -1.5, cy: f(-13 * s), r: f(5 * s), style: F("var(--tree)") }, g);
+      el("circle", { cx: f(-3.4 * s), cy: f(-15 * s), r: f(2.1 * s), style: SHEEN }, g);
     });
+    // a street light on a pole with an arm, the head over the road
     sym("lamp", (g) => {
       el("ellipse", { class: "pool", cx: 0, cy: 0, rx: 13, ry: 6.5, style: F("var(--pool, url(#pool))") }, g);
-      g.append(seg("", [0, 0], [0, -15], { style: "stroke:rgba(255,255,255,.3);stroke-width:1" }));
-      el("circle", { cx: 0, cy: -15, r: 1.8, style: F("#e7fff9") }, g);
+      g.append(pl("", [[0, 0], [0, -15], [2.2, -16.2]], { style: "fill:none;stroke:rgba(255,255,255,.3);stroke-width:1" }));
+      el("ellipse", { cx: 2.4, cy: -16, rx: 2, ry: 1.1, style: F("#e7fff9") }, g);
     });
     // vehicles: one symbol per direction of travel, so the beam leads
     const vehicle = (id, len, wid, h, cols, dir, o = {}) => sym(id, (g) => {
@@ -203,9 +294,20 @@
         s: [P(x, y + d, 2), P(x + w, y + d, 2), P(x + w + 0.1, y + d + 0.42, 0), P(x - 0.1, y + d + 0.42, 0), "url(#beam-r)"],
         n: [P(x, y, 2), P(x + w, y, 2), P(x + w + 0.1, y - 0.42, 0), P(x - 0.1, y - 0.42, 0), "url(#beam)"] }[dir];
       if (beam) g.append(poly("beam", beam.slice(0, 4), { style: F(beam[4]) }));
-      const b = box(x, y, w, d, h);
+      const bh = o.cabin ? h * 0.62 : h, b = box(x, y, w, d, bh);
       b.nodes[0].style.fill = cols[1]; b.nodes[1].style.fill = cols[2]; b.nodes[2].style.fill = cols[0];
       g.append(...b.nodes);
+      if (o.cabin) {
+        // a glasshouse set back from the bonnet: dark glass all round, the
+        // roof in the body colour, a pillar between the windows
+        const along = w >= d, n = along ? w : d, t0 = { e: 0.14, s: 0.14, w: 0.36, n: 0.36 }[dir] ?? 0.25, i = 0.012;
+        const c = along ? box(x + n * t0, y + i, n * 0.5, d - 2 * i, h - bh, { z: bh }) : box(x + i, y + n * t0, w - 2 * i, n * 0.5, h - bh, { z: bh });
+        c.nodes[0].style.fill = "#0c2422"; c.nodes[1].style.fill = "#143330"; c.nodes[2].style.fill = cols[0];
+        g.append(...c.nodes);
+        const m = along ? seg("", P(x + n * (t0 + 0.25), y + d - i, bh), P(x + n * (t0 + 0.25), y + d - i, h)) : seg("", P(x + w - i, y + n * (t0 + 0.25), bh), P(x + w - i, y + n * (t0 + 0.25), h));
+        m.style.cssText = `stroke:${cols[0]};stroke-width:.5`;
+        g.append(m);
+      }
       if (o.eds) {
         // EDS livery: a teal panel along the long side carrying the EDS logo
         // (the sun-and-wave mark and the wordmark, drawn as vectors and skewed
@@ -223,12 +325,15 @@
         el("text", { x: 3, y: 0, style: 'font:800 3.15px Geist, "Helvetica Neue", Arial, sans-serif;letter-spacing:-.06px;fill:#ffffff' }, logo).textContent = "EDS";
         const [, by] = P(0, 0, h);
         el("rect", { x: -2, y: f(by - 2.4), width: 4, height: 2.2, rx: 0.9, style: F("var(--vb, #6fcfc1)") }, g);
+        // the end the viewer sees: a windscreen when it is the front, windows in the back doors when not
+        const end = alongX ? (a, b, z0, z1) => onR(x + w, y, a * d, b * d, z0, z1) : (a, b, z0, z1) => onL(x, y + d, a * w, b * w, z0, z1);
+        g.append(dir === "e" || dir === "s" ? poly("", end(0.08, 0.92, h * 0.56, h * 0.88), { style: F("#0c2422") }) : shapes("", [end(0.1, 0.46, h * 0.56, h * 0.84), end(0.54, 0.9, h * 0.56, h * 0.84)], { style: F("#0c2422") }));
       }
       const tail = { e: [[x, y + d * 0.25], [x, y + d * 0.75]], w: [[x + w, y + d * 0.25], [x + w, y + d * 0.75]], s: [[x + w * 0.25, y], [x + w * 0.75, y]], n: [[x + w * 0.25, y + d], [x + w * 0.75, y + d]] }[dir];
       if (tail) for (const [tx, ty] of tail) { const [a, c] = P(tx, ty, h * 0.5); el("circle", { cx: f(a), cy: f(c), r: 0.9, style: F("var(--red)") }, g); }
     });
     const CAR = ["var(--car, #2f8d84)", "#123b37", "#1c5a54"], VAN = ["#f1fffc", "#6fcfc1", "#a9ebe1"], TRK = ["#8ea9a5", "#2a4744", "#40645f"];
-    vehicle("car-e", 0.3, 0.16, 4, CAR, "e"); vehicle("car-w", 0.3, 0.16, 4, CAR, "w"); vehicle("car-s", 0.16, 0.3, 4, CAR, "s"); vehicle("car-n", 0.16, 0.3, 4, CAR, "n");
+    vehicle("car-e", 0.3, 0.16, 4.2, CAR, "e", { cabin: true }); vehicle("car-w", 0.3, 0.16, 4.2, CAR, "w", { cabin: true }); vehicle("car-s", 0.16, 0.3, 4.2, CAR, "s", { cabin: true }); vehicle("car-n", 0.16, 0.3, 4.2, CAR, "n", { cabin: true });
     // the EDS vans, a little larger than the cars to carry the logo
     vehicle("van-e", 0.4, 0.19, 5.6, VAN, "e", { eds: true }); vehicle("van-w", 0.4, 0.19, 5.6, VAN, "w", { eds: true }); vehicle("van-s", 0.19, 0.4, 5.6, VAN, "s", { eds: true }); vehicle("van-n", 0.19, 0.4, 5.6, VAN, "n", { eds: true });
     vehicle("van-x", 0.4, 0.19, 5.6, VAN, "", { eds: true }); vehicle("van-y", 0.19, 0.4, 5.6, VAN, "", { eds: true });
@@ -238,9 +343,34 @@
       b.nodes[0].style.fill = "#c9dbd7"; b.nodes[1].style.fill = "#dfeae8"; b.nodes[2].style.fill = "#eef6f4";
       g.append(...b.nodes, poly("", [P(-0.55, 0.1, 4.2), P(0.55, 0.1, 4.2), P(0.55, 0.1, 6.6), P(-0.55, 0.1, 6.6)], { style: F("#123b37") }), seg("", P(0, 0.1, 0.6), P(0, 0.1, 7.6), { style: "stroke:#8aa7a2;stroke-width:1" }));
       g.append(pl("", [P(-0.08, 0, 8), P(0.02, 0, 12.5), P(0.12, 0, 8)], { style: "fill:none;stroke:rgba(255,255,255,.6);stroke-width:.9" }));
+      // pillars between the panes, two doors on each car, glass across the end
+      g.append(strokes("", [-0.44, -0.33, -0.22, -0.11, 0.11, 0.22, 0.33, 0.44].map((k) => [P(k, 0.1, 4.2), P(k, 0.1, 6.6)]), { style: "fill:none;stroke:#c9dbd7;stroke-width:.5" }));
+      g.append(strokes("", [-0.36, -0.2, 0.2, 0.36].map((k) => [P(k - 0.04, 0.1, 0.6), P(k - 0.04, 0.1, 6.6), P(k + 0.04, 0.1, 6.6), P(k + 0.04, 0.1, 0.6)]), { style: "fill:none;stroke:#8aa7a2;stroke-width:.5" }));
+      g.append(poly("", onR(0.55, -0.1, 0.03, 0.17, 4.2, 7), { style: F("#123b37") }));
       const [lx, ly] = P(dir === "e" ? 0.55 : -0.55, 0, 3); el("circle", { cx: f(lx), cy: f(ly), r: 1.1, style: F("#fff7d6") }, g);
     });
-    vehicle("truck-n", 0.2, 0.5, 8, TRK, "n"); vehicle("truck-x", 0.5, 0.2, 7, TRK, "");
+    // trucks: a box body and, ahead of it, a lower cab with a windscreen
+    const truck = (id, along, len, wid, h) => sym(id, (g) => {
+      const x = along ? -len / 2 : -wid / 2, y = along ? -wid / 2 : -len / 2, cab = 0.13, gap = 0.015;
+      const paint = (b, cols) => { b.nodes.forEach((n, i) => (n.style.fill = cols[i])); g.append(...b.nodes); return b; };
+      if (along) {
+        // heading +x: the body behind, the cab nearer the viewer
+        paint(box(x, y, len - cab - gap, wid, h), [TRK[1], TRK[2], TRK[0]]);
+        paint(box(x + len - cab, y, cab, wid, h * 0.72), [TRK[1], TRK[2], "#b9cfcb"]);
+        g.append(poly("", onR(x + len, y, 0.02, wid - 0.02, h * 0.42, h * 0.68), { style: F("#0c2422") }), poly("", onL(x + len - cab, y + wid, 0.02, cab - 0.03, h * 0.42, h * 0.68), { style: F("#0c2422") }));
+      } else {
+        // heading -y: the beam, then the cab, which is farther away
+        g.append(poly("beam", [P(x, y, 2), P(x + wid, y, 2), P(x + wid + 0.1, y - 0.42, 0), P(x - 0.1, y - 0.42, 0)], { style: F("url(#beam)") }));
+        paint(box(x, y, wid, cab, h * 0.72), [TRK[1], TRK[2], "#b9cfcb"]);
+        paint(box(x, y + cab + gap, wid, len - cab - gap, h), [TRK[1], TRK[2], TRK[0]]);
+        g.append(poly("", onR(x + wid, y, 0.02, cab - 0.03, h * 0.42, h * 0.68), { style: F("#0c2422") }));
+      }
+      // ribs down the body's long side
+      const n = 5, side = along ? (t) => onL(x + (len - cab) * t, y + wid, 0, 0.012, 1, h - 0.6) : (t) => onR(x + wid, y + cab + (len - cab) * t, 0, 0.012, 1, h - 0.6);
+      g.append(shapes("", Array.from({ length: n - 1 }, (_, i) => side((i + 1) / n)), { style: F("rgba(0,0,0,.18)") }));
+      if (!along) for (const t of [0.25, 0.75]) { const [tx, ty] = P(x + wid * t, y + len, h * 0.25); el("circle", { cx: f(tx), cy: f(ty), r: 0.9, style: F("var(--red)") }, g); }
+    });
+    truck("truck-n", false, 0.5, 0.2, 8); truck("truck-x", true, 0.5, 0.2, 7);
     // A low white roadster, unbadged, for the occasional stunt (city.js),
     // drawn in full rather than as a box: a wedge body lower at the nose, a
     // glasshouse with a raked windscreen, four wheels with rims and hubs, a
@@ -281,16 +411,35 @@
     });
     for (const dir of ["e", "w", "n", "s"]) roadster(dir);
     sym("cone", (g) => { g.append(poly("", [[-2.2, 0], [2.2, 0], [0, -6]], { style: F("var(--amber)") }), seg("", [-3, 0.5], [3, 0.5], { style: "stroke:#06201e;stroke-width:1.2" })); });
-    sym("person", (g) => { el("rect", { x: -1.4, y: -6, width: 2.8, height: 6, rx: 1.2, style: F("#f2c14e") }, g); el("circle", { cx: 0, cy: -7.6, r: 1.7, style: F("#ffe3b3") }, g); });
+    // people: legs, a top in --shirt (set on each one), a head, a small shadow
+    sym("person", (g) => {
+      el("ellipse", { cx: 0.8, cy: 0.2, rx: 2.2, ry: 0.8, style: SHADE }, g);
+      g.append(shapes("", [[[-1.2, 0], [-0.2, 0], [-0.2, -2.8], [-1.2, -2.8]], [[0.2, 0], [1.2, 0], [1.2, -2.8], [0.2, -2.8]]], { style: F("var(--legs, #1d3a37)") }));
+      el("rect", { x: -1.4, y: -6.2, width: 2.8, height: 3.8, rx: 1.1, style: F("var(--shirt, #f2c14e)") }, g);
+      el("circle", { cx: 0, cy: -7.7, r: 1.6, style: F("var(--skin, #ffe3b3)") }, g);
+    });
     // an EDS crew member: hi-vis orange with a reflective band and a white hard hat
-    sym("crew", (g) => { el("rect", { x: -1.5, y: -6.2, width: 3, height: 6.2, rx: 1.2, style: F("#f97316") }, g); el("rect", { x: -1.5, y: -3.7, width: 3, height: 0.9, style: F("#fff4e5") }, g); el("circle", { cx: 0, cy: -7.8, r: 1.6, style: F("#ffe3b3") }, g); el("path", { d: "M-2.1 -8.3a2.1 1.8 0 0 1 4.2 0z", style: F("#ffffff") }, g); });
+    sym("crew", (g) => {
+      el("ellipse", { cx: 0.8, cy: 0.2, rx: 2.3, ry: 0.8, style: SHADE }, g);
+      g.append(shapes("", [[[-1.3, 0], [-0.2, 0], [-0.2, -2.8], [-1.3, -2.8]], [[0.2, 0], [1.3, 0], [1.3, -2.8], [0.2, -2.8]]], { style: F("#1e3a5f") }));
+      el("rect", { x: -1.5, y: -6.2, width: 3, height: 3.9, rx: 1.1, style: F("#f97316") }, g); el("rect", { x: -1.5, y: -4.3, width: 3, height: 0.8, style: F("#fff4e5") }, g);
+      el("circle", { cx: 0, cy: -7.8, r: 1.6, style: F("#ffe3b3") }, g); el("path", { d: "M-2.1 -8.3a2.1 1.8 0 0 1 4.2 0z", style: F("#ffffff") }, g);
+    });
     // a gum tree: pale trunk, open clumps of grey-green leaves; and a jacaranda
     sym("tree-gum", (g) => {
       const bark = "fill:none;stroke:var(--bark,#c9c1ad);stroke-linecap:round;stroke-width:";
+      el("ellipse", { cx: 2.4, cy: 0.6, rx: 6, ry: 2.4, style: SHADE }, g);
       g.append(pl("", [[0, 0], [0.5, -7], [0.2, -13.5]], { style: `${bark}1.4` }), seg("", [0.4, -8], [-2.8, -12.6], { style: `${bark}.9` }), seg("", [0.3, -10.5], [3, -14.2], { style: `${bark}.9` }));
       [[-3.1, -14.6, 3.8, 2.6, "--gum-2"], [3.3, -15.6, 3.6, 2.5, "--gum-2"], [0.4, -18.6, 4.3, 3, "--gum"], [-2.3, -17.2, 2.8, 2, "--gum"], [2.6, -13.3, 2.4, 1.7, "--gum"]].forEach(([cx, cy, rx, ry, v]) => el("ellipse", { cx, cy, rx, ry, style: F(`var(${v})`) }, g));
     });
-    sym("tree-jac", (g) => { g.append(seg("", [0, 0], [0, -6], { style: "stroke:var(--detail);stroke-width:1.1" })); el("ellipse", { cx: 0, cy: -9, rx: 7.6, ry: 4.6, style: F("var(--jac-2)") }, g); el("ellipse", { cx: -1, cy: -11, rx: 5.4, ry: 3.4, style: F("var(--jac)") }, g); });
+    sym("tree-jac", (g) => {
+      el("ellipse", { cx: 2, cy: 0.6, rx: 6, ry: 2.4, style: SHADE }, g);
+      g.append(seg("", [0, 0], [0, -6], { style: "stroke:var(--detail);stroke-width:1.1" }));
+      el("ellipse", { cx: 0, cy: -9, rx: 7.6, ry: 4.6, style: F("var(--jac-2)") }, g); el("ellipse", { cx: -1, cy: -11, rx: 5.4, ry: 3.4, style: F("var(--jac)") }, g);
+      // a few fallen flowers on the ground
+      el("ellipse", { cx: 4.5, cy: 1.4, rx: 2.6, ry: 1, style: F("var(--jac)"), opacity: 0.35 }, g);
+      el("ellipse", { cx: -2.8, cy: -12, rx: 2, ry: 1.2, style: SHEEN }, g);
+    });
     sym("tank-rw", (g) => {
       const c = cyl(0, 0, 0.11, 9);
       ["#8fa5a1", "#b6c8c5", "#dfe9e7"].forEach((col, i) => (c.nodes[i].style.fill = col));
@@ -325,13 +474,69 @@
     sym("flag", (g) => { g.append(seg("", [0, 0], [0, -22], { style: "stroke:rgba(255,255,255,.55);stroke-width:1" }), poly("", [[0, -22], [7, -19.5], [0, -17]], { style: F("#6fcfc1") })); });
     sym("hedge", (g) => { const b = box(0, 0, 0.3, 0.07, 3); b.nodes.forEach((n) => (n.style.fill = "var(--tree-2)")); b.nodes[2].style.fill = "var(--tree)"; g.append(...b.nodes); });
     sym("letterbox", (g) => { g.append(seg("", [0, 0], [0, -4], { style: "stroke:rgba(255,255,255,.4);stroke-width:1" })); el("rect", { x: -1.5, y: -6.5, width: 3, height: 2.5, style: F("#8fbfb8") }, g); });
+    // shipping containers: ribbed sides, the doors on the end
+    for (const [k, top, l, r] of [["a", "#d98a52", "#7c3d16", "#a8592a"], ["b", "#6cc7bb", "#1d5f58", "#2f8d84"], ["c", "#9cb9d0", "#2f4b61", "#4b6b85"], ["d", "#c76a64", "#6a2522", "#8f3a35"]]) sym(`ctr-${k}`, (g) => {
+      const b = box(0, 0, 0.36, 0.15, 5.5);
+      [l, r, top].forEach((c, i) => (b.nodes[i].style.fill = c));
+      g.append(...b.nodes, poly("", onL(0, 0.15, 0, 0.36, 0, 5.5), { style: F("url(#clad-l)") }), seg("", P(0.36, 0.075, 0.4), P(0.36, 0.075, 5.1), { style: "stroke:rgba(0,0,0,.4);stroke-width:.5" }));
+    });
+    // a roof ventilator, the kind that spins on a shed
+    sym("vent", (g) => { const c = cyl(0, 0, 0.035, 2.2, { dome: true }); ["#7f9995", "#b6c8c5", "#dfe9e7", "#e7f2f0"].forEach((col, i) => (c.nodes[i].style.fill = col)); g.append(...c.nodes); });
+    // a cafe table under a market umbrella
+    sym("parasol", (g) => {
+      el("ellipse", { cx: 1.5, cy: 0.4, rx: 5, ry: 2, style: SHADE }, g);
+      g.append(seg("", [0, 0], [0, -8], { style: "stroke:rgba(255,255,255,.5);stroke-width:.6" }));
+      el("ellipse", { cx: 0, cy: -3.2, rx: 2.4, ry: 1.2, style: F("#cfe0dd") }, g);
+      g.append(poly("", [[-5.2, -7.6], [0, -10.4], [5.2, -7.6], [0, -5.6]], { style: F("var(--para, #f4f1e8)") }), poly("", [[-5.2, -7.6], [0, -5.6], [5.2, -7.6], [5.2, -7], [0, -5], [-5.2, -7]], { style: F("rgba(0,0,0,.2)") }));
+    });
+    // a kayak and its paddler, drawn heading down the lower reach
+    sym("kayak", (g) => {
+      const u = [0.82, 0.57], v = [-0.57, 0.82], at = (a, c, z = 0) => P(u[0] * a + v[0] * c, u[1] * a + v[1] * c, z);
+      g.append(poly("", [at(-0.12, -0.02), at(-0.34, -0.07), at(-0.34, 0.07), at(-0.12, 0.02)], { style: F("rgba(255,255,255,.16)") }));
+      g.append(poly("", [at(-0.13, 0, 0.8), at(-0.04, 0.032, 0), at(0.06, 0.032, 0), at(0.14, 0, 0.8), at(0.06, 0.032, 1.4), at(-0.04, 0.032, 1.4)], { style: F("#b7862a") }));
+      g.append(poly("", [at(-0.13, 0, 0.8), at(-0.04, -0.032, 1.4), at(0.06, -0.032, 1.4), at(0.14, 0, 0.8), at(0.06, 0.032, 1.4), at(-0.04, 0.032, 1.4)], { style: F("#f2c14e") }));
+      const [px, py] = at(0, 0, 1.4);
+      g.append(seg("", at(-0.03, -0.13, 3.6), at(0.03, 0.13, 3.2), { style: "stroke:#e7fff9;stroke-width:.6;stroke-linecap:round" }));
+      el("rect", { x: f(px - 1), y: f(py - 3.4), width: 2, height: 3, rx: 0.9, style: F("#ef4444") }, g);
+      el("circle", { cx: f(px), cy: f(py - 4.5), r: 1.15, style: F("#ffe3b3") }, g);
+    });
 
-    // window grids: a lit and a dark cell, three lighting variants, skewed to each face
+    // Window grids, skewed to each face: four bays by four floors per tile,
+    // a slab edge at every floor, a mullion in every lit window, and three
+    // lighting variants so neighbouring towers don't match. 0 is dark glass,
+    // 1 a lit office, 2 a brighter one.
+    const LIT = { a: "1020 0110 1001 0201", b: "0100 1002 0010 2100", c: "1101 0120 1011 0210" };
+    const rect = (x, y, w, h) => [[x, y], [x + w, y], [x + w, y + h], [x, y + h]];
     for (const side of ["l", "r"]) for (const v of ["a", "b", "c"]) {
-      const p = el("pattern", { id: `win-${side}-${v}`, width: 14, height: 12, patternUnits: "userSpaceOnUse", patternTransform: `skewY(${side === "l" ? 26.565 : -26.565})` }, D);
-      const lit = { a: ["00", "11"], b: ["10"], c: ["00", "01", "10"] }[v];
-      for (const cx of [0, 1]) for (const cy of [0, 1]) el("rect", { x: 1.5 + cx * 7, y: 1.5 + cy * 6, width: 4, height: 3, style: F(lit.includes(`${cx}${cy}`) ? "rgba(255,255,255,.24)" : "rgba(0,0,0,.3)") }, p);
+      const p = el("pattern", { id: `win-${side}-${v}`, width: 28, height: 20, patternUnits: "userSpaceOnUse", patternTransform: `skewY(${side === "l" ? 26.565 : -26.565})` }, D);
+      const cells = { 0: [], 1: [], 2: [] }, mull = [];
+      LIT[v].split(" ").forEach((row, r) => [...row].forEach((k, c) => {
+        cells[k].push(rect(1.1 + c * 7, 0.9 + r * 5, 4.8, 3.2));
+        if (k !== "0") mull.push(rect(3.3 + c * 7, 0.9 + r * 5, 0.4, 3.2));
+      }));
+      p.append(shapes("", [0, 1, 2, 3].map((r) => rect(0, 4.5 + r * 5, 28, 0.5)), { style: F("rgba(255,255,255,.06)") }));
+      p.append(...[["0", "rgba(0,0,0,.3)"], ["1", "rgba(255,255,255,.22)"], ["2", "rgba(190,240,232,.42)"]].map(([k, c]) => shapes("", cells[k], { style: F(c) })));
+      p.append(shapes("", mull, { style: F("rgba(0,0,0,.28)") }));
     }
+    // corrugated cladding: a rib every 2.4 units, skewed to each face
+    for (const side of ["l", "r"]) {
+      const p = el("pattern", { id: `clad-${side}`, width: 2.4, height: 10, patternUnits: "userSpaceOnUse", patternTransform: `skewY(${side === "l" ? 26.565 : -26.565})` }, D);
+      el("rect", { x: 0, y: 0, width: 0.7, height: 10, style: F("rgba(0,0,0,.13)") }, p);
+      el("rect", { x: 1.3, y: 0, width: 0.4, height: 10, style: F("rgba(255,255,255,.05)") }, p);
+    }
+    // a roller door's slats
+    const slat = el("pattern", { id: "slats", width: 6, height: 1.6, patternUnits: "userSpaceOnUse", patternTransform: "skewY(26.565)" }, D);
+    el("rect", { x: 0, y: 0, width: 6, height: 0.4, style: F("rgba(255,255,255,.1)") }, slat);
+    // grass: tufts and darker patches, scattered so the repeat doesn't show
+    const turf = el("pattern", { id: "turf", width: 23, height: 13, patternUnits: "userSpaceOnUse" }, D);
+    turf.append(strokes("", [[2, 3], [5.5, 9], [9, 2], [12.5, 7], [16, 11.5], [19, 4], [21, 9.5], [7, 12]].map(([x, y]) => [[x, y], [x + 0.5, y - 1.3], [x + 1, y]]), { style: "fill:none;stroke:rgba(255,255,255,.07);stroke-width:.55" }));
+    [[4, 6, 1.1], [14, 3.5, 0.8], [18, 8, 1.2], [10, 10.5, 0.7]].forEach(([cx, cy, r]) => el("ellipse", { cx, cy, rx: r * 1.8, ry: r, style: F("rgba(0,0,0,.07)") }, turf));
+    // soil: stones and darker clods in the cut faces of the ground
+    const soil = el("pattern", { id: "soil", width: 19, height: 9, patternUnits: "userSpaceOnUse" }, D);
+    [[2, 2, 1, "rgba(255,255,255,.05)"], [9, 6, 0.8, "rgba(255,255,255,.04)"], [15, 3, 1.3, "rgba(0,0,0,.18)"], [5, 7.5, 0.9, "rgba(0,0,0,.14)"], [12.5, 1, 0.6, "rgba(255,255,255,.05)"], [17, 7, 0.7, "rgba(255,255,255,.04)"]].forEach(([cx, cy, r, c]) => el("ellipse", { cx, cy, rx: r * 1.5, ry: r, style: F(c) }, soil));
+    // paving: a fine grid laid on the iso axes, a quarter tile apart
+    const pave = el("pattern", { id: "pave", width: TW / 4, height: TH / 4, patternUnits: "userSpaceOnUse" }, D);
+    pave.append(strokes("", [[[0, 0], [TW / 4, TH / 4]], [[0, TH / 4], [TW / 4, 0]]], { style: "fill:none;stroke:rgba(255,255,255,.035);stroke-width:.5" }));
     const bays = el("pattern", { id: "bays", width: 8, height: 8, patternUnits: "userSpaceOnUse", patternTransform: "rotate(26.565)" }, D);
     bays.append(seg("", [0, 0], [0, 8], { style: "stroke:rgba(255,255,255,.12);stroke-width:1" }));
     const grid = el("pattern", { id: "grid", width: TW, height: TH, patternUnits: "userSpaceOnUse" }, D);
@@ -353,6 +558,12 @@
   const S = [-0.6, -0.6, 15.6, 10.6], T = 14;
   const slabTop = [P(S[0], S[1]), P(S[2], S[1]), P(S[2], S[3]), P(S[0], S[3])];
   const ROADS = [[S[0], 4.7, S[2], 5.3], [4.7, S[1], 5.3, S[3]], [9.7, S[1], 10.3, S[3]], [7.3, 5.3, 7.9, S[3]]];
+  // footpaths: both sides of every road, and round the edge of the city
+  const PATHS = [
+    [S[0], 4.6, S[2], 4.7], [S[0], 5.3, S[2], 5.4], [4.6, S[1], 4.7, S[3]], [5.3, S[1], 5.4, S[3]],
+    [9.6, S[1], 9.7, S[3]], [10.3, S[1], 10.4, S[3]], [7.2, 5.4, 7.3, S[3]], [7.9, 5.4, 8.0, S[3]],
+    [S[0], 10.06, S[2], 10.22], [15.06, S[1], 15.22, S[3]], [S[0], -0.22, S[2], -0.06], [-0.22, S[1], -0.06, S[3]],
+  ];
   function base(svg, fx) {
     const g = el("g", { class: "base" }, svg);
     g.append(
@@ -360,15 +571,30 @@
       poly("slab-r", [P(S[2], S[1]), P(S[2], S[3]), P(S[2], S[3], -T), P(S[2], S[1], -T)]),
       ...[-4, -9].map((z) => poly("strata", [P(S[0], S[3], z), P(S[2], S[3], z), P(S[2], S[3], z - 1.5), P(S[0], S[3], z - 1.5)])),
       ...[-4, -9].map((z) => poly("strata", [P(S[2], S[1], z), P(S[2], S[3], z), P(S[2], S[3], z - 1.5), P(S[2], S[1], z - 1.5)])),
+      poly("soil", [P(S[0], S[3]), P(S[2], S[3]), P(S[2], S[3], -T), P(S[0], S[3], -T)]), poly("soil", [P(S[2], S[1]), P(S[2], S[3]), P(S[2], S[3], -T), P(S[2], S[1], -T)]),
       poly("slab-top", slabTop),
       pl("rim", [P(S[0], S[3]), P(S[2], S[3]), P(S[2], S[1])])
     );
     // pipes leave the slab where the mains reach its edge
     for (const [x, y] of [[5.18, S[3]], [10.18, S[3]], [S[2], 5.18], [S[2], 2.4]]) { const [cx, cy] = P(x, y, -6); el("ellipse", { class: "mh", cx: f(cx), cy: f(cy), rx: 2.8, ry: 2.2 }, g); }
+    // footpaths between the districts and the kerbs, and round the edge of
+    // the city, paved in slabs; the roads are laid over them at the corners
+    const quad = ([x0, y0, x1, y1]) => [P(x0, y0), P(x1, y0), P(x1, y1), P(x0, y1)];
+    const joints = [];
+    for (const r of PATHS) {
+      const [x0, y0, x1, y1] = r, alongX = x1 - x0 > y1 - y0;
+      for (let k = alongX ? Math.ceil(x0 / 0.2) * 0.2 : Math.ceil(y0 / 0.2) * 0.2; k < (alongX ? x1 : y1); k += 0.2) joints.push(alongX ? [P(k, y0), P(k, y1)] : [P(x0, k), P(x1, k)]);
+    }
+    g.append(shapes("footpath", PATHS.map(quad)), strokes("joint fine", joints));
     // roads: a surface, kerbs, lane dashes and crossings
     for (const [x0, y0, x1, y1] of ROADS) g.append(poly("road", [P(x0, y0), P(x1, y0), P(x1, y1), P(x0, y1)]));
+    // patched and worn asphalt, so the roads aren't one flat colour up close
+    g.append(shapes("patch", [[2.2, 4.74, 2.85, 4.93], [8.05, 5.08, 8.6, 5.27], [12.85, 4.72, 13.3, 4.95], [4.74, 8.35, 4.95, 8.95], [9.73, 0.75, 9.98, 1.4], [10.04, 8.8, 10.27, 9.3], [7.35, 7.2, 7.55, 7.7], [14.2, 5.05, 14.9, 5.26]].map(quad)));
+    g.append(strokes("wear", [4.85, 5.15].flatMap((y) => [[P(S[0], y - 0.04), P(S[2], y - 0.04)], [P(S[0], y + 0.04), P(S[2], y + 0.04)]])));
     for (const a of [[P(S[0], 4.7), P(S[2], 4.7)], [P(S[0], 5.3), P(S[2], 5.3)], [P(4.7, S[1]), P(4.7, S[3])], [P(5.3, S[1]), P(5.3, S[3])], [P(9.7, S[1]), P(9.7, S[3])], [P(10.3, S[1]), P(10.3, S[3])], [P(7.3, 5.3), P(7.3, S[3])], [P(7.9, 5.3), P(7.9, S[3])]]) g.append(pl("kerb", a));
     for (const a of [[P(-0.4, 5), P(15.4, 5)], [P(5, -0.4), P(5, 10.4)], [P(10, -0.4), P(10, 10.4)], [P(7.6, 5.4), P(7.6, 10.4)]]) g.append(pl("road-line", a));
+    // the light rail's two tracks, set into the main road
+    g.append(strokes("tramrail", [4.91, 4.97, 5.03, 5.09].map((y) => [P(S[0], y), P(S[2], y)])));
     for (const [sym, x, y] of [["crossing-y", 5, 4.1], ["crossing-y", 10, 5.6], ["crossing-x", 3.2, 5], ["crossing-x", 11.6, 5]]) g.append(...use(sym, x, y).nodes);
     // the river passes under the x = 5 road: a water strip, the bridge deck, railings and piers
     g.append(poly("wtr river", [P(4.6, 3.18), P(5.4, 3.45), P(5.4, 4.29), P(4.6, 4.02)]));
@@ -383,6 +609,8 @@
     // traffic: vans and cars on straight routes, moved with SMIL in the overlay
     // so the slab underneath is never repainted for them
     const t = el("g", { class: "traffic" }, fx);
+    // walkers behind the traffic go first, so the vehicles pass in front of them
+    const behind = el("g", { class: "walkers" }, t);
     const vehicle = (sym, route, dur, begin, cls) => {
       const v = el("g", { class: `veh${sym.startsWith("van") ? " eds" : ""}${cls ? ` ${cls}` : ""}` }, t);
       el("use", { href: `#${sym}` }, v);
@@ -401,6 +629,22 @@
     // light rail along the main road, one tram each way
     vehicle("tram-e", [P(-1.6, 4.97), P(16.6, 4.97)], 34, -8);
     vehicle("tram-w", [P(16.6, 5.03), P(-1.6, 5.03)], 34, -25);
+    // people on the footpaths, along the front of the city, the main road
+    // and the river road, at a walking pace
+    const walk = (route, dur, begin, shirt, parent = t) => {
+      const w = el("g", { class: "walker fine", style: `--shirt:${shirt}` }, parent);
+      el("use", { href: "#person" }, w);
+      el("animateMotion", { dur: `${dur}s`, begin: `${begin}s`, repeatCount: "indefinite", path: "M" + route.map((p) => `${f(p[0])} ${f(p[1])}`).join("L") }, w);
+    };
+    const bridge = (a, b) => (a < b ? [P(4.65, 3.05), P(4.65, 3.2, 3), P(4.65, 4.25, 3), P(4.65, 4.4)] : [P(4.65, 4.4), P(4.65, 4.25, 3), P(4.65, 3.2, 3), P(4.65, 3.05)]);
+    walk([P(-0.4, 4.65), P(15.4, 4.65)], 120, -10, "#f2c14e", behind);
+    walk([P(15.4, 4.65), P(-0.4, 4.65)], 140, -70, "#e7fff9", behind);
+    walk([P(-0.4, 10.14), P(15.4, 10.14)], 110, -30, "#38bdf8");
+    walk([P(15.4, 10.14), P(-0.4, 10.14)], 130, -90, "#ef4444");
+    walk([P(15.14, 10.4), P(15.14, -0.4)], 95, -20, "#8a78c0");
+    walk([P(15.14, -0.4), P(15.14, 10.4)], 105, -60, "#5fb4a6");
+    walk([P(4.65, -0.4), ...bridge(0, 1), P(4.65, 10.4)], 85, -40, "#fda4af", behind);
+    walk([P(4.65, 10.4), ...bridge(1, 0), P(4.65, -0.4)], 90, -5, "#e7fff9", behind);
     // in a storm more of the EDS fleet is on the road, and moving faster
     vehicle("van-e", [P(-0.9, 4.85), P(15.9, 4.85)], 9, -2, "patrol");
     vehicle("van-s", [P(10.15, -0.9), P(10.15, 10.9)], 8, -5, "patrol");
@@ -511,7 +755,12 @@
           lo(line("therm", [P(3.4, 3.85), P(3.4, 3.25)], 7.3)), lo(item(7.31, ...[0, 1, 2, 3].map((i) => { const [cx, cy] = P(3.4, 3.8 - i * 0.18); return el("circle", { class: "bead", cx: f(cx), cy: f(cy), r: 1.5, style: `--i:${i}` }); }))),
         ];
         const [tx, ty] = P(0.75, 0.75, 11);
-        const fx = [...S, el("circle", { class: "tip", cx: f(tx), cy: f(ty), r: 1.6 })];
+        // a kayak paddling the lower reach below the weir, fading in and out at the ends
+        const kayak = el("g", { class: "kayak fine", "data-layer": "street" }), kg = el("g", {}, kayak);
+        el("use", { href: "#kayak" }, kg);
+        el("animateMotion", { dur: "44s", repeatCount: "indefinite", path: "M" + [P(2.6, 2.6), P(3.4, 3.26), P(4.4, 3.6)].map(([a, b]) => `${f(a)} ${f(b)}`).join("L") }, kg);
+        el("animate", { attributeName: "opacity", values: "0;1;1;0", keyTimes: "0;.08;.9;1", dur: "44s", repeatCount: "indefinite" }, kg);
+        const fx = [...S, el("circle", { class: "tip", cx: f(tx), cy: f(ty), r: 1.6 }), kayak];
         return { decals, vol, fx, cut: [{ type: "bed", x0: 0.9, x1: 1.5 }] };
       },
     },
@@ -532,7 +781,9 @@
         const kinds = ["px", "py", "h", "py", "px", "h", "py", "h", "px", "py", "px"];
         [[5.7, 0.4], [5.7, 1.4], [5.7, 2.4], [5.7, 3.4], [7.05, 0.4], [7.05, 1.4], [7.05, 2.4], [7.05, 3.4], [8.4, 1.4], [8.4, 2.4], [8.4, 3.4]].forEach(([x, y], i) => {
           const two = (x === 7.05 && y === 1.4) || (x === 8.4 && y === 2.4), h = two ? 18 : 11, k = kinds[i];
-          vol.push(k === "px" ? prism(x, y, 0.75, 0.7, h, 7, { gable: "x" }) : k === "py" ? prism(x, y, 0.7, 0.75, h, 6, { gable: "y" }) : house(x, y, 0.75, 0.75, h + 1, 9));
+          const home = k === "px" ? prism(x, y, 0.75, 0.7, h, 7, { gable: "x" }) : k === "py" ? prism(x, y, 0.7, 0.75, h, 6, { gable: "y" }) : house(x, y, 0.75, 0.75, h + 1, 9);
+          home.nodes.push(...(k === "px" ? homeDetail(x, y, 0.75, 0.7, h, 7, "x", i) : k === "py" ? homeDetail(x, y, 0.7, 0.75, h, 6, "y", i) : homeDetail(x, y, 0.75, 0.75, h + 1, 9, "h", i)).filter(Boolean));
+          vol.push(home);
           vol.push(flat("door fine", [P(x + 0.28, y + 0.75, 0), P(x + 0.42, y + 0.75, 0), P(x + 0.42, y + 0.75, 6), P(x + 0.28, y + 0.75, 6)], x + 0.75 + y + 0.75 + 0.001));
           if (i % 3 === 0) vol.push(box(x + 0.5, y + 0.12, 0.1, 0.1, 5, { z: h + 3, bias: 0.002 }));
           if (i % 4 === 1) vol.push(box(x + 0.5, y + 0.05, 0.3, 0.3, 7, { bias: 0.003 }));
@@ -569,7 +820,7 @@
         const towers = [[10.8, 0.5, 1.1, 1.1, 86, "a"], [12.4, 0.4, 1.0, 1.0, 118, "b"], [13.9, 0.6, 0.8, 0.9, 64, "c"], [10.9, 2.4, 1.2, 0.9, 46, "b"], [12.6, 2.2, 1.0, 1.2, 72, "a"], [14.0, 2.5, 0.7, 0.8, 54, "c"], [11.95, 1.5, 0.55, 0.6, 38, "c"], [14.2, 1.65, 0.5, 0.6, 30, "a"], [11.7, 3.35, 0.7, 0.5, 26, "b"]];
         const decals = [slab(10.9, 3.75, 1.1, 0.75, "plaza"), ...towers.filter((t) => t[4] > 40).map(([x, y, w, d, h]) => ao(x, y, w, d, h))];
         const vol = [
-          ...towers.map(([x, y, w, d, h, v]) => box(x, y, w, d, h, { win: v })),
+          ...towers.map(([x, y, w, d, h, v]) => box(x, y, w, d, h, { win: v, entry: true })),
           box(12.55, 0.55, 0.7, 0.7, 20, { z: 118 }), box(12.75, 0.75, 0.3, 0.3, 8, { z: 138, top: "lit" }),
           item(14.9, seg("mast", P(12.9, 0.9, 146), P(12.9, 0.9, 162)), el("circle", { class: "blink", cx: f(P(12.9, 0.9, 163)[0]), cy: f(P(12.9, 0.9, 163)[1]), r: 1.8 })),
           box(12.75, 2.35, 0.7, 0.9, 14, { z: 72 }),
@@ -579,7 +830,7 @@
           cyl(11.45, 4.1, 0.2, 2, { water: true, ring: true }),
           ...[[10.98, 3.85], [11.9, 3.85], [10.98, 4.4], [11.9, 4.4]].map(([x, y]) => jac(x, y)),
           box(12.05, 4.2, 0.25, 0.25, 6, { top: "lit" }),
-          slab(12.85, 3.75, 1.6, 0.65, "platform", 1, {}), box(12.9, 3.8, 1.5, 0.55, 12, { top: "lit" }),
+          slab(12.85, 3.75, 1.6, 0.65, "platform", 1, {}), ...canopy(12.9, 3.8, 1.5, 0.55),
           ...[[10.8, 1.6, 1.1], [12.4, 1.4, 1.0], [13.9, 1.5, 0.8]].map(([x, y, w]) => flat("lit shop", [P(x, y, 0.4), P(x + w, y, 0.4), P(x + w, y, 4), P(x, y, 4)], x + w + y + 0.002)),
           box(14.55, 4.15, 0.1, 0.1, 6, { cls: "red" }), manhole(14.6, 4.35),
           ...[[10.6, 4.45], [13.0, 4.45], [14.6, 1.0], [14.6, 3.6], [12.3, 4.5]].map(([x, y]) => use("lamp", x, y, 0, { d: x + y + 0.06 })),
@@ -600,7 +851,7 @@
         const vol = [
           // inlet works: screening channel, flume, screen house
           box(0.3, 5.7, 1.2, 0.45, 6), item(7.66, ...[0, 1, 2, 3, 4].map((i) => seg("det", P(0.45 + i * 0.22, 6.15, 6), P(0.45 + i * 0.22, 6.15, 1)))),
-          flat("wtr flume", [P(0.4, 5.78, 6), P(1.4, 5.78, 6), P(1.4, 6.07, 6), P(0.4, 6.07, 6)], 7.66), box(1.55, 5.7, 0.4, 0.45, 9, { top: "lit" }),
+          flat("wtr flume", [P(0.4, 5.78, 6), P(1.4, 5.78, 6), P(1.4, 6.07, 6), P(0.4, 6.07, 6)], 7.66), box(1.55, 5.7, 0.4, 0.45, 9, { top: "lit", clad: true }),
           // two clarifiers with turning scraper arms, launder rings and walkways
           cyl(1.1, 6.55, 0.78, 5, { water: true, arm: true, ring: true }), cyl(1.1, 8.65, 0.78, 5, { water: true, arm: true, ring: true }),
           cyl(1.1, 6.55, 0.12, 3, { z: 5, bias: 0.01 }), cyl(1.1, 8.65, 0.12, 3, { z: 5, bias: 0.01 }),
@@ -610,7 +861,7 @@
           line("wtr-line", [P(ax + 0.2, ay + 0.65, 5), P(ax + 1.3, ay + 0.65, 5)], ax + 1.5 + ay + 1.3 + 0.02),
           item(ax + 1.5 + ay + 1.3 + 0.015, ...[0.35, 0.65, 0.95].map((k) => seg("det fine", P(ax + 0.2, ay + k, 5), P(ax + 1.3, ay + k, 5)))),
           // digesters, the flare and the dosing plant
-          cyl(3.0, 6.3, 0.55, 30, { dome: true }), cyl(4.0, 7.0, 0.45, 22, { dome: true }),
+          cyl(3.0, 6.3, 0.55, 30, { dome: true, bands: 3 }), cyl(4.0, 7.0, 0.45, 22, { dome: true, bands: 2 }),
           line("stair fine", [P(2.5, 6.6, 2), P(2.6, 6.5, 10), P(2.75, 6.35, 18), P(2.9, 6.2, 26)], 9.2),
           cyl(4.45, 6.2, 0.07, 34), box(4.1, 8.3, 0.1, 0.1, 8, { bias: 0.01 }), box(4.3, 8.3, 0.1, 0.1, 8, { bias: 0.011 }), box(4.5, 8.3, 0.1, 0.1, 8, { bias: 0.012 }),
           // chlorine contact tank, admin and laboratory, the ORI sampler cabinet
@@ -636,13 +887,13 @@
         const decals = [slab(5.55, 5.6, 1.5, 4.3, "ground2"), flat("track", [P(5.4, 8.95), P(5.6, 8.95), P(5.6, 9.2), P(5.4, 9.2)]), ao(5.7, 5.8, 1.15, 1.2, 20)];
         const vol = [
           rail([[5.55, 5.6], [7.05, 5.6], [7.05, 9.9]], 5, { posts: 0.5, cls: "fence fine", d: 11.1 }), rail([[5.55, 5.6], [5.55, 9.9], [6.5, 9.9]], 5, { posts: 0.5, cls: "fence fine", d: 16.6 }),
-          house(5.7, 5.8, 1.15, 1.2, 20, 8), flat("door fine", [P(6.1, 7.0, 0), P(6.5, 7.0, 0), P(6.5, 7.0, 12), P(6.1, 7.0, 12)], 5.7 + 1.15 + 5.8 + 1.2 + 0.001),
+          house(5.7, 5.8, 1.15, 1.2, 20, 8, { clad: true }), flat("door fine", [P(6.1, 7.0, 0), P(6.5, 7.0, 0), P(6.5, 7.0, 12), P(6.1, 7.0, 12)], 5.7 + 1.15 + 5.8 + 1.2 + 0.001),
           cyl(5.75, 5.85, 0.04, 26), cyl(5.6, 6.1, 0.05, 24, { cap: true }),
           line("det", [P(6.3, 7.0), P(6.3, 7.5)], 13.4),
           // the wet well with its two pumps and run lights
           cyl(6.3, 8.05, 0.6, 5, { water: "well" }),
           use("pump-dome", 6.12, 7.92, 5, { d: 14.08 }), use("pump-dome", 6.48, 8.18, 5, { d: 14.7 }),
-          cyl(6.8, 6.6, 0.35, 10), box(6.85, 8.6, 0.3, 0.3, 4), item(16.06, el("circle", { class: "det", cx: f(P(6.95, 8.75, 4)[0]), cy: f(P(6.95, 8.75, 4)[1]), r: 1.6 }), el("circle", { class: "det", cx: f(P(7.05, 8.75, 4)[0]), cy: f(P(7.05, 8.75, 4)[1]), r: 1.6 })),
+          cyl(6.8, 6.6, 0.35, 10, { bands: 1, rail: true }), box(6.85, 8.6, 0.3, 0.3, 4), item(16.06, el("circle", { class: "det", cx: f(P(6.95, 8.75, 4)[0]), cy: f(P(6.95, 8.75, 4)[1]), r: 1.6 }), el("circle", { class: "det", cx: f(P(7.05, 8.75, 4)[0]), cy: f(P(7.05, 8.75, 4)[1]), r: 1.6 })),
           box(6.4, 9.3, 0.5, 0.3, 7),
           // the control cabinet with the Pump Station Manager, its antenna and solar panel
           box(5.75, 9.1, 0.4, 0.4, 12, { top: "lit" }), item(15.66, seg("mast", P(6.1, 9.15, 12), P(6.1, 9.15, 32)), el("circle", { class: "blink", cx: f(P(6.1, 9.15, 33)[0]), cy: f(P(6.1, 9.15, 33)[1]), r: 1.6 })), use("solar", 5.78, 9.2, 12, { d: 15.67 }),
@@ -667,7 +918,7 @@
           item(16.95, seg("mast", P(8.8, 6.5, 44), P(8.8, 6.5, 76), { style: "stroke-width:2" }), seg("mast", P(8.72, 6.42, 58), P(8.88, 6.58, 58)), seg("mast", P(8.72, 6.42, 66), P(8.88, 6.58, 66)), seg("mast", P(8.74, 6.44, 72), P(8.86, 6.56, 72))),
           use("dish", 8.8, 6.5, 62, { d: 16.96 }), use("dish", 8.86, 6.56, 70, { d: 16.97 }),
           item(16.98, el("ellipse", { class: "hub", cx: f(hub[0]), cy: f(hub[1]), rx: 16, ry: 10 }), el("circle", { class: "beacon", cx: f(hub[0]), cy: f(hub[1]), r: 4 }), el("circle", { class: "blink", cx: f(hub[0]), cy: f(hub[1] - 2), r: 1.8 })),
-          box(8.3, 8.3, 0.9, 0.8, 18, { top: "lit" }), flat("door fine", [P(8.55, 9.1, 0), P(8.95, 9.1, 0), P(8.95, 9.1, 11), P(8.55, 9.1, 11)], 8.3 + 0.9 + 8.3 + 0.8 + 0.001),
+          box(8.3, 8.3, 0.9, 0.8, 18, { top: "lit", clad: true }), flat("door fine", [P(8.55, 9.1, 0), P(8.95, 9.1, 0), P(8.95, 9.1, 11), P(8.55, 9.1, 11)], 8.3 + 0.9 + 8.3 + 0.8 + 0.001),
           // the EDS fleet parked nose-in, side by side, so each van's logo shows
           ...[[8.5, 9.4], [8.8, 9.4], [9.1, 9.4]].map(([x, y], i) => use("van-y", x, y, 0, { d: x + y + 0.2, cls: i === 2 ? "yard-van" : undefined })), use("car-e", 8.5, 9.68, 0, { d: 18.4 }), use("car-e", 8.9, 9.68, 0, { d: 18.8 }),
           item(19.3, ...[[-0.1, -0.1], [0.1, -0.1], [0.1, 0.1], [-0.1, 0.1]].map(([dx, dy]) => seg("mast", P(9.4 + dx, 9.7 + dy), P(9.4, 9.7, 40))), ...[12, 24, 34].map((z) => pl("mast fine", [P(9.3, 9.6, z), P(9.5, 9.6, z), P(9.5, 9.8, z), P(9.3, 9.8, z), P(9.3, 9.6, z)])), el("circle", { class: "blink", cx: f(P(9.4, 9.7, 41)[0]), cy: f(P(9.4, 9.7, 41)[1]), r: 1.6 })),
@@ -687,15 +938,15 @@
         ];
         const vol = [
           // the big shed with roof monitors and roller doors, trucks at its dock
-          box(10.8, 5.8, 2.6, 1.6, 22), ...[0, 1, 2].map((i) => box(10.95 + i * 0.85, 5.95, 0.55, 1.3, 6, { z: 22, bias: 0.02 + i * 0.001 })),
-          item(10.8 + 2.6 + 5.8 + 1.6 + 0.002, ...[0, 1, 2].map((i) => poly("door", [P(11.0 + i * 0.8, 7.4, 0), P(11.5 + i * 0.8, 7.4, 0), P(11.5 + i * 0.8, 7.4, 12), P(11.0 + i * 0.8, 7.4, 12)]))),
+          ribbed(box(10.8, 5.8, 2.6, 1.6, 22, { clad: true }), 10.8, 5.8, 2.6, 1.6, 22), ...[0, 1, 2].map((i) => box(10.95 + i * 0.85, 5.95, 0.55, 1.3, 6, { z: 22, bias: 0.02 + i * 0.001, clad: true })),
+          item(10.8 + 2.6 + 5.8 + 1.6 + 0.002, ...[0, 1, 2].map((i) => { const q = [P(11.0 + i * 0.8, 7.4, 0), P(11.5 + i * 0.8, 7.4, 0), P(11.5 + i * 0.8, 7.4, 12), P(11.0 + i * 0.8, 7.4, 12)]; return [poly("door", q), poly("slats", q)]; })),
           use("truck-x", 12.3, 7.65, 0, { d: 20.1 }), use("truck-x", 11.3, 7.65, 0, { d: 19.1 }),
           // the sawtooth works and its office
           ...[0, 1, 2].map((i) => prism(13.3 + i * 0.43, 7.9, 0.43, 1.3, 16, 6, { gable: "y", skylight: true, bias: i * 0.001 })), box(13.3, 9.2, 1.3, 0.35, 16, { win: "a" }),
           // the stacks and the tank farm inside its bund
-          cyl(13.95, 6.2, 0.17, 58), cyl(14.45, 6.7, 0.17, 46), line("ladder fine", [P(14.1, 6.2, 2), P(14.1, 6.2, 56)], 20.5), line("ladder fine", [P(14.6, 6.7, 2), P(14.6, 6.7, 44)], 21.4),
+          cyl(13.95, 6.2, 0.17, 58, { stripes: [3, 9], bands: 4 }), cyl(14.45, 6.7, 0.17, 46, { stripes: [3, 9], bands: 3 }), line("ladder fine", [P(14.1, 6.2, 2), P(14.1, 6.2, 56)], 20.5), line("ladder fine", [P(14.6, 6.7, 2), P(14.6, 6.7, 44)], 21.4),
           box(10.75, 8.1, 2.4, 0.06, 3), box(10.75, 8.1, 0.06, 1.75, 3, { bias: 0.001 }), box(13.1, 8.1, 0.06, 1.75, 3), box(10.75, 9.8, 2.4, 0.06, 3),
-          cyl(11.3, 8.7, 0.5, 18), cyl(12.5, 8.7, 0.5, 18), cyl(11.9, 9.45, 0.28, 12), cyl(12.85, 9.5, 0.22, 10), box(12.35, 9.55, 0.25, 0.2, 5),
+          cyl(11.3, 8.7, 0.5, 18, { bands: 2, rail: true }), cyl(12.5, 8.7, 0.5, 18, { bands: 2, rail: true }), cyl(11.9, 9.45, 0.28, 12, { bands: 1 }), cyl(12.85, 9.5, 0.22, 10, { bands: 1 }), box(12.35, 9.55, 0.25, 0.2, 5),
           rail([[11.3, 8.1], [11.3, 7.6], [12.4, 7.6]], 9, { posts: 0.5, cls: "pipe-rack", d: 19.8 }),
           // cooling tower, gate kiosk, weighbridge, gantry and fence
           box(14.3, 9.2, 0.5, 0.5, 14), item(14.3 + 0.5 + 9.2 + 0.5 + 0.001, ...[3, 6, 9].map((z) => seg("det fine", P(14.3, 9.7, z), P(14.8, 9.7, z)))),
@@ -799,6 +1050,87 @@
     for (const a of [[P(4.7, 4.55), P(5.3, 4.55)], [P(4.7, 5.45), P(5.3, 5.45)], [P(9.7, 4.55), P(10.3, 4.55)], [P(9.7, 5.45), P(10.3, 5.45)], [P(4.55, 4.7), P(4.55, 5.3)], [P(5.45, 4.7), P(5.45, 5.3)], [P(9.55, 4.7), P(9.55, 5.3)], [P(10.45, 4.7), P(10.45, 5.3)]]) g.append(pl("stopline", a));
     for (const [x, y] of [[7.3, 6.5], [7.9, 8.2], [7.3, 9.6], [12.1, 5.38], [14.6, 5.38], [8.9, 4.62]]) g.append(...use("lamp", x, y).nodes);
     for (const [x, y] of [[7.84, 6.2], [7.36, 8.8], [14.2, 4.72], [1.4, 5.28], [4.72, 9.6]]) g.append(...use("gully", x, y, 0, { cls: "gully" }).nodes);
+    // lane arrows painted on the approach to each intersection (traffic keeps left)
+    const arrow = (x, y, dx, dy) => [[-0.17, -0.016], [0.03, -0.016], [0.03, -0.055], [0.12, 0], [0.03, 0.055], [0.03, 0.016], [-0.17, 0.016]].map(([a, c]) => P(x + dx * a - dy * c, y + dy * a + dx * c));
+    g.append(shapes("arrow", [[4.1, 4.84, 1, 0], [8.75, 4.84, 1, 0], [13.2, 4.84, 1, 0], [6.25, 5.16, -1, 0], [11.25, 5.16, -1, 0], [1.6, 5.16, -1, 0], [5.16, 2.75, 0, 1], [10.16, 3.75, 0, 1], [4.84, 6.25, 0, -1], [9.84, 6.25, 0, -1], [7.6, 9.6, 0, 1]].map((a) => arrow(...a))));
+    // the lids of the instrumented chambers under the road, over the mains
+    const lids = [[5.18, 5.18], [10.18, 5.18], [7.6, 5.18], [12.6, 5.18], [3.4, 5.18], [14.3, 5.18], [1.2, 5.18], [5.18, 2.4], [5.18, 6.4], [5.18, 7.8], [5.18, 9.0], [10.18, 2.0], [10.18, 4.0], [10.18, 6.2], [10.18, 7.8]].map(([x, y]) => P(x, y));
+    const ell = (rx, ry) => lids.map(([cx, cy]) => `M${f(cx - rx)} ${f(cy)}a${rx} ${ry} 0 1 0 ${2 * rx} 0a${rx} ${ry} 0 1 0 ${-2 * rx} 0Z`).join("");
+    el("path", { class: "lid", d: ell(3.4, 1.7) }, g);
+    el("path", { class: "lid-ring", d: ell(2, 1) }, g);
+  };
+
+  /* ---- the fine pass: what shows when the camera comes in close ---- */
+  // vol items sort by depth like everything else; decals lie flat under them
+  const POLES = [0.45, 1.35, 2.25, 3.9];
+  const FINE = {
+    river: () => ({
+      decals: [
+        // a gravel walking track from the footbridge through the park to the shelter
+        lo(line("trail", [P(1.14, 2.02), P(1.3, 2.6), P(1.9, 3.15), P(2.6, 3.55), P(3.3, 4.0), P(3.45, 4.25), P(4.0, 4.5), P(4.6, 4.55)], 0)),
+        lo(line("trail", [P(1.14, 0.83), P(1.25, 0.6), P(1.45, 0.55)], 0)),
+      ],
+      vol: [
+        // a picnic shelter: four posts, a hipped roof, a table under it
+        item(3.3 + 4.1 + 0.6, ...[[3.33, 4.13], [3.57, 4.13], [3.57, 4.37], [3.33, 4.37]].map(([x, y]) => seg("det", P(x, y), P(x, y, 8))), box(3.38, 4.2, 0.14, 0.1, 3).nodes, roof(3.3, 4.1, 0.3, 0.3, 8, 5)),
+        // someone fishing from the north bank, and a walker on the footbridge
+        who(3.75, 2.66, "#5fb4a6"), lo(item(6.42, seg("rod", P(3.76, 2.66, 6), P(3.95, 2.95, 2)))),
+        who(1.14, 1.5, "#e7fff9", { z: 4, d: 3.315 }), who(2.2, 3.4, "#f2c14e"), who(2.35, 3.48, "#8a78c0"),
+        ...many("rock", [[2.5, 2.95], [3.25, 3.75], [4.1, 3.0], [0.15, 1.55], [1.75, 1.95]], { cls: "fine" }),
+        ...many("reed", [[4.3, 3.85], [4.05, 3.75], [1.9, 2.6], [0.85, 1.75]], { cls: "fine" }),
+      ],
+    }),
+    sewer: () => ({
+      vol: [
+        // a game of cricket on the oval: batter, bowler, three in the field
+        ...[[9.0, 0.64], [9.0, 0.98], [8.72, 0.86], [9.18, 0.86], [8.85, 1.12]].map(([x, y]) => who(x, y, "#f4f6f2")),
+        who(6.75, 0.25, "#38bdf8"), who(8.1, 2.6, "#f2c14e"), who(6.72, 4.2, "#ef4444"),
+        // timber power poles down the east side of the second lane, two wires
+        // sagging between each pair; each span sorts at its nearer pole
+        ...POLES.map((y) => lo(item(8.28 + y + 0.05, seg("pole", P(8.28, y), P(8.28, y, 19)), seg("pole", P(8.21, y, 18), P(8.35, y, 18))))),
+        ...POLES.slice(1).map((y, i) => { const y0 = POLES[i], m = (y0 + y) / 2; return lo(item(8.35 + y + 0.04, strokes("wire", [-0.06, 0.06].map((k) => [P(8.28 + k, y0, 18), P(8.28 + k, m, 15.5), P(8.28 + k, y, 18)])))); }),
+      ],
+    }),
+    cbd: () => ({
+      vol: [
+        // rooftops: plant, a tank, solar, and a garden with its own trees.
+        // Each sorts just after the tower it stands on (x + w + y + d).
+        ...[["ac", 12.05, 1.62, 38, 14.65], ["ac", 12.25, 1.72, 38, 14.66], ["ac", 14.05, 2.6, 54, 18.05], ["ac", 14.3, 2.62, 54, 18.06], ["solar", 14.25, 1.72, 30, 17.0], ["solar", 14.25, 1.95, 30, 17.01],
+          ["hedge", 11.78, 3.42, 26, 16.28], ["tree-s", 11.95, 3.55, 26, 16.3], ["tree-s", 12.2, 3.65, 26, 16.32], ["vent", 10.95, 2.55, 46, 15.45], ["vent", 11.85, 2.6, 46, 15.46], ["vent", 13.95, 0.7, 64, 16.25]].map(([k, x, y, z, d]) => use(k, x, y, z, { d })),
+        cyl(12.33, 1.95, 0.08, 4, { z: 38, bias: 0.3 }),
+        // the plaza: a cafe, people about the fountain
+        ...many("parasol", [[11.25, 3.9], [11.75, 3.95]], { cls: "fine" }),
+        who(11.15, 4.15, "#f2c14e"), who(11.62, 4.38, "#e7fff9"), who(11.8, 4.15, "#8a78c0"), who(11.0, 3.92, "#ef4444"),
+      ],
+    }),
+    plant: () => ({
+      decals: [
+        // sludge drying beds between the digester and the aeration basin
+        item(0, shapes("sludge", [[2.78, 7.05, 0.66, 0.28], [2.78, 7.4, 0.66, 0.28], [2.78, 7.75, 0.66, 0.28]].map(([x, y, w, d]) => [P(x, y), P(x + w, y), P(x + w, y + d), P(x, y + d)]))),
+        item(0, strokes("bed-rim", [[2.75, 7.02, 0.72, 0.34], [2.75, 7.37, 0.72, 0.34], [2.75, 7.72, 0.72, 0.34]].map(([x, y, w, d]) => [P(x, y), P(x + w, y), P(x + w, y + d), P(x, y + d), P(x, y)]))),
+      ],
+      vol: [who(3.12, 9.88, "#f97316"), who(2.05, 7.95, "#f97316"), use("cone", 2.7, 7.0, 0, { cls: "fine" })],
+    }),
+    pump: () => ({
+      vol: [
+        // the standby generator, its exhaust and fuel tank
+        box(5.58, 7.5, 0.2, 0.26, 6, { clad: true }), cyl(5.7, 7.58, 0.02, 4, { z: 6, bias: 0.2 }),
+      ],
+    }),
+    industry: () => ({
+      vol: [
+        // containers under the gantry, two high in places; like the trucks
+        // they stay at street level when the district is taken apart
+        ...[["a", 13.68, 5.72, 0], ["c", 14.08, 5.72, 0], ["b", 13.68, 5.72, 5.5], ["d", 14.08, 5.9, 0], ["b", 14.08, 5.9, 5.5]].map(([k, x, y, z]) => lo(use(`ctr-${k}`, x, y, z, { d: x + 0.36 + y + 0.15 + z * 0.001 }))),
+        // ventilators along the shed roof, beyond the monitors
+        ...[11.0, 11.4, 11.8, 12.2, 12.6, 13.0].map((x) => use("vent", x, 7.3, 22, { d: 20.85 })),
+        who(12.9, 7.62, "#f97316"), who(10.62, 7.2, "#e7fff9"),
+        ...many("bin", [[13.15, 9.75], [10.55, 9.3]], { cls: "fine" }),
+      ],
+    }),
+    ops: () => ({
+      vol: [who(9.52, 6.82, "#e7fff9"), who(9.5, 7.15, "#5fb4a6"), who(8.65, 9.2, "#f97316")],
+    }),
   };
 
   /* ---- a district taken apart ---- */
@@ -1179,6 +1511,7 @@
   // moving parts sit in a matching group in the overlay that lifts with it.
   // The storm's weather is a canvas between the two (city-weather.js).
   const VB = "-330 -52 800 448";
+  const TEXTURE = { river: "turf", sewer: "turf", pump: "turf" };
   const MOVING = ".arm,.meter,.blink,.hub,.beacon,.screen,.bead,.wtr-line,.foam,.pipe-flow,.yard-van";
   function build(svg, data) {
     svg.setAttribute("viewBox", VB);
@@ -1210,7 +1543,12 @@
         const sensors = (zd.sensors || []).map((s, i) => sensor(s, i, ui));
         const parts = z.build(sensors);
         parts.vol.push(...(DETAIL[id] ? DETAIL[id]() : []));
+        const fine = FINE[id]?.() || {};
+        parts.vol.push(...(fine.vol || []));
+        parts.decals.push(...(fine.decals || []));
         const dec = el("g", { class: "decals" }, g), vol = el("g", { class: "vol" }, g), cut = el("g", { class: "cut" }, g);
+        // the ground's grain: grass in the green districts, paving in the built ones
+        dec.append(poly("tex", [P(x0, y0), P(x1, y0), P(x1, y1), P(x0, y1)], { style: `fill:url(#${TEXTURE[id] || "pave"})` }));
         parts.decals.forEach((p) => p.nodes.forEach((n) => dec.appendChild(n)));
         parts.vol.sort((a, b) => a.d - b.d).forEach((p) => p.nodes.forEach((n) => { n.setAttribute("data-s", p.s || "hi"); vol.appendChild(n); }));
         cutaway(z, parts.cut).forEach((n) => cut.appendChild(n));
