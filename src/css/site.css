@@ -425,6 +425,19 @@ ul { margin: 0; padding: 0; list-style: none; }
 .city-svg .rail.pipe-rack, .city-svg .post.pipe-rack { stroke: rgba(255, 255, 255, .5); stroke-width: 1.4; }
 .city-svg .rail.fence, .city-svg .post.fence { stroke: rgba(255, 255, 255, .16); }
 .city-svg .puddle { fill: var(--water); opacity: 0; transition: opacity 1.5s var(--ease); }
+/* the fine detail: footpaths and their joints, worn and patched asphalt, the
+   tram tracks, lane arrows and the lids over the instrumented chambers */
+.city-svg .footpath { fill: #0f3532; }
+.city-svg .soil { fill: url(#soil); }
+.city-svg .joint { fill: none; stroke: rgba(0, 0, 0, .28); stroke-width: .5; }
+.city-svg .patch { fill: rgba(255, 255, 255, .025); }
+.city-svg .wear { fill: none; stroke: rgba(0, 0, 0, .14); stroke-width: 1.4; }
+.city-svg .tramrail { fill: none; stroke: rgba(200, 235, 229, .14); stroke-width: .6; }
+.city-svg .arrow { fill: rgba(255, 255, 255, .14); }
+.city-svg .lid { fill: #082724; stroke: rgba(95, 180, 166, .4); stroke-width: .8; }
+.city-svg .lid-ring { fill: none; stroke: rgba(95, 180, 166, .3); stroke-width: .6; }
+.city-svg .post { fill: none; }
+.city-svg .rail.mid { stroke-width: .6; opacity: .6; }
 .city-svg .base use { --pool: url(#pool); }
 /* the underground: faint at rest, brought forward by "Show the sewer" */
 .city-svg .ugrid { fill: url(#grid); opacity: 0; transition: opacity .45s var(--ease); }
@@ -512,6 +525,40 @@ ul { margin: 0; padding: 0; list-style: none; }
 .city-svg .zone .zone-line { fill: none; stroke: var(--amber); stroke-width: 1; stroke-dasharray: 3 3; opacity: .6; }
 .city-svg .zone .contour, .city-svg .zone .fence, .city-svg .zone .path { fill: none; stroke: rgba(255, 255, 255, .1); stroke-width: 1; stroke-dasharray: 3 4; }
 .city-svg .zone .door { fill: rgba(4, 21, 19, .5); }
+.city-svg .zone .tex { pointer-events: none; }
+.city-svg .zone .cope { fill: rgba(255, 255, 255, .1); }
+.city-svg .zone .edge { stroke: rgba(255, 255, 255, .12); stroke-width: .8; }
+.city-svg .zone .eave { fill: rgba(0, 0, 0, .2); }
+.city-svg .zone .hwin { fill: rgba(4, 21, 19, .62); }
+.city-svg .zone .hwin-lit { fill: rgba(214, 255, 247, .5); }
+.city-svg .zone .sill { fill: none; stroke: rgba(255, 255, 255, .28); stroke-width: .6; }
+.city-svg .zone .tiles { fill: none; stroke: rgba(0, 0, 0, .14); stroke-width: .6; }
+.city-svg .zone .ridge { fill: none; stroke: rgba(255, 255, 255, .26); stroke-width: .7; stroke-linecap: round; stroke-linejoin: round; }
+.city-svg .zone .clad { opacity: .9; }
+.city-svg .zone .slats { fill: url(#slats); }
+.city-svg .zone .roofin { fill: rgba(0, 0, 0, .12); stroke: rgba(255, 255, 255, .08); stroke-width: .5; }
+.city-svg .zone .ribs { fill: none; stroke: rgba(0, 0, 0, .1); stroke-width: .6; }
+.city-svg .zone .seam { fill: none; stroke: rgba(0, 0, 0, .18); stroke-width: .6; }
+.city-svg .zone .stripe { fill: none; stroke: var(--red); stroke-width: 2; opacity: .55; }
+.city-svg .zone .tank-rail { fill: none; stroke: rgba(255, 255, 255, .32); stroke-width: .6; }
+.city-svg .zone .trail { fill: none; stroke: rgba(255, 255, 255, .06); stroke-width: 3.4; stroke-linecap: round; stroke-linejoin: round; }
+.city-svg .zone .sludge { fill: #2a3a2c; opacity: .8; }
+.city-svg .zone .bed-rim { fill: none; stroke: rgba(255, 255, 255, .2); stroke-width: .7; }
+.city-svg .zone .rod { stroke: rgba(255, 255, 255, .45); stroke-width: .5; }
+.city-svg .zone .glass { fill: rgba(167, 230, 220, .14); stroke: rgba(167, 230, 220, .35); stroke-width: .6; }
+.city-svg .zone .entry { fill: var(--aqua); opacity: .55; transition: opacity .35s var(--ease); }
+.city-svg .zone.active .entry { opacity: .9; }
+.city-svg .zone .pole { stroke: #a89f8a; stroke-width: .9; stroke-linecap: round; }
+.city-svg .zone .wire { fill: none; stroke: rgba(255, 255, 255, .2); stroke-width: .45; }
+/* people on the footpaths step as they go; a storm sends the kayak home */
+.city-fx .walker use { animation: walk-bob .38s ease-in-out infinite alternate; }
+.city-fx .walker:nth-child(odd) use { animation-delay: -.19s; }
+@keyframes walk-bob { to { translate: 0 -.7px; } }
+.city-fx .kayak { transition: opacity 1.2s var(--ease); }
+/* with a district apart its block drops through the street; the walkers step aside */
+.city-fx .walker { transition: opacity .3s var(--ease); }
+.city-fx.is-exploded .walker { opacity: 0; }
+.city-fx.is-storm .kayak { opacity: 0; }
 .city-svg .zone .ao { fill: rgba(0, 0, 0, .28); }
 .city-svg .zone .mh { fill: #06201e; stroke: var(--aqua); stroke-width: 1.2; }
 .city-svg .zone .mh-ring { fill: none; stroke: rgba(95, 180, 166, .5); stroke-width: .8; }
@@ -867,6 +914,9 @@ body.city-lock { overflow: hidden; }
 .city-asset-svg .fr { fill: var(--right); }
 .city-asset-svg .win { opacity: .85; }
 .city-asset-svg .pod { fill: rgba(4, 21, 19, .5); }
+.city-asset-svg .cope { fill: rgba(255, 255, 255, .1); }
+.city-asset-svg .edge { stroke: rgba(255, 255, 255, .12); stroke-width: .8; }
+.city-asset-svg .roofin { fill: rgba(0, 0, 0, .12); stroke: rgba(255, 255, 255, .08); stroke-width: .5; }
 .city-asset-svg .in { fill: #0d211f; }
 .city-asset-svg .in-2 { fill: #12302c; }
 .city-asset-svg .in-floor { fill: #081816; }
