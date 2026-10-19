@@ -66,6 +66,10 @@ export const stats = [
 // the menus. `featured` services also appear on the home page and in the
 // footer. `solutions` links a service to the solution pages (the old site's
 // "Applications") it is used for, and `papers` to white papers by id.
+// `pageTitle` (also on solutions and brands) is the whole title shown in
+// Google and the browser tab, in place of "<title> | EDS", where the short
+// title leaves out the words people search for. Keep it to 60 characters and
+// to words the page's own copy uses; the build warns when a title runs longer.
 export const serviceGroups = [
   { id: "sewer", title: "Sewer networks", heading: "Know what is in the pipe, and what should not be.", lede: "Measuring what flows through the network, finding where water gets in, and proving the fixes worked." },
   { id: "water", title: "Water & environment", heading: "Quality, sampling and rainfall, measured properly.", lede: "For utilities, industry and environmental projects, with full pipe flow alongside." },
@@ -243,6 +247,7 @@ export const services = [
   {
     slug: "sewer-flow-monitoring",
     title: "Sewer Flow Monitoring",
+    pageTitle: "Sewer Flow Monitoring, Australia Wide | EDS",
     icon: "waves",
     group: "sewer",
     process: true,
@@ -306,6 +311,7 @@ export const services = [
   {
     slug: "inflow-infiltration-studies",
     title: "Inflow & Infiltration Studies",
+    pageTitle: "Inflow & Infiltration (I&I) Studies | EDS",
     icon: "cloud-rain",
     group: "sewer",
     process: true,
@@ -402,6 +408,7 @@ export const services = [
   {
     slug: "data-as-a-service",
     title: "Sewer Flow Data as a Service",
+    pageTitle: "Sewer Flow Data as a Service (DaaS) | EDS",
     short: "Data as a Service (DaaS)",
     icon: "database-zap",
     group: "sewer",
@@ -475,6 +482,7 @@ export const services = [
   {
     slug: "sewer-model-calibration",
     title: "Sewer Network Model Calibrations",
+    pageTitle: "Hydraulic & Sewer Model Calibration | EDS",
     short: "Model Calibration",
     icon: "drafting-compass",
     group: "sewer",
@@ -562,6 +570,7 @@ export const services = [
   {
     slug: "blockage-overflow-alarms",
     title: "Blockage & Overflow Alarms",
+    pageTitle: "Sewer Blockage & Overflow Alarms | EDS",
     icon: "siren",
     group: "sewer",
     summary: "Level alarms and continuous depth monitoring that warn of blockages and surcharges before they become overflows.",
@@ -621,6 +630,7 @@ export const services = [
   {
     slug: "rehabilitation-verification",
     title: "Rehabilitation & Works Verification",
+    pageTitle: "Sewer Rehabilitation & Works Verification | EDS",
     short: "Works Verification",
     icon: "badge-check",
     group: "sewer",
@@ -705,6 +715,7 @@ export const services = [
   {
     slug: "sampling-programs",
     title: "Sampling & Sampler Hire",
+    pageTitle: "Sampling Programs & Sampler Hire | EDS",
     icon: "test-tubes",
     group: "water",
     summary: "Automatic water and wastewater samplers to buy or hire, including the only true intrinsically safe sampler in Australia.",
@@ -752,6 +763,7 @@ export const services = [
   {
     slug: "trade-waste",
     title: "Trade Waste Monitoring",
+    pageTitle: "Trade Waste Monitoring & Compliance | EDS",
     icon: "factory",
     group: "water",
     featured: true,
@@ -798,6 +810,7 @@ export const services = [
   {
     slug: "closed-channel-flow",
     title: "Closed Channel Flow Monitoring",
+    pageTitle: "Closed Channel & Full Pipe Flow Monitoring | EDS",
     short: "Closed Channel Flow",
     icon: "cylinder",
     group: "water",
@@ -847,6 +860,7 @@ export const services = [
   {
     slug: "rainfall-monitoring",
     title: "Rainfall Monitoring",
+    pageTitle: "Rainfall Monitoring & Rain Gauges | EDS",
     icon: "cloud-drizzle",
     group: "water",
     process: true,
@@ -886,6 +900,7 @@ export const services = [
   {
     slug: "real-time-monitoring",
     title: "Real-Time Monitoring",
+    pageTitle: "Real-Time Wireless Monitoring | EDS",
     icon: "radio-tower",
     group: "data",
     featured: true,
@@ -1043,6 +1058,7 @@ export const services = [
   {
     slug: "data-analysis-reporting",
     title: "Data Analysis & Reporting",
+    pageTitle: "Flow Data Analysis & Reporting | EDS",
     icon: "chart-line",
     group: "data",
     summary: "Validated flow, depth and rainfall data turned into reports that show where the problems are and what to fix first.",
@@ -1092,6 +1108,7 @@ export const services = [
   {
     slug: "network-assessment",
     title: "Network Assessment & Review",
+    pageTitle: "Water & Wastewater Network Assessment | EDS",
     icon: "network",
     group: "data",
     featured: true,
@@ -1139,6 +1156,7 @@ export const services = [
   {
     slug: "auditing-calibration",
     title: "Auditing & Calibration",
+    pageTitle: "Flow Meter Auditing & Calibration | EDS",
     icon: "clipboard-check",
     group: "field",
     featured: true,
@@ -1183,6 +1201,7 @@ export const services = [
   {
     slug: "equipment-rental",
     title: "Equipment Rental",
+    pageTitle: "Monitoring Equipment Hire & Rental | EDS",
     icon: "package-check",
     group: "field",
     summary: "Long and short term hire of monitoring and analytical equipment built for the harshest applications.",
@@ -1397,6 +1416,7 @@ export const solutions = [
   {
     slug: "wastewater-monitoring",
     title: "Wastewater Monitoring",
+    pageTitle: "Wastewater Flow & Quality Monitoring | EDS",
     icon: "droplets",
     summary: "Flow and quality monitoring, from a single EC point to thousands of deployed field instruments.",
     intro: [
@@ -1433,6 +1453,7 @@ export const solutions = [
   {
     slug: "automatic-sampling",
     title: "Automatic Sampling",
+    pageTitle: "Automatic Water & Wastewater Sampling | EDS",
     icon: "flask-conical",
     summary: "Australia's widest range of automated water and wastewater samplers, for sale or hire.",
     intro: [
@@ -1515,6 +1536,7 @@ export const brands = [
     slug: "eds",
     name: "EDS",
     title: "EDS Instruments",
+    pageTitle: "EDS Data Loggers, Sensors & Pump Station Manager",
     icon: "cpu",
     tag: "Designed and built by EDS",
     summary: "Data loggers, sensors and the Pump Station Manager, manufactured by EDS.",
@@ -1553,6 +1575,7 @@ export const brands = [
     slug: "detectronic",
     name: "Detectronic",
     title: "Detectronic",
+    pageTitle: "Detectronic Flow Meters & Level Monitors in Australia | EDS",
     icon: "radar",
     tag: "Sewer and wastewater network monitoring",
     summary: "Ultrasonic flow, level and water quality instruments engineered for sewer networks.",
@@ -1596,6 +1619,7 @@ export const brands = [
     slug: "ori",
     name: "ORI",
     title: "ORI Samplers",
+    pageTitle: "ORI ATEX & IECEx Certified Samplers in Australia | EDS",
     icon: "flask-conical",
     tag: "ATEX and IECEx certified sampling",
     summary: "Rugged mobile and stationary samplers from the world's leading maker of certified sampling systems.",
@@ -1645,6 +1669,7 @@ export const brands = [
     slug: "hach-flow",
     name: "Hach Flow",
     title: "Hach Flow",
+    pageTitle: "Hach Flow Meters, Loggers & Sensors in Australia | EDS",
     icon: "gauge",
     tag: "Open channel flow measurement",
     summary: "Loggers and sensors from Hach, including the Sigma and Marsh-McBirney legacy lines.",
@@ -1695,6 +1720,7 @@ export const brands = [
     slug: "beadedstream",
     name: "Beadedstream",
     title: "Beadedstream",
+    pageTitle: "Beadedstream Temperature Loggers in Australia | EDS",
     icon: "thermometer",
     tag: "Temperature data logging",
     summary: "Temperature loggers, thermistor strings and cloud data, proven in the extremes of Alaska.",
@@ -1733,6 +1759,7 @@ export const brands = [
     slug: "microlevel",
     name: "MicroLevel",
     title: "MicroLevel Samplers",
+    pageTitle: "MicroLevel Composite Samplers in Australia | EDS",
     icon: "test-tubes",
     tag: "Composite samplers",
     summary: "Portable, permanent and refrigerated composite samplers for wastewater and process liquids.",
@@ -1756,6 +1783,7 @@ export const brands = [
     slug: "aquamonitrix",
     name: "Aquamonitrix",
     title: "Aquamonitrix",
+    pageTitle: "Aquamonitrix Nitrate & Nitrite Analyser | EDS",
     icon: "flask-round",
     tag: "Nitrate and nitrite analyser",
     summary: "Real-time nitrate and nitrite measurement with laboratory accuracy in the field.",
@@ -1789,6 +1817,7 @@ export const brands = [
     slug: "dynaflox",
     name: "Dynaflox",
     title: "Dynaflox",
+    pageTitle: "Dynaflox Ultrasonic Water & Flow Meters | EDS",
     icon: "audio-waveform",
     tag: "Ultrasonic water and flow meters",
     summary: "Ultrasonic water meters and flow meters to ISO and AWWA standards.",
@@ -1915,7 +1944,7 @@ export const productPages = [
     tag: "Dual mode sewer flowmeter",
     title: "E-Flow 3 dual mode sewer flowmeter | EDS",
     lede: "Contactless radar measures velocity and depth in normal flow. When the sewer surcharges, ultrasonic and sealed pressure sensors take over, with no gap in the record.",
-    description: "EDS E-Flow 3: a four sensor area velocity flowmeter for sewer maintenance holes. Dual radar in normal flow, dual 1 MHz ultrasonic and sealed pressure in surcharge, RS485 Modbus RTU.",
+    description: "EDS E-Flow 3: a four sensor area velocity flowmeter for sewer maintenance holes. Dual radar in normal flow, ultrasonic and sealed pressure in surcharge.",
     image: img("e-flow-3.png"),
     figure: { src: img("e-flow-3-installation.jpg"), alt: "Cutaway of a sewer with E-Flow 3 mounted at the pipe obvert and cabled to a data logger near the top of the maintenance hole", caption: "E-Flow 3 at the pipe obvert, cabled to a logger in the shaft" },
     docs: [
@@ -1999,7 +2028,7 @@ export const productPages = [
     tag: "Battery powered 4G logger",
     title: "Hawk battery powered 4G sewer logger | EDS",
     lede: "The 4G logger built for Australian sewer networks. It lives inside the maintenance hole, with no cabinet to build and no power to bring to site.",
-    description: "EDS Hawk: a battery powered 4G LTE data logger for sewer maintenance holes. IP68 submersible, three RS485 sensor ports, logging from every second, internal battery up to 152 Ah.",
+    description: "EDS Hawk: a battery powered 4G LTE data logger for sewer maintenance holes. IP68 submersible, with three RS485 sensor ports and logging from every second.",
     image: img("hawk.png"),
     figure: { src: img("hawk-bracket.png"), alt: "The Hawk logger hanging from its stainless steel wall bracket", caption: "Hawk on its stainless wall bracket" },
     docs: [

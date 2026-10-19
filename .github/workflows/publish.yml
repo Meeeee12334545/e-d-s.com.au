@@ -24,8 +24,13 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      # The sitemap dates each page by when its content last changed, which
+      # the build works out against the dates of the last publish.
+      - name: Fetch the page dates from the last publish
+        run: git fetch -q --depth 1 origin gh-pages && git show FETCH_HEAD:assets/page-dates.json > "$RUNNER_TEMP/page-dates.json" || echo "No page dates published yet, so every page is dated today"
       - run: npm run build
         env:
+          PAGE_DATES: ${{ runner.temp }}/page-dates.json
           # No server on GitHub Pages, so visits go to the analytics server
           # (render.yaml), which also hosts the dashboard at /admin. Its Render
           # address is used because visitors never see it and it always has a
