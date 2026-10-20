@@ -1550,9 +1550,9 @@ export const brands = [
         name: "Data loggers",
         items: [
           { name: "Hawk", type: "logger", note: "Battery powered 4G sewer logger", image: img("hawk.png"), href: "products/hawk.html", docs: [{ label: "Datasheet", href: localDoc("eds-hawk-datasheet.pdf") }, { label: "Brochure", href: localDoc("eds-hawk-brochure.pdf") }] },
+          { name: "Metalog 4G", type: "logger", note: "4G logger for 4 to 20 mA and Modbus instruments", image: img("metalog-4g.png"), href: "products/metalog-4g.html", docs: [{ label: "Datasheet", href: localDoc("eds-metalog-4g-datasheet.pdf") }, { label: "Brochure", href: localDoc("eds-metalog-4g-brochure.pdf") }] },
           { name: "iLab Sonde", type: "quality", note: "Multi-parameter handheld", image: img("ilab-and-sensor.jpg") },
           { name: "EPM-2", type: "logger", note: "Portable 4G pressure logger", image: img("epm-2.png") },
-          { name: "Metalog", type: "logger", note: "4G data logger", image: img("grt101-gprs-4g-lte-battery-supply-wireless.jpg") },
           { name: "EMS-003", type: "logger", note: "Dual channel logger", image: img("003d.jpg") },
           { name: "EMS-050D", type: "logger", note: "Multi-channel logger", image: img("050d.jpg") },
           { name: "Pump Station Manager", type: "logger", note: "PSM, the EDS flagship since 1991", image: img("psm.jpg") },
@@ -1935,7 +1935,10 @@ export const alarm2 = {
 /* ------------------------------------------------------------------ */
 // Each is built at products/<slug>.html. `name` matches the product card in
 // the EDS range, which links here. `specs` is [[group, [[label, value]]]],
-// and `worksWith` is [[href, title, line]].
+// and `worksWith` is [[href, title, line]]. Optional: `terminals` draws the
+// terminal block, its groups in the order they sit on the block, each with
+// its pins as [[pin, name, function]] and a note, numbered from the pin 1
+// end; and `applications` is a row of [icon, title, line] cards.
 export const productPages = [
   {
     slug: "e-flow-3",
@@ -2112,6 +2115,110 @@ export const productPages = [
       ["flowsense.html", "EDS FlowSense", "Hosted data, hydrographs, alarms, quality auditing and export."],
     ],
     cta: { title: "Put a Hawk in the maintenance hole.", lede: "Tell us the network, the sites and the data you need. EDS will size the battery, supply the bracket and sensors, install and commission from the surface, and deliver the data through FlowSense. Also available in EDS rental fleets for temporary flow surveys." },
+  },
+  {
+    slug: "metalog-4g",
+    name: "Metalog 4G",
+    icon: "antenna",
+    tag: "Remote 4G data logger",
+    title: "Metalog 4G data logger for 4 to 20 mA and Modbus | EDS",
+    lede: "Telemetry for any 4 to 20 mA or Modbus instrument: four analogue inputs, an RS485 port and a 4G modem in one compact logger.",
+    description: "EDS Metalog 4G: a compact remote data logger with four 4 to 20 mA inputs and an RS485 Modbus RTU port, returning the data over the 4G network.",
+    image: img("metalog-4g.png"),
+    figure: { src: img("metalog-4g-dimensions.png"), alt: "Dimensioned drawing of the Metalog 4G: a front view 88 mm wide and 60 mm high with 10 mm keyhole flanges on each side, and the terminal end view, 25 mm deep", caption: "Front and terminal end views, in mm" },
+    docs: [
+      { label: "Datasheet", note: "Specifications, terminals and power, wiring, dimensions and installation.", href: localDoc("eds-metalog-4g-datasheet.pdf") },
+      { label: "Brochure", note: "The Metalog 4G at a glance: connections, applications and specifications.", href: localDoc("eds-metalog-4g-brochure.pdf") },
+    ],
+    highlights: [
+      ["activity", "4 × 4 to 20 mA", "Analogue inputs for two wire or three wire transmitters"],
+      ["cable", "RS485 Modbus RTU", "A shared two wire bus, or transparent pass through"],
+      ["signal", "4G cellular", "Built in modem with an SMA female 50 Ω connector"],
+      ["plug-zap", "9 to 28 V DC", "Suits 12 V and 24 V site supplies, and powers your sensors"],
+      ["usb", "USB setup", "Configured on site from a laptop"],
+      ["droplets", "IP58", "88 × 60 × 25 mm, rated −20 to 80 °C"],
+    ],
+    intro: [
+      "Metalog 4G is a compact remote data logger for water and wastewater networks. It reads up to four 4 to 20 mA transmitters and multiple RS485 Modbus RTU instruments, and returns the data over the 4G cellular network.",
+      "Level, pressure and flow transmitters all land on one 8 way terminal block. The 9 to 28 V DC supply range suits common 12 V and 24 V site supplies, and when the logger is fed from its DC jack, the V+ terminal powers loop powered transmitters at the same voltage.",
+      "Every setting is made on site from a laptop over USB, and two status lights show at a glance whether the logger is in setup, armed or sending.",
+    ],
+    features: [
+      ["Four analogue inputs", "Channels Ai0 to Ai3 accept 4 to 20 mA signals from two wire loop powered or three wire transmitters."],
+      ["RS485 Modbus RTU", "Poll instruments on a shared two wire bus, or use transparent mode to pass serial data straight through the logger."],
+      ["Powers your sensors", "Runs from 9 to 28 V DC through the terminal block or a 5.5 × 2.5 mm DC jack. Fed from the jack, V+ supplies your transmitters at the same voltage."],
+      ["4G cellular telemetry", "A built in 4G modem takes an antenna on its SMA female connector, directly or through an extension cable. The SIM sits in a hinged slot on the rear panel."],
+      ["Simple setup on site", "Configure from a laptop over USB. A red light shows setup, disarmed and armed; a green light shows start up and each message being sent."],
+      ["Compact and panel mounted", "An 88 × 60 × 25 mm IP58 body, fixed to a flat wall or panel through keyhole slots in both side flanges."],
+    ],
+    terminals: {
+      heading: "One terminal block, every connection.",
+      lede: "Power, analogue and RS485 wiring all land on a single 8 way terminal block, with the USB configuration port and power switch on the same face.",
+      groups: [
+        { label: "RS485", kind: "rs485", pins: [[8, "A+", "RS485 data A+"], [7, "B−", "RS485 data B−"]],
+          note: ["RS485", "A+ to A+ and B− to B− on every device, daisy chained along one bus, with a unique address for each Modbus device."] },
+        { label: "Analogue input", kind: "ai", pins: [[6, "Ai3", "Analogue input 4, 4 to 20 mA"], [5, "Ai2", "Analogue input 3, 4 to 20 mA"], [4, "Ai1", "Analogue input 2, 4 to 20 mA"], [3, "Ai0", "Analogue input 1, 4 to 20 mA"]],
+          note: ["Analogue inputs", "A two wire transmitter runs from V+ to its input, and all loops share V+. A three wire transmitter on its own supply shares 0 V with the logger GND."] },
+        { label: "9 to 28 V DC", kind: "power", pins: [[2, "GND", "Ground: supply negative, and the three wire 0 V common"], [1, "V+", "Power in, or sensor power out"]],
+          note: ["Power in or out", "Wire 9 to 28 V DC to V+ and GND, pins 1 and 2. Or plug the supply into the DC jack, and V+ then powers your sensors at the supply voltage."] },
+      ],
+      caution: "Switch the logger off before making or changing connections, and check each transmitter's polarity and supply voltage against its own datasheet.",
+    },
+    applications: {
+      heading: "Where it works.",
+      items: [
+        ["fan", "Pump stations", "Wet well level from a submersible level transducer."],
+        ["container", "Reservoirs", "Storage level in tanks and reservoirs."],
+        ["gauge", "Network pressure", "Pressure transmitters at critical points in the reticulation."],
+        ["waves", "Flow metering", "Analogue or Modbus outputs from flow meters."],
+      ],
+    },
+    specs: [
+      ["Sensor interface", [
+        ["Analogue inputs", "4 channels, Ai0 to Ai3, 4 to 20 mA (default)"],
+        ["Transmitters", "Two wire, loop powered from the logger V+, or three wire on an external supply"],
+        ["Ports", "1 × RS485, two wire (A+, B−)"],
+        ["Serial modes", "Modbus RTU, or transparent RS485 transmission"],
+      ]],
+      ["Telemetry", [
+        ["Cellular", "4G"],
+        ["Antenna", "SMA female connector, 50 Ω"],
+        ["SIM card", "Hinged slot on the rear panel"],
+        ["Configuration", "On site, from a laptop over USB"],
+      ]],
+      ["Power", [
+        ["Supply voltage", "9 to 28 V DC"],
+        ["Terminal input", "V+ and GND, pins 1 and 2"],
+        ["DC jack", "5.5 × 2.5 mm, 2.5 mm centre pin"],
+        ["Sensor power", "V+ output at supply voltage when powered from the DC jack"],
+        ["Power switch", "On / off"],
+      ]],
+      ["Enclosure and environment", [
+        ["Dimensions", "88 × 60 × 25 mm (W × H × D)"],
+        ["Protection", "IP58"],
+        ["Operating temperature", "−20 to 80 °C"],
+        ["Mounting", "Side flanges, 10 mm wide, with keyhole slots"],
+        ["Terminal block", "8 way, 3.81 mm pitch"],
+        ["Indicators", "ACT (red) and SRV (green) LEDs"],
+      ]],
+      ["Status lights", [
+        ["Setup mode", "ACT flashes every 600 ms"],
+        ["Disarmed", "ACT flashes every 6 s"],
+        ["Armed", "ACT flashes twice every 3 s"],
+        ["Starting or sending", "SRV on"],
+        ["Start up or send complete", "SRV off"],
+      ]],
+      ["Ordering", [
+        ["Model", "EDS-Metalog-4G-4CA"],
+        ["Matched to your site", "Transmitters, antennas and enclosures, by the EDS team"],
+      ]],
+    ],
+    specNote: "Specifications are subject to change without notice.",
+    worksWith: [
+      ["services/pump-station-monitoring.html", "Pump Station Monitoring", "Wet well levels, pump runs and alarms, watched around the clock."],
+      ["services/real-time-monitoring.html", "Real-Time Monitoring", "Rugged wireless monitoring for the SCADA systems you already run."],
+    ],
+    cta: { title: "Put your instruments on 4G.", lede: "Tell us the site, the instruments and the supply you have. Our team can match transmitters, antennas and enclosures to your site." },
   },
 ];
 
@@ -2403,6 +2510,8 @@ export const downloads = [
       ["EDS E-Flow 3 sewer flowmeter brochure", localDoc("eds-e-flow-3-brochure.pdf")],
       ["EDS Hawk 4G logger datasheet", localDoc("eds-hawk-datasheet.pdf")],
       ["EDS Hawk 4G logger brochure", localDoc("eds-hawk-brochure.pdf")],
+      ["EDS Metalog 4G data logger datasheet", localDoc("eds-metalog-4g-datasheet.pdf")],
+      ["EDS Metalog 4G data logger brochure", localDoc("eds-metalog-4g-brochure.pdf")],
       ["iLab 901 multi-parameter sensor datasheet", localDoc("eds-ilab-901-datasheet.pdf")],
       ["Detectronic MSFM S2.5T flow meter datasheet", localDoc("detectronic-msfm-s2-5t-datasheet.pdf")],
       ["Detectronic MSFM S2.5T installation and maintenance manual", localDoc("detectronic-msfm-s2-5t-manual.pdf")],
