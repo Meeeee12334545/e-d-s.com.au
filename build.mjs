@@ -1459,10 +1459,35 @@ ${ctaSection(r, { title: "Deploy Alarm2 across your network.", lede: "Complete l
 });
 
 /* ---- EDS instruments with a page of their own ---- */
+// The terminal block as it sits on the logger: the USB port, the terminals in
+// their groups (pin numbers under each, a numbered badge under each group,
+// counted from the pin 1 end) and the power switch, then the notes in that order.
+function terminalBand(t) {
+  const n = t.groups.length;
+  const block = t.groups.map((g, i) => `<li class="tb-group" data-kind="${g.kind}" style="--n:${g.pins.length}"><span class="tb-glabel">${esc(g.label)}</span><ol class="tb-pins">${g.pins.map(([pin, name, fn]) => `<li class="tb-pin" data-name="${esc(name)}"><span class="tb-name">${esc(name)}</span><span class="tb-screw" aria-hidden="true"></span><span class="tb-num"><span class="sr-only">Pin </span>${pin}<span class="sr-only">: ${esc(fn)}</span></span></li>`).join("")}</ol><span class="tb-badge" aria-hidden="true">${n - i}</span></li>`).join("");
+  const notes = [...t.groups].reverse().map((g, i) => `<li class="feature holder" data-reveal style="--i:${i}"><span class="tb-badge" aria-hidden="true">${i + 1}</span><div><b>${esc(g.note[0])}</b><span>${esc(g.note[1])}</span></div></li>`).join("");
+  return `<div class="section-head"><h2 class="h-lg" data-reveal>${esc(t.heading)}</h2><p class="lede" data-reveal style="--i:1">${esc(t.lede)}</p></div>
+  <figure class="tb" data-reveal>
+    <div class="tb-face">
+      <span class="tb-port" aria-hidden="true"><span>USB</span><i></i></span>
+      <ol class="tb-block" aria-label="Terminal block, left to right">${block}</ol>
+      <span class="tb-switch" aria-hidden="true"><span>Off / On</span><i></i><small>Power switch</small></span>
+    </div>
+    <figcaption>${esc(`Terminal block: ${t.groups.reduce((s, g) => s + g.pins.length, 0)} way, pin numbers under each terminal.`)}</figcaption>
+  </figure>
+  <ol class="tb-notes">${notes}</ol>
+  ${t.caution ? `<p class="tb-caution" data-reveal>${icon("circle-alert")}<span>${esc(t.caution)}</span></p>` : ""}`;
+}
+const applicationsBand = (a) => `<div class="section-head"><h2 class="h-lg" data-reveal>${esc(a.heading)}</h2></div>
+  <div class="grid c4">${a.items.map(([ic, t, d], i) => `<div class="card holder" data-reveal style="--i:${i}"><span class="card-icon">${icon(ic)}</span><h3>${esc(t)}</h3><p>${esc(d)}</p></div>`).join("")}</div>`;
+
 for (const pg of C.productPages) {
   const b = brand("eds");
   const pricing = { topic: "Product pricing", product: `${pg.name} (${b.name})` };
   const datasheet = pg.docs.find((d) => d.label === "Datasheet");
+  // optional bands between the overview (white) and the specifications, alternating grey and white
+  const extra = [pg.terminals && ["connections", terminalBand(pg.terminals)], pg.applications && ["applications", applicationsBand(pg.applications)]].filter(Boolean);
+  const tone = (i) => (i % 2 ? "" : " alt");
   add({
     file: `products/${pg.slug}.html`,
     title: pg.title,
@@ -1484,7 +1509,10 @@ ${pageHero(r, { crumbs: [["Products", "products/index.html"], [b.name, `products
     <div class="aside-card" data-reveal="right"><h3>Works with</h3><ul class="aside-links docs">${pg.worksWith.map(([href, t, d]) => `<li><a href="${r}${href}"><span>${esc(t)}<small>${esc(d)}</small></span>${icon("arrow-right")}</a></li>`).join("")}</ul></div>
   </aside>
 </div></section>
-<section class="section alt" id="specifications"><div class="wrap">
+${extra.map(([id, html], i) => `<section class="section${tone(i)}" id="${id}"><div class="wrap">
+  ${html}
+</div></section>`).join("\n")}
+<section class="section${tone(extra.length)}" id="specifications"><div class="wrap">
   <div class="section-head"><p class="eyebrow">Specifications</p><h2 class="h-lg" data-reveal>${esc(pg.name)} in detail.</h2></div>
   <div class="spec-groups">${pg.specs.map(([group, rows], i) => `<div class="aside-card" data-reveal style="--i:${i % 3}"><h3>${esc(group)}</h3><table class="specs"><tbody>${rows.map(([k, v]) => `<tr><th>${esc(k)}</th><td>${esc(v)}</td></tr>`).join("")}</tbody></table></div>`).join("")}</div>
   <p class="note spec-note" data-reveal>${esc(pg.specNote)} Full details are in the <a href="${datasheet.href}" rel="noopener">${esc(pg.name)} datasheet</a>.</p>
