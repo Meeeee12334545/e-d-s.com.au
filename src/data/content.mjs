@@ -301,7 +301,7 @@ export const services = [
         ],
       },
     ],
-    figure: { photo: "sewer-av-meter", alt: "An area velocity flow meter on a mounting band at the invert of a sewer, seen from the maintenance hole above, with wastewater flowing over it", caption: "An area velocity flow meter at the invert of a sewer, measuring depth and velocity in the flow.", pos: "50% 45%" },
+    figure: { photo: "sewer-av-meter", alt: "An area velocity flow meter on a mounting band at the invert of a sewer, seen from the manhole above, with wastewater flowing over it", caption: "An area velocity flow meter at the invert of a sewer, measuring depth and velocity in the flow.", pos: "50% 45%" },
     widget: "lab",
     related: ["inflow-infiltration-studies", "data-as-a-service", "sewer-model-calibration"],
     solutions: ["wastewater-monitoring"],
@@ -396,8 +396,8 @@ export const services = [
       },
     ],
     figures: [
-      { photo: "infiltration-joints", alt: "Groundwater streaming into a maintenance hole through the joints in its concrete wall, over an instrument mounted below", caption: "Infiltration: groundwater seeping in through failing joints, long after the rain has stopped." },
-      { photo: "inflow-manhole-rain", alt: "Water cascading down the step irons of a maintenance hole during heavy rain", caption: "Inflow: stormwater pouring into a maintenance hole while a storm is under way." },
+      { photo: "infiltration-joints", alt: "Groundwater streaming into a manhole through the joints in its concrete wall, over an instrument mounted below", caption: "Infiltration: groundwater seeping in through failing joints, long after the rain has stopped." },
+      { photo: "inflow-manhole-rain", alt: "Water cascading down the step irons of a manhole during heavy rain", caption: "Inflow: stormwater pouring into a manhole while a storm is under way." },
     ],
     widget: "lab",
     related: ["sewer-flow-monitoring", "thermal-infiltration-surveys", "sewer-model-calibration"],
@@ -525,7 +525,7 @@ export const services = [
         ],
       },
     ],
-    figure: { photo: "sewer-manhole-bracket", alt: "Looking down a maintenance hole to a sensor bracket fixed across the invert of the pipe, with the sensor cable running up the shaft", caption: "A monitoring site: the sensor bracket across the invert, cabled to a logger at the top of the shaft. Sites are chosen by their hydraulics, so the model is calibrated to readings it can trust." },
+    figure: { photo: "sewer-manhole-bracket", alt: "Looking down a manhole to a sensor bracket fixed across the invert of the pipe, with the sensor cable running up the shaft", caption: "A monitoring site: the sensor bracket across the invert, cabled to a logger at the top of the shaft. Sites are chosen by their hydraulics, so the model is calibrated to readings it can trust." },
     related: ["sewer-flow-monitoring", "inflow-infiltration-studies", "network-assessment"],
     products: ["detectronic", "hach-flow"],
   },
@@ -940,14 +940,14 @@ export const services = [
       {
         heading: "How the data reaches you",
         items: [
-          ["4G from the field", "EDS and Detectronic loggers report over the mobile network. The battery powered EDS Hawk lives inside the maintenance hole, with no cabinet or mains power at site."],
+          ["4G from the field", "EDS and Detectronic loggers report over the mobile network. The battery powered EDS Hawk lives inside the manhole, with no cabinet or mains power at site."],
           ["EDS FlowSense", "Every site on one map, refreshed every 60 seconds, worst first: open alarms, quiet loggers and sites outside their normal range."],
           ["Alarms that reach people", "Threshold and no-data rules, sent by email and SMS once when the state changes, so a dead logger is caught as well as a high level."],
           ["Your own systems", "Feeds to your SCADA or historian, and a read API, with nothing installed on your control network."],
         ],
       },
     ],
-    figure: { photo: "telemetry-pole-solar", alt: "A solar panel and a telemetry enclosure mounted on a pole beside a monitoring site, with a maintenance hole in the long grass below", caption: "A solar powered telemetry site. Readings leave over the mobile network as they are taken.", pos: "50% 18%" },
+    figure: { photo: "telemetry-pole-solar", alt: "A solar panel and a telemetry enclosure mounted on a pole beside a monitoring site, with a manhole in the long grass below", caption: "A solar powered telemetry site. Readings leave over the mobile network as they are taken.", pos: "50% 18%" },
     related: ["data-as-a-service", "sewer-flow-monitoring", "facility-management"],
     products: ["eds", "detectronic"],
   },
@@ -1147,7 +1147,7 @@ export const services = [
         ],
       },
     ],
-    figure: { photo: "sewer-pipe-downstream", alt: "Looking along a large sewer pipe from a maintenance hole, with the sensor mounting band fixed inside the entry and flow running away into the dark", caption: "Looking downstream from a maintenance hole. Flow and depth measured at sites like this show how the network is performing, and where it is not." },
+    figure: { photo: "sewer-pipe-downstream", alt: "Looking along a large sewer pipe from a manhole, with the sensor mounting band fixed inside the entry and flow running away into the dark", caption: "Looking downstream from a manhole. Flow and depth measured at sites like this show how the network is performing, and where it is not." },
     related: ["sewer-model-calibration", "data-analysis-reporting", "sewer-flow-monitoring"],
     solutions: ["asset-network-assessment"],
     products: ["detectronic", "eds"],
@@ -1194,7 +1194,7 @@ export const services = [
         ],
       },
     ],
-    figure: { photo: "site-crew-manhole", alt: "A sewer maintenance hole in a park with a safety barrier set up beside it and the EDS van parked nearby", caption: "A site visit: barriers up, the maintenance hole open, and the instrument checked against a reference measurement where it is installed." },
+    figure: { photo: "site-crew-manhole", alt: "A sewer manhole in a park with a safety barrier set up beside it and the EDS van parked nearby", caption: "A site visit: barriers up, the manhole open, and the instrument checked against a reference measurement where it is installed." },
     related: ["closed-channel-flow", "trade-waste", "equipment-rental"],
     products: ["hach-flow", "dynaflox", "eds"],
   },
@@ -1608,7 +1608,7 @@ export const brands = [
           { name: "MSFM", type: "flow", note: "Rugged 4G area velocity flow meter", image: img("s2.5-04-small-766x1024.png"), docs: [{ label: "S2.5T datasheet", href: localDoc("detectronic-msfm-s2-5t-datasheet.pdf") }, { label: "S2.5T manual", href: localDoc("detectronic-msfm-s2-5t-manual.pdf") }] },
           { name: "LIDoTT Smart", type: "level", note: "Long life, rugged 4G patented level monitor", image: img("dete01-01.24-600x452.png"), docs: [{ label: "LIDoTT Sensor datasheet", href: localDoc("detectronic-lidott-sensor-datasheet.pdf") }] },
           { name: "LIDoTT Alarm", type: "level", note: "Self contained level measurement and alarm device", image: img("lidott-alarm-3.png"), href: "products/lidott-alarm.html", docs: [{ label: "Datasheet", href: localDoc("detectronic-lidott-alarm-datasheet.pdf") }] },
-          { name: "Alarm2", type: "level", note: "All-in-one radar level monitor with alarms, up to 20 m, LoRaWAN or cellular", image: img("detectronic-alarm2.png"), href: "products/alarm2.html", docs: [{ label: "Datasheet", href: localDoc("detectronic-alarm2-datasheet.pdf") }, { label: "4G manual", href: localDoc("detectronic-alarm2-4g-manual.pdf") }] },
+          { name: "Alarm2", type: "level", note: "All-in-one radar level monitor with alarms, up to 20 m, LoRaWAN or 4G", image: img("detectronic-alarm2.png"), href: "products/alarm2.html", docs: [{ label: "Datasheet", href: localDoc("detectronic-alarm2-datasheet.pdf") }, { label: "4G manual", href: localDoc("detectronic-alarm2-4g-manual.pdf") }] },
           { name: "LIDoTT R", type: "level", note: "High-precision radar and pressure sensor for continuous monitoring", image: img("lidott-sensor-r-1.png"), docs: [{ label: "Datasheet", href: localDoc("detectronic-lidott-r-datasheet.pdf") }] },
           { name: "Multi Channel Data Loggers", type: "logger", note: "GPRS 2 channel logger for pulse output water meters, with optional pressure to 200 m and alarms on each channel", image: img("new-2-channel-logger-1001x1024.jpg"), docs: [{ label: "2 channel logger datasheet", href: localDoc("detectronic-msfm-gprs-2-channel-data-logger-datasheet.pdf") }] },
         ],
@@ -1862,7 +1862,7 @@ export const lidott = {
   image2: img("lidott-alarm-interior-drawing-web.jpg"),
   datasheet: localDoc("detectronic-lidott-alarm-datasheet.pdf"),
   // Detectronic's drawing of the alarm in place, labelled as an illustration.
-  figure: { photo: "lidott-alarm-site", alt: "Cutaway illustration of a LIDoTT Alarm mounted at the top of a maintenance hole beneath a street, measuring the sewer level below by radar and sending level alarms to the cloud over the mobile network", caption: "Illustration: where it sits. Mounted in the maintenance hole, measuring the level by radar and reporting alarms over the mobile network.", plain: true },
+  figure: { photo: "lidott-alarm-site", alt: "Cutaway illustration of a LIDoTT Alarm mounted at the top of a manhole beneath a street, measuring the sewer level below by radar and sending level alarms to the cloud over the mobile network", caption: "Illustration: where it sits. Mounted in the manhole, measuring the level by radar and reporting alarms over the mobile network.", plain: true },
   highlights: [
     ["radar", "Radar sensor", "5° beam angle"],
     ["ruler", "Range", "Measures up to 8.4 m"],
@@ -1896,7 +1896,7 @@ export const lidott = {
 export const alarm2 = {
   title: "Alarm2",
   maker: "Detectronic",
-  lede: "All-in-one radar level monitor with alarms, up to 20 m, LoRaWAN or cellular.",
+  lede: "All-in-one radar level monitor with alarms, up to 20 m, LoRaWAN or 4G.",
   image: img("detectronic-alarm2.png"),
   datasheet: localDoc("detectronic-alarm2-datasheet.pdf"),
   manual: localDoc("detectronic-alarm2-4g-manual.pdf"),
@@ -1905,7 +1905,7 @@ export const alarm2 = {
     ["ruler", "Range", "Measures up to 20 m"],
     ["package", "All in one", "Sensor, battery, modem and antenna"],
     ["bell-ring", "Multiple alarms", "High, low, and rate of change"],
-    ["wifi", "Connectivity", "LoRaWAN or 4G cellular"],
+    ["wifi", "Connectivity", "LoRaWAN or 4G mobile"],
     ["battery-full", "Long life", "Battery over 5 years"],
   ],
   description: [
@@ -1914,7 +1914,7 @@ export const alarm2 = {
   sections: [
     ["Precise measurement across range", "Radar measurement from 0 to 20 m with no blind spot ensures consistent accuracy across changing conditions. Accuracy of ± 5 mm at 20 m guarantees reliable threshold detection and alarm delivery."],
     ["Flexible alarm configuration", "High and low set-points, rate of change detection, and profile alarms are all configurable during installation. Alarms are sent immediately on threshold breach and hourly while the alarm condition persists."],
-    ["Robust deployment", "Fully integrated into a durable enclosure rated for outdoor and underground environments. LoRaWAN and 4G cellular connectivity options suit different network availability, with fallback to alternative modes."],
+    ["Robust deployment", "Fully integrated into a durable enclosure rated for outdoor and underground environments. LoRaWAN and 4G mobile connectivity options suit different network availability, with fallback to alternative modes."],
     ["Real-time monitoring", "Status messages and data are sent immediately on detection, with hourly heartbeat messages to confirm operational status. Integration with Detectronic Cloud enables email, SMS and web-based alerting."],
     ["Low maintenance", "Self-contained design requires no external sensors or wiring. Battery life over five years minimises site visits for maintenance."],
   ],
@@ -1947,9 +1947,9 @@ export const productPages = [
     tag: "Dual mode sewer flowmeter",
     title: "E-Flow 3 dual mode sewer flowmeter | EDS",
     lede: "Contactless radar measures velocity and depth in normal flow. When the sewer surcharges, ultrasonic and sealed pressure sensors take over, with no gap in the record.",
-    description: "EDS E-Flow 3: a four sensor area velocity flowmeter for sewer maintenance holes. Dual radar in normal flow, ultrasonic and sealed pressure in surcharge.",
+    description: "EDS E-Flow 3: a four sensor area velocity flowmeter for sewer manholes. Dual radar in normal flow, ultrasonic and sealed pressure in surcharge.",
     image: img("e-flow-3.png"),
-    figure: { src: img("e-flow-3-installation.jpg"), alt: "Cutaway of a sewer with E-Flow 3 mounted at the pipe obvert and cabled to a data logger near the top of the maintenance hole", caption: "E-Flow 3 at the pipe obvert, cabled to a logger in the shaft" },
+    figure: { src: img("e-flow-3-installation.jpg"), alt: "Cutaway of a sewer with E-Flow 3 mounted at the pipe obvert and cabled to a data logger near the top of the manhole", caption: "E-Flow 3 at the pipe obvert, cabled to a logger in the shaft" },
     docs: [
       { label: "Datasheet", note: "Principle of operation, full specifications, installation and wiring.", href: localDoc("eds-e-flow-3-datasheet.pdf") },
       { label: "Brochure", note: "How E-Flow 3 measures, and where it fits.", href: localDoc("eds-e-flow-3-brochure.pdf") },
@@ -1972,7 +1972,7 @@ export const productPages = [
       ["Surcharge: ultrasonic and pressure", "Dual 1 MHz ultrasonic Doppler transducers measure velocity through the water column, and the sealed pressure transducer reads depth to 10 m, compensated for dynamic pressure."],
       ["Seamless changeover", "The sensor checks all four elements every cycle and picks the right pair as the pipe fills and drains. The other pair stays available and cross checked, so there is no blind zone."],
       ["Obvert mounting sheds debris", "Fixed to the pipe crown on an EDS bracket, out of the flow path, so material cannot build up on the sensor face. Site visits become verification, not cleaning."],
-      ["No confined space entry", "Installed and retrieved from the maintenance hole opening, then commissioned and verified from the surface with EMS-Flow through the EDS logger."],
+      ["No confined space entry", "Installed and retrieved from the manhole opening, then commissioned and verified from the surface with EMS-Flow through the EDS logger."],
       ["Diagnostics you can trust", "Composite velocity, depth and flow come with each sensor's own value and status over Modbus, so you can see which pair is active, and why, from the office."],
     ],
     specs: [
@@ -2005,7 +2005,7 @@ export const productPages = [
       ["Mechanical and environmental", [
         ["Housing", "Alloy and engineering plastic composite"],
         ["Sealing", "Electronics fully potted, unaffected by temperature cycling"],
-        ["Cable", "Integral, length to suit the maintenance hole"],
+        ["Cable", "Integral, length to suit the manhole"],
         ["Mounting", "Pipe obvert on an EDS bracket, sensor face upstream"],
         ["Water temperature", "0 to 60 °C, accurate to 0.5 °C"],
         ["Service", "Sewage, trade waste and combined flows, permanent or temporary"],
@@ -2030,8 +2030,8 @@ export const productPages = [
     icon: "radio-tower",
     tag: "Battery powered 4G logger",
     title: "Hawk battery powered 4G sewer logger | EDS",
-    lede: "The 4G logger built for Australian sewer networks. It lives inside the maintenance hole, with no cabinet to build and no power to bring to site.",
-    description: "EDS Hawk: a battery powered 4G LTE data logger for sewer maintenance holes. IP68 submersible, with three RS485 sensor ports and logging from every second.",
+    lede: "The 4G logger built for Australian sewer networks. It lives inside the manhole, with no cabinet to build and no power to bring to site.",
+    description: "EDS Hawk: a battery powered 4G LTE data logger for sewer manholes. IP68 submersible, with three RS485 sensor ports and logging from every second.",
     image: img("hawk.png"),
     figure: { src: img("hawk-bracket.png"), alt: "The Hawk logger hanging from its stainless steel wall bracket", caption: "Hawk on its stainless wall bracket" },
     docs: [
@@ -2047,7 +2047,7 @@ export const productPages = [
       ["magnet", "Set up from the surface", "Magnet wake and EMS-Flow over Bluetooth"],
     ],
     intro: [
-      "The Hawk installs inside the maintenance hole. It powers and reads your flow, level and quality sensors over RS485, logs as often as every second, stores every reading on board, and reports over 4G LTE to FlowSense and to your own systems.",
+      "The Hawk installs inside the manhole. It powers and reads your flow, level and quality sensors over RS485, logs as often as every second, stores every reading on board, and reports over 4G LTE to FlowSense and to your own systems.",
       "There is no cabinet to build, no power to bring to site, and no need to enter the chamber to commission or reconfigure it. Nothing is mounted at the surface, so there is nothing to damage, vandalise or maintain in the road reserve.",
       "Hawk connects directly to E-Flow 3 and any other Modbus RTU sensor, and reports to FlowSense: one team for the sensor, logger, telemetry and data.",
     ],
@@ -2061,7 +2061,7 @@ export const productPages = [
     ],
     specs: [
       ["Telemetry", [
-        ["Cellular", "4G LTE"],
+        ["Mobile network", "4G LTE"],
         ["Logging interval", "1 second to 24 hours"],
         ["Reporting interval", "1 minute to 24 hours"],
         ["Data centres", "Up to 4, each with primary and standby addressing"],
@@ -2114,7 +2114,7 @@ export const productPages = [
       ["products/e-flow-3.html", "E-Flow 3 flowmeter", "Dual mode sewer flowmeter, radar with surcharge backup."],
       ["flowsense.html", "EDS FlowSense", "Hosted data, hydrographs, alarms, quality auditing and export."],
     ],
-    cta: { title: "Put a Hawk in the maintenance hole.", lede: "Tell us the network, the sites and the data you need. EDS will size the battery, supply the bracket and sensors, install and commission from the surface, and deliver the data through FlowSense. Also available in EDS rental fleets for temporary flow surveys." },
+    cta: { title: "Put a Hawk in the manhole.", lede: "Tell us the network, the sites and the data you need. EDS will size the battery, supply the bracket and sensors, install and commission from the surface, and deliver the data through FlowSense. Also available in EDS rental fleets for temporary flow surveys." },
   },
   {
     slug: "metalog-4g",
@@ -2133,13 +2133,13 @@ export const productPages = [
     highlights: [
       ["activity", "4 × 4 to 20 mA", "Analogue inputs for two wire or three wire transmitters"],
       ["cable", "RS485 Modbus RTU", "A shared two wire bus, or transparent pass through"],
-      ["signal", "4G cellular", "Built in modem with an SMA female 50 Ω connector"],
+      ["signal", "4G mobile", "Built in modem with an SMA female 50 Ω connector"],
       ["plug-zap", "9 to 28 V DC", "Suits 12 V and 24 V site supplies, and powers your sensors"],
       ["usb", "USB setup", "Configured on site from a laptop"],
       ["droplets", "IP58", "88 × 60 × 25 mm, rated −20 to 80 °C"],
     ],
     intro: [
-      "Metalog 4G is a compact remote data logger for water and wastewater networks. It reads up to four 4 to 20 mA transmitters and multiple RS485 Modbus RTU instruments, and returns the data over the 4G cellular network.",
+      "Metalog 4G is a compact remote data logger for water and wastewater networks. It reads up to four 4 to 20 mA transmitters and multiple RS485 Modbus RTU instruments, and returns the data over the 4G mobile network.",
       "Level, pressure and flow transmitters all land on one 8 way terminal block. The 9 to 28 V DC supply range suits common 12 V and 24 V site supplies, and when the logger is fed from its DC jack, the V+ terminal powers loop powered transmitters at the same voltage.",
       "Every setting is made on site from a laptop over USB, and two status lights show at a glance whether the logger is in setup, armed or sending.",
     ],
@@ -2147,7 +2147,7 @@ export const productPages = [
       ["Four analogue inputs", "Channels Ai0 to Ai3 accept 4 to 20 mA signals from two wire loop powered or three wire transmitters."],
       ["RS485 Modbus RTU", "Poll instruments on a shared two wire bus, or use transparent mode to pass serial data straight through the logger."],
       ["Powers your sensors", "Runs from 9 to 28 V DC through the terminal block or a 5.5 × 2.5 mm DC jack. Fed from the jack, V+ supplies your transmitters at the same voltage."],
-      ["4G cellular telemetry", "A built in 4G modem takes an antenna on its SMA female connector, directly or through an extension cable. The SIM sits in a hinged slot on the rear panel."],
+      ["4G mobile telemetry", "A built in 4G modem takes an antenna on its SMA female connector, directly or through an extension cable. The SIM sits in a hinged slot on the rear panel."],
       ["Simple setup on site", "Configure from a laptop over USB. A red light shows setup, disarmed and armed; a green light shows start up and each message being sent."],
       ["Compact and panel mounted", "An 88 × 60 × 25 mm IP58 body, fixed to a flat wall or panel through keyhole slots in both side flanges."],
     ],
@@ -2181,7 +2181,7 @@ export const productPages = [
         ["Serial modes", "Modbus RTU, or transparent RS485 transmission"],
       ]],
       ["Telemetry", [
-        ["Cellular", "4G"],
+        ["Mobile network", "4G"],
         ["Antenna", "SMA female connector, 50 Ω"],
         ["SIM card", "Hinged slot on the rear panel"],
         ["Configuration", "On site, from a laptop over USB"],
@@ -2321,13 +2321,13 @@ export const about = {
   founder: { name: "Cynthia Harper", role: "Co-founder, Environmental Data Services", text: "EDS continues to strive to deliver the level of service and professionalism that was part of Graham's founding ethos." },
   // Photographs from EDS sites: one beside the timeline on the home page, and
   // the mosaic on the about page (the first photo is the large one).
-  homePhoto: { photo: "site-crew-manhole", alt: "A sewer maintenance hole in a park with a safety barrier set up beside it and the EDS van parked nearby", caption: "On site: a maintenance hole opened for an instrument check." },
+  homePhoto: { photo: "site-crew-manhole", alt: "A sewer manhole in a park with a safety barrier set up beside it and the EDS van parked nearby", caption: "On site: a manhole opened for an instrument check." },
   field: {
     heading: "The work, as it is.",
     lede: "Sewers, chambers, cabinets and poles: the sites EDS crews instrument, visit and keep reporting.",
     photos: [
-      { photo: "sewer-av-meter", alt: "An area velocity flow meter on a mounting band at the invert of a sewer, seen from the maintenance hole above, with wastewater flowing over it", caption: "An area velocity flow meter in the channel of a sewer." },
-      { photo: "site-crew-manhole", alt: "A sewer maintenance hole in a park with a safety barrier set up beside it and the EDS van parked nearby", caption: "A site visit." },
+      { photo: "sewer-av-meter", alt: "An area velocity flow meter on a mounting band at the invert of a sewer, seen from the manhole above, with wastewater flowing over it", caption: "An area velocity flow meter in the channel of a sewer." },
+      { photo: "site-crew-manhole", alt: "A sewer manhole in a park with a safety barrier set up beside it and the EDS van parked nearby", caption: "A site visit." },
       { photo: "telemetry-pole-solar", alt: "A solar panel and a telemetry enclosure mounted on a pole beside a monitoring site", caption: "A solar powered telemetry site.", pos: "50% 18%" },
       { photo: "sewer-sensors-chamber", alt: "A sewer chamber with a level float and an area velocity sensor installed in the flow", caption: "Level and velocity sensors in a chamber." },
       { photo: "telemetry-cabinet", alt: "An open site cabinet with a data logger, a modem and a power supply mounted inside", caption: "Inside a site cabinet.", pos: "50% 62%" },
@@ -2558,7 +2558,7 @@ export const city = [
     id: "sewer",
     name: "Sewer network",
     icon: "waves",
-    blurb: "Under every street, flow and depth are measured at the maintenance hole and sent in over 4G.",
+    blurb: "Under every street, flow and depth are measured at the manhole and sent in over 4G.",
     services: ["s:sewer-flow-monitoring", "s:inflow-infiltration-studies", "s:blockage-overflow-alarms", "s:sewer-model-calibration"],
     products: [["Detectronic MSFM flow meter", "p:detectronic"], ["LIDoTT Alarm", "lidott"], ["Hach Flo-Dar", "p:hach-flow"]],
     sensors: [
@@ -2573,11 +2573,11 @@ export const city = [
     ],
     strata: {
       above: "Eleven homes, each draining through its own lateral.",
-      street: "Two lanes, six maintenance holes and the EDS crew at MH 9.",
+      street: "Two lanes, six manholes and the EDS crew at MH 9.",
       below: "Two lane mains, the house laterals and a cracked joint letting groundwater in.",
     },
     asset: {
-      id: "mh9", pin: "msfm", name: "Maintenance hole 9", button: "See inside maintenance hole 9",
+      id: "mh9", pin: "msfm", name: "Manhole 9", button: "See inside manhole 9",
       caption: "How the Detectronic MSFM is installed: the sensor rides a ring locked inside the pipe, and the logger is fixed to the step irons.",
       parts: [
         { id: "cover", name: "Cover and frame", note: "At road level. The only part a passer-by sees." },
@@ -2867,7 +2867,7 @@ export const cityStorm = {
   steps: [
     { n: 1, at: 0, zone: "river", caption: "Rain starts. The RIMCO 7499 gauge tips at 18 mm/h.", why: "Rain data shows why the network changed.", link: "s:rainfall-monitoring", hud: { rain: 18, primary: 212, well: 1.12, alarms: 0 }, announce: true, announceText: "Rain gauge tipping, 18 millimetres an hour." },
     { n: 2, at: 4, zone: "sewer", caption: "Gully pits and three connected downpipes push inflow into the sewer.", why: "Inflow and infiltration studies find where the rain gets in.", link: "s:inflow-infiltration-studies", hud: { rain: 18, primary: 640, well: 1.38, alarms: 0 } },
-    { n: 3, at: 8, zone: "sewer", caption: "Level passes 2.0 m at MH 14. LIDoTT Alarm: High.", sub: [{ at: 10, state: "highHigh", caption: "3.0 m. High-high. An SMS and email go out.", log: "ALARM High-high level 3.04 m · MH 14 · LIDoTT Alarm", logStamp: "06:52 · SMS and email", sms: true }], why: "Level alarms warn before a surcharge becomes a spill.", link: "s:blockage-overflow-alarms", hud: { rain: 22, primary: 1480, well: 1.62, alarms: 1 }, announce: true, announceText: "Maintenance hole 14 surcharging. LIDoTT Alarm high-high. SMS sent to the operations centre." },
+    { n: 3, at: 8, zone: "sewer", caption: "Level passes 2.0 m at MH 14. LIDoTT Alarm: High.", sub: [{ at: 10, state: "highHigh", caption: "3.0 m. High-high. An SMS and email go out.", log: "ALARM High-high level 3.04 m · MH 14 · LIDoTT Alarm", logStamp: "06:52 · SMS and email", sms: true }], why: "Level alarms warn before a surcharge becomes a spill.", link: "s:blockage-overflow-alarms", hud: { rain: 22, primary: 1480, well: 1.62, alarms: 1 }, announce: true, announceText: "Manhole 14 surcharging. LIDoTT Alarm high-high. SMS sent to the operations centre." },
     { n: 4, at: 12, zone: "ops", caption: "FlowSense receives the alarm and sends an EDS crew to MH 14.", why: "Every alarm lands in one place.", link: "flowsense", hud: { rain: 22, primary: 2030, well: 2.05, alarms: 1 }, log: "Crew dispatched to MH 14", logStamp: "06:54 · FlowSense" },
     { n: 5, at: 15, zone: "pump", caption: "Both pumps run as the wet well reaches 2.61 m.", why: "Pump station monitoring shows whether start and stop levels suit the flows arriving.", link: "s:pump-station-monitoring", hud: { rain: 20, primary: 1900, well: 2.61, alarms: 1 }, log: "Pump station: both pumps running, wet well 2.61 m", logStamp: "06:58 · FlowSense", announce: true, announceText: "Pump station running both pumps." },
     { n: 6, at: 18, zone: "plant", caption: "The plant inlet spikes to 420 L/s on the Dynaflox meter.", why: "Closed channel flow metered without cutting the pipe.", link: "s:closed-channel-flow", hud: { rain: 14, primary: 1600, well: 2.40, alarms: 1 } },

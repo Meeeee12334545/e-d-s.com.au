@@ -1631,7 +1631,7 @@ add({
   current: "resources",
   scripts: ["library.js"],
   body: (r) => `
-${pageHero(r, { crumbs: [["Resources"]], title: "White papers, downloads and support.", lede: "What we have learned in the field, and the files you need to keep instruments running.", visual: heroToc([["papers", "White papers", C.papers.length], ["downloads", "Software, drivers and datasheets", library.length], ["support", "Passwords, RMA forms and data access"]]) })}
+${pageHero(r, { crumbs: [["Resources"]], title: "White papers, downloads and support.", lede: "What we have learnt in the field, and the files you need to keep instruments running.", visual: heroToc([["papers", "White papers", C.papers.length], ["downloads", "Software, drivers and datasheets", library.length], ["support", "Passwords, RMA forms and data access"]]) })}
 <section class="section" id="papers"><div class="wrap">
   <div class="section-head"><p class="eyebrow">White papers</p><h2 class="h-lg" data-reveal>EDS publications</h2></div>
   <div class="grid ${C.papers.length % 3 ? "c2" : "c3"}">
