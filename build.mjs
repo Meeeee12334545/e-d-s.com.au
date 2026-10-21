@@ -931,7 +931,7 @@ add({
       <button type="button" class="city-close" aria-label="${esc(C.cityUi.toolbar.close)}" hidden>${icon("x", false)}</button>
       <div class="city-stage" data-reveal="scale">
         <div class="city-view">
-        <svg id="city" role="group" aria-label="${esc(C.cityUi.stageLabel)}"></svg>
+        <div class="city-model"><svg id="city" role="group" aria-label="${esc(C.cityUi.stageLabel)}"></svg></div>
         <div class="city-asset" id="city-asset" role="group" hidden>
           <svg class="city-asset-svg" aria-hidden="true" focusable="false"></svg>
           <div class="city-asset-bar"><button type="button" class="btn btn-ghost city-btn" data-act="asset-back">${icon("arrow-left")}<span></span></button><button type="button" class="btn btn-ghost city-btn" data-act="asset-toggle" aria-pressed="true">${icon("unfold-vertical")}${icon("fold-vertical", false)}<span></span></button></div>

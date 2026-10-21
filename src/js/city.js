@@ -8,7 +8,22 @@
 // a tap or keyboard focus (or when the visitor runs the storm), and a
 // sensor's readout opens on a click. Hovering only brightens what would be
 // picked. The ambient animation (traffic, pings, flows) always runs.
+//
+// The city is drawn once the page has painted its first frame (or after a
+// moment, in a tab that is not showing), so the hero is on screen before the
+// work of building two thousand elements begins. The city sits well below
+// the fold, so nothing is seen to wait.
 (() => {
+  let started = false;
+  const start = () => {
+    if (started) return;
+    started = true;
+    build();
+  };
+  const fallback = setTimeout(start, 400);
+  requestAnimationFrame(() => { clearTimeout(fallback); setTimeout(start, 0); });
+
+  function build() {
   const svg = document.getElementById("city"), dataEl = document.getElementById("city-data");
   if (!svg || !dataEl || !window.CityScene) return;
   const data = JSON.parse(dataEl.textContent);
@@ -313,12 +328,16 @@
   /* ---- under a mouse the whole city tilts a little toward the pointer ---- */
   // The stylesheet grows and lifts it on hover; this sets the tilt as an
   // axis and angle, a few degrees at most, throttled to one update a frame.
-  if (fine) {
+  // It goes onto the box that holds the three layers as an inline rotate
+  // (site.css eases it, and the compositor turns the one texture): set as
+  // custom properties on the stage it restyled every node in the city on
+  // every move of the mouse.
+  const model = $(".city-model", stage);
+  if (fine && model) {
     let box = null, raf = 0, px = 0, py = 0;
     const setTilt = (rx, ry) => {
       const a = Math.hypot(rx, ry);
-      stage.style.setProperty("--tilt", `${a.toFixed(2)}deg`);
-      if (a > 0.01) { stage.style.setProperty("--ax", (rx / a).toFixed(3)); stage.style.setProperty("--ay", (ry / a).toFixed(3)); }
+      model.style.rotate = a > 0.01 ? `${(rx / a).toFixed(3)} ${(ry / a).toFixed(3)} 0 ${a.toFixed(2)}deg` : "";
     };
     stage.addEventListener("pointerenter", (e) => { if (e.pointerType === "mouse") box = stage.getBoundingClientRect(); });
     stage.addEventListener("pointermove", (e) => {
@@ -616,7 +635,9 @@
   /* ---- gating: nothing runs while the stage is off screen or the tab hidden ---- */
   function sync() {
     const on = state.inView && !document.hidden;
-    cls("is-offscreen", !on);
+    // only the overlay holds animations, so only it is paused (the class
+    // on the still city would restyle its two thousand nodes for nothing)
+    sc.fx.classList.toggle("is-offscreen", !on);
     if (on) {
       layers.forEach((s) => { try { s.unpauseAnimations(); } catch {} });
       startTicker(); kick();
@@ -1069,4 +1090,5 @@
   // start on the district the page was built with (the first card)
   setActive(cards.find((c) => c.classList.contains("active"))?.dataset.zone || order[0]);
   paintHud();
+  }
 })();
