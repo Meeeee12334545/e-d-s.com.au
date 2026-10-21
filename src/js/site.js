@@ -599,6 +599,17 @@
     $$(".footer, .cta, .contact-grid").forEach((el) => io2.observe(el));
   }
 
+  /* ---- ambient loops pause while off screen ---- */
+  // The FlowSense screens, the office map, the flow lab's pipe and the "open
+  // now" dot animate for as long as a page is open. Off screen they would
+  // still be restyled and repainted on every frame, so they pause until
+  // they are back in view (site.css: .offscreen).
+  const loops = $$(".fs-screen, #ausmap, #lab-pipe, .open-status, .live-tag");
+  if (loops.length) {
+    const io3 = new IntersectionObserver((entries) => entries.forEach((en) => en.target.classList.toggle("offscreen", !en.isIntersecting)), { rootMargin: "80px 0px" });
+    loops.forEach((el) => io3.observe(el));
+  }
+
   /* ---- flow field: streamlines that part around the pointer ---- */
   function flowField(canvas) {
     const ctx = canvas.getContext("2d");

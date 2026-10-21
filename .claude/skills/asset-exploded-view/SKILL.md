@@ -1,6 +1,6 @@
 ---
 name: asset-exploded-view
-description: Build interactive exploded and cutaway views of physical assets (maintenance holes, wet wells, pump stations, tanks, towers, instruments, whole city districts) as live isometric SVG in this website, with every part labelled from the real datasheets. Use this whenever someone asks to explode, take apart, deconstruct, peel back, cut away or "see inside" anything on the home page city or any other drawing on the site, or asks for an "exploded view", "expanded view", "layers view", "x-ray" or "what's inside" of an asset or product, even if they don't say SVG. Not for generating raster images.
+description: Build interactive exploded and cutaway views of physical assets (manholes, wet wells, pump stations, tanks, towers, instruments, whole city districts) as live isometric SVG in this website, with every part labelled from the real datasheets. Use this whenever someone asks to explode, take apart, deconstruct, peel back, cut away or "see inside" anything on the home page city or any other drawing on the site, or asks for an "exploded view", "expanded view", "layers view", "x-ray" or "what's inside" of an asset or product, even if they don't say SVG. Not for generating raster images.
 ---
 
 # Asset exploded view
@@ -18,7 +18,7 @@ Pick one per object. Each is a decision about what the visitor should understand
 
 | Style | How it moves | Use it for |
 | --- | --- | --- |
-| Mechanical | Parts separate along one axis (usually height), evenly spaced, keeping their order and their outline | Built assets: a maintenance hole, a wet well, a rain gauge, a sampler |
+| Mechanical | Parts separate along one axis (usually height), evenly spaced, keeping their order and their outline | Built assets: a manhole, a wet well, a rain gauge, a sampler |
 | Slide-out | One part leaves along a second axis, with a dashed guide back to where it sits | A sensor inside a pipe, a battery out of a logger |
 | Layered peel (strata) | Horizontal layers lift apart: structures, street, below ground | A whole district, a building's floors |
 | Conceptual stack | Plates for stages of a flow, stacked in order | The data path: instrument, logger, network, FlowSense, alarms |
@@ -100,7 +100,7 @@ buttons. A notes layer over the stage holds them plus one SVG of leader lines in
 ## 7. Accessibility
 
 - Every control is a `<button>` with a name that says what it does ("Take it apart",
-  "Put it back", "See inside maintenance hole 9", "Back to the district").
+  "Put it back", "See inside manhole 9", "Back to the district").
 - Opening a view moves focus to its first control; closing returns focus where it came from.
   Announce changes once through `#city-live`.
 - Labels are in reading order (top to bottom), so a screen reader hears the parts in order.

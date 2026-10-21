@@ -794,7 +794,7 @@
           ...[[6.78, 0.9], [6.78, 2.3], [6.78, 3.7], [8.13, 1.7], [8.13, 3.95]].map(([x, y]) => use("lamp", x, y, 0, { d: x + y + 0.06 })),
           box(9.2, 4.2, 0.4, 0.16, 5, { top: "lit" }),
           manhole(6.78, 1.55), manhole(8.13, 1.0), manhole(6.78, 0.5), manhole(8.13, 3.05),
-          // the EDS crew lowering a flow meter down the open maintenance hole
+          // the EDS crew lowering a flow meter down the open manhole
           manhole(6.78, 3.05, { open: true }),
           item(9.84, ...[[-0.14, 0.12], [0.14, 0.1], [0.02, -0.16]].map(([dx, dy]) => seg("det", P(6.78 + dx, 3.05 + dy), P(6.78, 3.05, 17)))),
           item(9.85, ...cyl(6.78, 3.05, 0.055, 3, { z: 7 }).nodes.map((n, i) => (n.classList.add("meter"), (n.style.fill = ["#6fb8ad", "#479086", "#dbf0ec"][i]), n))),
@@ -1281,7 +1281,7 @@
   const faceL = (x, y, z, w, h, inset = 0.04) => [P(x + inset, y, z + h - 3), P(x + w - inset, y, z + h - 3), P(x + w - inset, y, z + 3), P(x + inset, y, z + 3)];
 
   const ASSETS = {
-    // Maintenance hole 9 and the Detectronic MSFM S2.5T (DNS 51 manual):
+    // Manhole 9 and the Detectronic MSFM S2.5T (DNS 51 manual):
     // the sensor on its mounting plate, the stainless ring locked in the
     // pipe by a scissor expander, the cable tied along the ring's trailing
     // edge, the logger fixed to the step irons, the ATEX battery pack beside it.

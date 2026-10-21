@@ -931,7 +931,7 @@ add({
       <button type="button" class="city-close" aria-label="${esc(C.cityUi.toolbar.close)}" hidden>${icon("x", false)}</button>
       <div class="city-stage" data-reveal="scale">
         <div class="city-view">
-        <svg id="city" role="group" aria-label="${esc(C.cityUi.stageLabel)}"></svg>
+        <div class="city-model"><svg id="city" role="group" aria-label="${esc(C.cityUi.stageLabel)}"></svg></div>
         <div class="city-asset" id="city-asset" role="group" hidden>
           <svg class="city-asset-svg" aria-hidden="true" focusable="false"></svg>
           <div class="city-asset-bar"><button type="button" class="btn btn-ghost city-btn" data-act="asset-back">${icon("arrow-left")}<span></span></button><button type="button" class="btn btn-ghost city-btn" data-act="asset-toggle" aria-pressed="true">${icon("unfold-vertical")}${icon("fold-vertical", false)}<span></span></button></div>
@@ -1631,7 +1631,7 @@ add({
   current: "resources",
   scripts: ["library.js"],
   body: (r) => `
-${pageHero(r, { crumbs: [["Resources"]], title: "White papers, downloads and support.", lede: "What we have learned in the field, and the files you need to keep instruments running.", visual: heroToc([["papers", "White papers", C.papers.length], ["downloads", "Software, drivers and datasheets", library.length], ["support", "Passwords, RMA forms and data access"]]) })}
+${pageHero(r, { crumbs: [["Resources"]], title: "White papers, downloads and support.", lede: "What we have learnt in the field, and the files you need to keep instruments running.", visual: heroToc([["papers", "White papers", C.papers.length], ["downloads", "Software, drivers and datasheets", library.length], ["support", "Passwords, RMA forms and data access"]]) })}
 <section class="section" id="papers"><div class="wrap">
   <div class="section-head"><p class="eyebrow">White papers</p><h2 class="h-lg" data-reveal>EDS publications</h2></div>
   <div class="grid ${C.papers.length % 3 ? "c2" : "c3"}">
