@@ -599,7 +599,8 @@ ul { margin: 0; padding: 0; list-style: none; }
 .city-svg .zone .sludge { fill: #4b4034; opacity: .85; }
 .city-svg .zone .bed-rim { fill: none; stroke: rgba(255, 255, 255, .2); stroke-width: .7; }
 .city-svg .zone .rod { stroke: rgba(255, 255, 255, .45); stroke-width: .5; }
-.city-svg .zone .glass { fill: rgba(167, 230, 220, .14); stroke: rgba(167, 230, 220, .35); stroke-width: .6; }
+/* the transit canopy's glass wall (`glass` on a block is the material above) */
+.city-svg .zone .pane { fill: rgba(167, 230, 220, .14); stroke: rgba(167, 230, 220, .35); stroke-width: .6; }
 .city-svg .zone .entry { fill: #ffd27a; opacity: .75; transition: opacity .35s var(--ease); }
 /* the new tower: its floor slabs, the crane and its lines; the EDS wordmark on the operations centre */
 .city-svg .zone .floor-line { fill: none; stroke: rgba(0, 0, 0, .3); stroke-width: .6; }
@@ -684,7 +685,9 @@ ul { margin: 0; padding: 0; list-style: none; }
 .city-svg.lidott-highhigh .sensor[data-sensor="lidott"] .ping-dot { fill: var(--red); }
 /* the lift */
 .city-svg.has-active .zone:not(.active) { opacity: .78; }
-.city-svg .zone.active { --lift: 52%; --lift-g: 26%; --detail: rgba(4, 32, 29, .32); --water: #4fc3f7; translate: 0 -14px; scale: 1.07; }
+/* a third of the way to the highlight: the pick reads, and the tiles stay
+   terracotta and the brick red rather than going pastel */
+.city-svg .zone.active { --lift: 34%; --lift-g: 17%; --detail: rgba(4, 32, 29, .32); --water: #4fc3f7; translate: 0 -14px; scale: 1.07; }
 .city-svg .zone.active .g { stroke: var(--aqua); stroke-width: 1.6; }
 /* keyboard focus: a white edge round the district, heavier than the selection's */
 .city-svg .zone:focus-visible > .g, .city-svg .zone.active:focus-visible > .g { stroke: #fff; stroke-width: 2.8; }
