@@ -1111,7 +1111,7 @@
     const mix = (a, b, t) => a + (b - a) * t, smooth = (x) => x * x * (3 - 2 * x), lim = (v, a, b) => Math.max(a, Math.min(b, v));
     const nameOf = (id) => zoneOf[id]?.name || id, idx = (id) => route.indexOf(id) + 1;
     const jump = (top) => scrollTo({ top, left: 0, behavior: "instant" });
-    const T = { on: false, t: 0, tr: 0, vh: 1, top: 0, raf: 0, last: 0, W: 800, H: 448, B: VB0.slice(), K: [], F: VB0.slice(), cs: { s: 1, tx: 0, ty: 0 }, focus: null, k: 0, notesZ: null, cardZ: null, told: null, endTold: false, dir: 1, snapping: false, snapRaf: 0, idle: 0, inertia: false, inertiaT: 0, inertiaRaf: 0, vel: 0, y: 0, lastI: 0, dirty: true, seen: new Set(), labA: "" };
+    const T = { on: false, t: 0, tr: 0, vh: 1, top: 0, raf: 0, last: 0, lastScroll: 0, baked: -1, W: 800, H: 448, B: VB0.slice(), K: [], F: VB0.slice(), cs: { s: 1, tx: 0, ty: 0 }, focus: null, k: 0, notesZ: null, cardZ: null, told: null, endTold: false, dir: 1, snapping: false, snapRaf: 0, idle: 0, inertia: false, inertiaT: 0, inertiaRaf: 0, vel: 0, y: 0, lastI: 0, dirty: true, seen: new Set(), labA: "" };
     const dots = {};
     $("[data-text]", tHint).textContent = fine ? TOUR.begin : TOUR.beginTouch;
     route.forEach((id, i) => {
@@ -1232,6 +1232,9 @@
       if (Math.abs(T.t - T.tr) < 0.0003) T.tr = T.t;
       if (T.tr !== prev) T.dir = Math.sign(T.tr - prev) || T.dir;
       if (T.tr !== prev || T.dirty) { T.dirty = false; render(); }
+      // once the drawn camera has caught up with a scroll that has stopped,
+      // bake it, so the city is crisp exactly where the visitor rests
+      else if (T.tr === T.t && T.baked !== T.t && !T.snapping && !T.inertia && now - T.lastScroll > 150) { T.baked = T.t; bake(T.F); }
       T.raf = requestAnimationFrame(loop);
     }
 
@@ -1318,7 +1321,7 @@
     function stopInertia(settled) { if (!T.inertia) return; clearTimeout(T.inertiaT); cancelAnimationFrame(T.inertiaRaf); T.inertia = false; T.vel = 0; if (settled) scheduleRest(); }
     addEventListener("scroll", () => {
       if (!T.on) return;
-      T.t = (scrollY - T.top) / T.vh; T.dirty = true;
+      T.t = (scrollY - T.top) / T.vh; T.dirty = true; T.lastScroll = performance.now();
       if (T.t < -0.25) { leave({ to: "top" }); return; }
       if (T.t > NT + 1.4) { leave({ to: "end" }); return; }
       if (!T.snapping && !T.inertia) scheduleRest();
