@@ -29,7 +29,7 @@ export const site = {
   // should be eds@e-d-s.com.au. It is safe to publish. The build stops if it
   // is empty.
   formKey: "4fd0d5e0-cb94-40ad-adda-7c634e765045",
-  address: ["13/20-22 Ellerslie Road", "Meadowbrook QLD 4131", "Australia"],
+  address: ["13/20–22 Ellerslie Road", "Meadowbrook QLD 4131", "Australia"],
   hours: "Monday to Friday, 7:30am to 4:30pm",
   founded: 1991,
   // The live address, used for canonical links, the sitemap and share cards.
@@ -50,7 +50,36 @@ export const offices = [
 ];
 
 // The home hero's paragraph: 20 words at most, so the hero fits one screen.
-export const homeLede = "Instruments, trained crews and data you can act on, for water and wastewater. Australian owned since 1991.";
+export const homeLede = "Australia's largest supplier of water and wastewater monitoring equipment, with our own crews and data platform. Australian owned since 1991.";
+
+// The proof row under the client logos on the home page: four statements at
+// one weight. Each is a claim made elsewhere on the site (the About timeline,
+// the footer credentials, the DaaS page), brought up to the first screen.
+export const proof = [
+  { lead: "Australian owned and operated since 1991", text: "Founded in Queensland. Four offices across the country, and crews who travel Australia wide." },
+  { lead: "Australia's largest supplier of water and wastewater monitoring equipment", text: "Our own loggers and flowmeters, and ranges from Detectronic, Hach, ORI, Beadedstream and more, supplied, installed and serviced by EDS." },
+  { lead: "Sydney Water panel provider", text: "Sewer flow and level instrumentation on a five year panel, and EDS loggers in Bureau of Meteorology service since the 1990s." },
+  { lead: "Certified for the sewer", text: "Intrinsically safe instruments under ATEX and IECEx, Zone 0, with 99.95% data availability under EDS DaaS." },
+];
+
+// The instrument shelf on the home page: four flagship instruments shown large
+// on one plate, each with its maker, one line and two facts from its own page.
+// `fit` is how much of the shot's height the image may take, so the four sit at
+// a believable relative size. Product shots on transparent backgrounds only.
+export const shelf = {
+  heading: "The instruments our crews put their name to.",
+  lede: "EDS designs and builds its own loggers and flowmeters, and represents manufacturers including Detectronic, Hach, ORI and Beadedstream. Every instrument here is one we install, service and calibrate ourselves.",
+  items: [
+    { name: "MSFM S2 flow monitor with LIDoTT", maker: "Detectronic", href: "products/detectronic.html", image: img("detectronic-msfm-s2-lidott.png"), fit: 100,
+      text: "The area velocity meter our sewer fleet runs on, with the level sensor that keeps measuring as the chamber surcharges.", specs: ["ATEX and IECEx Zone 0", "LIDoTT level to ± 2 mm"] },
+    { name: "LIDoTT Alarm", maker: "Detectronic", href: "products/lidott-alarm.html", image: img("lidott-alarm-cut.png"), fit: 90,
+      text: "Radar level sensor, battery, modem and aerial in one device, for early warning of blockages and overflows.", specs: ["Radar level to ± 5 mm", "Up to seven years on battery"] },
+    { name: "Hawk", maker: "EDS", href: "products/hawk.html", image: img("hawk.png"), fit: 94,
+      text: "The 4G logger built for Australian sewer networks. It lives inside the manhole, with no cabinet to build and no power to bring to site.", specs: ["IP68 submersible", "Designed and built by EDS"] },
+    { name: "E-Flow 3", maker: "EDS", href: "products/e-flow-3.html", image: img("e-flow-3.png"), fit: 72,
+      text: "Contactless radar measures velocity and depth in normal flow. When the sewer surcharges, ultrasonic and pressure sensors take over.", specs: ["Four sensors, no gap in the record", "Designed and built by EDS"] },
+  ],
+};
 
 export const stats = [
   { value: 1991, label: "Founded in Queensland. Australian owned ever since.", plain: true },
@@ -71,9 +100,9 @@ export const stats = [
 // title leaves out the words people search for. Keep it to 60 characters and
 // to words the page's own copy uses; the build warns when a title runs longer.
 export const serviceGroups = [
-  { id: "sewer", title: "Sewer networks", heading: "Know what is in the pipe, and what should not be.", lede: "Measure what flows through the network, find where the water gets in, and prove the fixes worked." },
-  { id: "water", title: "Water & environment", heading: "Quality, sampling and rainfall, measured properly.", lede: "For utilities, industry and environmental projects, with full pipe flow measured alongside." },
-  { id: "data", title: "Real-time data & analysis", heading: "From a reading to a decision.", lede: "Data that arrives as it happens, reaches the systems you already run, and ends in a report you can act on." },
+  { id: "sewer", title: "Sewer networks", heading: "Know what is in the pipe, and what should not be.", lede: "Measure what flows through the network, find where the water gets in, and prove the fixes worked.", proof: "Intrinsically safe instruments certified for Zone 0, from the company awarded the largest sewer monitoring project in Australia in recent years." },
+  { id: "water", title: "Water & environment", heading: "Quality, sampling and rainfall, measured properly.", lede: "For utilities, industry and environmental projects, with full pipe flow measured alongside.", proof: "The widest range of automatic samplers in Australia, including the only true intrinsically safe sampler." },
+  { id: "data", title: "Real-time data & analysis", heading: "From a reading to a decision.", lede: "Data that arrives as it happens, reaches the systems you already run, and ends in a report you can act on.", proof: "From the company that built the Pump Station Manager in 1991." },
   { id: "field", title: "Field services & support", heading: "The people and equipment behind every program.", lede: "Calibration, hire, facility management and training, from four offices across Australia and crews who travel." },
 ];
 
@@ -93,8 +122,8 @@ export const glance = {
     ["cloud-rain", "Rain gauges in the catchment", "Each response tied to the rain that caused it"],
   ],
   "data-as-a-service": [
-    ["wallet", "No capital outlay", "EDS selects the sites, installs and maintains the equipment"],
     ["activity", "99.95% data availability", "A managed fleet with continuous oversight"],
+    ["wallet", "No capital outlay", "EDS selects the sites, installs and maintains the equipment"],
     ["gauge", "Detectronic MSFM AV meters", "Intrinsically safe, with integrated 4G"],
     ["bell-ring", "Real-time alerts", "Know about a change when it happens"],
   ],
@@ -111,8 +140,8 @@ export const glance = {
     ["crosshair", "Targeted repairs", "Knowing where water enters narrows the cost of works"],
   ],
   "blockage-overflow-alarms": [
-    ["radar", "Radar level to ± 5 mm", "LIDoTT ALARM measures up to 8.4 m"],
-    ["battery-full", "Up to seven years", "Battery life, in a self-cleaning enclosure"],
+    ["radar", "Radar level to ± 5 mm", "LIDoTT Alarm measures up to 8.4 m"],
+    ["landmark", "Sydney Water panel provider", "For sewer flow and level instrumentation"],
     ["bell-ring", "SMS, email and website", "Three alarm states, and a daily heartbeat"],
     ["shield-check", "Zone 0", "ATEX and IECEx, the most hazardous classification"],
   ],
@@ -253,19 +282,20 @@ export const services = [
     process: true,
     featured: true,
     summary: "Temporary and permanent flow monitoring for councils and water authorities, installed by trained crews Australia wide.",
-    tags: ["Councils", "Water authorities"],
+    tags: ["Detectronic MSFM meters", "ATEX and IECEx"],
     intro: [
-      "Good decisions about a sewer network start with good data from inside it. EDS has been putting flow meters into Australian sewers for more than three decades, for councils and water authorities who need to know what their network is really doing. We bring the instruments, the crews and the data platform, and we stay until the data has answered your question.",
-      "Our own trained crews install and look after every site, Australia wide, safely and to the standard the data depends on. And unlike many providers, we give you full access to your data, not just a report at the end.",
+      "Good decisions about a sewer network start with good data from inside it. EDS has been putting flow meters into Australian sewers for more than three decades.",
+      "We work for councils and water authorities who need to know what their network is really doing: we bring the instruments, the crews and the data platform, and we stay until the data has answered your question. Our own trained crews install and look after every site, Australia wide, safely and to the standard the data depends on, and you get full access to your data, not just a report at the end.",
     ],
     blocks: [
       {
         heading: "Why choose EDS",
+        lede: "Australia's largest supplier of water and wastewater monitoring equipment, with our own crews and data platform, and more than three decades in Australian sewers.",
         items: [
-          ["Instruments built for the sewer", "Our fleet runs on the latest Detectronic MSFM area velocity flow meters, intrinsically safe and certified under ATEX and IECEx."],
-          ["Crews who do this every day", "Our field crews are trained in installation, maintenance and calibration, so every meter goes in right the first time."],
+          ["Instruments built for the sewer", "Our fleet runs on the latest Detectronic MSFM area velocity flow meters, intrinsically safe and certified under ATEX and IECEx. The MSFM S2.5T measures velocity from 0.03 to 4 m/s and depth to 3.5 m."],
+          ["Crews who do this every day", "Our field crews are trained in installation, maintenance and calibration and work from four offices, so every meter goes in right the first time."],
           ["Programs of any length", "From a short inflow and infiltration study to years of monitoring that feeds your sewer master plan."],
-          ["Sensors for every chamber", "Including the LIDoTT level sensor, which keeps measuring precisely as conditions change."],
+          ["Sensors for every chamber", "Including the LIDoTT level sensor, accurate to ± 2 mm, which switches automatically to pressure, to 10 m, when the chamber surcharges."],
           ["With you past the install", "We stay with you through data collection and interpretation, not just the day the meter goes in."],
         ],
       },
@@ -414,43 +444,15 @@ export const services = [
     group: "sewer",
     featured: true,
     summary: "Sewer flow monitoring with no capital outlay. EDS supplies, installs and looks after the equipment, and you get validated data.",
-    tags: ["No capital outlay", "99.95% data availability"],
+    tags: ["No capital outlay", "Validated data"],
     intro: [
       "With Data as a Service you don't buy flow meters, you buy the answers. EDS chooses the sites, installs and maintains the equipment, validates the data continuously and delivers insight you can act on. You pay for data you can rely on, with no capital outlay and nothing to own.",
-      "It's a structured way of working, and it gives you accurate, reliable and defensible results.",
+      "EDS has been putting flow meters into Australian sewers for more than three decades. With DaaS, EDS answers for the data, not just the equipment.",
     ],
     blocks: [
       {
-        heading: "How it runs, end to end",
-        list: [
-          "Hydraulic site selection",
-          "Expert installation",
-          "Continuous QA/QC and validation",
-          "Real-time monitoring and anomaly detection",
-          "Verification of the depth to velocity relationship",
-          "Ongoing maintenance and performance checks",
-          "Delivery of actionable insights",
-        ],
-      },
-      {
-        heading: "Managed service and support",
-        items: [
-          ["99.95% data availability", "A managed fleet with continuous oversight."],
-          ["Hydraulic validation of sites", "Every site is checked against the hydraulics it should obey."],
-          ["Continuous calibration", "An ongoing process, not a periodic visit."],
-          ["Real-time alerts and insights", "Know about a change when it happens."],
-        ],
-      },
-      {
-        heading: "The instruments behind it",
-        items: [
-          ["Detectronic MSFM AV flow meter", "Built for the sewer, with reliable, precise measurement."],
-          ["Intrinsically safe", "ATEX and IECEx certified."],
-          ["Integrated 4G communications", "Real-time data and continuous visibility of network performance."],
-        ],
-      },
-      {
         heading: "DaaS against traditional monitoring",
+        lede: "What changes when EDS answers for the data rather than supplying the equipment.",
         table: {
           left: "Traditional monitoring",
           right: "EDS DaaS",
@@ -464,6 +466,29 @@ export const services = [
             ["Capital outlay", "Equipment purchase", "None"],
           ],
         },
+      },
+      {
+        heading: "The instruments behind it",
+        lede: "EDS runs these instruments in its own monitoring fleet, so the advice you get comes from people who install them.",
+        items: [
+          ["Detectronic MSFM area velocity flow meter", "The MSFM S2.5T measures velocity from 0.03 to 4.00 m/s and depth to 3.5 m, logging every 1 to 60 minutes, with more than 15 weeks on one battery at 2 minute logging."],
+          ["Certified for Zone 0", "Intrinsically safe under ATEX and IECEx, the most hazardous classification, for live sewers."],
+          ["Integrated 4G into FlowSense", "Readings arrive as they are taken, with alarms by email and SMS when something changes, or by API into your own systems."],
+        ],
+      },
+      {
+        heading: "How it runs, end to end",
+        lede: "A managed fleet with continuous oversight, delivered with 99.95% data availability.",
+        steps: true,
+        list: [
+          "Hydraulic site selection",
+          "Expert installation",
+          "Continuous QA/QC and validation",
+          "Real-time monitoring and anomaly detection",
+          "Verification of the depth to velocity relationship",
+          "Ongoing maintenance and performance checks",
+          "Delivery of insight you can act on",
+        ],
       },
       {
         heading: "Common questions",
@@ -574,10 +599,10 @@ export const services = [
     pageTitle: "Sewer Blockage & Overflow Alarms | EDS",
     icon: "siren",
     group: "sewer",
-    summary: "Level alarms and continuous depth monitoring that warn of blockages and surcharges before they become overflows.",
+    summary: "Level alarms that warn as a sewer surcharges, and Blockage Watch in FlowSense that finds a blockage weeks before it overflows.",
     intro: [
       "Blockages and surcharges give warning if something is watching. EDS deploys level monitoring through sewer networks that alerts crews to rising wastewater depth, so utilities can react quickly to a blockage, or a surcharge caused by a sewer collapse, before it becomes a spill.",
-      "Detectronic's LIDoTT ALARM puts a radar level sensor, battery, modem and aerial into one Zone 0 certified device, suited to deployment throughout sewer networks and in domestic or lateral sewers.",
+      "Detectronic's LIDoTT Alarm puts a radar level sensor, battery, modem and aerial into one Zone 0 certified device, suited to deployment throughout sewer networks and in domestic or lateral sewers. EDS supplies and installs it across Australia and runs it in our own monitoring fleet, and is a Sydney Water panel provider for sewer flow and level instrumentation.",
       "Where flow meters are already installed, the data does the watching too. A steady rise in depth with no rain to explain it points to a developing blockage or sediment build-up, often long before field crews would report it.",
     ],
     blocks: [
@@ -587,22 +612,23 @@ export const services = [
           ["Three alarm states", "Thresholds such as normal, high and high-high are configured on site, with a message when levels return to normal."],
           ["Alarms that reach people", "Delivered by SMS, email and website, with GIS options and optional weather-managed alarm filtering."],
           ["Daily heartbeat", "A daily message confirms each sensor is still operational."],
-          ["Long life, zero maintenance", "Battery life of up to seven years, in a submersible, naturally self-cleaning enclosure."],
-          ["Depth watched against flow", "On metered sites, FlowSense Blockage Watch looks for depth creeping upward while flow does not, and gives crews a shortlist."],
         ],
       },
       {
         heading: "Level alarms for every chamber",
-        items: [
-          ["LIDoTT ALARM", "Pulsed coherent radar measuring up to 8.4 m to ± 5 mm, with three alarm states and a battery life of up to seven years."],
-          ["Detectronic Alarm2", "Radar level from 0 to 20 m with no deadband, accurate to ± 5 mm at 20 m. High and low, rate of change and profile alarms, sent immediately on change and hourly while in alarm."],
-          ["LIDoTT R", "Radar and pressure level together, up to 17 m in total with zero deadband, for continuous monitoring through surcharge."],
-          ["Certified for the sewer", "All three are ATEX and IECEx certified for Zone 0, the most hazardous classification."],
+        lede: "Three Detectronic radar instruments, all ATEX and IECEx certified for Zone 0, the most hazardous classification.",
+        products: [
+          { name: "LIDoTT Alarm", maker: "Detectronic", href: "products/lidott-alarm.html", image: img("lidott-alarm-cut.png"), fit: 92,
+            text: "Pulsed coherent radar measuring up to 8.4 m to ± 5 mm, with three alarm states and a battery life of up to seven years, in a submersible, self-cleaning enclosure." },
+          { name: "Alarm2", maker: "Detectronic", href: "products/alarm2.html", image: img("detectronic-alarm2.png"), fit: 92,
+            text: "Radar level from 0 to 20 m with no deadband, accurate to ± 5 mm at 20 m. High and low, rate of change and profile alarms." },
+          { name: "LIDoTT R", maker: "Detectronic", href: "products/detectronic.html#lidott-r", image: img("lidott-sensor-r-cut.png"), fit: 96,
+            text: "Radar and pressure level together, up to 17 m in total with zero deadband, for continuous monitoring through surcharge." },
         ],
       },
       {
         heading: "Blockage Watch in FlowSense",
-        lede: "Where flow meters are installed, FlowSense reads the dry weather record for the signs of a developing blockage. It is included on every site, and shows that a line is blocking rather than exactly where.",
+        lede: "Where flow meters are installed, FlowSense reads the dry weather record and finds a developing blockage weeks before it overflows. It is included on every site, and shows that a line is blocking rather than exactly where; a level alarm in the chamber warns as the depth rises.",
         items: [
           ["Eight blockage signatures", "Six of them from level alone. The strongest, conveyance at matched depth, uses velocity as well."],
           ["Scored, not just flagged", "Each case is scored: watch from 35, warning from 55 and critical from 75. A case closes itself once the signature goes."],
@@ -1319,6 +1345,7 @@ export const services = [
 export const solutions = [
   {
     slug: "structure-performance",
+    tags: ["One score, 0 to 1000", "Alarms on change"],
     title: "Structure Performance & Monitoring",
     icon: "landmark",
     summary: "24/7 condition scoring of critical structures with the EDS Asset Score (EAS).",
@@ -1353,9 +1380,10 @@ export const solutions = [
   },
   {
     slug: "asset-network-assessment",
+    tags: ["Blockages and sediment", "Cross connections"],
     title: "Asset & Network Assessment",
     icon: "scan-search",
-    summary: "Regular, consistent assessments that keep networks and assets operating at peak performance.",
+    summary: "Catch blockages, structural defects and cross connections early, and see where to spend first.",
     intro: [
       "A deteriorating network rarely fails all at once. It costs more to run first, in staff time and maintenance, long before anything fails outright.",
       "Regular, consistent assessments from EDS catch that slide early and keep your network and assets performing at their best.",
@@ -1386,9 +1414,10 @@ export const solutions = [
   },
   {
     slug: "network-thermal-monitoring",
+    tags: ["Up to 125 sensors", "± 0.1 °C"],
     title: "Network Thermal Monitoring",
     icon: "thermometer",
-    summary: "Short to long term temperature studies that pinpoint ingress sources in reticulated networks.",
+    summary: "Temperature studies that find exactly where water gets into a pipe, in water and wastewater networks alike.",
     intro: [
       "Water getting into a pipe is usually a different temperature from what's already in it. EDS runs short to long term temperature studies in reticulated networks that use that difference to find exactly where the water gets in. The method works in water and wastewater networks, and in most atmospheric or pressurised networks besides.",
       "Temperature is a growing practice in network assessment because it is accurate, low cost, and pinpoints specific ingress sources.",
@@ -1416,6 +1445,7 @@ export const solutions = [
   },
   {
     slug: "wastewater-monitoring",
+    tags: ["Our founding focus", "No capital outlay with DaaS"],
     title: "Wastewater Monitoring",
     pageTitle: "Wastewater Flow & Quality Monitoring | EDS",
     icon: "droplets",
@@ -1453,6 +1483,7 @@ export const solutions = [
   },
   {
     slug: "automatic-sampling",
+    tags: ["Australia's only true intrinsically safe sampler", "Buy or hire"],
     title: "Automatic Sampling",
     pageTitle: "Automatic Water & Wastewater Sampling | EDS",
     icon: "flask-conical",
@@ -1491,9 +1522,10 @@ export const solutions = [
   },
   {
     slug: "environmental-monitoring",
+    tags: ["Baseline to compliance", "Water, rain, temperature, sampling"],
     title: "Environmental Monitoring",
     icon: "trees",
-    summary: "Environmental data you can trust, at every stage of project development.",
+    summary: "Water quality, rainfall, temperature and sampling, designed around your project, from the baseline to compliance.",
     intro: [
       "Every environmental project has its own questions to answer. EDS works closely with you to design monitoring around them, drawing on decades of experience with the most demanding sites.",
       "Accurate, reliable data that makes sense is how you understand the environment you work in, and the effect you're having on it.",
@@ -1532,6 +1564,11 @@ export const solutions = [
 /* ------------------------------------------------------------------ */
 // `docs` on a product is downloadable from its card; the brand page's
 // Documents panel lists those plus any brand-wide `docs`.
+// The network work leads the solutions (index, menu, footer and form): it is
+// where EDS began and what most visitors come for.
+const SOLUTION_ORDER = ["wastewater-monitoring", "asset-network-assessment", "network-thermal-monitoring", "automatic-sampling", "environmental-monitoring", "structure-performance"];
+solutions.sort((a, b) => SOLUTION_ORDER.indexOf(a.slug) - SOLUTION_ORDER.indexOf(b.slug));
+
 export const brands = [
   {
     slug: "eds",
@@ -1875,11 +1912,11 @@ export const lidott = {
     ["battery-full", "Long life", "Battery up to 7 years"],
   ],
   description: [
-    "LIDoTT ALARM is a level measurement and alarm device which integrates the level sensor, battery, modem and Detectronic's unique Neptune antenna into one compact device. It alerts users to changes in wastewater depth, enabling utilities to react quickly to blockages and to surcharges caused by sewer collapses.",
+    "LIDoTT Alarm is a level measurement and alarm device which integrates the level sensor, battery, modem and Detectronic's unique Neptune antenna into one compact device. It alerts users to changes in wastewater depth, enabling utilities to react quickly to blockages and to surcharges caused by sewer collapses.",
   ],
   sections: [
     ["Continuous measurement and alarm delivery", "Alarm threshold set-points are configured on site during installation, and a \"return to normal\" message is sent when levels fall back below the threshold. Level sampling can be set to 5 or 15 minutes, and a daily heartbeat message verifies the sensor is operational. Logging at 15 minute intervals is available as an option."],
-    ["Designed for convenience", "LIDoTT ALARM is simple to install and zero maintenance by design. The enclosure is moulded from a resilient, naturally self-cleaning polymer and is submersible."],
+    ["Designed for convenience", "LIDoTT Alarm is simple to install and zero maintenance by design. The enclosure is moulded from a resilient, naturally self-cleaning polymer and is submersible."],
     ["Widespread deployment", "Ideal for deployment throughout sewer networks and in domestic or lateral sewers, and suitable for other water courses. It offers up to three configurable level states, for example normal, high and high-high (green, amber, red), and keeps reporting status as levels return to normal."],
     ["Easy to mount", "The LIDoTT laser pointer is clipped onto the fixing pole during installation to identify the measurement target. Once marked, the LIDoTT ALARM replaces the pointer and locks into place. The assembly is easily removed and replaced in exactly the same position."],
     ["Data communications", "Communicates using NB-IoT / Cat M1 with 2G fallback. Each breached threshold triggers an alarm message with the current level, both going high and returning to normal. Alarms are delivered via Detectronic Cloud by SMS, email and website, with GIS options and optional weather-managed alarm filtering."],
@@ -2531,7 +2568,7 @@ export const about = {
   founder: { name: "Cynthia Harper", role: "Co-founder, Environmental Data Services", text: "EDS continues to strive to deliver the level of service and professionalism that was part of Graham's founding ethos." },
   // Photographs from EDS sites: one beside the timeline on the home page, and
   // the mosaic on the about page (the first photo is the large one).
-  homePhoto: { photo: "site-crew-manhole", alt: "A sewer manhole in a park with a safety barrier set up beside it and the EDS van parked nearby", caption: "On site: a manhole opened for an instrument check." },
+  homePhoto: { photo: "sewer-av-meter", alt: "An area velocity flow meter on a mounting band at the invert of a sewer, seen from the manhole above, with wastewater flowing over it", caption: "An area velocity flow meter at the invert of a sewer, measuring depth and velocity in the flow.", pos: "50% 45%" },
   field: {
     heading: "The work, as it is.",
     lede: "Sewers, chambers, cabinets and poles: the sites our crews instrument, visit and keep reporting.",
@@ -2553,11 +2590,11 @@ export const about = {
 // pages. `topic` and `mode` pre-fill the enquiry form (see contactHref()).
 export const ways = {
   heading: "Buy it, hire it, or let EDS run it.",
-  lede: "However your program is funded, the same instruments, crews and data platform sit behind it. Pick the way that suits your budget and your timeline.",
+  lede: "However your program is funded, the same instruments, our own crews from four offices and FlowSense sit behind it. Pick the way that suits your budget and your timeline.",
   items: [
     {
       mode: "buy", icon: "package", title: "Buy", line: "Own the instruments",
-      text: "Choose from one of Australia's largest portfolios of monitoring instruments, made by EDS or by the leading manufacturers we represent.",
+      text: "Choose from one of Australia's largest portfolios of monitoring instruments, built by EDS or by the manufacturers we represent, including Detectronic, Hach, ORI and Beadedstream.",
       points: ["Supply, installation and commissioning", "In situ audits and calibration", "Training for your staff"],
       link: ["products/index.html", "Browse products"], topic: "Product pricing", cta: "Request pricing",
     },
@@ -2565,13 +2602,13 @@ export const ways = {
       mode: "hire", icon: "calendar-clock", title: "Hire", line: "For a study or a season",
       text: "Short and long term hire from the EDS fleet, built for the harshest and most demanding applications.",
       points: ["Flow meters, samplers and loggers", "Bespoke packages for difficult sites", "Expert advice on the right setup"],
-      link: ["services/equipment-rental.html", "Equipment rental"], topic: "Equipment Rental", cta: "Ask about hire",
+      link: ["services/equipment-rental.html", "Equipment rental"], topic: "Equipment Rental", cta: "Start an enquiry",
     },
     {
       mode: "managed", icon: "database-zap", title: "Data as a Service", line: "No capital outlay",
       text: "EDS selects the sites, installs and maintains the equipment, validates the data continuously and delivers insights you can act on.",
       points: ["99.95% data availability", "Continuous QA/QC and calibration", "Real-time alerts in FlowSense"],
-      link: ["services/data-as-a-service.html", "How DaaS works"], topic: "Sewer Flow Data as a Service", cta: "Ask about DaaS",
+      link: ["services/data-as-a-service.html", "How DaaS works"], topic: "Sewer Flow Data as a Service", cta: "Start an enquiry",
     },
   ],
 };
@@ -2592,12 +2629,12 @@ export const results = [
     services: ["sewer-flow-monitoring"],
   },
   {
-    stat: "24 h", label: "for the network to return to baseline", who: "Coastal network", home: true,
+    stat: "24 h", label: "until flows were back at baseline after relining", who: "Coastal network", home: true,
     text: "After a cleaning and relining program, flow profiles recorded by EDS showed the network back to its baseline hydraulic behaviour within a day, confirming the works had restored full capacity.",
     services: ["data-analysis-reporting", "rehabilitation-verification"],
   },
   {
-    stat: "15", label: "sites of sewer and rainfall data in eight weeks", who: "North East Water", home: true,
+    stat: "15", label: "sites of sewer flow and rainfall monitoring in eight weeks", who: "North East Water", home: true,
     text: "High resolution sewer flow and rainfall monitoring, giving the utility the data it needed for infrastructure planning and management.",
     services: ["rainfall-monitoring", "sewer-flow-monitoring"],
   },

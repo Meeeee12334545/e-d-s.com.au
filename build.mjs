@@ -122,6 +122,14 @@ function shot(name, alt, { sizes = "(max-width: 980px) calc(100vw - 40px), 700px
   const [big] = v;
   return `<picture><source type="image/webp" srcset="${set("webp")}" sizes="${sizes}"><img src="@root/assets/img/flowsense/${name}-${big.w}x${big.h}.jpg" srcset="${set("jpg")}" sizes="${sizes}" width="${big.w}" height="${big.h}" alt="${esc(alt)}"${eager ? ' fetchpriority="high"' : ' loading="lazy"'} decoding="async"></picture>`;
 }
+// Client marks at one optical weight. Each PNG's own proportions give its
+// height (equal ink area: a square mark taller, a wide wordmark shorter), so
+// a roundel and a wordmark carry the same weight in the grid (--h, site.css).
+const pngSize = (file) => { const b = readFileSync(path.join(ROOT, "src", file)); return { w: b.readUInt32BE(16), h: b.readUInt32BE(20) }; };
+const logoHeight = (src) => { const { w, h } = pngSize(src.replace("@root/", "")); return Math.max(24, Math.min(46, Math.round(Math.sqrt(3400 / (w / h))))); };
+const logoGrid = () => `<ul class="logo-grid" aria-label="Clients">${C.clients.map((c, i) => `<li data-reveal style="--i:${i % 5};--h:${logoHeight(c.src)}px"><img src="${c.src}" alt="${esc(c.name)}" loading="lazy"></li>`).join("")}</ul>`;
+// Four statements at one weight: the home page's proof row (C.proof).
+const proofRow = () => `<div class="proof-row">${C.proof.map((p, i) => `<div data-reveal style="--i:${i}"><b>${esc(p.lead)}</b><span>${esc(p.text)}</span></div>`).join("")}</div>`;
 // Two photographs side by side, across the page.
 const figureRow = (figs) => `<div class="photo-row">${figs.map((f, i) => photoFigure(f, { i, sizes: "(max-width: 700px) calc(100vw - 40px), (max-width: 980px) calc(50vw - 28px), 612px" })).join("")}</div>`;
 // A product shot or drawing in the sidebar: { src, alt, caption, w, h }.
@@ -249,15 +257,15 @@ function footer(r) {
           </div>
         </div>
         <div>
-          <h4>Services</h4>
+          <h2>Services</h2>
           <ul>${C.services.filter((s) => s.featured).slice(0, 7).map((s) => `<li><a href="${r}services/${s.slug}.html">${esc(s.short || s.title)}</a></li>`).join("")}<li><a href="${r}services/index.html">All services</a></li></ul>
         </div>
         <div>
-          <h4>Products</h4>
+          <h2>Products</h2>
           <ul>${C.brands.map((b) => `<li><a href="${r}products/${b.slug}.html">${esc(b.name)}</a></li>`).join("")}</ul>
         </div>
         <div>
-          <h4>Company</h4>
+          <h2>Company</h2>
           <ul>
             <li><a href="${r}about.html">About EDS</a></li>
             <li><a href="${r}flowsense.html">EDS FlowSense</a></li>
@@ -268,7 +276,7 @@ function footer(r) {
           </ul>
         </div>
         <div>
-          <h4>Head office</h4>
+          <h2>Head office</h2>
           <address>${site.address.join("<br>")}</address>
           <p style="margin-top:10px">${site.hours}</p>
           ${openStatus()}
@@ -425,7 +433,17 @@ ${scripts.map((s) => `<script src="${asset(r, `js/${s}`)}" defer></script>`).joi
 `.replaceAll("@root/", r)
     // Every link to a document (a datasheet, manual, brochure, white paper or
     // download in assets/docs) saves the file rather than opening it in the tab.
-    .replace(/<a\s[^>]*href="[^"]*assets\/docs\/[^"]*"[^>]*>/g, (a) => (/\sdownload(?=[\s>=])/.test(a) ? a : a.replace(/>$/, " download>")));
+    .replace(/<a\s[^>]*href="[^"]*assets\/docs\/[^"]*"[^>]*>/g, (a) => (/\sdownload(?=[\s>=])/.test(a) ? a : a.replace(/>$/, " download>")))
+    // Typographer's apostrophes: a straight tick between two letters (EDS's,
+    // don't) becomes ’ everywhere, copy and alt text alike. No page script
+    // holds such a tick, so code is untouched.
+    .replace(/(\p{L})'(\p{L})/gu, "$1’$2")
+    // A number and its unit never part at a line end (8.4 m, ±5 mm, Zone 0).
+    // Text between tags only, never inside a script or a stylesheet.
+    .replace(/(<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>)|>([^<]+)(?=<)/g, (m, code, text) => (code ? m : `>${text
+      .replace(/(\d) (?=(?:mm|m|km|kPa|kL|L|°C|mA|V|MB|h)(?![\p{L}\d]))/gu, "$1\u00a0")
+      .replace(/± (?=\d)/g, "±\u00a0")
+      .replace(/\bZone (?=\d)/g, "Zone\u00a0")}`));
   // In-page links, product deep links and form labels all rely on ids being unique.
   const ids = [...out.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]);
   const dupes = ids.filter((id, i) => ids.indexOf(id) !== i);
@@ -442,7 +460,7 @@ const pageHero = (r, { crumbs = [], iconName, eyebrow, title, lede, actions = ""
   heroCrumbs = crumbs;
   const copy = `
     <nav class="crumbs" aria-label="Breadcrumb"><a href="${r}index.html">Home</a>${crumbs.map(([label, href]) => `${icon("chevron-down", false)}${href ? `<a href="${r}${href}">${esc(label)}</a>` : `<span aria-current="page">${esc(label)}</span>`}`).join("")}</nav>
-    ${iconName ? `<div class="hero-icon holder" data-reveal="scale">${icon(iconName)}</div>` : ""}
+    ${iconName && !visual ? `<div class="hero-icon holder" data-reveal="scale">${icon(iconName)}</div>` : ""}
     ${eyebrow ? `<p class="eyebrow">${esc(eyebrow)}</p>` : ""}
     <h1 class="h-lg" data-reveal>${esc(title)}</h1>
     ${lede ? `<p class="lede" data-reveal style="--i:1">${esc(lede)}</p>` : ""}
@@ -500,8 +518,8 @@ const ctaSection = (r, { title = "Talk to the people who measure it.", lede = "T
 // A card that is a link. The whole card is the link, so instead of a "Learn
 // more" label on every card an arrow sits in the corner (`.go`). `tags` are
 // short facts from the content shown as chips under the text.
-const cardLink = (r, { href, iconName, title, text, n, tilt = true, cls = "", media = "", tags = [] }) => `
-<a class="card${tilt ? " tilt" : ""}${cls ? ` ${cls}` : ""}" href="${r}${href}" data-reveal style="--i:${n % 4}">
+const cardLink = (r, { href, iconName, title, text, n, tilt = true, cls = "", media = "", tags = [], cols = 4 }) => `
+<a class="card${tilt ? " tilt" : ""}${cls ? ` ${cls}` : ""}" href="${r}${href}" data-reveal style="--i:${n % cols}">
   <span class="card-icon">${icon(iconName)}</span>
   <h3>${esc(title)}</h3>
   <p>${esc(text)}</p>
@@ -509,11 +527,11 @@ const cardLink = (r, { href, iconName, title, text, n, tilt = true, cls = "", me
   <span class="go" aria-hidden="true">${icon("arrow-right")}</span>${media}
 </a>`;
 
-const labSection = ({ eyebrow = "Flow lab", title = "See what a storm does to a sewer.", lede = "Send a storm through a model catchment and watch the hydrograph respond. The gap between measured flow and the dry weather pattern is inflow and infiltration: water that should never have reached the sewer." } = {}) => `
-<section class="section dark" id="flow-lab">
+const labSection = ({ eyebrow = "", title = "See what a storm does to a sewer.", lede = "Send a storm through a model catchment and watch the hydrograph respond. The gap between measured flow and the dry weather pattern is inflow and infiltration: water that should never have reached the sewer." } = {}) => `
+<section class="section dark band" id="flow-lab">
   <div class="wrap">
     <div class="section-head">
-      <p class="eyebrow">${eyebrow}</p>
+      ${eyebrow ? `<p class="eyebrow">${eyebrow}</p>` : ""}
       <h2 class="h-lg" data-reveal>${title}</h2>
       <p class="lede" data-reveal style="--i:1">${lede}</p>
     </div>
@@ -543,19 +561,19 @@ const labSection = ({ eyebrow = "Flow lab", title = "See what a storm does to a 
           <p class="sr-only" id="lab-summary"></p>
           <p class="sr-only" id="lab-cursor-sr" aria-live="polite"></p>
         </div>
-        <p class="lab-hint">${icon("mouse-pointer-2", false)}<span>Point at the chart to read values<span class="lab-kbd">, or focus it and press <kbd>←</kbd> <kbd>→</kbd></span></span></p>
+        <p class="lab-hint">${icon("pointer", false)}<span>Tap or point at the chart to read values<span class="lab-kbd">, or focus it and press <kbd>←</kbd> <kbd>→</kbd></span></span></p>
         <div class="lab-controls">
           <div class="lab-actions">
             <button class="btn btn-primary" id="lab-storm" data-magnetic>${icon("cloud-rain")} Send a storm</button>
             <button class="lab-pause" id="lab-pause" type="button" aria-pressed="false" aria-label="Pause the simulation"><span class="when-running">${icon("pause", false)}</span><span class="when-paused" hidden>${icon("play", false)}</span></button>
           </div>
-          <label class="range"><span>Storm size <output id="lab-size-out" for="lab-size"></output></span><input id="lab-size" type="range" min="5" max="50" step="1" value="26"><small>Rain depth of the next storm, over two hours.</small></label>
-          <label class="range"><span>Network condition <output id="lab-leak-out" for="lab-leak"></output></span><input id="lab-leak" type="range" min="0.15" max="1.6" step="0.05" value="1"><small>How much of the rain finds its way into the sewer.</small></label>
+          <label class="range"><span>Storm size <output id="lab-size-out" for="lab-size"></output></span><input id="lab-size" aria-label="Storm size" type="range" min="5" max="50" step="1" value="26"><small>Rain depth of the next storm, over two hours.</small></label>
+          <label class="range"><span>Network condition <output id="lab-leak-out" for="lab-leak"></output></span><input id="lab-leak" aria-label="Network condition" type="range" min="0.15" max="1.6" step="0.05" value="1"><small>How much of the rain finds its way into the sewer.</small></label>
         </div>
       </div>
       <div class="panel">
         <div class="panel-head"><div class="panel-title">${icon("gauge", false)} At the flow meter</div></div>
-        <svg id="lab-pipe" viewBox="0 0 200 200" role="img" aria-label="Cross-section of a sewer pipe showing the water depth against the high and high-high alarm levels, with the area-velocity meter at the bottom">
+        <svg id="lab-pipe" viewBox="0 0 200 200" role="img" aria-label="Cross-section of a sewer pipe showing the water depth against the high and high-high alarm levels, with the area velocity meter at the bottom">
           <defs>
             <clipPath id="lab-clip"><circle cx="100" cy="100" r="80"/></clipPath>
             <linearGradient id="lab-wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5fb4a6" stop-opacity=".85"/><stop offset="1" stop-color="#0d7c72" stop-opacity=".9"/></linearGradient>
@@ -578,22 +596,22 @@ const labSection = ({ eyebrow = "Flow lab", title = "See what a storm does to a 
             <rect x="89" y="167" width="22" height="11" rx="2.5" fill="#5fb4a6" stroke="#04201d" stroke-width="1.5"/>
           </g>
         </svg>
-        <p class="lab-pipe-cap">600 mm pipe. Area-velocity meter at the invert; dashed lines are the alarm levels.</p>
+        <p class="lab-pipe-cap">600 mm pipe. Area velocity meter at the invert; dashed lines are the alarm levels.</p>
         <div class="readouts">
-          <div class="readout"><b id="lab-q">0</b><span>Flow L/s</span></div>
-          <div class="readout"><b id="lab-d">0</b><span>Depth mm</span></div>
-          <div class="readout"><b id="lab-v">0</b><span>Velocity m/s</span></div>
-          <div class="readout readout-ii"><b id="lab-dq">+0.0</b><span>I&amp;I L/s</span></div>
+          <div class="readout"><b id="lab-q">0</b><span>Flow <i>L/s</i></span></div>
+          <div class="readout"><b id="lab-d">0</b><span>Depth <i>mm</i></span></div>
+          <div class="readout"><b id="lab-v">0</b><span>Velocity <i>m/s</i></span></div>
+          <div class="readout readout-ii"><b id="lab-dq">+0.0</b><span>I&amp;I <i>L/s</i></span></div>
         </div>
         <div class="state" id="lab-state" data-level="0" aria-live="polite"><i></i><div><b>Normal</b><small>Flow is tracking the dry weather pattern.</small></div></div>
         <div class="state" style="margin-top:10px">${icon("droplets", false)}<div><b><span id="lab-extra">0</span> kL above dry weather flow</b><small>Extra volume in the last 30 hours: the cost of I&amp;I.</small></div></div>
       </div>
     </div>
-    <p class="note" style="margin-top:16px">An illustrative model of a 600 mm sewer, not live data. Flow is wetted area multiplied by velocity, the way an area-velocity flow meter measures it.</p>
+    <p class="note" style="margin-top:16px">An illustrative model of a 600 mm sewer, not live data. Flow is wetted area multiplied by velocity, the way an area velocity flow meter measures it.</p>
   </div>
 </section>`;
 
-const lidottDemo = () => `
+const lidottDemo = ({ link = "" } = {}) => `
 <div class="demo" data-reveal>
   <div class="panel">
     <div class="panel-head"><div class="panel-title">${icon("radar", false)} Drag the water level</div></div>
@@ -606,8 +624,8 @@ const lidottDemo = () => `
       <rect id="lid-water" x="0" y="300" width="360" height="80" fill="url(#lid-wg)" clip-path="url(#lid-clip)"/>
       <clipPath id="lid-clip"><rect x="100" y="42" width="160" height="340"/><rect x="0" y="330" width="100" height="50"/><rect x="260" y="330" width="100" height="50"/></clipPath>
       <polygon id="lid-beam" points="180,96 170,300 190,300" fill="rgba(95,180,166,.22)" stroke="rgba(95,180,166,.7)" stroke-dasharray="3 4"/>
-      <line x1="100" x2="260" y1="225" y2="225" stroke="#f59e0b" stroke-dasharray="5 5"/><text x="268" y="229" fill="#f59e0b" font-size="11" font-weight="600">High 2.0 m</text>
-      <line x1="100" x2="260" y1="147.500" y2="147.500" stroke="#ef4444" stroke-dasharray="5 5"/><text x="268" y="151" fill="#ef4444" font-size="11" font-weight="600">High-high 3.0 m</text>
+      <line x1="100" x2="260" y1="225" y2="225" stroke="#f59e0b" stroke-dasharray="5 5"/><text x="268" y="229" fill="#f59e0b" font-size="12" font-weight="600">High 2.0 m</text>
+      <line x1="100" x2="260" y1="147.500" y2="147.500" stroke="#ef4444" stroke-dasharray="5 5"/><text x="268" y="151" fill="#f87171" font-size="12" font-weight="600">High-high 3.0 m</text>
       <rect x="92" y="28" width="176" height="12" rx="3" fill="#26313f" stroke="rgba(255,255,255,.3)"/>
       <rect x="168" y="42" width="24" height="10" fill="#8fa3c0"/>
       <rect x="160" y="52" width="40" height="44" rx="8" fill="#e8f3f1" stroke="#5fb4a6" stroke-width="2"/>
@@ -615,17 +633,18 @@ const lidottDemo = () => `
       <line id="lid-dim" x1="118" x2="118" y1="96" y2="300" stroke="rgba(255,255,255,.45)" stroke-dasharray="2 4"/>
       <text x="16" y="24" fill="rgba(255,255,255,.6)" font-size="11">Ground level</text>
     </svg>
-    <label class="range" style="margin-top:12px"><span>Water level <output><span id="lid-level">1.10</span> m</output></span><input id="lidott-level" type="range" min="0.2" max="3.8" step="0.01" value="1.1"></label>
+    <label class="range" style="margin-top:12px"><span>Water level <output><span id="lid-level">1.10</span> m</output></span><input id="lidott-level" aria-label="Water level" type="range" min="0.2" max="3.8" step="0.01" value="1.1"></label>
   </div>
   <div class="panel">
     <div class="panel-head"><div class="panel-title">${icon("bell", false)} What the utility sees</div></div>
     <div class="readouts" style="grid-template-columns:1fr 1fr;margin-top:0">
-      <div class="readout"><b><span id="lid-dist">2.90</span></b><span>Radar range m</span></div>
-      <div class="readout"><b>± 5</b><span>Accuracy mm</span></div>
+      <div class="readout"><b><span id="lid-dist">2.90</span><small>m</small></b><span>Radar range</span></div>
+      <div class="readout"><b>±5<small>mm</small></b><span>Accuracy</span></div>
     </div>
     <div class="state" id="lid-state" data-level="0" aria-live="polite"><i></i><div><b>Normal</b><small>Three configurable states: normal, high, high-high.</small></div></div>
     <div class="sms" id="lidott-log" aria-live="polite"></div>
-    <p class="note">An illustration of the alarm behaviour. Thresholds are set on site during installation.</p>
+    <p class="note">An illustration of how a LIDoTT Alarm behaves. Thresholds are set on site during installation.</p>
+    ${link ? `<a class="link-arrow" href="${link}" style="margin-top:12px">LIDoTT Alarm specifications and datasheet ${icon("arrow-right")}</a>` : ""}
   </div>
 </div>`;
 
@@ -696,8 +715,8 @@ function fsScreen() {
   const views = [["I/I heat map", "Severity by pipe", heat], ["Blockage Watch", "Dry days only", blockage], ["Pump Station Manager", "Wet well, to scale", psm], ["Alarms", "Sent to people, not addresses", alarms]];
   return `
   <div class="fs-screen" data-reveal="right">
-    <div class="fs-chrome"><img src="${site.logoWhite}" alt=""><span>FlowSense</span><span class="dot">Live</span></div>
-    ${views.map(([t, s, svg], i) => `<div class="fs-view${i === 0 ? " active" : ""}"><h4>${t}<small>${s}</small></h4>${svg}</div>`).join("")}
+    <div class="fs-chrome"><img src="${site.logoWhite}" alt=""><span>FlowSense</span><span class="dot">Demo</span></div>
+    ${views.map(([t, s, svg], i) => `<div class="fs-view${i === 0 ? " active" : ""}"><p class="fs-view-title">${t}<small>${s}</small></p>${svg}</div>`).join("")}
     <span class="fs-caption">Illustration</span>
   </div>`;
 }
@@ -707,7 +726,7 @@ function fsScreen() {
 // like the flow lab and the FlowSense screens.
 const liveCard = () => `
 <aside class="live" aria-label="Illustration of a flow meter reporting live" data-reveal="right" style="--i:5">
-  <div class="live-head"><span class="live-site">${icon("radio-tower", false)} Site 07 · Trunk sewer</span><span class="live-tag">Live</span></div>
+  <div class="live-head"><span class="live-site">${icon("radio-tower", false)} Site 07 · Trunk sewer</span><span class="live-tag">Reporting</span></div>
   <div class="live-value"><b data-live="q">41.8</b><span>L/s</span></div>
   <p class="live-label">Flow over the last 24 hours</p>
   <svg class="live-chart" viewBox="0 0 300 86" aria-hidden="true">
@@ -763,10 +782,10 @@ const resultsFor = (slug) => C.results.filter((x) => x.services.includes(slug)).
 
 // How a monitoring program runs, as four numbered steps.
 const processSection = (tone = "alt") => `
-<section class="section${tone === "alt" ? " alt" : ""}" id="how-it-runs"><div class="wrap">
-  <div class="section-head"><p class="eyebrow">How a program runs</p><h2 class="h-lg" data-reveal>From the first call to data you can act on.</h2></div>
+<section class="section band${tone === "alt" ? " alt" : ""}" id="how-it-runs"><div class="wrap">
+  <div class="band-head"><h2 class="h-lg" data-reveal>How a program runs</h2><p class="lede" data-reveal style="--i:1">From the first call to data you can act on.</p></div>
   <ol class="process">
-    ${C.programSteps.map(([ic, t, d], n) => `<li class="holder" data-reveal style="--i:${n}"><span class="process-n">${String(n + 1).padStart(2, "0")}</span><span class="card-icon">${icon(ic)}</span><h3>${esc(t)}</h3><p>${esc(d)}</p></li>`).join("")}
+    ${C.programSteps.map(([, t, d], n) => `<li data-reveal style="--i:${n}"><span class="process-n">${String(n + 1).padStart(2, "0")}</span><h3>${esc(t)}</h3><p>${esc(d)}</p></li>`).join("")}
   </ol>
 </div></section>`;
 
@@ -908,10 +927,8 @@ add({
 <section class="clients proof" aria-label="Clients and key figures">
   <p>Trusted by government, utilities, councils and industry</p>
   <div class="wrap">
-    <ul class="logo-grid" aria-label="Clients">${C.clients.map((c, i) => `<li data-reveal style="--i:${i % 5}"><img src="${c.src}" alt="${esc(c.name)}" loading="lazy"></li>`).join("")}</ul>
-    <div class="stats">
-      ${C.stats.map((s, i) => `<div class="stat" data-reveal style="--i:${i}"><div class="stat-value"><span data-count="${s.value}"${s.decimals ? ` data-decimals="${s.decimals}"` : ""}${s.plain ? ' data-plain="1" data-from="1950"' : ""}>${s.value}</span>${s.suffix ? `<small>${s.suffix}</small>` : ""}</div><div class="stat-label">${s.label}</div></div>`).join("")}
-    </div>
+    ${logoGrid()}
+    ${proofRow()}
   </div>
 </section>
 
@@ -1030,10 +1047,10 @@ ${waysSection(r)}
   <div class="wrap fs-grid">
     <div>
       <h2 class="h-lg" data-reveal>Sewer network intelligence.</h2>
-      <p class="lede" data-reveal style="--i:1;color:rgba(255,255,255,.85)">EDS FlowSense is the platform behind our monitoring, with flow analytics and engineering insight for every site EDS measures.</p>
-      <div class="fs-list" role="tablist" data-reveal style="--i:2">
+      <p class="lede" data-reveal style="--i:1">EDS FlowSense is the platform behind our monitoring, with flow analytics and engineering insight for every site EDS measures.</p>
+      <div class="fs-list" role="group" aria-label="FlowSense tools" data-reveal style="--i:2">
         ${[["flame", "I/I heat map", "One colour per severity band, with arrows showing which way the water runs."], ["siren", "Blockage Watch", "Early warning before a dry weather spill."], ["fan", "Pump Station Manager", "The wet well drawn to scale, with its live level."], ["bell-ring", "Alarms that reach people", "Sent to the email and mobile your team holds that day."]]
-          .map(([ic, t, d], i) => `<button class="fs-item" role="tab" aria-selected="${i === 0}"><span class="card-icon">${icon(ic)}</span><span><b>${t}</b><span>${d}</span></span></button>`).join("")}
+          .map(([ic, t, d], i) => `<button type="button" class="fs-item" aria-pressed="${i === 0}"><span class="card-icon">${icon(ic)}</span><span><b>${t}</b><span>${d}</span></span></button>`).join("")}
       </div>
       <div class="hero-actions">
         <a class="btn btn-primary btn-lg" href="${r}flowsense.html">Discover FlowSense ${icon("arrow-right")}</a>
@@ -1047,15 +1064,18 @@ ${waysSection(r)}
 <section class="section alt" id="products">
   <div class="wrap">
     <div class="section-head split">
-      <h2 class="h-lg" data-reveal>One of Australia's largest portfolios of monitoring instruments.</h2>
-      <div class="rail-nav"><button class="rail-btn" data-rail="brand-rail" data-dir="prev" aria-label="Previous products">${icon("arrow-right")}</button><button class="rail-btn" data-rail="brand-rail" data-dir="next" aria-label="Next products">${icon("arrow-right")}</button></div>
+      <div><h2 class="h-lg" data-reveal>${esc(C.shelf.heading)}</h2><p class="lede" data-reveal style="--i:1">${esc(C.shelf.lede)}</p></div>
+      <a class="btn btn-outline" href="${r}products/index.html">All ${products.length} instruments ${icon("arrow-right")}</a>
     </div>
-    <div class="rail" id="brand-rail">
-      ${C.brands.map((b) => `
-      <a class="card brand-card" href="${r}products/${b.slug}.html">
-        <div class="brand-shot"><img src="${b.cover || b.groups[0].items[0].image}" alt="${esc(b.title)}" loading="lazy" draggable="false"></div>
-        <div class="brand-body"><span class="tag">${esc(b.tag)}</span><h3>${esc(b.title)}</h3><p>${esc(b.summary)}</p><span class="go" aria-hidden="true">${icon("arrow-right")}</span></div>
+    <div class="shelf" data-reveal="scale">
+      ${C.shelf.items.map((it, n) => `
+      <a class="inst" href="${r}${it.href}">
+        <span class="inst-shot" style="--fit:${it.fit}%"><img src="${it.image}" alt="${esc(it.name)}" loading="lazy"></span>
+        <span class="inst-body"><small>${esc(it.maker)}</small><b>${esc(it.name)}</b><span class="inst-text">${esc(it.text)}</span><span class="inst-spec">${it.specs.map((x) => `<i>${esc(x)}</i>`).join("")}</span></span>
       </a>`).join("")}
+    </div>
+    <div class="range-grid">
+      ${C.brands.map((b, n) => { const count = products.filter((p) => p.brand === b).length; return `<a class="range-link" href="${r}products/${b.slug}.html" data-reveal style="--i:${n % 4}"><span><b>${esc(b.title)}</b><small>${count} ${count === 1 ? "instrument" : "instruments"}</small></span><span class="go" aria-hidden="true">${icon("arrow-right")}</span></a>`; }).join("")}
     </div>
   </div>
 </section>
@@ -1063,7 +1083,6 @@ ${waysSection(r)}
 <section class="section" id="about">
   <div class="wrap split">
     <div>
-      <p class="eyebrow">Since 1991</p>
       <h2 class="h-lg" data-reveal>Australian owned. Family founded. Still measuring.</h2>
       <div class="timeline">
         <span class="timeline-fill"></span>
@@ -1073,7 +1092,7 @@ ${waysSection(r)}
     </div>
     <div class="about-side">
       ${photoFigure(C.about.homePhoto, { sizes: "(max-width: 980px) calc(100vw - 40px), 460px" })}
-      <figure class="quote" data-reveal="right" style="margin:0">
+      <figure class="quote" data-reveal="right">
         ${icon("quote", false)}
         <blockquote>${C.about.quote.text}</blockquote>
         <cite><b>${C.about.quote.who}</b>, ${C.about.quote.org}</cite>
@@ -1084,8 +1103,8 @@ ${waysSection(r)}
     <div class="about-block" id="offices" data-reveal>
       <h3 class="h-md">Four offices. One number.</h3>
       <p>Crews and support across the country. Call <a href="${site.phoneHref}">${site.phone}</a> from anywhere in Australia.</p>
-      <ul class="mini-grid">
-        ${C.offices.map((o) => `<li><span class="card-icon">${icon("map-pin")}</span><span><b>${o.city} <em>${o.state}</em></b><span>${o.note}</span></span></li>`).join("")}
+      <ul class="mini-grid plain">
+        ${C.offices.map((o) => `<li><span><b>${o.city} <em>${o.state}</em></b><span>${o.note}</span></span></li>`).join("")}
       </ul>
       <a class="link-arrow" href="${r}contact.html">Office details ${icon("arrow-right")}</a>
     </div>
@@ -1115,12 +1134,20 @@ add({
   description: `${C.services.length} services from EDS: sewer flow and I&I monitoring, blockage alarms, water quality, sampling, rainfall, pump stations, SCADA integration, calibration and more.`,
   current: "services",
   body: (r) => `
-${pageHero(r, { crumbs: [["Services"]], title: "Specialised services for water and wastewater networks.", lede: "From a single audit to a national monitoring program, delivered by trained EDS crews, Australia wide.", actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${r}contact.html">Talk to our team ${icon("arrow-right")}</a><a class="btn btn-ghost btn-lg" href="${site.phoneHref}">${icon("phone")} ${site.phone}</a><div class="chips">${C.serviceGroups.map((g) => `<a class="chip" href="#${g.id}">${esc(g.title)}</a>`).join("")}</div>`, visual: heroToc(C.serviceGroups.map((g) => [g.id, g.title, C.services.filter((s) => s.group === g.id).length])) })}
+${pageHero(r, { crumbs: [["Services"]], title: "Specialised services for water and wastewater networks.", lede: "From a single audit to a national monitoring program, installed and run by our own crews from four offices.", actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${contactHref(r)}">Start an enquiry ${icon("arrow-right")}</a><a class="btn btn-ghost btn-lg" href="${site.phoneHref}">${icon("phone")} ${site.phone}</a><div class="chips">${C.serviceGroups.map((g) => `<a class="chip" href="#${g.id}">${esc(g.title)}</a>`).join("")}</div>`, visual: heroToc(C.serviceGroups.map((g) => [g.id, g.title, C.services.filter((s) => s.group === g.id).length])) })}
 ${C.serviceGroups.map((g, gi) => `
 <section class="section${gi % 2 ? " alt" : ""}" id="${g.id}"><div class="wrap">
-  <div class="section-head"><p class="eyebrow">${esc(g.title)}</p><h2 class="h-lg" data-reveal>${esc(g.heading)}</h2><p class="lede" data-reveal style="--i:1">${esc(g.lede)}</p></div>
+  <div class="section-head"><p class="kicker">${esc(g.title)}<span>${C.services.filter((s) => s.group === g.id).length} services</span></p><h2 class="h-lg" data-reveal>${esc(g.heading)}</h2><p class="lede" data-reveal style="--i:1">${esc(g.lede)}${g.proof ? ` <span class="lede-proof">${esc(g.proof)}</span>` : ""}</p></div>
   <div class="grid c3">
-    ${C.services.filter((s) => s.group === g.id).map((s, n) => cardLink(r, { href: `services/${s.slug}.html`, iconName: s.icon, title: s.title, text: s.summary, n })).join("")}
+    ${(() => {
+      // Rows always fill: the group's lead service spans two columns (with
+      // its chips and a tint), and a second card does too where the count
+      // would otherwise leave a hole in the last row.
+      const list = C.services.filter((s) => s.group === g.id);
+      const extra = (3 - (list.length + 1) % 3) % 3;
+      const wide = new Set([0, ...Array.from({ length: extra }, (_, k) => list.length - 1 - k).filter((k) => k > 0)]);
+      return list.map((s, n) => cardLink(r, { href: `services/${s.slug}.html`, iconName: s.icon, title: s.title, text: s.summary, n, cols: 3, tags: n === 0 ? s.tags || [] : [], cls: n === 0 ? "wide lead" : wide.has(n) ? "wide" : "" })).join("");
+    })()}
   </div>
 </div></section>`).join("")}
 ${waysSection(r)}
@@ -1136,7 +1163,7 @@ const faqHtml = (faq) => `
 // A two column comparison: { left, right, rows: [[label, left, right]] }.
 // `neutral` tables weigh two options against each other; the others set a
 // common practice against the EDS way of working.
-const tableHtml = (c) => `<div class="table-scroll"><table class="compare${c.neutral ? " neutral" : ""}"><thead><tr><th></th><th>${esc(c.left)}</th><th>${esc(c.right)}</th></tr></thead><tbody>${c.rows.map((row) => `<tr>${row.map((cell) => `<td>${esc(cell)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
+const tableHtml = (c) => `<div class="table-scroll"><table class="compare${c.neutral ? " neutral" : ""}"><thead><tr><th><span class="sr-only">Compared on</span></th><th>${esc(c.left)}</th><th>${esc(c.right)}</th></tr></thead><tbody>${c.rows.map((row) => `<tr>${row.map((cell, i) => `<td${i ? ` data-h="${esc(i === 1 ? c.left : c.right)}"` : ""}>${esc(cell)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
 
 // A content block in a product range page's main column: a heading with a
 // short lede, then feature cards (`items`), a checklist or numbered steps
@@ -1157,7 +1184,12 @@ const blockHtml = (b) => `
 function sectionsOf(s) {
   const list = [...(s.blocks || []).map((b) => [slugify(b.heading), b.heading])];
   if (s.compare) list.push([slugify(s.compare.heading), s.compare.heading]);
-  if (resultsFor(s.slug).length) list.push(["results", "Results from the field"]);
+  // The evidence sits straight after the first feature band (bandsOf()), so
+  // a visitor meets a result before the reference material.
+  if (resultsFor(s.slug).length) {
+    const after = (s.blocks || []).findIndex((b) => b.items);
+    list.splice(after < 0 ? list.length : after + 1, 0, ["results", "Results from the field"]);
+  }
   if (s.process) list.push(["how-it-runs", "How a program runs"]);
   if (s.widget === "lab") list.push(["flow-lab", "Try the flow lab"]);
   if (s.widget === "lidott") list.push(["alarm-demo", "Try the alarm"]);
@@ -1198,7 +1230,7 @@ function overviewHtml(s) {
     ? `<div class="prose" data-reveal>${paras(s.intro)}</div>`
     : `<div class="prose" data-reveal><p>${esc(lead)}</p></div><div class="prose prose-rest" data-reveal style="--i:1">${paras(rest)}</div>`;
   return `
-<section class="section" id="overview"><div class="wrap">
+<section class="section band" id="overview"><div class="wrap">
   <div class="intro">${text}${visual}</div>
   ${s.figures ? figureRow(s.figures) : ""}
 </div></section>`;
@@ -1228,7 +1260,13 @@ function bandsOf(s, r) {
   let cards = false;
   for (const b of blocks) {
     const id = slugify(b.heading);
-    if (b.items && !cards) {
+    if (b.products) {
+      out.push({ id, cls: "band-products", html: `${bandHead(b)}<div class="shelf n${b.products.length}" data-reveal="scale">${b.products.map((it) => `
+      <a class="inst" href="${r}${it.href}">
+        <span class="inst-shot" style="--fit:${it.fit || 100}%"><img src="${it.image}" alt="${esc(it.name)}" loading="lazy"></span>
+        <span class="inst-body"><small>${esc(it.maker)}</small><b>${esc(it.name)}</b><span class="inst-text">${esc(it.text)}</span></span>
+      </a>`).join("")}</div>` });
+    } else if (b.items && !cards) {
       cards = true;
       out.push({ id, cls: "band-cards", html: `${bandHead(b)}<div class="feature-grid n${b.items.length}">${b.items.map(([t, d], n) => `<div class="feature holder" data-reveal style="--i:${n % 4}"><div><b>${esc(t)}</b><span>${esc(d)}</span></div></div>`).join("")}</div>` });
     } else if (b.items) {
@@ -1241,7 +1279,7 @@ function bandsOf(s, r) {
     } else if (isSteps(b)) {
       out.push({ id, cls: "band-steps", html: `${bandHead(b)}<ol class="step-grid n${b.list.length}">${b.list.map((l, n) => `<li data-reveal style="--i:${n % 4}"><span>${String(n + 1).padStart(2, "0")}</span><p>${esc(l)}</p></li>`).join("")}</ol>` });
     } else {
-      out.push({ id, cls: "band-list", html: `${bandHead(b)}<ul class="checks cols" data-reveal>${b.list.map((l) => `<li>${icon("check", false)}<span>${esc(l)}</span></li>`).join("")}</ul>` });
+      out.push({ id, cls: "band-list", html: `${bandHead(b)}<ul class="checks cols" data-reveal style="--rows:${Math.ceil(b.list.length / 2)}">${b.list.map((l) => `<li>${icon("check", false)}<span>${esc(l)}</span></li>`).join("")}</ul>` });
     }
   }
   if (s.compare) out.push({ id: slugify(s.compare.heading), cls: "band-table", html: `${bandHead(s.compare)}<div data-reveal>${tableHtml(s.compare)}</div>` });
@@ -1249,13 +1287,19 @@ function bandsOf(s, r) {
   const results = resultsFor(s.slug);
   // One result sits beside its heading. Two share the row with a third tile
   // that lists the other results, so the row is full and every result is a
-  // click away.
+  // click away. The band goes straight after the first feature band, so the
+  // evidence comes before the reference material (sectionsOf() matches).
   const resultsHead = `<div class="band-head"><h2 class="h-lg" data-reveal>Results from the field</h2></div>`;
-  if (results.length === 1) out.push({ id: "results", cls: "band-results", html: `<div class="split-band">${resultsHead}${resultCards(results)}</div>` });
+  let resultsBand = null;
+  if (results.length === 1) resultsBand = { id: "results", cls: "band-results", html: `<div class="split-band">${resultsHead}${resultCards(results)}</div>` };
   else if (results.length) {
     const rest = C.results.filter((x) => !results.includes(x));
-    const more = `<a class="result more" href="${r}about.html#projects" data-reveal style="--i:2"><p class="more-h">${rest.length} more results from EDS programs</p><ul>${rest.slice(0, 4).map((x) => `<li><b>${esc(x.stat)}</b><span>${esc(x.label)}</span></li>`).join("")}</ul><span class="link-arrow">All results ${icon("arrow-right")}</span></a>`;
-    out.push({ id: "results", cls: "band-results", html: `${resultsHead}${resultCards(results, more)}` });
+    const more = `<a class="result more" href="${r}about.html#projects" aria-label="All results from EDS programs" data-reveal style="--i:2"><p class="more-h">${rest.length} more results from EDS programs</p><ul>${rest.slice(0, 4).map((x) => `<li><b>${esc(x.stat)}</b><span>${esc(x.label)}</span></li>`).join("")}</ul><span class="link-arrow">All results ${icon("arrow-right")}</span></a>`;
+    resultsBand = { id: "results", cls: "band-results", html: `${resultsHead}${resultCards(results, more)}` };
+  }
+  if (resultsBand) {
+    const after = out.findIndex((b) => b.cls === "band-cards");
+    out.splice(after < 0 ? out.length : after + 1, 0, resultsBand);
   }
   return out;
 }
@@ -1289,12 +1333,12 @@ for (const s of C.services) {
     scripts: { lab: ["lab.js"], lidott: ["widgets.js"] }[s.widget] || [],
     body: (r) => `
 ${pageHero(r, { crumbs: [["Services", "services/index.html"], [s.short || s.title]], title: s.title, lede: s.summary, compact: true, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${contactHref(r, { topic: s.title })}">Start an enquiry ${icon("arrow-right")}</a>${s.widget === "lab" ? `<a class="btn btn-ghost btn-lg" href="#flow-lab">${icon("cloud-rain")} Try the flow lab</a>` : ""}${s.widget === "lidott" ? `<a class="btn btn-ghost btn-lg" href="#alarm-demo">${icon("bell")} Try the alarm</a>` : ""}`, visual: glanceOf(s) })}
-${sectionBar(r, s)}
+<div class="secbar-scope">${sectionBar(r, s)}
 ${detailBody(r, s, {
-  related: [["Related services", svcLinks(r, s.related)], ["Related solutions", solLinks(r, s.solutions)], ["Products we use", brandLinks(r, s.products)], ["White papers", paperLinks(s.papers)]],
-  demo: s.widget === "lab" ? labSection({ eyebrow: "Try it", title: s.slug.startsWith("inflow") ? "Watch inflow and infiltration happen." : "What the flow meter sees in a storm." })
-    : s.widget === "lidott" ? `<section class="section dark" id="alarm-demo"><div class="wrap"><div class="section-head"><p class="eyebrow">Try it</p><h2 class="h-lg" data-reveal>Raise the water. Watch the alarm.</h2></div>${lidottDemo()}</div></section>` : "",
-})}
+  related: [["Related services", svcLinks(r, s.related)], ["Related solutions", solLinks(r, s.solutions)], ["Instruments we use", brandLinks(r, s.products)], ["White papers", paperLinks(s.papers)]],
+  demo: s.widget === "lab" ? labSection({ title: s.slug.startsWith("inflow") ? "Watch inflow and infiltration happen." : "What the flow meter sees in a storm." })
+    : s.widget === "lidott" ? `<section class="section dark band" id="alarm-demo"><div class="wrap"><div class="section-head"><h2 class="h-lg" data-reveal>Raise the water. Watch the alarm.</h2></div>${lidottDemo({ link: `${r}products/lidott-alarm.html` })}</div></section>` : "",
+})}</div>
 ${ctaSection(r, { topic: s.title })}`,
   });
 }
@@ -1303,14 +1347,18 @@ ${ctaSection(r, { topic: s.title })}`,
 add({
   file: "solutions/index.html",
   title: "Wastewater & Environmental Monitoring Solutions | EDS",
-  description: "Structure performance monitoring, asset and network assessment, thermal monitoring, wastewater monitoring, automatic sampling and environmental monitoring.",
+  description: "Wastewater, network, thermal, sampling, environmental and structure monitoring from Australia's largest service contractor for water and wastewater studies.",
   current: "solutions",
   menuTab: "solutions",
   body: (r) => `
-${pageHero(r, { crumbs: [["Solutions"]], title: "Monitoring applied to the problem in front of you.", lede: "Each solution combines EDS instruments, field crews and data into an outcome you can act on.", visual: heroSteps("How a solution comes together", [["cpu", "Instruments", "Chosen from one of Australia's largest monitoring portfolios."], ["hard-hat", "Field crews", "Installed, maintained and calibrated by trained EDS crews."], ["chart-line", "Data you can act on", "Delivered to FlowSense, your SCADA system or a report."]]) })}
-<section class="section"><div class="wrap"><div class="grid c3">
-  ${C.solutions.map((s, n) => cardLink(r, { href: `solutions/${s.slug}.html`, iconName: s.icon, title: s.title, text: s.summary, n })).join("")}
-</div></div></section>
+${pageHero(r, { crumbs: [["Solutions"]], title: "Monitoring applied to the problem in front of you.", lede: "Instruments, crews and data from Australia's largest service contractor for water and wastewater monitoring studies.", actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${contactHref(r)}">Start an enquiry ${icon("arrow-right")}</a>`, visual: heroSteps("How a solution comes together", [["cpu", "Instruments", "Our own, and ranges from Detectronic, Hach, ORI and more: one of Australia's largest portfolios."], ["hard-hat", "Field crews", "Installed, maintained and calibrated by trained EDS crews from four offices."], ["chart-line", "Data you can act on", "Delivered to FlowSense, your SCADA system or a report."]]) })}
+<section class="section"><div class="wrap">
+  <div class="section-head"><h2 class="h-lg" data-reveal>Start with the problem you are solving.</h2><p class="lede" data-reveal style="--i:1">Each solution page sets out what we look for, how we measure it, and the instruments and crews we bring.</p></div>
+  <div class="grid c3">
+  ${C.solutions.map((s, n) => cardLink(r, { href: `solutions/${s.slug}.html`, iconName: s.icon, title: s.title, text: s.summary, n, cols: 3, tags: s.tags || [] })).join("")}
+  </div>
+</div></section>
+<section class="section alt proof-band" aria-label="Why EDS"><div class="wrap">${proofRow()}</div></section>
 ${ctaSection(r)}`,
 });
 for (const s of C.solutions) {
@@ -1323,11 +1371,11 @@ for (const s of C.solutions) {
     scripts: s.widget === "eas" ? ["widgets.js"] : [],
     body: (r) => `
 ${pageHero(r, { crumbs: [["Solutions", "solutions/index.html"], [s.title]], title: s.title, lede: s.summary, compact: true, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${contactHref(r, { topic: s.title })}">Start an enquiry ${icon("arrow-right")}</a>`, visual: glanceOf(s) })}
-${sectionBar(r, s)}
+<div class="secbar-scope">${sectionBar(r, s)}
 ${detailBody(r, s, {
-  related: [["Related solutions", solLinks(r, s.related)], ["Related services", svcLinks(r, C.services.filter((x) => x.solutions?.includes(s.slug)).map((x) => x.slug))], ["Products we use", brandLinks(r, s.productLinks)]],
-  demo: s.widget === "eas" ? `<section class="section dark" id="asset-score"><div class="wrap"><div class="section-head"><p class="eyebrow">EDS Asset Score</p><h2 class="h-lg" data-reveal>One score, watched around the clock.</h2></div>${easDemo()}</div></section>` : "",
-})}
+  related: [["Related solutions", solLinks(r, s.related)], ["Related services", svcLinks(r, C.services.filter((x) => x.solutions?.includes(s.slug)).map((x) => x.slug))], ["Instruments we use", brandLinks(r, s.productLinks)]],
+  demo: s.widget === "eas" ? `<section class="section dark band" id="asset-score"><div class="wrap"><div class="section-head"><p class="eyebrow">EDS Asset Score</p><h2 class="h-lg" data-reveal>One score, watched around the clock.</h2></div>${easDemo()}</div></section>` : "",
+})}</div>
 ${ctaSection(r, { topic: s.title })}`,
   });
 }
@@ -1427,11 +1475,11 @@ ${pageHero(r, { crumbs: [["Products", "products/index.html"], [b.name]], iconNam
     ${b.blocks?.length ? `<div style="margin-top:clamp(40px,5vw,64px)">${b.blocks.map(blockHtml).join("")}</div>` : ""}
   </div>
   <aside class="aside">
-    ${b.logo ? `<div class="aside-card" data-reveal="right" style="display:grid;place-items:center;padding:32px"><img src="${b.logo}" alt="${esc(b.name)} logo" style="max-height:70px;width:auto" loading="lazy"></div>` : ""}
-    <div class="aside-card brand" data-reveal="right"><h3>Request pricing</h3><p>Sales, hire and service from EDS, Australia wide.</p><a class="btn btn-primary" href="${contactHref(r, pricing)}">Start an enquiry ${icon("arrow-right")}</a></div>
+    ${b.logo ? `<div class="aside-card logo-card" data-reveal="right" style="display:grid;place-items:center;padding:32px"><img src="${b.logo}" alt="${esc(b.name)} logo" style="max-height:70px;width:auto" loading="lazy"></div>` : ""}
+    <div class="aside-card brand" data-reveal="right"><h2>Request pricing</h2><p>Sales, hire and service from EDS, Australia wide.</p><a class="btn btn-primary" href="${contactHref(r, pricing)}">Start an enquiry ${icon("arrow-right")}</a></div>
     ${docs.length
-      ? `<div class="aside-card" data-reveal="right"><h3>Documents</h3><ul class="aside-links docs">${docs.map((d) => `<li><a href="${d.href}" rel="noopener"><span>${esc(d.title)}<small>${esc(d.meta)}</small></span>${icon("download")}</a></li>`).join("")}</ul></div>`
-      : `<div class="aside-card" data-reveal="right"><h3>Datasheets and manuals</h3><p>Ask us for the datasheet, manual or software for any ${esc(b.name)} product.</p><a class="link-arrow" href="${contactHref(r, { product: `${b.name} datasheet or manual` })}">Request a datasheet ${icon("arrow-right")}</a></div>`}
+      ? `<div class="aside-card" data-reveal="right"><h2>Documents</h2><ul class="aside-links docs">${docs.map((d) => `<li><a href="${d.href}" rel="noopener"><span>${esc(d.title)}<small>${esc(d.meta)}</small></span>${icon("download")}</a></li>`).join("")}</ul></div>`
+      : `<div class="aside-card" data-reveal="right"><h2>Datasheets and manuals</h2><p>Ask us for the datasheet, manual or software for any ${esc(b.name)} product.</p><a class="link-arrow" href="${contactHref(r, { product: `${b.name} datasheet or manual` })}">Request a datasheet ${icon("arrow-right")}</a></div>`}
   </aside>
 </div></section>
 <section class="section alt" id="range"><div class="wrap">
@@ -1468,7 +1516,7 @@ ${pageHero(r, { crumbs: [["Products", "products/index.html"], ["Detectronic", "p
   </div>
   <aside class="aside">
     <figure class="aside-card aside-figure" data-reveal="right"><img src="${C.lidott.image2}" alt="Drawing of LIDoTT Alarm in section" loading="lazy"><figcaption>LIDoTT Alarm, in section</figcaption></figure>
-    <div class="aside-card" data-reveal="right"><h3>Specifications</h3><table class="specs"><tbody>${C.lidott.specs.map(([k, v]) => `<tr><th>${k}</th><td>${v}</td></tr>`).join("")}</tbody></table></div>
+    <div class="aside-card" data-reveal="right"><h2>Specifications</h2><table class="specs"><tbody>${C.lidott.specs.map(([k, v]) => `<tr><th>${k}</th><td>${v}</td></tr>`).join("")}</tbody></table></div>
   </aside>
 </div></section>
 ${ctaSection(r, { title: "Deploy LIDoTT Alarm across your network.", lede: "Simple to install and zero maintenance by design. Ask EDS for pricing and a deployment plan.", topic: "Product pricing", product: "LIDoTT Alarm (Detectronic)" })}`,
@@ -1490,7 +1538,7 @@ ${pageHero(r, { crumbs: [["Products", "products/index.html"], ["Detectronic", "p
     <div class="feature-list" style="margin-top:40px">${C.alarm2.sections.map(([t, d]) => `<div class="feature holder" data-reveal><div><b>${esc(t)}</b><span>${esc(d)}</span></div></div>`).join("")}</div>
   </div>
   <aside class="aside">
-    <div class="aside-card" data-reveal="right"><h3>Specifications</h3><table class="specs"><tbody>${C.alarm2.specs.map(([k, v]) => `<tr><th>${k}</th><td>${v}</td></tr>`).join("")}</tbody></table></div>
+    <div class="aside-card" data-reveal="right"><h2>Specifications</h2><table class="specs"><tbody>${C.alarm2.specs.map(([k, v]) => `<tr><th>${k}</th><td>${v}</td></tr>`).join("")}</tbody></table></div>
   </aside>
 </div></section>
 ${ctaSection(r, { title: "Deploy Alarm2 across your network.", lede: "Complete level measurement and alarm device, ready for remote deployment. Ask EDS for pricing and support.", topic: "Product pricing", product: "Alarm2 (Detectronic)" })}`,
@@ -1543,14 +1591,14 @@ ${pageHero(r, { crumbs: [["Products", "products/index.html"], [b.name, `products
   </div>
   <aside class="aside">
     <figure class="aside-card aside-figure" data-reveal="right"><img src="${pg.figure.src}" alt="${esc(pg.figure.alt)}" loading="lazy"><figcaption>${esc(pg.figure.caption)}</figcaption></figure>
-    <div class="aside-card" data-reveal="right"><h3>Documents</h3><ul class="aside-links docs">${pg.docs.map((d) => `<li><a href="${d.href}" rel="noopener"><span>${esc(`${pg.name} ${d.label.toLowerCase()}`)}<small>${docType(d.href)} · ${esc(d.note)}</small></span>${icon("download")}</a></li>`).join("")}</ul></div>
-    <div class="aside-card" data-reveal="right"><h3>Works with</h3><ul class="aside-links docs">${pg.worksWith.map(([href, t, d]) => `<li><a href="${r}${href}"><span>${esc(t)}<small>${esc(d)}</small></span>${icon("arrow-right")}</a></li>`).join("")}</ul></div>
+    <div class="aside-card" data-reveal="right"><h2>Documents</h2><ul class="aside-links docs">${pg.docs.map((d) => `<li><a href="${d.href}" rel="noopener"><span>${esc(`${pg.name} ${d.label.toLowerCase()}`)}<small>${docType(d.href)} · ${esc(d.note)}</small></span>${icon("download")}</a></li>`).join("")}</ul></div>
+    <div class="aside-card" data-reveal="right"><h2>Works with</h2><ul class="aside-links docs">${pg.worksWith.map(([href, t, d]) => `<li><a href="${r}${href}"><span>${esc(t)}<small>${esc(d)}</small></span>${icon("arrow-right")}</a></li>`).join("")}</ul></div>
   </aside>
 </div></section>
-${extra.map(([id, html], i) => `<section class="section${tone(i)}" id="${id}"><div class="wrap">
+${extra.map(([id, html], i) => `<section class="section band${tone(i)}" id="${id}"><div class="wrap">
   ${html}
 </div></section>`).join("\n")}
-<section class="section${tone(extra.length)}" id="specifications"><div class="wrap">
+<section class="section band${tone(extra.length)}" id="specifications"><div class="wrap">
   <div class="section-head"><p class="eyebrow">Specifications</p><h2 class="h-lg" data-reveal>${esc(pg.name)} in detail.</h2></div>
   <div class="spec-groups">${pg.specs.map(([group, rows], i) => `<div class="aside-card" data-reveal style="--i:${i % 3}"><h3>${esc(group)}</h3><table class="specs"><tbody>${rows.map(([k, v]) => `<tr><th>${esc(k)}</th><td>${esc(v)}</td></tr>`).join("")}</tbody></table></div>`).join("")}</div>
   <p class="note spec-note" data-reveal>${esc(pg.specNote)} Full details are in the <a href="${datasheet.href}" rel="noopener">${esc(pg.name)} datasheet</a>.</p>
@@ -1699,7 +1747,7 @@ ${second.map(fsStop).join("")}
   <div class="fs-trust" data-reveal><p>${esc(FS.standards.instruments)}</p><p class="note">${esc(FS.standards.note)}</p></div>
   <div class="fs-clients">
     <p>${esc(FS.standards.clientsHeading)}</p>
-    <ul class="logo-grid" aria-label="Clients">${C.clients.map((c, i) => `<li data-reveal style="--i:${i % 5}"><img src="${c.src}" alt="${esc(c.name)}" loading="lazy"></li>`).join("")}</ul>
+    ${logoGrid()}
     <p class="note">${esc(FS.standards.clientsNote)}</p>
   </div>
 </div></section>
@@ -1732,17 +1780,17 @@ ${pageHero(r, { crumbs: [["About"]], title: "Australian owned and operated since
     <figure class="quote" data-reveal="right" style="margin:0">${icon("quote", false)}<blockquote style="font-size:1.25rem">${C.about.quote.text}</blockquote><cite><b>${C.about.quote.who}</b>, ${C.about.quote.org}</cite></figure>
   </aside>
 </div></section>
-<section class="section dark" id="in-the-field"><div class="wrap">
+<section class="section alt" id="in-the-field"><div class="wrap">
   <div class="section-head"><p class="eyebrow">In the field</p><h2 class="h-lg" data-reveal>${esc(C.about.field.heading)}</h2><p class="lede" data-reveal style="--i:1">${esc(C.about.field.lede)}</p></div>
   <div class="mosaic">${C.about.field.photos.map((f, i) => photoFigure(f, { i, sizes: i ? "(max-width: 560px) calc(100vw - 40px), (max-width: 980px) calc(50vw - 27px), 300px" : "(max-width: 980px) calc(100vw - 40px), 614px" })).join("")}</div>
 </div></section>
-<section class="section alt" id="how-we-work"><div class="wrap">
+<section class="section" id="how-we-work"><div class="wrap">
   <div class="section-head"><h2 class="h-lg" data-reveal>${esc(C.about.approach.heading)}</h2><p class="lede" data-reveal style="--i:1">${esc(C.about.approach.lede)}</p></div>
   <div class="grid c3">
     ${C.about.approach.items.map(([ic, t, d], n) => `<div class="card hoverable holder" data-reveal style="--i:${n % 3}"><span class="card-icon">${icon(ic)}</span><h3>${esc(t)}</h3><p>${esc(d)}</p></div>`).join("")}
   </div>
 </div></section>
-<section class="section"><div class="wrap">
+<section class="section alt"><div class="wrap">
   <div class="section-head"><p class="eyebrow">EDS origins</p><h2 class="h-lg" data-reveal>Founded by Graham and Cynthia Harper.</h2>
   <p class="lede" data-reveal style="--i:1">EDS began in Queensland in 1991, following Graham's success with Elpro, and alongside the release of the Pump Station Manager.</p></div>
   <div class="timeline">
@@ -1754,9 +1802,10 @@ ${pageHero(r, { crumbs: [["About"]], title: "Australian owned and operated since
 <section class="section dark"><div class="wrap aus">
   <svg id="ausmap" data-offices='${JSON.stringify(C.offices)}' role="group" aria-label="Map of Australia showing EDS offices" data-reveal="scale"></svg>
   <div><h2 class="h-lg" data-reveal>Four offices across Australia.</h2>
-  <div class="office-list" style="margin-top:26px">${C.offices.map((o) => `<button class="office"><span class="card-icon">${icon("map-pin")}</span><span><b>${o.city}</b><span>${o.note}</span></span><em>${o.state}</em></button>`).join("")}</div></div>
-</div></section>
-${ctaSection(r)}`,
+  <p class="lede" data-reveal style="--i:1">Crews and support across the country, on one number. Tell us about your network, site or project.</p>
+  <div class="office-list" style="margin-top:26px">${C.offices.map((o) => `<button class="office"><span class="card-icon">${icon("map-pin")}</span><span><b>${o.city}</b><span>${o.note}</span></span><em>${o.state}</em></button>`).join("")}</div>
+  <div class="hero-actions" data-reveal style="--i:2"><a class="btn btn-primary btn-lg" data-magnetic href="${contactHref(r)}">Start an enquiry ${icon("arrow-right")}</a><a class="btn btn-ghost btn-lg" href="${site.phoneHref}">${icon("phone")} ${site.phone}</a></div></div>
+</div></section>`,
 });
 
 /* ---- resources ---- */
@@ -1979,13 +2028,13 @@ ${pageHero(r, { compact: true, crumbs: [["Contact", "contact.html"], ["Start an 
   ${enquiryForm(r, "")}
   <aside class="enquire-aside">
     <div class="aside-card brand" data-reveal="right">
-      <h3>Prefer to talk?</h3>
+      <h2>Prefer to talk?</h2>
       <a class="hero-call" href="${site.phoneHref}">${icon("phone")}<span><small>Call from anywhere in Australia</small><b>${site.phone}</b></span></a>
       <p>${site.hours}.</p>
       ${openStatus()}
     </div>
     <div class="aside-card" data-reveal="right" style="--i:1">
-      <h3>Head office</h3>
+      <h2>Head office</h2>
       <address>${site.address.join("<br>")}</address>
       <a class="link-arrow" href="${r}contact.html">All contact details ${icon("arrow-right")}</a>
     </div>
@@ -2045,7 +2094,7 @@ ${pageHero(r, { crumbs: [["Privacy policy"]], title: privacy[0], lede: privacy[1
 function searchIndex() {
   const items = [];
   const text = (...parts) => parts.flat(Infinity).filter(Boolean).join(" ");
-  const blockText = (blocks = []) => blocks.map((b) => [b.heading, b.lede, b.items || [], b.list || [], b.table?.rows || [], b.faq || []]);
+  const blockText = (blocks = []) => blocks.map((b) => [b.heading, b.lede, b.items || [], b.list || [], (b.products || []).map((p) => [p.name, p.maker, p.text]), b.table?.rows || [], b.faq || []]);
   const plain = plainPath;
   const put = (g, t, s, h, more = {}) => items.push({ g, t, s, h, ...more });
 

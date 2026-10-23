@@ -166,23 +166,6 @@
     });
   }
 
-  /* ---- product rail: drag to scroll + buttons ---- */
-  $$(".rail").forEach((rail) => {
-    let down = false, startX = 0, startL = 0, moved = 0;
-    rail.addEventListener("pointerdown", (e) => { if (e.pointerType !== "mouse") return; down = true; startX = e.clientX; startL = rail.scrollLeft; moved = 0; });
-    window.addEventListener("pointermove", (e) => {
-      if (!down) return;
-      moved = e.clientX - startX;
-      if (Math.abs(moved) > 5) rail.classList.add("dragging");
-      rail.scrollLeft = startL - moved;
-    });
-    window.addEventListener("pointerup", () => { down = false; setTimeout(() => rail.classList.remove("dragging"), 0); });
-    rail.addEventListener("dragstart", (e) => e.preventDefault());
-    const step = () => ($(".brand-card", rail)?.offsetWidth || 320) + 18;
-    $$(`[data-rail="${rail.id}"]`).forEach((b) =>
-      b.addEventListener("click", () => rail.scrollBy({ left: step() * (b.dataset.dir === "prev" ? -1 : 1), behavior: calm ? "auto" : "smooth" }))
-    );
-  });
 
   /* ---- timeline fill ---- */
   const tl = $(".timeline");
@@ -203,11 +186,12 @@
     let i = 0, auto = true;
     const show = (n) => {
       i = n;
-      fsItems.forEach((b, k) => b.setAttribute("aria-selected", String(k === n)));
+      fsItems.forEach((b, k) => b.setAttribute("aria-pressed", String(k === n)));
       $$(".fs-view").forEach((v, k) => v.classList.toggle("active", k === n));
     };
     fsItems.forEach((b, k) => {
       b.addEventListener("click", () => { auto = false; show(k); });
+      b.addEventListener("focus", () => { auto = false; });
       b.addEventListener("pointerenter", (e) => { if (e.pointerType === "mouse") { auto = false; show(k); } });
     });
     setInterval(() => { if (auto && !document.hidden) show((i + 1) % fsItems.length); }, 4200);
@@ -268,6 +252,7 @@
       }
       if (id === current) return;
       current = id;
+      if (!id) list.scrollTo({ left: 0, behavior: "auto" });
       for (const a of links) {
         const on = a.hash === `#${id}`;
         a.classList.toggle("on", on);
