@@ -74,8 +74,8 @@
   const areaOf = (el) => {
     for (const [sel, name] of AREAS) {
       if (!el.closest(sel)) continue;
-      const menu = sel === ".header" && el.closest(".nav-item.has-mega")?.querySelector(".nav-link");
-      return menu && menu !== el ? `Header › ${text(menu)} menu` : name;
+      const menu = sel === ".header" && el.closest(".mega")?.parentElement.querySelector(".nav-link");
+      return menu ? `Header › ${text(menu)} menu` : name;
     }
     const section = el.closest("section");
     if (!section) return "Page";
@@ -137,8 +137,7 @@
     const expandable = el.matches("summary") ? el.parentElement : el.hasAttribute("aria-expanded") ? el : null;
     if (expandable) {
       // A header menu that hover has opened stays open when clicked (site.js).
-      const open = expandable.matches("details") ? expandable.open : el.matches(".nav-link") ? el.parentElement.dataset.by === "click" : el.getAttribute("aria-expanded") === "true";
-      if (el.matches(".nav-link")) label += " menu";
+      const open = expandable.matches("details") ? expandable.open : el.matches(".nav-toggle") ? el.closest(".nav-item").dataset.by === "click" : el.getAttribute("aria-expanded") === "true";
       return report({ type: "toggle", target: open ? "close" : "open", label, area, item });
     }
     if (el.getAttribute("role") === "tab") return report({ type: "tab", label, area, item });

@@ -154,9 +154,22 @@ ul { margin: 0; padding: 0; list-style: none; }
   font-size: 1.03rem; font-weight: 550; color: var(--on-dark-soft);
   transition: color .2s var(--ease), background-color .2s var(--ease);
 }
-.nav-link:hover, .nav-item.open > .nav-link, .nav-link[aria-current="page"] { color: #fff; background: rgba(255, 255, 255, .1); }
-.nav-link .icon { font-size: 15px; transition: rotate .25s var(--ease); }
-.nav-item.open > .nav-link .icon { rotate: 180deg; }
+.nav-link:hover, .nav-link[aria-current="page"] { color: #fff; background: rgba(255, 255, 255, .1); }
+/* Services and Products: the word is a link to the page that lists them all
+   and the chevron beside it the button that opens the menu. The two share
+   one pill, lit as a whole while the pointer is over it, its menu is open
+   or it is the page the visitor is on; the chevron takes a ring of its own
+   under the pointer, so it reads as a control in its own right. */
+.nav-split { display: inline-flex; align-items: center; border-radius: 999px; transition: background-color .2s var(--ease); }
+.nav-split > .nav-link { padding-right: 3px; border-radius: 999px 0 0 999px; }
+.nav-split > .nav-link:is(:hover, [aria-current="page"]) { background: none; }
+.nav-toggle { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; margin-right: 4px; border-radius: 50%; font-size: 15px; color: var(--on-dark-soft); transition: color .2s var(--ease), background-color .2s var(--ease); }
+.nav-toggle .icon { transition: rotate .25s var(--ease); }
+.nav-split:hover, .nav-item.open > .nav-split, .nav-split:has(> [aria-current="page"]) { background: rgba(255, 255, 255, .1); }
+.nav-split:hover > *, .nav-item.open > .nav-split > * { color: #fff; }
+.nav-toggle:hover { background: rgba(255, 255, 255, .14); }
+.nav-item.open .nav-toggle .icon { rotate: 180deg; }
+.nav-split > :focus-visible { outline-offset: -2px; }
 .mega {
   position: absolute; top: calc(100% + 10px); left: 50%; translate: -50% 0;
   min-width: 380px; padding: 10px; border-radius: 18px; max-height: calc(100vh - 110px); overflow: auto;
