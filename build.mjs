@@ -139,7 +139,11 @@ function header(r, current, menuTab) {
   // column list. Each link carries a one-line description: the service's
   // or solution's summary, the brand's summary, the product's lede.
   const mLink = (i) => `<a href="${r}${i.href}">${icon(i.icon)}<span><b>${esc(i.label)}</b>${i.desc ? `<small>${esc(i.desc)}</small>` : ""}</span></a>`;
-  const navBtn = (label, keys) => `<button class="nav-link" aria-expanded="false"${keys.includes(current) ? ' aria-current="page"' : ""}>${label}${icon("chevron-down", false)}</button>`;
+  // Services and Products are each a link to the page that lists them all,
+  // with a chevron beside it that opens the menu (the menu also opens under
+  // the pointer, site.js), so the word can be clicked to go to the page and
+  // keyboard and touch visitors still have a button for the menu.
+  const navSplit = (label, href, keys) => `<div class="nav-split"><a class="nav-link" href="${r}${href}"${keys.includes(current) ? ' aria-current="page"' : ""}>${label}</a><button class="nav-toggle" type="button" aria-expanded="false" aria-controls="mega-${label.toLowerCase()}" aria-label="${label} menu">${icon("chevron-down", false)}</button></div>`;
   const tabs = [
     ...C.serviceGroups.map((g) => ({
       id: g.id, label: g.title, lede: g.lede, all: { href: `services/index.html#${g.id}`, label: "All services" },
@@ -153,8 +157,8 @@ function header(r, current, menuTab) {
   const openTab = tabs.some((t) => t.id === menuTab) ? menuTab : tabs[0].id;
   const tabbed = `
       <div class="nav-item has-mega wide">
-        ${navBtn("Services", ["services", "solutions"])}
-        <div class="mega mega-tabs">
+        ${navSplit("Services", "services/index.html", ["services", "solutions"])}
+        <div class="mega mega-tabs" id="mega-services">
           <div class="mega-rail">
             <p class="mega-head" id="mega-rail-label">Services and solutions</p>
             <div role="tablist" aria-labelledby="mega-rail-label">
@@ -173,8 +177,8 @@ function header(r, current, menuTab) {
   const pItems = [...C.brands.map((b) => ({ href: `products/${b.slug}.html`, icon: b.icon, label: b.name, desc: b.tag })), ...C.productPages.map((pg) => ({ href: `products/${pg.slug}.html`, icon: pg.icon, label: pg.name, desc: pg.tag })), { href: "products/lidott-alarm.html", icon: "bell", label: "LIDoTT Alarm", desc: C.lidott.lede }, { href: "products/alarm2.html", icon: "bell-ring", label: "Alarm2", desc: C.alarm2.lede }];
   const mega = (label, key, items, all) => `
       <div class="nav-item has-mega">
-        ${navBtn(label, [key])}
-        <div class="mega cols-2">
+        ${navSplit(label, all.href, [key])}
+        <div class="mega cols-2" id="mega-${key}">
           ${items.map(mLink).join("")}
           <a class="mega-all" href="${r}${all.href}"><span>${all.label}</span>${icon("arrow-right")}</a>
         </div>
@@ -418,7 +422,10 @@ ${searchDialog()}
 ${scripts.map((s) => `<script src="${asset(r, `js/${s}`)}" defer></script>`).join("\n")}${tracker(r, file)}
 </body>
 </html>
-`.replaceAll("@root/", r);
+`.replaceAll("@root/", r)
+    // Every link to a document (a datasheet, manual, brochure, white paper or
+    // download in assets/docs) saves the file rather than opening it in the tab.
+    .replace(/<a\s[^>]*href="[^"]*assets\/docs\/[^"]*"[^>]*>/g, (a) => (/\sdownload(?=[\s>=])/.test(a) ? a : a.replace(/>$/, " download>")));
   // In-page links, product deep links and form labels all rely on ids being unique.
   const ids = [...out.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]);
   const dupes = ids.filter((id, i) => ids.indexOf(id) !== i);
@@ -1779,7 +1786,7 @@ ${pageHero(r, { crumbs: [["Resources"]], title: "White papers, downloads and sup
     ${C.papers.map((p, n) => `
     <a class="card paper tilt" href="${p.href}" rel="noopener" data-reveal style="--i:${n}">
       <div class="paper-top"><span class="card-icon">${icon("file-text")}</span><span class="tag">${p.date}</span></div>
-      <div class="paper-body"><h3>${esc(p.title)}</h3><p>${esc(p.text)}</p><span class="go" aria-hidden="true">${icon("arrow-up-right")}</span></div>
+      <div class="paper-body"><h3>${esc(p.title)}</h3><p>${esc(p.text)}</p><span class="go" aria-hidden="true">${icon("download")}</span></div>
     </a>`).join("")}
   </div>
 </div></section>
@@ -2031,7 +2038,7 @@ ${pageHero(r, { crumbs: [["Privacy policy"]], title: privacy[0], lede: privacy[1
 // Everything the search palette (search.js) can find, grouped by `g`. Links
 // are relative to the site root, and search.js adds each page's way back to
 // it. `b` is extra text to match on that is never shown; `x` marks links that
-// leave the site.
+// leave the site and `d` the documents, which download rather than open.
 function searchIndex() {
   const items = [];
   const text = (...parts) => parts.flat(Infinity).filter(Boolean).join(" ");
@@ -2057,11 +2064,11 @@ function searchIndex() {
   put("Pages", "All solutions", "Monitoring applied to the problem in front of you.", "solutions/index.html", { i: "layout-grid" });
   put("Pages", "Home", site.tagline, "index.html", { i: "house" });
   put("Pages", "Privacy policy", "How EDS handles personal information.", "privacy.html", { i: "lock" });
-  for (const p of C.papers) put("Documents", p.title, `${p.kind || "White paper"} · ${p.date}`, p.href, { i: "file-text", x: 1, b: p.text });
-  for (const g of C.downloads) for (const [label, href] of g.items) put("Documents", label, g.group, plain(href), { i: g.icon, x: 1, b: g.note });
+  for (const p of C.papers) put("Documents", p.title, `${p.kind || "White paper"} · ${p.date}`, p.href, { i: "file-text", d: 1, b: p.text });
+  for (const g of C.downloads) for (const [label, href] of g.items) put("Documents", label, g.group, plain(href), { i: g.icon, d: 1, b: g.note });
   for (const p of products) {
     for (const d of p.docs || []) {
-      if (!items.some((e) => e.h === plain(d.href))) put("Documents", `${p.name}: ${d.label}`, `${p.brand.name} · ${docType(d.href)}`, plain(d.href), { i: "file-text", x: 1, b: text(p.brand.title, p.note) });
+      if (!items.some((e) => e.h === plain(d.href))) put("Documents", `${p.name}: ${d.label}`, `${p.brand.name} · ${docType(d.href)}`, plain(d.href), { i: "file-text", d: 1, b: text(p.brand.title, p.note) });
     }
   }
   put("Contact", `Call ${site.phone}`, `${site.hours}, from anywhere in Australia`, site.phoneHref, { i: "phone", b: "phone ring telephone call" });
@@ -2073,7 +2080,7 @@ function searchIndex() {
   put("Sign in", "Remote data access", "DetectData, for Detectronic instruments", site.remoteDataUrl, { i: "globe", x: 1, b: "login detecdata" });
 
   const icons = {};
-  for (const name of new Set(items.map((e) => e.i).filter(Boolean).concat("arrow-right", "arrow-up-right", "search-x"))) { icon(name); icons[name] = iconCache.get(name); }
+  for (const name of new Set(items.map((e) => e.i).filter(Boolean).concat("arrow-right", "arrow-up-right", "download", "search-x"))) { icon(name); icons[name] = iconCache.get(name); }
   const suggested = ["services/sewer-flow-monitoring.html", "services/inflow-infiltration-studies.html", "services/data-as-a-service.html", "products/lidott-alarm.html", "flowsense.html", "products/index.html#finder", site.phoneHref];
   return { items, icons, suggested };
 }

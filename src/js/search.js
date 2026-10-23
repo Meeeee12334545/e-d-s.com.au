@@ -92,8 +92,8 @@
   /* ---- rendering ---- */
   const row = (e, raw = "") => {
     const icon = e.img ? `<img src="${href(e.img)}" alt="" loading="lazy">` : svg(e.i);
-    const ext = e.x ? ' target="_blank" rel="noopener"' : "";
-    return `<a class="sr${e.img ? " sr-img" : ""}" role="option" href="${escHtml(href(e.h))}"${ext} data-h="${escHtml(e.h)}" data-track-label="${escHtml(e.t)}"><span class="sr-icon">${icon}</span><span class="sr-text"><b>${highlight(e.t, raw)}</b><small>${escHtml(e.s)}</small></span>${svg(e.x ? "arrow-up-right" : "arrow-right")}</a>`;
+    const ext = e.x ? ' target="_blank" rel="noopener"' : e.d ? ' download rel="noopener"' : "";
+    return `<a class="sr${e.img ? " sr-img" : ""}" role="option" href="${escHtml(href(e.h))}"${ext} data-h="${escHtml(e.h)}" data-track-label="${escHtml(e.t)}"><span class="sr-icon">${icon}</span><span class="sr-text"><b>${highlight(e.t, raw)}</b><small>${escHtml(e.s)}</small></span>${svg(e.x ? "arrow-up-right" : e.d ? "download" : "arrow-right")}</a>`;
   };
   const group = (label, html) => `<div class="sr-group" role="group" aria-label="${escHtml(label)}"><p aria-hidden="true">${escHtml(label)}</p>${html}</div>`;
 

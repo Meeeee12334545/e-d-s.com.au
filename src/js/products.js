@@ -47,7 +47,7 @@
     $("page").hidden = !d.page;
     if (d.page) $("page").href = d.page;
     $("docs").hidden = !d.docs.length;
-    $("docs").querySelector("ul").innerHTML = d.docs.map((doc) => `<li><a href="${esc(doc.href)}" rel="noopener">${esc(doc.label)}${docIcon}</a></li>`).join("");
+    $("docs").querySelector("ul").innerHTML = d.docs.map((doc) => `<li><a href="${esc(doc.href)}" rel="noopener" download>${esc(doc.label)}${docIcon}</a></li>`).join("");
     $("count").textContent = `${at + 1} of ${list.length}`;
     dialog.querySelectorAll("[data-qv-step]").forEach((b) => (b.disabled = list.length < 2));
     history.replaceState(null, "", `#${card.id}`);
@@ -159,7 +159,7 @@
         row("What it is", items.map((p) => esc(p.note))),
         row("Type", items.map((p) => esc(p.type))),
         row("Range", items.map((p) => esc(p.range))),
-        row("Documents", items.map((p) => p.docs.map((d) => `<a href="${esc(d.href)}" rel="noopener">${esc(d.label)}</a>`).join("<br>"))),
+        row("Documents", items.map((p) => p.docs.map((d) => `<a href="${esc(d.href)}" rel="noopener" download>${esc(d.label)}</a>`).join("<br>"))),
       ];
       // Every specification row any of them has, in the order first met.
       const specs = new Map();
