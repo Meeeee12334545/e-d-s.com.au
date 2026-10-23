@@ -50,7 +50,7 @@ export const offices = [
 ];
 
 // The home hero's paragraph: 20 words at most, so the hero fits one screen.
-export const homeLede = "Monitoring instruments, field crews and data services for water and wastewater, across Australia since 1991.";
+export const homeLede = "Instruments, trained crews and data you can act on, for water and wastewater. Australian owned since 1991.";
 
 export const stats = [
   { value: 1991, label: "Founded in Queensland. Australian owned ever since.", plain: true },
@@ -71,10 +71,10 @@ export const stats = [
 // title leaves out the words people search for. Keep it to 60 characters and
 // to words the page's own copy uses; the build warns when a title runs longer.
 export const serviceGroups = [
-  { id: "sewer", title: "Sewer networks", heading: "Know what is in the pipe, and what should not be.", lede: "Measuring what flows through the network, finding where water gets in, and proving the fixes worked." },
-  { id: "water", title: "Water & environment", heading: "Quality, sampling and rainfall, measured properly.", lede: "For utilities, industry and environmental projects, with full pipe flow alongside." },
+  { id: "sewer", title: "Sewer networks", heading: "Know what is in the pipe, and what should not be.", lede: "Measure what flows through the network, find where the water gets in, and prove the fixes worked." },
+  { id: "water", title: "Water & environment", heading: "Quality, sampling and rainfall, measured properly.", lede: "For utilities, industry and environmental projects, with full pipe flow measured alongside." },
   { id: "data", title: "Real-time data & analysis", heading: "From a reading to a decision.", lede: "Data that arrives as it happens, reaches the systems you already run, and ends in a report you can act on." },
-  { id: "field", title: "Field services & support", heading: "The people and equipment behind every program.", lede: "Calibration, hire, facility management and training, from four offices across Australia." },
+  { id: "field", title: "Field services & support", heading: "The people and equipment behind every program.", lede: "Calibration, hire, facility management and training, from four offices across Australia and crews who travel." },
 ];
 
 // "At a glance" in each service and solution page hero: [icon, fact, line].
@@ -255,38 +255,38 @@ export const services = [
     summary: "Temporary and permanent flow monitoring for councils and water authorities, installed by trained crews Australia wide.",
     tags: ["Councils", "Water authorities"],
     intro: [
-      "EDS provides comprehensive sewer flow monitoring to help councils and water authorities manage their wastewater infrastructure efficiently and effectively. With more than three decades of experience, we pair industry-leading technology with hands-on support to deliver accurate, reliable data for informed decisions.",
-      "Our crews are highly trained installation engineers, available Australia wide, who deliver results that are both safe and accurate. And unlike other providers, EDS gives you full access to the data.",
+      "Good decisions about a sewer network start with good data from inside it. EDS has been putting flow meters into Australian sewers for more than three decades, for councils and water authorities who need to know what their network is really doing. We bring the instruments, the crews and the data platform, and we stay until the data has answered your question.",
+      "Our own trained crews install and look after every site, Australia wide, safely and to the standard the data depends on. And unlike many providers, we give you full access to your data, not just a report at the end.",
     ],
     blocks: [
       {
         heading: "Why choose EDS",
         items: [
-          ["Precision and reliability", "Our fleet features the latest Detectronic MSFM area velocity flow meters, intrinsically safe and certified under ATEX and IECEx."],
-          ["Expertise you can trust", "Field crews complete rigorous training in installation, maintenance and calibration, so every unit is installed correctly."],
-          ["Flexible programs", "From short-term inflow and infiltration studies to long-term monitoring that supports sewer master planning."],
-          ["Advanced sensors", "Including the LIDoTT level sensor for highly precise measurement across changing conditions."],
-          ["Customer-focused", "We stay with you through data collection and interpretation, not just the install."],
+          ["Instruments built for the sewer", "Our fleet runs on the latest Detectronic MSFM area velocity flow meters, intrinsically safe and certified under ATEX and IECEx."],
+          ["Crews who do this every day", "Our field crews are trained in installation, maintenance and calibration, so every meter goes in right the first time."],
+          ["Programs of any length", "From a short inflow and infiltration study to years of monitoring that feeds your sewer master plan."],
+          ["Sensors for every chamber", "Including the LIDoTT level sensor, which keeps measuring precisely as conditions change."],
+          ["With you past the install", "We stay with you through data collection and interpretation, not just the day the meter goes in."],
         ],
       },
       {
         heading: "What is included",
         items: [
-          ["Temporary and permanent flow monitoring", "Ideal for I/I studies, model calibrations and compliance reporting."],
-          ["Comprehensive data analysis", "Detailed insights in reports that are easy to interpret, supporting planning and regulatory compliance."],
-          ["Custom installation and site inspections", "Proper hydraulic site selection and installation to guarantee accurate data."],
-          ["Rainfall correlation studies", "Data from RIMCO 7499 tipping bucket rain gauges shows how rainfall events affect the network."],
-          ["Seamless data integration", "Data is transmitted directly to our platform, with API options for your existing systems."],
+          ["Temporary and permanent flow monitoring", "For I&I studies, model calibration and compliance reporting."],
+          ["Analysis and reporting", "Reports that are easy to read and act on, for planning and regulatory compliance."],
+          ["Sites chosen properly", "Hydraulic site selection and careful installation, because accurate data starts with the right spot in the pipe."],
+          ["Rainfall alongside", "RIMCO 7499 tipping bucket rain gauges in the catchment show how each storm moves through the network."],
+          ["Data where you want it", "Readings arrive in EDS FlowSense as they are taken, or by API into the systems you already run."],
         ],
       },
       {
         heading: "Applications",
         list: [
-          "Sewer model calibration to support long-term planning",
-          "Identifying sources of inflow and infiltration to reduce treatment costs",
-          "Capacity assessment for future infrastructure expansion",
-          "Compliance with environmental regulations",
-          "Early detection of blockages and potential system failures",
+          "Calibrating your sewer model for long term planning",
+          "Finding the sources of inflow and infiltration, and cutting treatment costs",
+          "Assessing capacity before you expand",
+          "Meeting environmental regulations",
+          "Catching blockages and failures early",
         ],
       },
       {
@@ -318,9 +318,9 @@ export const services = [
     featured: true,
     summary: "Find where stormwater and groundwater enter the sewer, and how much, so investment goes where it counts.",
     intro: [
-      "EDS specialises in identifying and addressing the challenges of sewer inflow and infiltration (I&I). Excess stormwater and groundwater entering sewer systems remains one of the most costly and complex challenges for councils and utilities across Australia.",
-      "Industry data suggests I&I can make up to 50% of the flow in older sewer networks during storm events. Left unmanaged, it hides the true capacity of a system, complicates hydraulic modelling and distorts investment planning, so infrastructure ends up sized too large or too small.",
-      "Our team provides practical solutions to manage and mitigate the effects of I&I, protecting the environment and keeping the system efficient.",
+      "Stormwater and groundwater getting into the sewer is one of the most expensive problems a council or utility can have, and one of the hardest to see. Finding it is what EDS does best.",
+      "Industry data suggests inflow and infiltration (I&I) can make up half the flow in an older network during a storm. Left alone, it hides the true capacity of the system, muddies the hydraulic model and skews investment planning, so pipes and plants end up sized too big or too small.",
+      "We measure where the water gets in and how much, so your money goes to the repairs that make the biggest difference.",
     ],
     blocks: [
       {
@@ -335,19 +335,19 @@ export const services = [
       {
         heading: "Our I&I services",
         items: [
-          ["Assessment and analysis", "Comprehensive evaluation of sewer systems to identify I&I sources."],
-          ["Advanced monitoring", "State-of-the-art technology for real-time data collection and analysis."],
-          ["Customised solutions", "Tailored strategies to manage and reduce I&I impacts."],
-          ["Maintenance and support", "Ongoing support so implemented solutions keep working."],
+          ["Find the sources", "Flow meters and rain gauges across the catchment show which subcatchments let the water in, and how much."],
+          ["Watch it happen", "Intrinsically safe meters report over 4G, so you see each storm's response as it happens."],
+          ["Plan the fix", "A ranked remediation plan built on your own data, instead of blanket rehabilitation."],
+          ["Ongoing support", "We keep the monitoring and the fixes working long after the study ends."],
         ],
       },
       {
         heading: "What you gain",
         items: [
-          ["Environmental protection", "Prevent untreated sewage discharges and safeguard natural water bodies."],
-          ["Cost efficiency", "Reduce treatment costs by minimising unnecessary flow into the sewer."],
-          ["System longevity", "Extend the life and reliability of sewer infrastructure."],
-          ["Compliance assurance", "Meet environmental regulations and standards."],
+          ["Fewer overflows", "Less stormwater in the sewer means fewer untreated discharges into local waterways."],
+          ["Lower treatment costs", "Every litre of rain you keep out of the sewer is a litre you don't have to pump and treat."],
+          ["Assets that last longer", "A network that is not overloaded in every storm lasts longer and fails less often."],
+          ["Compliance you can show", "Data that demonstrates you are meeting environmental regulations and standards."],
         ],
       },
       {
@@ -413,14 +413,15 @@ export const services = [
     icon: "database-zap",
     group: "sewer",
     featured: true,
-    summary: "A complete open channel sewer monitoring solution with no capital outlay, managed end to end by EDS.",
+    summary: "Sewer flow monitoring with no capital outlay. EDS supplies, installs and looks after the equipment, and you get validated data.",
     tags: ["No capital outlay", "99.95% data availability"],
     intro: [
-      "EDS DaaS delivers a structured workflow that ensures accuracy, reliability and defensible results. We select the sites, install and maintain the equipment, validate the data continuously and deliver insights you can act on.",
+      "With Data as a Service you don't buy flow meters, you buy the answers. EDS chooses the sites, installs and maintains the equipment, validates the data continuously and delivers insight you can act on. You pay for data you can rely on, with no capital outlay and nothing to own.",
+      "It's a structured way of working, and it gives you accurate, reliable and defensible results.",
     ],
     blocks: [
       {
-        heading: "A structured, end-to-end approach",
+        heading: "How it runs, end to end",
         list: [
           "Hydraulic site selection",
           "Expert installation",
@@ -436,14 +437,14 @@ export const services = [
         items: [
           ["99.95% data availability", "A managed fleet with continuous oversight."],
           ["Hydraulic validation of sites", "Every site is checked against the hydraulics it should obey."],
-          ["Continuous calibration", "Not a periodic visit, an ongoing process."],
+          ["Continuous calibration", "An ongoing process, not a periodic visit."],
           ["Real-time alerts and insights", "Know about a change when it happens."],
         ],
       },
       {
-        heading: "Advanced monitoring technology",
+        heading: "The instruments behind it",
         items: [
-          ["Detectronic MSFM AV flow meter", "High performance in sewer environments, with reliable, precise measurement."],
+          ["Detectronic MSFM AV flow meter", "Built for the sewer, with reliable, precise measurement."],
           ["Intrinsically safe", "ATEX and IECEx certified."],
           ["Integrated 4G communications", "Real-time data and continuous visibility of network performance."],
         ],
@@ -488,13 +489,13 @@ export const services = [
     group: "sewer",
     process: true,
     featured: true,
-    summary: "Monitoring programs designed to calibrate and enhance hydraulic and sewer network models.",
+    summary: "Flow and rainfall monitoring designed to calibrate your hydraulic model, scored storm by storm.",
     intro: [
-      "We work closely with our clients to design and deliver tailored network monitoring programs, from project initiation through to final delivery. These programs support the calibration and enhancement of existing hydraulic and sewer network models.",
-      "Hydraulic modelling helps communities understand, plan and future-proof their wastewater infrastructure. High-resolution flow and rainfall data are essential for accurate simulation of collection system performance in both dry and wet weather.",
-      "Today's leading modelling platforms can import and process flow and rainfall data in near real time. But the quality of a model depends entirely on the accuracy of the field data fed into it.",
-      "Whether you are starting your hydraulic modelling journey or need updated flow monitoring to re-calibrate an existing model, EDS is ready to partner with you. Our team has worked with major councils and utilities across Australia, and understands the importance of reliable, defensible data that supports confident engineering decisions.",
-      "Measured data can change the plan as well as the model. When a regional water authority used temporary flow monitoring to recalibrate its hydraulic model, the data showed actual infiltration rates were significantly lower than first modelled. Rehabilitation funds were reallocated, and high risk catchments prioritised more accurately.",
+      "A hydraulic model is only as good as the field data behind it. EDS designs and delivers the monitoring programs that calibrate new models and bring existing ones back into line with the network, from the first site visit to the final dataset.",
+      "Modelling is how communities plan and future-proof their wastewater infrastructure. To simulate the network properly in dry weather and in storms, the model needs high resolution flow and rainfall data from the pipes themselves.",
+      "Today's modelling platforms can take flow and rainfall data in near real time. The limit is no longer the software. It's the accuracy of what goes in.",
+      "Whether you're building your first model or recalibrating one you've had for years, we're ready to help. Our team has worked with major councils and utilities across Australia, and we know what defensible data looks like to the engineers who have to stand behind it.",
+      "Measured data can change the plan as well as the model. When a regional water authority recalibrated its hydraulic model with temporary flow monitoring, the data showed infiltration was well below what had been modelled. Rehabilitation funds were moved, and the high risk catchments were prioritised properly.",
     ],
     blocks: [
       {
@@ -674,8 +675,8 @@ export const services = [
     group: "water",
     summary: "pH, EC, turbidity and nutrient monitoring for wastewater, process water and the environment, from one sensor to a whole network.",
     intro: [
-      "EDS has provided both flow and quality monitoring to the wastewater industry since its founding, and quality monitoring remains a major part of what we do. Whatever the requirement, from single point EC monitoring to a network program delivering real-time data from thousands of field instruments, we supply, install and look after the equipment.",
-      "EDS manufactures its own pH, EC and turbidity sensors and the iLab multi-parameter range, and represents Aquamonitrix for real-time nitrate and nitrite measurement. Readings can go straight to your SCADA or telemetry system.",
+      "EDS has measured water quality for the wastewater industry since the company began, and it's still a big part of what we do. Whether you need one EC point or a network of thousands of instruments reporting in real time, we supply, install and look after the equipment.",
+      "We make our own pH, EC and turbidity sensors and the iLab multi-parameter range, and we represent Aquamonitrix for real-time nitrate and nitrite. Readings go straight to FlowSense, or to your own SCADA or telemetry system.",
     ],
     blocks: [
       {
@@ -720,7 +721,7 @@ export const services = [
     group: "water",
     summary: "Automatic water and wastewater samplers to buy or hire, including the only true intrinsically safe sampler in Australia.",
     intro: [
-      "EDS offers the largest range of automated water and wastewater samplers, and supplies the only true intrinsically safe sampler in Australia. We sell the widest range of sampler configurations in the country and keep a select rental fleet for short to long term projects.",
+      "If you need to sample water or wastewater, EDS has the widest range of automatic samplers in Australia, including the only true intrinsically safe sampler in the country. Buy the configuration that suits the job, or hire from our select rental fleet for a short study or a long program.",
       "The range covers mobile and stationary samplers from ORI, the world's leading manufacturer of ATEX and IECEx certified sampling systems, and MicroLevel's portable, fixed and refrigerated composite samplers.",
     ],
     blocks: [
@@ -767,21 +768,21 @@ export const services = [
     icon: "factory",
     group: "water",
     featured: true,
-    summary: "Compliance monitoring, real-time data and reporting for industrial discharge.",
+    summary: "Flow, sampling, quality and reporting for industrial discharge, from one team, so staying compliant is simple.",
     intro: [
-      "EDS provides comprehensive trade waste monitoring to help businesses stay compliant and efficient. We work with some of Australia's largest companies, helping them manage their trade waste efficiently and sustainably.",
-      "A trade waste program usually brings flow, sampling and quality together. EDS supplies, installs and services all three, so one team answers for the whole site.",
+      "Trade waste monitoring keeps your business compliant and your discharge under control. EDS works with some of Australia's largest companies to measure, sample and report on what leaves their sites, efficiently and sustainably.",
+      "A trade waste program usually brings flow, sampling and quality together. EDS supplies, installs and services all three, so you deal with one team for the whole site instead of three suppliers.",
       "For utilities, network flow data also shows trade waste where it should not be. In one Queensland catchment, persistent overnight flow with no rain to explain it led to the discovery of a trade waste connection incorrectly tied into the sewer.",
     ],
     blocks: [
       {
         heading: "Trade waste services",
         items: [
-          ["Compliance monitoring", "Accurate, reliable monitoring systems that keep you within local and national regulations."],
-          ["Real-time data collection", "Continuous monitoring of trade waste parameters, allowing timely intervention."],
-          ["Customised solutions", "Systems tailored to your operations and waste streams."],
-          ["Reporting and analysis", "Comprehensive reporting to help you understand and manage your trade waste."],
-          ["Maintenance and support", "Ongoing servicing so your monitoring is always working."],
+          ["Compliance monitoring", "Accurate, reliable monitoring that keeps you within local and national regulations."],
+          ["Real-time data", "Continuous readings, so you can step in before a problem becomes a breach."],
+          ["Built around your site", "Systems matched to your operations and your waste streams."],
+          ["Reporting and analysis", "Clear reports that help you understand and manage what you discharge."],
+          ["Kept working", "Ongoing servicing, so your monitoring is working every day, not just on the day it's checked."],
         ],
       },
       {
@@ -796,10 +797,10 @@ export const services = [
       {
         heading: "Why EDS",
         items: [
-          ["Decades of experience", "Knowledge gained over decades in the industry."],
-          ["Exceptional customer service", "A team dedicated to supporting you."],
-          ["Cutting-edge technology", "Precise and reliable monitoring solutions."],
-          ["Tailored solutions", "Designed around the needs of your business."],
+          ["Decades in the industry", "We've been measuring water and wastewater since 1991, and it shows in the advice you get."],
+          ["Real support", "A team dedicated to supporting you, on the phone and on site."],
+          ["Instruments that suit the job", "Precise, reliable instruments from EDS and the manufacturers we represent."],
+          ["Designed around you", "No two sites discharge the same thing, so no two programs are the same."],
         ],
       },
     ],
@@ -816,9 +817,9 @@ export const services = [
     group: "water",
     summary: "Magnetic, ultrasonic and contacting technologies to measure and totalise flow in full pipes.",
     intro: [
-      "In closed channel flow monitoring there are several products and technologies that can be used to measure flow.",
-      "The options include magnetic and ultrasonic flow meters, pressure transmitters and contacting technologies such as capacitance, TDR (time domain reflectometry) and paddle wheel, to measure and totalise the flow. Each technology has its pluses and minuses.",
-      "EDS staff would welcome the opportunity to discuss the options and services available.",
+      "Measuring flow in a full pipe comes down to choosing the right technology for the liquid, the pipe and the job. There are several to choose from, and each has its strengths.",
+      "The options include magnetic and ultrasonic flow meters, pressure transmitters and contacting technologies such as capacitance, TDR (time domain reflectometry) and paddle wheel, to measure and totalise the flow.",
+      "EDS has supplied, installed and calibrated all of them. We'd be glad to talk through which one suits your application.",
     ],
     blocks: [
       {
@@ -904,26 +905,26 @@ export const services = [
     icon: "radio-tower",
     group: "data",
     featured: true,
-    summary: "Rugged wireless monitoring equipment that integrates with the SCADA systems you already run.",
+    summary: "Rugged 4G monitoring that reports to one map and to the SCADA you already run, with alarms that reach people.",
     intro: [
-      "EDS offers an extensive selection of rugged, wireless monitoring equipment designed for the most demanding and critical applications. Our devices are engineered for resilience and accuracy, performing reliably in any condition.",
-      "We are not just about providing equipment. We combine the latest monitoring technology with a high level of customer service, so you have the support and expertise to succeed.",
+      "When a level rises or a logger goes quiet, you want to know now, not next week. EDS supplies rugged wireless monitoring equipment built for the most demanding and critical sites, reporting over 4G to one map and to the SCADA you already run.",
+      "And we don't just ship the boxes. We install, commission and support the equipment, so the data keeps arriving for the life of the program.",
     ],
     blocks: [
       {
         heading: "Key features",
         items: [
-          ["Durable design", "Built to withstand harsh environments and challenging conditions."],
-          ["Wireless connectivity", "Integrates with wireless networks for flexible deployment."],
-          ["Versatile compatibility", "Works with leading SCADA architectures including ClearSCADA, Schneider CITECT, ELPRO and many more."],
+          ["Built tough", "Made for harsh environments and challenging conditions, including a surcharged manhole."],
+          ["Wireless from the start", "4G telemetry built in, so a site can go wherever the mobile network reaches."],
+          ["Fits your SCADA", "Works with ClearSCADA, Schneider CITECT, ELPRO and many more."],
         ],
       },
       {
-        heading: "Our promise",
+        heading: "What you can count on",
         items: [
-          ["Latest technology", "Stay ahead with the most advanced monitoring tools."],
-          ["Exceptional support", "A commitment to outstanding customer service."],
-          ["Reliability", "The highest industry data uptime rate for continuous, dependable monitoring."],
+          ["Current technology", "The latest monitoring tools, from EDS and the manufacturers we represent."],
+          ["Support from the people who install it", "Our crews put this equipment in, so the advice you get comes from the field."],
+          ["Data that keeps arriving", "The highest data uptime in the industry, for continuous, dependable monitoring."],
         ],
       },
       {
@@ -1112,17 +1113,17 @@ export const services = [
     icon: "network",
     group: "data",
     featured: true,
-    summary: "In-depth network analysis and reporting on the performance and condition of water and wastewater networks.",
+    summary: "A clear picture of how your water or wastewater network is performing, where it is struggling, and what to fix first.",
     intro: [
-      "EDS has in-depth knowledge and a long history of working with Australia's largest networks in the water and wastewater industry. We offer full network analysis and reports that show overall performance and operating condition.",
-      "EDS has developed numerous collection system models to assist councils and governments in evaluating their sewer systems, troubleshooting existing problems, proposing improvements and developing a prioritised list of improvements with their associated costs.",
+      "EDS has worked with some of Australia's largest water and wastewater networks for more than thirty years, so we know what a healthy network looks like in the data, and what a struggling one looks like. A network assessment turns your monitoring into a clear picture of performance and condition, and a list of what to do about it.",
+      "We've built collection system models for councils and governments across the country, to evaluate their sewers, troubleshoot problems, propose improvements and rank them with their costs.",
     ],
     blocks: [
       {
-        heading: "Related activities",
+        heading: "Alongside an assessment",
         list: [
           "Model development",
-          "Flow monitoring for model calibration and I/I assessment",
+          "Flow monitoring for model calibration and I&I assessment",
           "Development of a program for system improvement",
           "Training your staff in modelling and monitoring practices",
           "Real-time data evaluation as events happen, with instantaneous alarms",
@@ -1160,10 +1161,10 @@ export const services = [
     icon: "clipboard-check",
     group: "field",
     featured: true,
-    summary: "In situ audits and calibration of your monitoring equipment by experienced service technicians.",
+    summary: "Audits and calibration of your monitoring equipment where it is installed, by experienced EDS technicians, so your data holds up.",
     intro: [
-      "EDS's experienced team of service and network technicians offers in situ audit and calibration of your monitoring equipment. This includes closed channel, open channel, quantity and analytical equipment.",
-      "EDS has a vast knowledge base in the operation of the many monitoring technologies available.",
+      "An instrument that has drifted costs you twice: once in readings you can't trust, and again in the decisions made on them. EDS service technicians audit and calibrate monitoring equipment where it's installed, across closed channel, open channel, quantity and analytical instruments.",
+      "We've worked with most of the monitoring technologies available, so we know how each one drifts and how to put it right.",
       "Calibration is what keeps a long record trustworthy. EDS has calibrated long term sewer flow gauges across multiple Yarra Valley Water sites, so the data stays reliable for hydraulic modelling and infrastructure planning.",
     ],
     blocks: [
@@ -1206,9 +1207,9 @@ export const services = [
     group: "field",
     summary: "Long and short term hire of monitoring and analytical equipment built for the harshest applications.",
     intro: [
-      "EDS offers an extensive range of monitoring and analytical equipment as part of our hire fleet. Our equipment is designed for the harshest and most demanding applications.",
-      "EDS is one of the leading suppliers of rugged scientific and quantitative products across a wide range of applications, and we back the fleet with expert advice.",
-      "We are renowned for tackling difficult applications and can offer bespoke packages, from off-the-shelf systems to national and international projects.",
+      "Not every program needs you to own the instruments. The EDS hire fleet covers flow meters, loggers, samplers and analytical equipment, all built for the harshest and most demanding applications, for a short study or a long program.",
+      "EDS is one of the leading suppliers of rugged scientific and measurement equipment across a wide range of applications, and we back the fleet with advice from people who use it in the field.",
+      "Difficult sites are our specialty. Ask us for an off-the-shelf system or a bespoke package, for one site or for national and international projects.",
     ],
     blocks: [
       {
@@ -1247,18 +1248,18 @@ export const services = [
     title: "Facility Management",
     icon: "building-2",
     group: "field",
-    summary: "Integrated, technology-driven facility management for major corporate and government organisations.",
+    summary: "Facility management with the monitoring built in, for major corporate and government organisations including Defence.",
     intro: [
-      "With more than 30 years of experience, EDS is a trusted leader in facility management solutions for major corporate and government organisations across Australia.",
-      "Facility management is more than maintenance. It is about optimising the performance, safety and sustainability of your assets. Our team works closely with each client to provide tailored solutions that maximise operational efficiency and minimise downtime, while ensuring compliance with the latest regulations and industry standards.",
-      "We combine in-depth knowledge of complex facilities with advanced monitoring systems, integrated data management platforms and real-time reporting tools. At EDS each solution is custom built, because no two facilities are the same. We consider your environment, budget, level of risk, compliance and legislative requirements.",
+      "For more than 30 years, major corporate and government organisations across Australia have trusted EDS to look after their facilities, among them Defence and Transurban.",
+      "Facility management is more than maintenance. It's keeping your assets performing, safe and sustainable, with as little downtime as possible and every regulation and industry standard met. We work closely with each client to get there.",
+      "Because we're a monitoring company, our facility management comes with the monitoring built in: sensors, data platforms and real-time reporting, alongside deep experience of complex facilities. Every solution is custom built around your environment, budget, risk, compliance and legislative requirements, because no two facilities are the same.",
     ],
     blocks: [
       {
         heading: "Our facility management services",
         items: [
-          ["Comprehensive asset management", "Proactive maintenance, lifecycle planning and asset optimisation strategies."],
-          ["24/7 support and monitoring", "Continuous system oversight and rapid response to issues, minimising operational disruption."],
+          ["Asset management", "Proactive maintenance, lifecycle planning and strategies to get the most from every asset."],
+          ["24/7 support and monitoring", "Continuous oversight and a rapid response when something goes wrong, so disruption stays small."],
           ["Sustainability and compliance", "Solutions focused on energy efficiency, environmental responsibility and regulatory compliance."],
           ["Custom integration", "New technologies and processes integrated into your existing facility infrastructure, including your BMS."],
         ],
@@ -1322,10 +1323,10 @@ export const solutions = [
     icon: "landmark",
     summary: "24/7 condition scoring of critical structures with the EDS Asset Score (EAS).",
     intro: [
-      "EDS has worked with Australia's largest industries to deliver detailed and critical asset condition reports. No one knows better than our clients how quickly asset conditions can change. EDS offers a complete product and service solution to deliver real-time condition reporting.",
-      "The patent pending EDS Asset Score (EAS) provides a 24/7 status score of infrastructure condition and change, so our clients are notified as soon as possible of any adverse or subtle change to asset integrity. The EAS is represented as a score from 0 to 1000 and uses EDS algorithms to plot and record asset condition.",
+      "A structure can change condition faster than an annual inspection will catch. EDS has worked with Australia's largest industries to deliver detailed condition reports on critical assets, and offers a complete product and service solution for reporting that condition in real time.",
+      "At its heart is the patent pending EDS Asset Score (EAS): one number from 0 to 1000, recorded around the clock, that tells you how a structure is doing and whether it's changing. When something shifts, subtly or suddenly, the people responsible hear about it as soon as possible.",
       "Every client's solution is different, from buildings to hydraulic assessments. For one government asset, EDS installed a combination of light, moisture, seismic and temperature sensors across critical structure points, providing 24/7 monitoring and asset evaluation.",
-      "Historical EAS can also be plotted to alarm on a predetermined trigger. For example, if any monitored parameter changes by more than 5% in 60 minutes, on-site managers and key stakeholders are alerted.",
+      "The score's history can also raise alarms on a trigger you set. If any monitored parameter moves more than 5% in 60 minutes, say, on-site managers and key stakeholders are alerted.",
     ],
     blocks: [
       {
@@ -1356,8 +1357,8 @@ export const solutions = [
     icon: "scan-search",
     summary: "Regular, consistent assessments that keep networks and assets operating at peak performance.",
     intro: [
-      "Network condition and deterioration can vary in severity, but it almost always affects the overall serviceability of the asset, increasing staff and maintenance costs.",
-      "By carrying out regular, consistent network assessments and reports, EDS can help ensure your network and assets are operating at peak performance.",
+      "A deteriorating network rarely fails all at once. It costs more to run first, in staff time and maintenance, long before anything fails outright.",
+      "Regular, consistent assessments from EDS catch that slide early and keep your network and assets performing at their best.",
       "Accurate flow data reveals far more than inflow. In one regional council, a sudden shift in the depth to velocity relationship revealed a partial obstruction in a rising main, and a targeted CCTV inspection confirmed the debris.",
     ],
     blocks: [
@@ -1389,8 +1390,8 @@ export const solutions = [
     icon: "thermometer",
     summary: "Short to long term temperature studies that pinpoint ingress sources in reticulated networks.",
     intro: [
-      "EDS offers the products and services to deliver short to long term temperature studies that measure temperature fluctuations in reticulated networks. This is not limited to water or wastewater networks, and applies to most atmospheric or pressurised networks.",
-      "Using temperature to determine network conditions is a growing practice. It delivers accurate, low cost reports on network conditions and allows specific ingress sources to be pinpointed.",
+      "Water getting into a pipe is usually a different temperature from what's already in it. EDS runs short to long term temperature studies in reticulated networks that use that difference to find exactly where the water gets in. The method works in water and wastewater networks, and in most atmospheric or pressurised networks besides.",
+      "Temperature is a growing practice in network assessment because it is accurate, low cost, and pinpoints specific ingress sources.",
     ],
     blocks: [
       {
@@ -1420,9 +1421,9 @@ export const solutions = [
     icon: "droplets",
     summary: "Flow and quality monitoring, from a single EC point to thousands of deployed field instruments.",
     intro: [
-      "EDS has decades of experience providing both flow and quality monitoring for the wastewater industry. This was the founding focus of EDS and remains a major part of our services to this day.",
-      "EDS is Australia's largest service contractor for water and wastewater monitoring studies, both short and long term.",
-      "We can provide the widest range of equipment suited to the most demanding applications, whatever the requirement: from single point EC monitoring to a detailed network monitoring program delivering real-time data from thousands of deployed field instruments.",
+      "Flow and quality monitoring for the wastewater industry is where EDS began, and decades later it's still the heart of what we do.",
+      "Today EDS is Australia's largest service contractor for water and wastewater monitoring studies, short and long term.",
+      "Whatever you need to measure, we have the equipment and the people for it: from a single EC point to a network program with thousands of instruments reporting in real time, in the most demanding conditions.",
     ],
     blocks: [
       {
@@ -1457,8 +1458,8 @@ export const solutions = [
     icon: "flask-conical",
     summary: "Australia's widest range of automated water and wastewater samplers, for sale or hire.",
     intro: [
-      "EDS offers the largest range of automated water and wastewater samplers. The only true intrinsically safe sampler in Australia is supplied by EDS.",
-      "We offer the widest range of sampler configurations in Australia for purchase, and a select rental fleet for short to long term projects.",
+      "EDS has the largest range of automatic water and wastewater samplers in Australia, and supplies the only true intrinsically safe sampler in the country.",
+      "Buy from the widest range of sampler configurations in Australia, or hire from our select rental fleet for a short study or a long program.",
     ],
     blocks: [
       {
@@ -1494,9 +1495,9 @@ export const solutions = [
     icon: "trees",
     summary: "Environmental data you can trust, at every stage of project development.",
     intro: [
-      "EDS works closely with clients to deliver environmental monitoring solutions tailored to each project's requirements. Decades of direct market experience mean EDS can deliver the most suitable solutions for the most demanding needs.",
-      "Environmental data that makes sense, and is accurate and reliable, is essential to understanding your biophysical environment and the interactions you are having with it.",
-      "Trustworthy data matters at every stage of project development: to guide design, provide a baseline, allow prediction and assessment of impacts, validate mitigation and management procedures, or demonstrate compliance.",
+      "Every environmental project has its own questions to answer. EDS works closely with you to design monitoring around them, drawing on decades of experience with the most demanding sites.",
+      "Accurate, reliable data that makes sense is how you understand the environment you work in, and the effect you're having on it.",
+      "And it matters at every stage of a project: to guide the design, set the baseline, predict and assess impacts, check that mitigation is working, and demonstrate compliance.",
     ],
     blocks: [
       {
@@ -1542,8 +1543,8 @@ export const brands = [
     summary: "Data loggers, sensors and the Pump Station Manager, manufactured by EDS.",
     cover: img("e-flow-3.png"),
     intro: [
-      "Environmental Data Services is a manufacturer, and represents leading manufacturers, in water supply and management, wastewater management, flow monitoring equipment and process control equipment.",
-      "EDS manufactures the popular EMS \"D\" Series data loggers and the Pump Station Manager, and contractually manufactures and supplies data loggers to the Australian Bureau of Meteorology.",
+      "EDS designs and builds its own instruments, and represents leading manufacturers, across water supply, wastewater, flow monitoring and process control. When you buy an EDS instrument, the people who designed it are the people who support it.",
+      "We make the popular EMS \"D\" Series data loggers, the Pump Station Manager that launched the company in 1991, the 4G Hawk and Metalog loggers and the E-Flow 3 sewer flowmeter, and we manufacture and supply data loggers to the Australian Bureau of Meteorology under contract.",
     ],
     groups: [
       {
@@ -1586,6 +1587,7 @@ export const brands = [
       "Detectronic is a specialist in sewer and wastewater network monitoring and management, focused on measuring, recording, reporting and reacting to wastewater depths and flow rates.",
       "Detectronic designs and manufactures a comprehensive range of advanced ultrasonic flow, level and water quality monitoring instruments, engineered for the accurate monitoring of sewerage networks, wastewater systems and trade effluent.",
       "Its flow meters support early flood detection, inflow and infiltration assessment, combined sewer overflow (CSO) monitoring and the development of intelligent sewer networks, across both short-term investigations and long-term continuous monitoring programs.",
+      "EDS supplies and installs Detectronic instruments across Australia and runs them in our own monitoring fleet, so the advice you get comes from people who install them.",
     ],
     blocks: [
       {
@@ -1625,8 +1627,8 @@ export const brands = [
     summary: "Rugged mobile and stationary samplers from the world's leading maker of certified sampling systems.",
     logo: img("ori-logo.png"),
     intro: [
-      "EDS is proud to offer the trusted ORI product range across Australia, in an established partnership that continues to deliver exceptional results in the field. Together, EDS and ORI provide some of the most rugged, reliable and high-performance equipment available.",
-      "For over 60 years, ORI has been a global leader in manufacturing sampling, measuring and laboratory equipment. A 100% family-owned company, ORI is recognised as the world's leading manufacturer of ATEX and IECEx certified sampling systems.",
+      "EDS is proud to bring the ORI range to Australia. It's a long partnership, and together we put some of the most rugged, reliable and high performance sampling equipment available into the field.",
+      "ORI has been a global leader in sampling, measuring and laboratory equipment for over 60 years. Still 100% family owned, it is recognised as the world's leading manufacturer of ATEX and IECEx certified sampling systems.",
       "ORI samplers come with one of two controls: BASIC, for simple programs, or NeMo, which adds logging, telemetry and control.",
     ],
     blocks: [
@@ -1674,8 +1676,8 @@ export const brands = [
     tag: "Open channel flow measurement",
     summary: "Loggers and sensors from Hach, including the Sigma and Marsh-McBirney legacy lines.",
     intro: [
-      "Hach Flow, including its legacy brands Sigma and Marsh-McBirney, has a proven track record of industry-leading innovation and product accuracy in open channel flow measurement.",
-      "With true and timely flow data, you reduce risk and make critical wastewater flow decisions with confidence, managing your flow proactively rather than reacting to problems.",
+      "Hach Flow, with its legacy brands Sigma and Marsh-McBirney, has a long record of innovation and accuracy in open channel flow measurement. EDS has supplied the range since the Marsh-McBirney days in the 1990s.",
+      "True, timely flow data lets you manage wastewater flow before it becomes a problem, and make the critical decisions with confidence rather than reacting afterwards.",
       "Hach meters are the link between collecting superior flow data and conveying it to you conveniently and reliably, with options for stationary, portable, permanent or temporary use. The sensor range runs from non-contact sensors that stay above the flow to limit fouling, to rugged submerged AV sensors.",
     ],
     blocks: [
@@ -1726,8 +1728,8 @@ export const brands = [
     summary: "Temperature loggers, thermistor strings and cloud data, proven in the extremes of Alaska.",
     logo: img("logo-dark.png"),
     intro: [
-      "EDS is proud to represent Beadedstream, a leader in temperature data logging and monitoring. The partnership lets us offer loggers, sensors and data monitoring systems designed to measure air, soil and water temperatures in the most challenging environments.",
-      "Beadedstream's products are renowned for their reliability, having been tested and proven in the extreme conditions of Alaska. They provide accurate, dependable temperature data for scientific research, industrial process monitoring and remote locations.",
+      "EDS represents Beadedstream, a leader in temperature data logging. Its loggers, sensors and data systems measure air, soil and water temperature in the most challenging environments.",
+      "Beadedstream equipment has a reputation for reliability that was earned in the extreme conditions of Alaska. It delivers accurate, dependable temperature data for scientific research, industrial process monitoring and remote sites.",
       "In sewers, EDS lays Beadedstream temperature cables alongside open channel flow meters to locate where groundwater is getting in.",
     ],
     blocks: [
@@ -1766,7 +1768,7 @@ export const brands = [
     intro: [
       "The MicroLevel MICROSAMPLER range takes composite samples from wastewater, factory drains and manholes, water channels and any liquid that needs to be examined.",
       "The range covers three configurations: the portable 10P, the fixed 10B for industrial wastewater, manholes, streams and channels, and the stationary, refrigerated 10R for samples that must be kept cool until collection.",
-      "EDS supplies MicroLevel samplers alongside the ORI range, and can advise on the configuration that suits the site and the sampling program.",
+      "EDS supplies MicroLevel samplers alongside the ORI range, and we're happy to advise on the configuration that suits your site and your sampling program.",
     ],
     groups: [
       {
@@ -1788,8 +1790,8 @@ export const brands = [
     tag: "Nitrate and nitrite analyser",
     summary: "Real-time nitrate and nitrite measurement with laboratory accuracy in the field.",
     intro: [
-      "Aquamonitrix is a revolutionary analyser for measuring nitrate and nitrite in raw, process and effluent water. It delivers real-time measurement with laboratory accuracy in the field, and transmits data instantly to your SCADA or telemetry system and to the dedicated Datamonitrix data management platform.",
-      "It delivers lab-quality accuracy and precision over a broad analytic range, with extremely stable calibration and minimal need for intervention over long deployments. The analyser can be up and running within a couple of hours and is easy to operate and service, contributing to low operating and lifetime costs.",
+      "Aquamonitrix brings laboratory accuracy for nitrate and nitrite out into the field. It measures raw, process and effluent water in real time, and sends the results straight to your SCADA or telemetry system and to its own Datamonitrix data platform.",
+      "It holds lab quality accuracy and precision over a broad range, with calibration that stays stable over long deployments and little need for intervention. It can be up and running within a couple of hours, and it's easy to operate and service, which keeps operating and lifetime costs low.",
       "Aquamonitrix measures nitrate and nitrite from the same sample. It is portable, and the inbuilt sample system is robust enough to handle wastewater without sample pre-treatment or costly add-on sampling equipment.",
     ],
     blocks: [
@@ -1824,6 +1826,7 @@ export const brands = [
     intro: [
       "Dynaflox (formerly Dynameters) was established in 1998 and is a leading manufacturer of ultrasonic water meters and flow meters for wide ranging applications.",
       "All Dynaflox products meet world standards of quality and performance, including ISO and AWWA standards. Its system is certified to ISO 9001:2008 and ISO 14001, and its products hold the CE mark. Every system is individually tested and inspected.",
+      "EDS supplies, installs and calibrates Dynaflox meters for full pipe flow, from plant inlets to trade waste discharge.",
     ],
     groups: [
       {
@@ -2280,13 +2283,13 @@ export const flowsense = {
 /* ------------------------------------------------------------------ */
 export const about = {
   intro: [
-    "Environmental Data Services (EDS) is an Australian owned and operated company that has been a market leader in providing equipment and services to the water and wastewater industry since 1991.",
-    "EDS delivers cutting-edge equipment and specialised services to the water and wastewater industry, as well as the mining, manufacturing, power and processing sectors. Our team comprises scientists, engineers and technicians who excel in all facets of environmental monitoring and project delivery.",
-    "Our purpose is straightforward: to empower you with the freedom to take control of your assets and projects. We are driven by a pursuit of discovery and innovation, developing technologies and delivering services that open the door to a world of possibilities.",
+    "Environmental Data Services (EDS) is an Australian owned and operated company, founded in Queensland in 1991 by Graham and Cynthia Harper. We've been a market leader in equipment and services for the water and wastewater industry ever since.",
+    "We supply instruments and specialised services to the water and wastewater industry, and to mining, manufacturing, power and processing. Our team is scientists, engineers and technicians who are good at every part of environmental monitoring, from the manhole to the final report.",
+    "Our purpose is simple: to give you the data and the confidence to take control of your assets and projects. We like finding things out, and we build the technology and the services that make it possible.",
   ],
   mission: [
-    "EDS is committed to delivering the highest level of equipment and services, with a core focus on achieving successful client outcomes. The company's mission is rooted in innovation, sustainability and a relentless pursuit of discovery and technological advancement.",
-    "EDS empowers businesses and organisations with state-of-the-art tools and insights for making informed environmental decisions, contributing to a more sustainable future.",
+    "We're committed to the best equipment and service we can deliver, judged by one thing: whether it got you the outcome you needed. Innovation, sustainability and a genuine curiosity about how networks behave are what drive us.",
+    "We give businesses and organisations the tools and the insight to make informed environmental decisions, and a more sustainable future comes with them.",
   ],
   timeline: [
     ["Early 1970s", "Elite Electronics", "Graham Harper begins building businesses in electronics."],
@@ -2308,10 +2311,10 @@ export const about = {
   ],
   approach: {
     heading: "Instruments, crews and data, from one team.",
-    lede: "EDS makes instruments, represents leading manufacturers, installs and maintains them with its own crews, and delivers the data. One team answers for the whole chain.",
+    lede: "EDS makes instruments, represents leading manufacturers, installs and maintains them with our own crews, and delivers the data. One team answers for the whole chain, so there's never anyone else to call.",
     items: [
       ["cpu", "Manufacturer and representative", "EDS designs and builds its own loggers and sensors, and represents leading manufacturers including Detectronic, ORI, Hach and Beadedstream."],
-      ["hard-hat", "Our own field crews", "Installation engineers trained in installation, maintenance and calibration, working from four offices across Australia."],
+      ["hard-hat", "Our own field crews", "Installation engineers trained in installation, maintenance and calibration, working from four offices and travelling Australia wide."],
       ["shield-check", "Certified for hazardous areas", "Intrinsically safe equipment certified under ATEX and IECEx, including Zone 0 instruments for sewer environments."],
       ["badge-check", "Data you can defend", "ISO compliant data validation, with continuous QA/QC and calibration checks throughout every program."],
       ["waves", "One platform", "Readings arrive in EDS FlowSense, built and supported in Australia, or go straight to your own SCADA and systems."],
@@ -2324,7 +2327,7 @@ export const about = {
   homePhoto: { photo: "site-crew-manhole", alt: "A sewer manhole in a park with a safety barrier set up beside it and the EDS van parked nearby", caption: "On site: a manhole opened for an instrument check." },
   field: {
     heading: "The work, as it is.",
-    lede: "Sewers, chambers, cabinets and poles: the sites EDS crews instrument, visit and keep reporting.",
+    lede: "Sewers, chambers, cabinets and poles: the sites our crews instrument, visit and keep reporting.",
     photos: [
       { photo: "sewer-av-meter", alt: "An area velocity flow meter on a mounting band at the invert of a sewer, seen from the manhole above, with wastewater flowing over it", caption: "An area velocity flow meter in the channel of a sewer." },
       { photo: "site-crew-manhole", alt: "A sewer manhole in a park with a safety barrier set up beside it and the EDS van parked nearby", caption: "A site visit." },
@@ -2343,7 +2346,7 @@ export const about = {
 // pages. `topic` and `mode` pre-fill the enquiry form (see contactHref()).
 export const ways = {
   heading: "Buy it, hire it, or let EDS run it.",
-  lede: "However your program is funded, the same instruments, crews and data platform sit behind it.",
+  lede: "However your program is funded, the same instruments, crews and data platform sit behind it. Pick the way that suits your budget and your timeline.",
   items: [
     {
       mode: "buy", icon: "package", title: "Buy", line: "Own the instruments",
@@ -2453,7 +2456,7 @@ export const papers = [
     id: "unforeseen-benefits",
     title: "The Unforeseen Benefits of Sewer Inflow & Infiltration Monitoring",
     date: "October 2025",
-    text: "How modern sewer flow monitoring programs deliver far more than I/I insights. Drawing on real projects across Australia, it shows accurate flow data helping utilities detect blockages, verify maintenance, identify cross connections, optimise pump operations and target investment.",
+    text: "How modern sewer flow monitoring programs deliver far more than I&I insights. Drawing on real projects across Australia, it shows accurate flow data helping utilities detect blockages, verify maintenance, identify cross connections, optimise pump operations and target investment.",
     href: localDoc("eds-white-paper-unforeseen-benefits-of-ii-monitoring.pdf"),
   },
   {
