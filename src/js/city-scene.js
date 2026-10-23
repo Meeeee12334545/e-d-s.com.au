@@ -155,16 +155,16 @@
     return [shapes("eave", eave), shapes("hwin", dark), shapes("hwin hwin-lit", lit), strokes("sill", sills), strokes("tiles", tiles), strokes("ridge", ridge)];
   }
   // An open transit canopy on its platform (z 1): a glass wall at the back,
-  // posts front and back, benches, people waiting, a lit roof on top. It is
+  // posts front and back, benches, people waiting, a white roof on top. It is
   // street furniture, so it stays at street level when the district comes apart.
   const canopy = (x, y, w, d) => {
     const xs = [x + 0.05, x + w / 2, x + w - 0.05], post = (px, py) => seg("det", P(px, py, 1), P(px, py, 9));
     return [
-      item(x + y + 0.1, xs.map((px) => post(px, y + 0.04)), poly("glass", [P(x + 0.05, y + 0.04, 1), P(x + w - 0.05, y + 0.04, 1), P(x + w - 0.05, y + 0.04, 8.4), P(x + 0.05, y + 0.04, 8.4)])),
+      item(x + y + 0.1, xs.map((px) => post(px, y + 0.04)), poly("pane", [P(x + 0.05, y + 0.04, 1), P(x + w - 0.05, y + 0.04, 1), P(x + w - 0.05, y + 0.04, 8.4), P(x + 0.05, y + 0.04, 8.4)])),
       use("bench", x + 0.3, y + 0.12, 1, { cls: "fine", d: x + y + 0.5 }), use("bench", x + w - 0.5, y + 0.12, 1, { cls: "fine", d: x + w + y - 0.2 }),
       who(x + 0.55, y + 0.3, "#e7fff9", { z: 1 }), who(x + 0.68, y + 0.34, "#f2c14e", { z: 1 }), who(x + w - 0.3, y + 0.28, "#38bdf8", { z: 1 }),
       item(x + w + y + d - 0.01, xs.map((px) => post(px, y + d - 0.04))),
-      box(x, y, w, d, 2.4, { z: 9, top: "lit", cls: "white" }),
+      box(x, y, w, d, 2.4, { z: 9, cls: "white" }),
     ].map(lo);
   };
   // a flat roof in sheeting: ribs running across it, painted with the block
@@ -1037,9 +1037,9 @@
       ...many("lamp", [[6.78, 4.3], [8.13, 0.55]]),
     ],
     cbd: () => [
-      box(13.35, 1.55, 0.45, 0.5, 34, { win: "b" }), box(10.5, 1.85, 0.3, 0.4, 20, { win: "a" }),
+      box(13.35, 1.55, 0.45, 0.5, 34, { win: "b", cls: "glass" }), box(10.5, 1.85, 0.3, 0.4, 20, { win: "a", cls: "glass" }),
       ...many("antenna", [[11.3, 0.9, 86], [12.95, 0.6, 138], [14.3, 2.9, 54]], { cls: "fine" }),
-      cyl(13.0, 2.95, 0.1, 5, { z: 72 }), cyl(14.3, 1.0, 0.09, 5, { z: 64 }),
+      cyl(13.0, 2.95, 0.1, 5, { z: 72, cls: "steel" }), cyl(14.3, 1.0, 0.09, 5, { z: 64, cls: "steel" }),
       ...many("car-e", [[11.4, 4.45], [13.6, 4.45], [14.2, 4.45]]), ...many("car-s", [[14.8, 1.5], [14.8, 3.0]]),
       ...many("bollard", [[10.95, 3.72], [11.2, 3.72], [11.45, 3.72], [11.7, 3.72], [11.95, 3.72]], { cls: "fine" }),
       ...many("bin", [[11.0, 4.45], [12.4, 3.75], [13.2, 4.5]], { cls: "fine" }), ...many("sign", [[10.6, 2.3], [12.3, 1.4], [14.65, 3.4]], { cls: "fine" }),
@@ -1605,11 +1605,15 @@
         zones[id] = g; zoneFx[id] = gf; slots[id] = order;
         // the shadow the lifted district casts, and its label floating above
         shadows[id] = el("ellipse", { class: "shadow", cx: f(cx), cy: f(cy + 10), rx: f((x1 - x0 + y1 - y0) * TW / 4 * 0.98), ry: f((x1 - x0 + y1 - y0) * TH / 4 * 0.98) }, shadowLayer);
-        const a = P((x0 + x1) / 2, (y0 + y1) / 2, z.h + (id === "cbd" ? 22 : 18));
+        // the label floats above the district's skyline. The CBD's floats
+        // higher: its tallest tower carries a mast light at z 163 and the
+        // asset-score pill sits over the tower beside it, and the district's
+        // lift (scaled 1.07, raised 14) carries both up further.
+        const top = z.h + (id === "cbd" ? 78 : 18), a = P((x0 + x1) / 2, (y0 + y1) / 2, top);
         anchors[id] = a;
         const text = zd.name, wpx = text.length * 6.1 + 22;
         // in the expanded view the labels of the other districts drop onto their own tiles
-        const lg = el("g", { class: "zlabel", "data-zone": id, style: `--drop:${f(z.h + 4)}px` }, labelLayer);
+        const lg = el("g", { class: "zlabel", "data-zone": id, style: `--drop:${f(top - 14)}px` }, labelLayer);
         el("line", { x1: f(a[0]), y1: f(a[1] + 9), x2: f(a[0]), y2: f(a[1] + 20) }, lg);
         el("rect", { x: f(a[0] - wpx / 2), y: f(a[1] - 11), width: f(wpx), height: 21, rx: 10.5 }, lg);
         el("text", { x: f(a[0]), y: f(a[1] + 3.5), "text-anchor": "middle" }, lg).textContent = text;
