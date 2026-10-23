@@ -2463,14 +2463,6 @@ export const flowsense = {
     clientsHeading: "Since 1991, EDS has measured water and wastewater for",
     clientsNote: "Logos are of organisations EDS has supplied, monitored or worked for since 1991. They are the trademarks of their owners and do not indicate use of FlowSense.",
   },
-  pricing: {
-    heading: "One subscription. Every capability. Priced by the site.",
-    lede: "Published, because a price you can only discover through a sales cycle is itself a cost. No editions, no modules and no per user fees. Everything on this page is in the one subscription, and the only number that moves is how many sites you monitor.",
-    rates: [["First 20 sites", "$30", "per site, per month"], ["Sites 21 and beyond", "$20", "per site, per month"]],
-    examples: { heading: "What that means for a real network", rows: [["Small shire", "5", "$1,800", "$30"], ["Regional council", "20", "$7,200", "$30"], ["Mid size council", "50", "$14,400", "$24"], ["Large regional network", "90", "$24,000", "$22"], ["Bulk utility", "300", "$74,400", "$21"]], cols: ["Sites", "Per year", "Per site, per month"] },
-    start: [["Free trial", "$0", "90 days of the whole platform, on your own uploaded flow history. No hardware required."], ["Assisted onboarding", "$2,500", "Once: GIS, sites, alarms, SCADA and training. Waived from 50 sites."], ["Guided calibration", "$7,500", "Optional, per catchment, done with EDS. The tools are included."]],
-    terms: "AUD excluding GST, billed annually on twelve month terms. Bands are cumulative, so growth never re-prices the sites you have. A site is a monitored location with at least one active channel, and archived sites cost nothing. Unlimited users. SMS is the only pass-through charge, at carrier cost. Rates hold for the term and may change at renewal on 60 days written notice. Either side may end the subscription at renewal on 30 days notice, and your data exports with you in full.",
-  },
   faq: [
     ["Who owns the data?", "You do. Data exports in open formats with no export fee, and if you cancel at renewal, your data exports with you in full."],
     ["Do we need to install anything?", "No. FlowSense runs in the browser on desktop, tablet and phone. Connecting your SCADA needs no agent, connector or gateway on your systems, and FlowSense has no control path into them."],

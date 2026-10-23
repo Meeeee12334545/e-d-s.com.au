@@ -1550,7 +1550,8 @@ ${ctaSection(r, { ...pg.cta, ...pricing })}`,
 // lede and four points beside the screen they describe, in the order the
 // platform's menu runs (Monitor, Analyse, Engineer, Deliver). The Pump
 // Station Manager is the one showpiece band, with its screen pinned. The
-// copy and the screens are `flowsense` in content.mjs.
+// copy and the screens are `flowsense` in content.mjs. The rate card stays in
+// the brochures, not on the page (EDS, 23 October 2026).
 const FS = C.flowsense;
 const FS_SIZES = {
   single: "(max-width: 980px) calc(100vw - 40px), 700px",
@@ -1583,7 +1584,7 @@ function fsStop(s, n) {
 // the walkthrough as its action.
 const fsBar = (r) => `
 <nav class="secbar" aria-label="On this page"><div class="wrap secbar-in">
-  <ol>${[["platform", "Platform"], ["monitor", "Monitor"], ["blockage-watch", "Blockage Watch"], ["psm", "Pump stations"], ["analyse", "Analyse"], ["engineer", "Engineer"], ["reports", "Reports"], ["connect", "Connect"], ["standards", "Standards"], ["pricing", "Pricing"], ["questions", "Questions"], ["documents", "Documents"]].map(([id, label]) => `<li><a href="#${id}">${label}</a></li>`).join("")}</ol>
+  <ol>${[["platform", "Platform"], ["monitor", "Monitor"], ["blockage-watch", "Blockage Watch"], ["psm", "Pump stations"], ["analyse", "Analyse"], ["engineer", "Engineer"], ["reports", "Reports"], ["connect", "Connect"], ["standards", "Standards"], ["questions", "Questions"], ["documents", "Documents"]].map(([id, label]) => `<li><a href="#${id}">${label}</a></li>`).join("")}</ol>
   <a class="btn btn-brand secbar-cta" href="${contactHref(r, { topic: "EDS FlowSense" })}">Request a walkthrough</a>
 </div></nav>`;
 // The wet well trace beside the Pump Station Manager: five hours of level
@@ -1688,23 +1689,11 @@ ${second.map(fsStop).join("")}
     <p class="note">${esc(FS.standards.clientsNote)}</p>
   </div>
 </div></section>
-<section class="section band alt" id="pricing"><div class="wrap">
-  <div class="band-head"><h2 class="h-lg" data-reveal>${esc(FS.pricing.heading)}</h2><p class="lede" data-reveal style="--i:1">${esc(FS.pricing.lede)}</p></div>
-  <div class="fs-price">
-    <div class="fs-rates">${FS.pricing.rates.map(([k, v, u], i) => `<div class="fs-rate${i ? " second" : ""}" data-reveal style="--i:${i}"><small>${esc(k)}</small><b>${esc(v)}</b><span>${esc(u)}</span></div>`).join("")}</div>
-    <div class="fs-examples" data-reveal style="--i:2">
-      <p>${esc(FS.pricing.examples.heading)}</p>
-      <table><thead><tr><th>Network</th>${FS.pricing.examples.cols.map((c) => `<th>${esc(c)}</th>`).join("")}</tr></thead><tbody>${FS.pricing.examples.rows.map((row) => `<tr>${row.map((c) => `<td>${esc(c)}</td>`).join("")}</tr>`).join("")}</tbody></table>
-    </div>
-  </div>
-  <ul class="fs-start">${FS.pricing.start.map(([k, v, d], n) => `<li data-reveal style="--i:${n}"><b>${esc(v)}</b><span><strong>${esc(k)}</strong>${esc(d)}</span></li>`).join("")}</ul>
-  <p class="note fs-terms" data-reveal>${esc(FS.pricing.terms)}</p>
-</div></section>
-<section class="section band" id="questions"><div class="wrap split rev">
+<section class="section band alt" id="questions"><div class="wrap split rev">
   <div class="section-head" style="margin:0"><h2 class="h-lg" data-reveal>What councils and utilities ask us.</h2><p class="lede" data-reveal style="--i:1">If your question is not here, our team will answer it on ${site.phone}.</p></div>
   <div data-reveal>${faqHtml(FS.faq)}</div>
 </div></section>
-<section class="section band alt" id="documents"><div class="wrap">
+<section class="section band" id="documents"><div class="wrap">
   <div class="section-head"><h2 class="h-lg" data-reveal>Read more about FlowSense.</h2></div>
   <ul class="doc-list grid c2">
     ${FS.docs.map((d, n) => `<li data-reveal style="--i:${n}"><a href="${d.href}" rel="noopener"><span class="card-icon">${icon("file-text")}</span><span>${esc(d.label)}<small>${esc(d.note)} ${docType(d.href)}.</small></span>${icon("download")}</a></li>`).join("")}

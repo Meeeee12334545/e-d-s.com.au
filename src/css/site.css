@@ -2752,50 +2752,22 @@ html:has(.secbar) .band[id] { scroll-margin-top: calc(16px - clamp(56px, 7vw, 96
 .fs-clients > p:first-child { margin-bottom: 20px; font-size: .95rem; font-weight: 500; color: var(--muted); }
 .fs-clients .logo-grid { padding-bottom: 10px; }
 
-/* The rate card. */
-.fs-price { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr); gap: 16px; align-items: stretch; }
-.fs-rates { display: grid; gap: 14px; }
-.fs-rate { display: grid; gap: 6px; align-content: center; padding: 26px 28px; border-radius: var(--radius); background: #fff; border: 1px solid var(--border); }
-.fs-rate small { font-size: .88rem; font-weight: 600; color: var(--brand-dark); }
-.fs-rate b { font-family: var(--font-display); font-size: clamp(2.6rem, 4.5vw, 3.6rem); font-weight: 680; letter-spacing: -.035em; line-height: 1; color: var(--ink); font-variant-numeric: tabular-nums; }
-.fs-rate span { font-size: .92rem; color: var(--muted); }
-.fs-rate.second { background: var(--grain), var(--brand-gradient); border-color: transparent; }
-.fs-rate.second small { color: #c9fff5; } .fs-rate.second b { color: #fff; } .fs-rate.second span { color: rgba(255, 255, 255, .82); }
-.fs-examples { padding: 22px 26px 16px; border-radius: var(--radius); background: #fff; border: 1px solid var(--border); }
-.fs-examples > p { margin-bottom: 8px; font-family: var(--font-display); font-weight: 620; color: var(--ink); }
-.fs-examples table { width: 100%; border-collapse: collapse; font-size: .95rem; font-variant-numeric: tabular-nums; }
-.fs-examples th { padding: 8px 0 10px; border-bottom: 1px solid var(--border); text-align: right; font-size: .78rem; font-weight: 600; color: var(--muted); }
-.fs-examples td { padding: 11px 0; border-bottom: 1px solid var(--border); text-align: right; color: var(--ink-2); }
-.fs-examples th:first-child, .fs-examples td:first-child { text-align: left; }
-.fs-examples td:first-child { font-weight: 600; color: var(--ink); }
-.fs-examples tr:last-child td { border-bottom: 0; }
-.fs-examples th + th, .fs-examples td + td { padding-left: 16px; }
-.fs-start { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin: 16px 0 0; padding: 0; list-style: none; }
-.fs-start li { display: grid; grid-template-columns: auto 1fr; gap: 16px; align-items: start; padding: 22px 24px; border-radius: var(--radius); background: #fff; border: 1px solid var(--border); }
-.fs-start b { font-family: var(--font-display); font-size: 1.5rem; font-weight: 650; letter-spacing: -.02em; line-height: 1.1; color: var(--brand-dark); font-variant-numeric: tabular-nums; }
-.fs-start strong { display: block; margin-bottom: 3px; font-family: var(--font-display); font-weight: 620; color: var(--ink); }
-.fs-start span { font-size: .9rem; line-height: 1.5; color: var(--muted); }
-.fs-terms { margin-top: 20px; max-width: 100ch; line-height: 1.55; }
-
 @media (max-width: 980px) {
-  .fs-stop-in, .fs-stop.tall .fs-stop-in, .fs-stop.wide .fs-stop-copy, .fs-psm-stage, .fs-psm-more, .fs-flow, .fs-price { grid-template-columns: 1fr; }
+  .fs-stop-in, .fs-stop.tall .fs-stop-in, .fs-stop.wide .fs-stop-copy, .fs-psm-stage, .fs-psm-more, .fs-flow { grid-template-columns: 1fr; }
   .fs-stop.rev .fs-stop-copy { order: 0; }
   .fs-stop.wide .fs-stop-copy { align-items: start; }
   .fs-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .fs-facts li:nth-child(3) { padding-left: 0; border-left: 0; }
   .fs-facts li:nth-child(n + 3) { padding-top: 20px; }
-  .fs-std, .fs-assure, .fs-start { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .fs-std, .fs-assure { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .fs-key { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 700px) {
-  .fs-points, .fs-key, .fs-std, .fs-assure, .fs-start { grid-template-columns: 1fr; }
+  .fs-points, .fs-key, .fs-std, .fs-assure { grid-template-columns: 1fr; }
   .fs-media.beside { grid-template-columns: 1fr; align-items: start; }
   .fs-media.stack { padding: 0; display: grid; gap: 12px; }
   .fs-media.stack .over { position: static; width: 100%; }
   .fs-pin { width: 24px; height: 24px; font-size: .72rem; }
-  .fs-examples { overflow-x: auto; padding-inline: 18px; }
-  .fs-examples table { font-size: .86rem; }
-  .fs-examples th + th, .fs-examples td + td { padding-left: 10px; }
   .fs-facts b { font-size: 1.9rem; }
 }
 
