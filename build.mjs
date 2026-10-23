@@ -969,6 +969,7 @@ add({
 
       <div class="city-bar">
         <div class="city-toolbar" role="toolbar" aria-label="${esc(C.cityUi.toolbarLabel)}">
+          <button type="button" class="btn btn-primary city-btn" data-act="tour">${icon("route")}<span>${esc(C.cityUi.toolbar.tour)}</span></button>
           <button type="button" class="btn btn-ghost city-btn" data-act="storm" aria-pressed="false" aria-describedby="city-note">${icon("cloud-rain")}<span>${esc(C.cityUi.toolbar.storm)}</span></button>
           <button type="button" class="btn btn-ghost city-btn" data-act="explode" aria-pressed="false">${icon("unfold-vertical")}${icon("fold-vertical", false)}<span>${esc(C.cityUi.explode.take)}</span></button>
           <button type="button" class="btn btn-ghost city-btn" data-act="under" aria-pressed="false">${icon("layers")}<span>${esc(C.cityUi.toolbar.under)}</span></button>
@@ -1006,6 +1007,19 @@ add({
         </article>`).join("")}
       </div>
     </div>
+  </div>
+  <div class="city-track" id="city-track" hidden></div>
+  <div class="city-tour" id="city-tour" role="region" aria-label="${esc(C.cityUi.tour.title)}" hidden>
+    <div class="city-tour-bg"></div>
+    <div class="city-tour-stage" id="city-tour-stage"></div>
+    <div class="city-tour-top">
+      <div class="city-tour-where"><p class="eyebrow">${esc(C.cityUi.tour.title)}</p><p class="city-tour-title" id="city-tour-title"></p><p class="city-tour-sub" id="city-tour-sub"></p></div>
+      <button type="button" class="btn btn-ghost city-btn city-tour-leave" data-act="tour-leave">${icon("x", false)}<span>${esc(C.cityUi.tour.leave)}</span><kbd>Esc</kbd></button>
+    </div>
+    <div class="city-tour-rail" id="city-tour-rail" role="group" aria-label="${esc(C.cityUi.tour.railLabel)}"></div>
+    <div class="city-tour-card" id="city-tour-card"><p class="city-tour-num"></p><h3></h3><p class="city-tour-blurb"></p><div class="chips"></div><button type="button" class="city-tour-open" data-act="tour-open">${esc(C.cityUi.tour.open)}${icon("arrow-right", false)}</button></div>
+    <div class="city-tour-hint" id="city-tour-hint"><span class="city-tour-mouse" aria-hidden="true"></span><span data-text></span></div>
+    <div class="city-tour-end" id="city-tour-end"><div><h3>${esc(C.cityUi.tour.end.heading)}</h3><p>${esc(C.cityUi.tour.end.text)}</p><div class="city-tour-acts"><a class="btn btn-primary" href="${r}enquire.html">${esc(C.cityUi.tour.end.enquire)}${icon("arrow-right")}</a><button type="button" class="btn btn-ghost" data-act="tour-end">${esc(C.cityUi.tour.end.back)}</button></div><p class="city-tour-more">${esc(C.cityUi.tour.end.more)}</p></div></div>
   </div>
   <script type="application/json" id="city-data">${JSON.stringify({ ui: C.cityUi, storm: C.cityStorm, zones: C.city.map(({ id, name, sensors, strata, asset }) => ({ id, name, sensors, strata, asset: { ...asset, parts: asset.parts.map((p) => ({ ...p, href: p.ref ? cityHref(r, p.ref) : "" })) } })) }).replace(/</g, "\\u003c")}</script>
 </section>

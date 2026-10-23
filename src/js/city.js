@@ -36,7 +36,7 @@
   // on phones, the list of labels under it
   const section = svg.closest(".city-section"), stage = svg.closest(".city-stage"), view = svg.closest(".city-view");
   const cards = $$(".city-card"), tabs = $$(".city-tab"), caption = $(".city-caption"), liveEl = $("#city-live");
-  const btn = { storm: $('.city-btn[data-act="storm"]'), under: $('.city-btn[data-act="under"]'), expand: $('.city-btn[data-act="expand"]'), explode: $('.city-btn[data-act="explode"]') };
+  const btn = { tour: $('.city-btn[data-act="tour"]'), storm: $('.city-btn[data-act="storm"]'), under: $('.city-btn[data-act="under"]'), expand: $('.city-btn[data-act="expand"]'), explode: $('.city-btn[data-act="explode"]') };
   const grid = $("#city-grid"), closeBtn = $(".city-close");
   const tiles = Object.fromEntries($$(".city-tile[data-tile]").map((t) => [t.dataset.tile, t]));
   const tip = $(".city-tip"), tipBody = $(".city-tip-body"), tipClose = $(".city-tip-close");
@@ -49,7 +49,8 @@
 
   // view: "city", "district" (the active district taken apart) or "asset"
   // (its asset open and taken apart, reached from `assetFrom`)
-  const state = { active: null, under: false, expanded: false, inView: false, storm: null, view: "city", assetFrom: "city" };
+  // `tour` is the tour's state while the visitor is on it (the end of this file)
+  const state = { active: null, under: false, expanded: false, inView: false, storm: null, view: "city", assetFrom: "city", tour: null };
   let liveTimer = 0;
   const announce = (text) => {
     if (!liveEl || !text) return;
@@ -128,7 +129,7 @@
     cls("has-active", !!id);
     cls("is-underground", state.under);
     cls("is-expanded", state.expanded);
-    cls("is-exploded", state.view === "district");
+    cls("is-exploded", state.view === "district" || !!(state.tour && state.tour.k > 0));
     cls("is-asset", state.view === "asset");
     stage.classList.toggle("is-exploded", state.view === "district");
     stage.classList.toggle("is-asset", state.view === "asset");
@@ -341,7 +342,7 @@
     };
     stage.addEventListener("pointerenter", (e) => { if (e.pointerType === "mouse") box = stage.getBoundingClientRect(); });
     stage.addEventListener("pointermove", (e) => {
-      if (e.pointerType !== "mouse" || !box) return;
+      if (e.pointerType !== "mouse" || !box || state.tour) return;
       if (state.view !== "city") { setTilt(0, 0); return; }
       px = (e.clientX - box.left) / box.width - 0.5;
       py = (e.clientY - box.top) / box.height - 0.5;
@@ -840,6 +841,8 @@
   function layoutNotes() {
     if (notesEl.hidden || !notes.length) return;
     const r = view.getBoundingClientRect(), W = r.width, H = r.height, wide = W >= 680, cw = colW();
+    // the tour keeps the labels clear of its own bar, card and rail
+    const inset = parseFloat(notesEl.style.getPropertyValue("--inset")) || 0, ceil = parseFloat(notesEl.style.getPropertyValue("--ceil")) || 6, floor = parseFloat(notesEl.style.getPropertyValue("--floor")) || 6;
     notesEl.classList.toggle("is-narrow", !wide);
     notesList.classList.toggle("is-on", !wide);
     notesEl.style.setProperty("--col", `${cw}px`);
@@ -854,13 +857,13 @@
         ids.forEach((i) => notes[i].btn.parentNode !== noteCols[side] && noteCols[side].append(notes[i].btn));
         // stack each label level with its mark, pushed apart, kept on the stage
         const place = [];
-        let y = 6;
+        let y = ceil;
         for (const i of ids) { const h = notes[i].btn.offsetHeight; const top = Math.max(y, at[i][1] - h / 2); place.push([i, top, h]); y = top + h + 8; }
-        let limit = H - 6;
-        for (let j = place.length - 1; j >= 0; j--) { if (place[j][1] + place[j][2] > limit) place[j][1] = Math.max(6, limit - place[j][2]); limit = place[j][1] - 8; }
+        let limit = H - (side === "left" ? floor : 6);
+        for (let j = place.length - 1; j >= 0; j--) { if (place[j][1] + place[j][2] > limit) place[j][1] = Math.max(ceil, limit - place[j][2]); limit = place[j][1] - 8; }
         for (const [i, top, h] of place) {
           notes[i].btn.style.top = `${top.toFixed(1)}px`;
-          const ex = side === "left" ? cw + 4 : W - cw - 4, ey = top + h / 2, [ax, ay] = at[i];
+          const ex = side === "left" ? cw + 4 : W - inset - cw - 4, ey = top + h / 2, [ax, ay] = at[i];
           const mx = side === "left" ? Math.max(ex + 10, Math.min(ax - 12, ex + 26)) : Math.min(ex - 10, Math.max(ax + 12, ex - 26));
           d += `M${ex.toFixed(1)} ${ey.toFixed(1)}H${mx.toFixed(1)}L${ax.toFixed(1)} ${ay.toFixed(1)}`;
           dots += `<circle cx="${ax.toFixed(1)}" cy="${ay.toFixed(1)}" r="2.6"/>`;
@@ -893,6 +896,8 @@
     assetSvg.setAttribute("viewBox", [x, y, w, h].map((n) => n.toFixed(1)).join(" "));
   }
   function openAsset(id, from = "city", trigger) {
+    // asked for from the tour, the asset opens on the page with its district picked
+    if (state.tour) { state.tour.leave({ select: id }); from = "city"; trigger = $(`.city-inside[data-zone="${id}"]`); }
     if (state.storm) finishStorm(true);
     hideTip();
     const z = zoneOf[id];
@@ -1085,6 +1090,279 @@
   scheduleStunt(5000 + Math.random() * 5000);
   // a hook for checking it without waiting: svg.dispatchEvent(new Event("citystunt"))
   svg.addEventListener("citystunt", stunt);
+
+  /* ---- the tour: the visitor's own scrolling flies the camera through the city ---- */
+  // "Take the tour" pins the city to the screen and turns the page's scroll
+  // into a timeline t: 0 is the whole city, 1 to 7 the districts in route
+  // order and 8 the whole city again. The camera is a curve through the
+  // frames "Take it apart" uses, rising between districts and dipping in on
+  // arrival; the district nearest the camera comes apart by how close the
+  // camera is, with the same three layers and labels. The camera is a
+  // transform on .city-model (the compositor moves one texture) relative to
+  // a viewBox rewritten only when the visitor rests, so the drawing is crisp
+  // at any zoom without being redrawn on every frame. Nothing moves by
+  // itself: a notch of a wheel is a push that eases off, and everything else
+  // is the page scrolling. Wheel events are never cancelled, since cancelling
+  // the first of a trackpad's stream drops the whole gesture in Chrome.
+  const TOUR = ui.tour, tourEl = $("#city-tour"), track = $("#city-track");
+  if (TOUR && tourEl && track && btn.tour) {
+    const route = (TOUR.route || []).filter((id) => sc.zones[id]), NT = route.length;
+    const tStage = $("#city-tour-stage"), tTitle = $("#city-tour-title"), tSub = $("#city-tour-sub"), tRail = $("#city-tour-rail"), tCard = $("#city-tour-card"), tHint = $("#city-tour-hint"), tEnd = $("#city-tour-end");
+    const mix = (a, b, t) => a + (b - a) * t, smooth = (x) => x * x * (3 - 2 * x), lim = (v, a, b) => Math.max(a, Math.min(b, v));
+    const nameOf = (id) => zoneOf[id]?.name || id, idx = (id) => route.indexOf(id) + 1;
+    const jump = (top) => scrollTo({ top, left: 0, behavior: "instant" });
+    const T = { on: false, t: 0, tr: 0, vh: 1, top: 0, raf: 0, last: 0, lastScroll: 0, baked: -1, W: 800, H: 448, B: VB0.slice(), K: [], F: VB0.slice(), cs: { s: 1, tx: 0, ty: 0 }, focus: null, k: 0, notesZ: null, cardZ: null, told: null, endTold: false, dir: 1, snapping: false, snapRaf: 0, idle: 0, inertia: false, inertiaT: 0, inertiaRaf: 0, vel: 0, y: 0, lastI: 0, dirty: true, seen: new Set(), labA: "" };
+    const dots = {};
+    $("[data-text]", tHint).textContent = fine ? TOUR.begin : TOUR.beginTouch;
+    route.forEach((id, i) => {
+      const b = document.createElement("button"); b.type = "button"; b.className = "city-tour-dot";
+      b.innerHTML = `<span>${nameOf(id)}</span><i></i>`; b.setAttribute("aria-label", fill(TOUR.dot, { name: nameOf(id), i: i + 1, n: NT }));
+      b.addEventListener("click", () => goTo(i + 1));
+      tRail.appendChild(b); dots[id] = b;
+    });
+
+    /* the camera */
+    function measure() { T.W = view.clientWidth || 800; T.H = view.clientHeight || 448; T.K = [overview(), ...route.map(frameFor), overview()]; }
+    // the whole city, a little closer than the page shows it, in the stage's shape
+    function overview() {
+      const aspect = T.W / T.H, k = 0.92, w = VB0[2] * k, h = VB0[3] * k, x = VB0[0] + (VB0[2] - w) / 2, y = VB0[1] + (VB0[3] - h) / 2;
+      if (w / h < aspect) { const W = h * aspect; return [x - (W - w) / 2, y, W, h]; }
+      const H = w / aspect; return [x, y - (H - h) / 2, w, H];
+    }
+    // the box "Take it apart" frames, set a little above centre so it clears
+    // the card, with room beside it for the label columns
+    function frameFor(id) {
+      const [x0, y0, x1, y1] = sc.explode(id).box, W = T.W, aspect = W / T.H, wide = isWide(), col = wide ? colW() + 20 : 0;
+      const room = Math.max(0.42, 1 - (2 * col + 40) / W), padV = wide ? 0.2 : 0.3, cyf = wide ? 0.46 : 0.38;
+      const w = Math.max((x1 - x0) / room, (y1 - y0) * (1 + padV * 2) * aspect), h = w / aspect;
+      return [(x0 + x1) / 2 - w / 2, (y0 + y1) / 2 - h * cyf, w, h];
+    }
+    // the frame at t: a Catmull-Rom curve through the frame centres, eased
+    // so the camera slows into each district, and a zoom that lifts between
+    function camAt(t) {
+      const K = T.K, n = K.length - 1; t = lim(t, 0, n);
+      const i = Math.min(n - 1, Math.floor(t)), s = t - i;
+      const c = (k) => { const F = K[lim(k, 0, n)]; return [F[0] + F[2] / 2, F[1] + F[3] / 2]; };
+      const p0 = c(i - 1), p1 = c(i), p2 = c(i + 1), p3 = c(i + 2);
+      const cr = (a, b, c2, d, u) => 0.5 * (2 * b + (-a + c2) * u + (2 * a - 5 * b + 4 * c2 - d) * u * u + (-a + 3 * b - 3 * c2 + d) * u * u * u);
+      const u = s + (smooth(s) - s) * 0.6;
+      const cx = cr(p0[0], p1[0], p2[0], p3[0], u), cy = cr(p0[1], p1[1], p2[1], p3[1], u);
+      const bump = i === 0 || i === n - 1 ? 0.08 : 0.3;
+      const w = mix(K[i][2], K[i + 1][2], u) * (1 + bump * Math.sin(Math.PI * s)), h = w / (T.W / T.H);
+      return [cx - w / 2, cy - h / 2, w, h];
+    }
+    function pose(t) {
+      t = lim(t, 0, NT + 1);
+      let focus = null, kf = 0;
+      route.forEach((id, i) => { const d = Math.abs(t - (i + 1)), k = 1 - smooth(clamp((d - 0.08) / 0.4)); if (k > kf) { kf = k; focus = id; } });
+      const tilt = t < 1 ? 7 * (1 - smooth(clamp(t / 0.6))) : t > NT ? 7 * smooth(clamp((t - NT - 0.4) / 0.6)) : 0;
+      return { t, F: camAt(t), focus, k: kf, tilt, noteA: focus ? clamp((kf - 0.82) / 0.18) : 0, endA: clamp((t - NT - 0.55) / 0.3), hintA: 1 - clamp(t / 0.1), labA: Math.max(1 - clamp(t / 0.45), clamp((t - NT - 0.4) / 0.45)) };
+    }
+    // the transform that shows frame F when the drawing is rendered for frame B
+    function camOf(F) {
+      const [bx, by, bw, bh] = T.B, s = bw / F[2], px = (F[0] + F[2] / 2 - bx) / bw * T.W, py = (F[1] + F[3] / 2 - by) / bh * T.H;
+      return { s, tx: T.W / 2 - s * px, ty: T.H / 2 - s * py };
+    }
+    // at rest the camera is baked into the viewBox, so the city is crisp at any zoom
+    function bake(F) { T.B = F.slice(); setVB(F); T.cs = { s: 1, tx: 0, ty: 0 }; model.style.transform = "translate3d(0px, 0px, 0px) scale(1)"; T.dirty = true; }
+
+    /* what the visitor reads: the card, the bar and the rail */
+    function setCard(id, a) {
+      if (id && T.cardZ !== id) {
+        T.cardZ = id;
+        const card = cardOf(id);
+        $(".city-tour-num", tCard).textContent = fill(TOUR.at, { i: idx(id), n: NT });
+        $("h3", tCard).textContent = nameOf(id);
+        $(".city-tour-blurb", tCard).textContent = $(":scope > p", card)?.textContent || "";
+        const chips = $(".chips", card);
+        $(".chips", tCard).replaceChildren(...(chips ? [...chips.children].map((c) => c.cloneNode(true)) : []));
+      }
+      tCard.style.opacity = a.toFixed(3); tCard.style.transform = `translateY(${((1 - a) * 10).toFixed(1)}px)`; tCard.style.pointerEvents = a > 0.6 ? "auto" : "none";
+    }
+    function render() {
+      const po = pose(T.tr), t = po.t;
+      if (po.focus !== T.focus) {
+        if (T.focus) placeDistrict(T.focus, 0);
+        T.focus = po.focus; T.k = 0;
+        if (po.focus) setActive(po.focus);
+      }
+      const wasApart = T.k > 0;
+      T.k = po.k;
+      if (T.focus && dk[T.focus] !== po.k) placeDistrict(T.focus, po.k);
+      if (po.k > 0 !== wasApart) apply();
+      T.F = po.F; T.cs = camOf(po.F);
+      model.style.transform = `translate3d(${T.cs.tx.toFixed(2)}px, ${T.cs.ty.toFixed(2)}px, 0px) scale(${T.cs.s.toFixed(4)})`;
+      const tilt = po.tilt > 0.01 ? `1 0 0 ${po.tilt.toFixed(2)}deg` : "";
+      if (model.style.rotate !== tilt) model.style.rotate = tilt;
+      const labA = po.labA.toFixed(3);
+      if (labA !== T.labA) { T.labA = labA; sc.labelLayer.style.opacity = labA; }
+      setCard(po.noteA > 0 ? T.focus : T.cardZ, po.noteA);
+      // the labels "Take it apart" draws, once the district is nearly apart
+      if (po.noteA > 0 && T.focus && isWide()) {
+        if (T.notesZ !== T.focus) { T.notesZ = T.focus; notesEl.style.setProperty("--floor", `${tCard.offsetHeight + 40}px`); showDistrictNotes(T.focus); }
+        notesEl.style.opacity = po.noteA.toFixed(3);
+        layoutNotes();
+      } else if (T.notesZ) { T.notesZ = null; hideNotes(); }
+      if (po.noteA >= 0.99 && T.focus && T.told !== T.focus) { T.told = T.focus; announce(fill(TOUR.live.arrive, { name: nameOf(T.focus), i: idx(T.focus), n: NT })); }
+      if (po.noteA <= 0) T.told = null;
+      const hintA = po.hintA.toFixed(3), endA = po.endA.toFixed(3), dim = (1 - po.endA * 0.6).toFixed(3);
+      if (tHint.style.opacity !== hintA) tHint.style.opacity = hintA;
+      if (tEnd.style.opacity !== endA) { tEnd.style.opacity = endA; tEnd.style.pointerEvents = po.endA > 0.5 ? "auto" : "none"; }
+      if (view.style.opacity !== dim) view.style.opacity = dim;
+      if (po.endA >= 0.99 && !T.endTold) { T.endTold = true; announce(TOUR.live.end); }
+      if (po.endA <= 0) T.endTold = false;
+      const near = Math.round(t), d = Math.abs(t - near);
+      let title, sub, cur = null;
+      if (near === 0 && t < 0.5) { title = fine ? TOUR.begin : TOUR.beginTouch; sub = fill(TOUR.count, { n: NT }); }
+      else if (near === NT + 1 && t > NT + 0.5) { title = TOUR.endTitle; sub = TOUR.endSub; }
+      else if (d < 0.3 && near >= 1 && near <= NT) { cur = route[near - 1]; title = nameOf(cur); sub = fill(TOUR.at, { i: near, n: NT }); }
+      else { const nx = lim(T.dir > 0 ? Math.ceil(t) : Math.floor(t), 1, NT); title = fill(TOUR.flying, { name: nameOf(route[nx - 1]) }); sub = fill(TOUR.at, { i: nx, n: NT }); }
+      if (tTitle.textContent !== title) tTitle.textContent = title;
+      if (tSub.textContent !== sub) tSub.textContent = sub;
+      if (cur) T.seen.add(cur);
+      for (const id of route) { const b = dots[id]; if (id === cur) b.setAttribute("aria-current", "step"); else b.removeAttribute("aria-current"); b.classList.toggle("seen", T.seen.has(id) && id !== cur); }
+    }
+    // the drawn t follows the scrolled t with a little weight, which smooths
+    // the steps of a wheel without ever lagging behind it
+    function loop(now) {
+      if (!T.on) return;
+      const dt = Math.min(64, now - T.last); T.last = now;
+      const prev = T.tr, tau = reduced ? 40 : 90;
+      T.tr += (T.t - T.tr) * (1 - Math.exp(-dt / tau));
+      if (Math.abs(T.t - T.tr) < 0.0003) T.tr = T.t;
+      if (T.tr !== prev) T.dir = Math.sign(T.tr - prev) || T.dir;
+      if (T.tr !== prev || T.dirty) { T.dirty = false; render(); }
+      // once the drawn camera has caught up with a scroll that has stopped,
+      // bake it, so the city is crisp exactly where the visitor rests
+      else if (T.tr === T.t && T.baked !== T.t && !T.snapping && !T.inertia && now - T.lastScroll > 150) { T.baked = T.t; bake(T.F); }
+      T.raf = requestAnimationFrame(loop);
+    }
+
+    /* in and out */
+    function enter() {
+      if (T.on) return;
+      if (state.storm) finishStorm(true);
+      if (state.view !== "city") resetViews();
+      if (state.expanded) setExpanded(false);
+      hideTip();
+      state.under = false;
+      Object.assign(T, { on: true, t: 0, tr: 0, dir: 1, focus: null, k: 0, notesZ: null, cardZ: null, told: null, endTold: false, labA: "" });
+      T.seen.clear();
+      state.tour = T;
+      route.forEach((id) => sc.explode(id));
+      tourEl.hidden = false;
+      document.body.classList.add("is-touring"); document.documentElement.classList.add("is-touring"); section.classList.add("is-touring"); cls("is-touring", true);
+      notesEl.style.setProperty("--inset", "44px"); notesEl.style.setProperty("--ceil", "84px");
+      tStage.appendChild(view);
+      T.vh = innerHeight || 800; track.hidden = false; track.style.height = `${(NT + 2.4) * T.vh}px`;
+      T.top = section.getBoundingClientRect().top + scrollY;
+      jump(T.top);
+      measure(); bake(overview()); setActive(route[0]); apply(); render();
+      T.last = performance.now(); T.raf = requestAnimationFrame(loop);
+      announce(TOUR.live.start);
+      $('[data-act="tour-leave"]', tourEl)?.focus({ preventScroll: true });
+    }
+    function leave({ to = "top", select } = {}) {
+      if (!T.on) return;
+      stopInertia(); cancelSnap(); clearTimeout(T.idle); cancelAnimationFrame(T.raf);
+      const last = select || T.focus || route[lim(Math.round(T.tr), 1, NT) - 1];
+      if (T.focus) placeDistrict(T.focus, 0);
+      Object.assign(T, { on: false, focus: null, k: 0 });
+      state.tour = null;
+      if (T.notesZ) { T.notesZ = null; hideNotes(); }
+      notesEl.style.opacity = ""; notesEl.style.removeProperty("--inset"); notesEl.style.removeProperty("--ceil"); notesEl.style.removeProperty("--floor");
+      cls("is-touring", false);
+      setVB(VB0); model.style.transform = ""; model.style.rotate = ""; view.style.opacity = ""; sc.labelLayer.style.opacity = "";
+      stage.insertBefore(view, stage.firstChild);
+      section.classList.remove("is-touring"); track.hidden = true; tourEl.hidden = true;
+      document.body.classList.remove("is-touring"); document.documentElement.classList.remove("is-touring");
+      setActive(last); apply();
+      const r = section.getBoundingClientRect(), top = r.top + scrollY;
+      jump(to === "end" ? Math.max(top, top + r.height - innerHeight + 40) : top - 8);
+      btn.tour.focus({ preventScroll: true });
+      announce(TOUR.live.left);
+    }
+    T.leave = leave;
+
+    /* the scroll sets t; a wheel notch is a push that eases off; a rest near
+       a district finishes the arrival; the drawing is re-rendered crisp at rest */
+    function goTo(i, { ms, ease = easeIO } = {}) {
+      i = lim(i, 0, NT + 1); stopInertia(); cancelAnimationFrame(T.snapRaf);
+      const y = T.top + i * T.vh, y0 = scrollY, t0 = performance.now(), dur = ms || (reduced ? 240 : Math.min(1100, 480 + 300 * Math.abs(i - T.t)));
+      T.snapping = true;
+      const step = (now) => { if (!T.snapping) return; const k = clamp((now - t0) / dur); jump(mix(y0, y, ease(k))); if (k < 1) T.snapRaf = requestAnimationFrame(step); else { T.snapping = false; scheduleRest(); } };
+      T.snapRaf = requestAnimationFrame(step);
+    }
+    function cancelSnap() { if (T.snapping) { cancelAnimationFrame(T.snapRaf); T.snapping = false; } }
+    function scheduleRest() { clearTimeout(T.idle); T.idle = setTimeout(rest, 200); }
+    function rest() {
+      if (!T.on || T.snapping || T.inertia) return;
+      const t = T.t;
+      if (t < 0 || t > NT + 1) return;
+      const near = Math.round(t), d = Math.abs(t - near);
+      if (d > 0.003 && d < 0.22 && near >= 1 && near <= NT) { goTo(near, { ms: reduced ? 200 : 560, ease: easeOut }); return; }
+      bake(T.F);
+    }
+    // the push waits a moment before it moves anything, so that a trackpad
+    // stream that begins with one big event can cancel it unnoticed
+    function impulse(dir) {
+      T.vel = lim(T.vel + dir * (reduced ? 650 : 950), -2600, 2600);
+      if (T.inertia) return;
+      T.inertia = true; clearTimeout(T.inertiaT);
+      T.inertiaT = setTimeout(() => { if (!T.inertia) return; T.y = scrollY; T.lastI = performance.now(); T.inertiaRaf = requestAnimationFrame(inertiaStep); }, 45);
+    }
+    function inertiaStep(now) {
+      if (!T.inertia) return;
+      const dt = Math.min(0.05, (now - T.lastI) / 1000); T.lastI = now;
+      T.y += T.vel * dt; T.vel *= Math.exp(-dt / (reduced ? 0.16 : 0.3));
+      jump(T.y);
+      if (Math.abs(T.vel) > 24 && T.on) T.inertiaRaf = requestAnimationFrame(inertiaStep); else stopInertia(true);
+    }
+    function stopInertia(settled) { if (!T.inertia) return; clearTimeout(T.inertiaT); cancelAnimationFrame(T.inertiaRaf); T.inertia = false; T.vel = 0; if (settled) scheduleRest(); }
+    addEventListener("scroll", () => {
+      if (!T.on) return;
+      T.t = (scrollY - T.top) / T.vh; T.dirty = true; T.lastScroll = performance.now();
+      if (T.t < -0.25) { leave({ to: "top" }); return; }
+      if (T.t > NT + 1.4) { leave({ to: "end" }); return; }
+      if (!T.snapping && !T.inertia) scheduleRest();
+    }, { passive: true });
+    addEventListener("scrollend", () => { if (T.on && !T.snapping && !T.inertia) { clearTimeout(T.idle); rest(); } });
+    let lastWheel = 0, streak = 0;
+    addEventListener("wheel", (e) => {
+      if (!T.on) return;
+      const now = performance.now();
+      streak = now - lastWheel < 60 ? streak + 1 : 0; lastWheel = now;
+      // a lone event after a pause is a notch of a wheel; a stream is a
+      // trackpad or a smooth wheel, and the page scrolls with its own momentum
+      const notch = e.deltaMode === 1 ? Math.abs(e.deltaY) >= 1 : Math.abs(e.deltaY) >= 30;
+      if (streak === 0 && notch && Math.abs(e.deltaX) < 2) { cancelSnap(); impulse(Math.sign(e.deltaY)); return; }
+      stopInertia(); cancelSnap();
+    }, { passive: true });
+    addEventListener("touchstart", () => { if (T.on) { stopInertia(); cancelSnap(); } }, { passive: true });
+    // before the page's own Escape handling, so a readout closes on its own first
+    document.addEventListener("keydown", (e) => {
+      if (!T.on || e.metaKey || e.ctrlKey || e.altKey || e.target.closest?.("input, textarea, select, [contenteditable]")) return;
+      const cur = Math.round(lim(T.t, 0, NT + 1)), go = (i) => { e.preventDefault(); goTo(i, { ms: reduced ? 240 : 820 }); };
+      if (e.key === "Escape") { if (!openTip) { e.preventDefault(); leave(); } }
+      else if (e.key === " " && e.target.closest?.("button, a")) return;
+      else if (e.key === "ArrowDown" || e.key === "PageDown" || e.key === "ArrowRight" || (e.key === " " && !e.shiftKey)) go(cur + 1);
+      else if (e.key === "ArrowUp" || e.key === "PageUp" || e.key === "ArrowLeft" || (e.key === " " && e.shiftKey)) go(cur - 1);
+      else if (e.key === "Home") go(0);
+      else if (e.key === "End") go(NT + 1);
+    }, { capture: true });
+    addEventListener("resize", () => {
+      if (!T.on) return;
+      const t = T.t; T.vh = innerHeight || 800; track.style.height = `${(NT + 2.4) * T.vh}px`;
+      T.top = section.getBoundingClientRect().top + scrollY; jump(T.top + t * T.vh);
+      measure(); bake(camAt(T.tr)); render();
+    });
+    btn.tour.addEventListener("click", enter);
+    $('[data-act="tour-leave"]', tourEl)?.addEventListener("click", () => leave());
+    $('[data-act="tour-end"]', tourEl)?.addEventListener("click", () => leave({ to: "end" }));
+    $('[data-act="tour-open"]', tourEl)?.addEventListener("click", () => leave({ select: T.cardZ }));
+    // on the tour a click on a district flies to it
+    for (const [id, g] of Object.entries(sc.zones)) g.addEventListener("click", () => { if (T.on && route.includes(id)) goTo(idx(id)); });
+  }
 
   /* ---- go ---- */
   // start on the district the page was built with (the first card)
