@@ -1853,16 +1853,34 @@ ${pageHero(r, { crumbs: [["Page not found"]], iconName: "waves", eyebrow: "Error
 });
 
 /* ---- privacy ---- */
+// content/privacy.txt, one paragraph a line: the first line is the page title
+// and the second its lede. A line that starts "1. " (and so on) is a section
+// heading, a run of lines that start "- " is a list, and [words](url) is a link.
 const privacy = (await readFile(path.join(ROOT, "content/privacy.txt"), "utf8")).split("\n").map((l) => l.trim()).filter(Boolean);
+const legalLine = (l) => esc(l).replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (_, words, href) => `<a href="${href}" rel="noopener">${words}</a>`);
+const legalHtml = (lines) => {
+  const out = [];
+  let list = null;
+  for (const l of lines) {
+    if (l.startsWith("- ")) {
+      if (!list) out.push((list = []));
+      list.push(`  <li>${legalLine(l.slice(2))}</li>`);
+      continue;
+    }
+    list = null;
+    out.push(/^\d+\.\s/.test(l) && l.length < 90 ? `<h2>${esc(l)}</h2>` : `<p>${legalLine(l)}</p>`);
+  }
+  return out.map((x) => (Array.isArray(x) ? `<ul>\n${x.join("\n")}\n</ul>` : x)).join("\n");
+};
 add({
   file: "privacy.html",
   title: "Privacy policy | EDS",
-  description: "EDS privacy policy and statement.",
+  description: "What the EDS website collects when you visit or get in touch, why, who sees it, and how to ask us about it.",
   current: "",
   body: (r) => `
-${pageHero(r, { crumbs: [["Privacy policy"]], title: "EDS Privacy Policy & Statement", lede: privacy[1] })}
+${pageHero(r, { crumbs: [["Privacy policy"]], title: privacy[0], lede: privacy[1] })}
 <section class="section"><div class="wrap"><div class="legal">
-  ${privacy.slice(2).map((l) => (/^\d+\.\s/.test(l) && l.length < 90 ? `<h2>${esc(l)}</h2>` : `<p>${esc(l)}</p>`)).join("\n")}
+  ${legalHtml(privacy.slice(2))}
 </div></div></section>`,
 });
 

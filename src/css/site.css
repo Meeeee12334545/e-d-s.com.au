@@ -1615,6 +1615,11 @@ a.contact-card:hover .card-icon { background: var(--brand); color: #fff; }
 .legal { max-width: 78ch; }
 .legal p { margin-bottom: 1em; }
 .legal h2 { font-size: 1.35rem; margin: 1.6em 0 .6em; }
+.legal ul { margin: 0 0 1em; padding-left: 1.3em; list-style: disc; }
+.legal li { margin-bottom: .45em; padding-left: .2em; }
+.legal li::marker { color: var(--brand-mid); }
+.legal a { color: var(--brand-dark); font-weight: 600; text-decoration: underline; text-decoration-color: rgba(13, 124, 114, .35); text-underline-offset: 3px; }
+.legal a:hover { text-decoration-color: currentColor; }
 
 /* ---------- dialogs (search, product quick view) ---------- */
 [hidden] { display: none !important; }
