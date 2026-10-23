@@ -891,7 +891,7 @@ body.city-lock { overflow: hidden; }
 .city-leaders .balloon text { fill: #04201d; font: 700 10px var(--font-body); text-anchor: middle; }
 .city-notes-col { position: absolute; top: 0; bottom: 0; width: var(--col); }
 .city-notes-col[data-side="left"] { left: 0; }
-.city-notes-col[data-side="right"] { right: 0; }
+.city-notes-col[data-side="right"] { right: var(--inset, 0px); }
 .city-notes.is-narrow .city-notes-col { display: none; }
 .city-label { position: absolute; left: 0; right: 0; display: block; padding: 7px 11px 8px; border-radius: 12px; text-align: left; pointer-events: auto; background: rgba(4, 21, 19, .84); border: 1px solid var(--line-dark-strong); backdrop-filter: blur(6px); color: #fff; touch-action: manipulation; transition: border-color .18s var(--ease), background-color .18s var(--ease); }
 .city-notes-col[data-side="left"] .city-label { text-align: right; }
@@ -2573,6 +2573,72 @@ html:has(.secbar) .band[id] { scroll-margin-top: calc(16px - clamp(56px, 7vw, 96
    a page does not repaint them on every frame while the visitor reads
    something else. */
 .offscreen, .offscreen * { animation-play-state: paused !important; }
+
+/* ---------- the tour: the visitor's own scrolling flies the camera ----------
+   "Take the tour" pins the city to the screen and lays a scroll track
+   (.city-track, only while the tour is on) through the page; city.js turns
+   the scroll into a flight through the districts. The camera is a transform
+   on .city-model each frame, relative to a viewBox rewritten only at rest,
+   so the compositor moves one texture and the drawing stays crisp. */
+html.is-touring { scroll-behavior: auto; }
+body.is-touring { overscroll-behavior-y: contain; }
+.city-section.is-touring { padding: 0; }
+.city-section.is-touring > .wrap { display: none; }
+.city-track { width: 1px; }
+.city-tour { position: fixed; inset: 0; z-index: 160; color: #fff; overflow: clip; }
+.city-tour-bg { position: absolute; inset: 0; background: radial-gradient(120% 90% at 50% 72%, #0b302d 0%, #062321 42%, var(--deep) 70%); }
+.city-tour-bg::after { content: ""; position: absolute; inset: 0; background-image: var(--grain); opacity: .45; mix-blend-mode: overlay; }
+.city-tour-stage { position: absolute; inset: 0; perspective: 1400px; }
+.city-tour-stage .city-view { position: absolute; inset: 0; }
+/* the hover lift and the pointer tilt stand aside; the opener's tilt and
+   the camera are set by city.js without easing, since the scroll drives them */
+.city-tour-stage .city-model { position: absolute; inset: 0; transform-origin: 0 0; transition: none; scale: 1; translate: 0 0; }
+.city-tour-stage .city-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.city-tour-stage .city-weather { display: none; }
+/* every district is named over the whole city (the names fade as the camera
+   flies in); the pills give way to the labels of the district taken apart */
+.city-fx.is-touring .zlabel { opacity: 1; translate: 0 0; transition: none; }
+.city-fx.is-touring .callout { display: none; }
+.city-tour-top { position: absolute; left: 0; right: 0; top: 0; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 18px var(--gutter) 0; pointer-events: none; }
+.city-tour-top > * { pointer-events: auto; }
+.city-tour-where .eyebrow { margin: 0; }
+.city-tour-title { margin: 2px 0 0; font-size: 1.25rem; font-weight: 650; letter-spacing: -.015em; line-height: 1.2; color: #fff; min-height: 1.2em; }
+.city-tour-sub { margin: 3px 0 0; font-size: .78rem; color: var(--on-dark-faint); font-family: var(--font-mono); }
+.city-tour-leave { background: rgba(4, 21, 19, .55); backdrop-filter: blur(10px); }
+.city-tour-leave kbd { font-family: var(--font-mono); font-size: 11px; padding: 2px 6px; border-radius: 5px; border: 1px solid var(--line-dark-strong); color: var(--on-dark-faint); background: rgba(255, 255, 255, .05); }
+.city-tour-rail { position: absolute; right: var(--gutter); top: 50%; translate: 0 -50%; display: flex; flex-direction: column; gap: 14px; align-items: flex-end; }
+.city-tour-dot { display: flex; align-items: center; gap: 12px; color: var(--on-dark-faint); font-size: .8rem; font-weight: 600; padding: 2px 0; }
+.city-tour-dot span { opacity: 0; translate: 6px 0; transition: opacity .25s var(--ease), translate .25s var(--ease-out); }
+.city-tour-rail:hover .city-tour-dot span, .city-tour-dot:focus-visible span { opacity: 1; translate: 0 0; }
+.city-tour-dot[aria-current="step"] { color: #fff; }
+.city-tour-dot i { display: block; width: 8px; height: 8px; border-radius: 50%; background: rgba(255, 255, 255, .28); transition: background .25s var(--ease), scale .3s var(--ease-spring), box-shadow .3s var(--ease); }
+.city-tour-dot[aria-current="step"] i { background: var(--aqua); scale: 1.5; box-shadow: 0 0 0 4px rgba(95, 180, 166, .25); }
+.city-tour-dot.seen i { background: rgba(95, 180, 166, .7); }
+.city-tour-card { position: absolute; left: var(--gutter); bottom: 28px; width: min(400px, calc(100% - 2 * var(--gutter))); padding: 20px 22px 18px; border-radius: 20px; background: rgba(4, 21, 19, .72); backdrop-filter: blur(16px); border: 1px solid var(--line-dark-strong); opacity: 0; will-change: transform, opacity; }
+.city-tour-num { margin: 0; font-family: var(--font-mono); font-size: .76rem; color: var(--aqua); letter-spacing: .06em; }
+.city-tour-card h3 { color: #fff; font-size: 1.55rem; margin-top: 4px; }
+.city-tour-blurb { margin: 8px 0 0; color: var(--on-dark-soft); font-size: .92rem; }
+.city-tour-card .chips { margin-top: 12px; }
+.city-tour-open { display: inline-flex; align-items: center; gap: 8px; margin-top: 14px; color: var(--aqua); font-weight: 650; font-size: .9rem; transition: color .2s var(--ease); }
+.city-tour-open:hover { color: #9ad0c2; }
+.city-tour-open .icon { font-size: 15px; }
+.city-tour-hint { position: absolute; left: 0; right: 0; bottom: 44px; display: flex; flex-direction: column; align-items: center; gap: 12px; color: var(--on-dark-soft); font-size: .9rem; font-weight: 550; pointer-events: none; }
+.city-tour-mouse { width: 24px; height: 38px; border: 1.6px solid rgba(255, 255, 255, .55); border-radius: 13px; position: relative; }
+.city-tour-mouse::after { content: ""; position: absolute; left: 50%; top: 7px; width: 3px; height: 7px; margin-left: -1.5px; border-radius: 2px; background: var(--aqua); animation: tour-wheel 1.8s var(--ease) infinite; }
+@keyframes tour-wheel { 0% { translate: 0 0; opacity: 0; } 25% { opacity: 1; } 70% { translate: 0 12px; opacity: 1; } 100% { translate: 0 14px; opacity: 0; } }
+.city-tour-end { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding-inline: var(--gutter); pointer-events: none; opacity: 0; }
+.city-tour-end > div { pointer-events: auto; max-width: 620px; padding: 36px 40px; border-radius: 40px; background: radial-gradient(closest-side, rgba(4, 21, 19, .8), rgba(4, 21, 19, .5) 60%, rgba(4, 21, 19, 0)); }
+.city-tour-end h3 { color: #fff; font-size: clamp(2.1rem, 5vw, 3.2rem); }
+.city-tour-end p { color: var(--on-dark-soft); margin: 14px 0 0; font-size: 1.05rem; text-wrap: balance; }
+.city-tour-acts { display: flex; gap: 10px; justify-content: center; margin-top: 22px; flex-wrap: wrap; }
+.city-tour-more { color: var(--on-dark-faint); font-size: .82rem; }
+.city-tour-end .city-tour-more { margin-top: 18px; }
+@media (max-width: 760px) {
+  .city-tour-dot span, .city-tour-leave span { display: none; }
+  .city-tour-card { width: calc(100% - 2 * var(--gutter) - 28px); padding: 16px 18px 14px; }
+  .city-tour-card h3 { font-size: 1.3rem; }
+  .city-tour-title { font-size: 1.05rem; }
+}
 
 /* ---------- less motion ----------
    For visitors whose system asks for reduced motion the ambient animation

@@ -2803,7 +2803,7 @@ export const cityUi = {
   zoneLabel: "{name}: show EDS services and products",
   tabsLabel: "City districts",
   toolbarLabel: "City controls",
-  toolbar: { storm: "Send a storm", stormBusy: "Stop the storm", stormCancelled: "Storm stopped.", under: "Show the sewer", underOn: "Show the surface", expand: "Expand the city", collapse: "Back to the page", close: "Close" },
+  toolbar: { tour: "Take the tour", storm: "Send a storm", stormBusy: "Stop the storm", stormCancelled: "Storm stopped.", under: "Show the sewer", underOn: "Show the surface", expand: "Expand the city", collapse: "Back to the page", close: "Close" },
   captionRest: "Pick a district, send a storm, or show the sewer beneath the streets.",
   sensorsHeading: "Sensors on the map",
   tipLabel: "Sensor readings",
@@ -2826,6 +2826,25 @@ export const cityUi = {
     // shown while the sewer is on view
     underItems: [["gauge", "Area velocity flow meter"], ["waves", "Level sensor"], ["radio-tower", "Data logger"]] },
   expandedLabel: "The city, expanded",
+  // the tour: the visitor's own scrolling flies the camera through the city,
+  // district by district in `route` order (the way the water goes), each one
+  // taken apart as the camera arrives
+  tour: {
+    title: "City tour",
+    route: ["river", "sewer", "pump", "plant", "industry", "cbd", "ops"],
+    begin: "Scroll to fly in", beginTouch: "Swipe to fly in", count: "{n} districts",
+    flying: "Flying to {name}", at: "District {i} of {n}",
+    endTitle: "End of the tour", endSub: "Scroll on to continue the page",
+    leave: "Leave the tour", railLabel: "Tour districts", dot: "{name}, district {i} of {n}",
+    open: "Open this district",
+    end: { heading: "That's the city.", text: "Seven districts and one platform: every reading you saw arrives in EDS FlowSense.", enquire: "Start an enquiry", back: "Back to the page", more: "or keep scrolling" },
+    live: {
+      start: "City tour started. Scroll to fly through the city. Escape leaves the tour.",
+      arrive: "{name}, district {i} of {n}, taken apart.",
+      end: "End of the tour. Scroll on to continue the page.",
+      left: "Tour closed.",
+    },
+  },
   // taking a district apart into its three layers, and opening its asset
   explode: {
     take: "Take it apart", put: "Put it back together", back: "Back to the district", backCity: "Back to the city",
