@@ -2653,7 +2653,6 @@ html:has(.secbar) .band[id] { scroll-margin-top: calc(16px - clamp(56px, 7vw, 96
 .fs-stage::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: var(--split); background: var(--grain); pointer-events: none; z-index: -1; }
 .fs-stage-shot { margin: 0; }
 .fs-stage-shot figcaption { margin-top: 16px; max-width: 86ch; font-size: .92rem; line-height: 1.55; color: var(--ink-2); }
-.fs-stage-shot figcaption small { display: block; margin-top: 4px; font-size: .82rem; color: var(--muted); }
 .fs-facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: clamp(36px, 5vw, 56px) 0 0; padding: 0; list-style: none; border-top: 1px solid var(--border); }
 .fs-facts li { padding: 24px 24px 0 0; }
 .fs-facts li + li { padding-left: 24px; border-left: 1px solid var(--border); }

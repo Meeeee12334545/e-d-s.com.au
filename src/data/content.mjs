@@ -2231,19 +2231,17 @@ export const productPages = [
 export const flowsense = {
   title: "The whole network. Understood.",
   lede: "Live operations, infiltration and inflow, pump stations and calibrated hydraulic models, all on one validated record.",
-  // The Network Overview under the hero, and the line every screen on the
-  // page shares: they are photographs of the demonstration account.
+  // The Network Overview under the hero, and the key figures beneath it.
   stage: {
     shot: "overview",
     alt: "The FlowSense Network Overview: six status figures across the top, a list of the sites that need attention, and a map of the network on aerial imagery.",
-    caption: "The Network Overview opens on what needs attention, worst first, beside a map of where it is, and refreshes every sixty seconds.",
-    demoNote: "Screens on this page are photographed from the FlowSense demonstration account. Its sites and readings are synthetic.",
+    caption: "The Network Overview lists the sites that need attention, worst first, beside a map of where they are. It refreshes every sixty seconds.",
   },
   facts: [
-    ["60", "s", "between refreshes of the whole network"],
-    ["5", "", "ways in from your SCADA, with no EDS software on it"],
-    ["8", "", "blockage signatures, six of them from level alone"],
-    ["16", "", "engineering tools on a GIS canvas, by project and scenario"],
+    ["60", "s", "refresh rate across the whole network"],
+    ["5", "", "ways to connect your SCADA, with nothing installed on it"],
+    ["8", "", "blockage signatures, six of them from a level reading alone"],
+    ["16", "", "engineering tools on one GIS canvas, by project and scenario"],
   ],
   // Three products in one, and the purchase each one takes the place of.
   layers: {

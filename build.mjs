@@ -1622,7 +1622,7 @@ ${pageHero(r, { crumbs: [["FlowSense"]], eyebrow: "Sewer network intelligence", 
   <div class="wrap">
     <figure class="fs-stage-shot">
       ${fsFrame(FS.stage.shot, FS.stage.alt, { sizes: FS_SIZES.wide, cls: "lg", eager: true, i: 3 })}
-      <figcaption data-reveal style="--i:4">${esc(FS.stage.caption)} <small>${esc(FS.stage.demoNote)}</small></figcaption>
+      <figcaption data-reveal style="--i:4">${esc(FS.stage.caption)}</figcaption>
     </figure>
     <ul class="fs-facts">
       ${FS.facts.map(([v, u, l], n) => `<li data-reveal style="--i:${n}"><b>${esc(v)}${u ? `<small>${esc(u)}</small>` : ""}</b><span>${esc(l)}</span></li>`).join("")}
