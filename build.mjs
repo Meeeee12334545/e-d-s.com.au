@@ -122,7 +122,11 @@ function header(r, current, menuTab) {
   // column list. Each link carries a one-line description: the service's
   // or solution's summary, the brand's summary, the product's lede.
   const mLink = (i) => `<a href="${r}${i.href}">${icon(i.icon)}<span><b>${esc(i.label)}</b>${i.desc ? `<small>${esc(i.desc)}</small>` : ""}</span></a>`;
-  const navBtn = (label, keys) => `<button class="nav-link" aria-expanded="false"${keys.includes(current) ? ' aria-current="page"' : ""}>${label}${icon("chevron-down", false)}</button>`;
+  // Services and Products are each a link to the page that lists them all,
+  // with a chevron beside it that opens the menu (the menu also opens under
+  // the pointer, site.js), so the word can be clicked to go to the page and
+  // keyboard and touch visitors still have a button for the menu.
+  const navSplit = (label, href, keys) => `<div class="nav-split"><a class="nav-link" href="${r}${href}"${keys.includes(current) ? ' aria-current="page"' : ""}>${label}</a><button class="nav-toggle" type="button" aria-expanded="false" aria-controls="mega-${label.toLowerCase()}" aria-label="${label} menu">${icon("chevron-down", false)}</button></div>`;
   const tabs = [
     ...C.serviceGroups.map((g) => ({
       id: g.id, label: g.title, lede: g.lede, all: { href: `services/index.html#${g.id}`, label: "All services" },
@@ -136,8 +140,8 @@ function header(r, current, menuTab) {
   const openTab = tabs.some((t) => t.id === menuTab) ? menuTab : tabs[0].id;
   const tabbed = `
       <div class="nav-item has-mega wide">
-        ${navBtn("Services", ["services", "solutions"])}
-        <div class="mega mega-tabs">
+        ${navSplit("Services", "services/index.html", ["services", "solutions"])}
+        <div class="mega mega-tabs" id="mega-services">
           <div class="mega-rail">
             <p class="mega-head" id="mega-rail-label">Services and solutions</p>
             <div role="tablist" aria-labelledby="mega-rail-label">
@@ -156,8 +160,8 @@ function header(r, current, menuTab) {
   const pItems = [...C.brands.map((b) => ({ href: `products/${b.slug}.html`, icon: b.icon, label: b.name, desc: b.tag })), ...C.productPages.map((pg) => ({ href: `products/${pg.slug}.html`, icon: pg.icon, label: pg.name, desc: pg.tag })), { href: "products/lidott-alarm.html", icon: "bell", label: "LIDoTT Alarm", desc: C.lidott.lede }, { href: "products/alarm2.html", icon: "bell-ring", label: "Alarm2", desc: C.alarm2.lede }];
   const mega = (label, key, items, all) => `
       <div class="nav-item has-mega">
-        ${navBtn(label, [key])}
-        <div class="mega cols-2">
+        ${navSplit(label, all.href, [key])}
+        <div class="mega cols-2" id="mega-${key}">
           ${items.map(mLink).join("")}
           <a class="mega-all" href="${r}${all.href}"><span>${all.label}</span>${icon("arrow-right")}</a>
         </div>
