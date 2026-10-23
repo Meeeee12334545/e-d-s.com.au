@@ -105,6 +105,23 @@ const photoFigure = (f, { i, sizes } = {}) => `
   <div class="photo-frame"${f.pos ? ` style="--pos:${esc(f.pos)}"` : ""}>${photo(f.photo, f.alt, { sizes })}</div>
   ${f.caption ? `<figcaption>${esc(f.caption)}</figcaption>` : ""}
 </figure>`;
+// FlowSense screens. tools/flowsense_screens.py lifts them out of the
+// brochures into src/assets/img/flowsense as <name>-<w>x<h>.jpg with a WebP
+// twin, at one or two widths, laid out like the photographs above. Shown
+// in their own colours: they are the platform, not a photograph.
+const SHOTS = {};
+for (const f of readdirSync(path.join(ROOT, "src/assets/img/flowsense"))) {
+  const m = f.match(/^(.+)-(\d+)x(\d+)\.jpg$/);
+  if (m) (SHOTS[m[1]] ||= []).push({ w: +m[2], h: +m[3] });
+}
+for (const list of Object.values(SHOTS)) list.sort((a, b) => b.w - a.w);
+function shot(name, alt, { sizes = "(max-width: 980px) calc(100vw - 40px), 700px", eager = false } = {}) {
+  const v = SHOTS[name];
+  if (!v) throw new Error(`No FlowSense screen named "${name}" in src/assets/img/flowsense (see tools/flowsense_screens.py)`);
+  const set = (ext) => v.map((s) => `@root/assets/img/flowsense/${name}-${s.w}x${s.h}.${ext} ${s.w}w`).join(", ");
+  const [big] = v;
+  return `<picture><source type="image/webp" srcset="${set("webp")}" sizes="${sizes}"><img src="@root/assets/img/flowsense/${name}-${big.w}x${big.h}.jpg" srcset="${set("jpg")}" sizes="${sizes}" width="${big.w}" height="${big.h}" alt="${esc(alt)}"${eager ? ' fetchpriority="high"' : ' loading="lazy"'} decoding="async"></picture>`;
+}
 // Two photographs side by side, across the page.
 const figureRow = (figs) => `<div class="photo-row">${figs.map((f, i) => photoFigure(f, { i, sizes: "(max-width: 700px) calc(100vw - 40px), (max-width: 980px) calc(50vw - 28px), 612px" })).join("")}</div>`;
 // A product shot or drawing in the sidebar: { src, alt, caption, w, h }.
@@ -122,7 +139,11 @@ function header(r, current, menuTab) {
   // column list. Each link carries a one-line description: the service's
   // or solution's summary, the brand's summary, the product's lede.
   const mLink = (i) => `<a href="${r}${i.href}">${icon(i.icon)}<span><b>${esc(i.label)}</b>${i.desc ? `<small>${esc(i.desc)}</small>` : ""}</span></a>`;
-  const navBtn = (label, keys) => `<button class="nav-link" aria-expanded="false"${keys.includes(current) ? ' aria-current="page"' : ""}>${label}${icon("chevron-down", false)}</button>`;
+  // Services and Products are each a link to the page that lists them all,
+  // with a chevron beside it that opens the menu (the menu also opens under
+  // the pointer, site.js), so the word can be clicked to go to the page and
+  // keyboard and touch visitors still have a button for the menu.
+  const navSplit = (label, href, keys) => `<div class="nav-split"><a class="nav-link" href="${r}${href}"${keys.includes(current) ? ' aria-current="page"' : ""}>${label}</a><button class="nav-toggle" type="button" aria-expanded="false" aria-controls="mega-${label.toLowerCase()}" aria-label="${label} menu">${icon("chevron-down", false)}</button></div>`;
   const tabs = [
     ...C.serviceGroups.map((g) => ({
       id: g.id, label: g.title, lede: g.lede, all: { href: `services/index.html#${g.id}`, label: "All services" },
@@ -136,8 +157,8 @@ function header(r, current, menuTab) {
   const openTab = tabs.some((t) => t.id === menuTab) ? menuTab : tabs[0].id;
   const tabbed = `
       <div class="nav-item has-mega wide">
-        ${navBtn("Services", ["services", "solutions"])}
-        <div class="mega mega-tabs">
+        ${navSplit("Services", "services/index.html", ["services", "solutions"])}
+        <div class="mega mega-tabs" id="mega-services">
           <div class="mega-rail">
             <p class="mega-head" id="mega-rail-label">Services and solutions</p>
             <div role="tablist" aria-labelledby="mega-rail-label">
@@ -156,8 +177,8 @@ function header(r, current, menuTab) {
   const pItems = [...C.brands.map((b) => ({ href: `products/${b.slug}.html`, icon: b.icon, label: b.name, desc: b.tag })), ...C.productPages.map((pg) => ({ href: `products/${pg.slug}.html`, icon: pg.icon, label: pg.name, desc: pg.tag })), { href: "products/lidott-alarm.html", icon: "bell", label: "LIDoTT Alarm", desc: C.lidott.lede }, { href: "products/alarm2.html", icon: "bell-ring", label: "Alarm2", desc: C.alarm2.lede }];
   const mega = (label, key, items, all) => `
       <div class="nav-item has-mega">
-        ${navBtn(label, [key])}
-        <div class="mega cols-2">
+        ${navSplit(label, all.href, [key])}
+        <div class="mega cols-2" id="mega-${key}">
           ${items.map(mLink).join("")}
           <a class="mega-all" href="${r}${all.href}"><span>${all.label}</span>${icon("arrow-right")}</a>
         </div>
@@ -401,7 +422,10 @@ ${searchDialog()}
 ${scripts.map((s) => `<script src="${asset(r, `js/${s}`)}" defer></script>`).join("\n")}${tracker(r, file)}
 </body>
 </html>
-`.replaceAll("@root/", r);
+`.replaceAll("@root/", r)
+    // Every link to a document (a datasheet, manual, brochure, white paper or
+    // download in assets/docs) saves the file rather than opening it in the tab.
+    .replace(/<a\s[^>]*href="[^"]*assets\/docs\/[^"]*"[^>]*>/g, (a) => (/\sdownload(?=[\s>=])/.test(a) ? a : a.replace(/>$/, " download>")));
   // In-page links, product deep links and form labels all rely on ids being unique.
   const ids = [...out.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]);
   const dupes = ids.filter((id, i) => ids.indexOf(id) !== i);
@@ -853,7 +877,7 @@ function cityLabel(ref) {
 add({
   file: "index.html",
   title: "Environmental Data Services | Water & Wastewater Monitoring",
-  description: "Environmental Data Services (EDS): monitoring instruments, field crews and data services for water and wastewater, across Australia since 1991.",
+  description: "Environmental Data Services (EDS): flow meters, samplers, trained field crews and FlowSense data for water and wastewater. Australian owned since 1991.",
   current: "home",
   scripts: ["city-scene.js", "city-weather.js", "city.js"],
   body: (r) => {
@@ -1067,7 +1091,7 @@ ${waysSection(r)}
     </div>
     <div class="about-block" id="industries" data-reveal style="--i:1">
       <h3 class="h-md">Built for critical infrastructure.</h3>
-      <p>EDS provides the capability, experience and service that clients rely on for critical infrastructure and operational monitoring.</p>
+      <p>Government, utilities and industry rely on EDS for critical infrastructure and operational monitoring, and have for more than thirty years.</p>
       <ul class="mini-grid">
         ${C.industries.map(([ic, t, d]) => `<li><span class="card-icon">${icon(ic)}</span><span><b>${t}</b><span>${d}</span></span></li>`).join("")}
       </ul>
@@ -1091,7 +1115,7 @@ add({
   description: `${C.services.length} services from EDS: sewer flow and I&I monitoring, blockage alarms, water quality, sampling, rainfall, pump stations, SCADA integration, calibration and more.`,
   current: "services",
   body: (r) => `
-${pageHero(r, { crumbs: [["Services"]], title: "Specialised services for water and wastewater networks.", lede: "From a single audit to a national monitoring program, delivered by trained crews in every state.", actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${r}contact.html">Talk to our team ${icon("arrow-right")}</a><a class="btn btn-ghost btn-lg" href="${site.phoneHref}">${icon("phone")} ${site.phone}</a><div class="chips">${C.serviceGroups.map((g) => `<a class="chip" href="#${g.id}">${esc(g.title)}</a>`).join("")}</div>`, visual: heroToc(C.serviceGroups.map((g) => [g.id, g.title, C.services.filter((s) => s.group === g.id).length])) })}
+${pageHero(r, { crumbs: [["Services"]], title: "Specialised services for water and wastewater networks.", lede: "From a single audit to a national monitoring program, delivered by trained EDS crews, Australia wide.", actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${r}contact.html">Talk to our team ${icon("arrow-right")}</a><a class="btn btn-ghost btn-lg" href="${site.phoneHref}">${icon("phone")} ${site.phone}</a><div class="chips">${C.serviceGroups.map((g) => `<a class="chip" href="#${g.id}">${esc(g.title)}</a>`).join("")}</div>`, visual: heroToc(C.serviceGroups.map((g) => [g.id, g.title, C.services.filter((s) => s.group === g.id).length])) })}
 ${C.serviceGroups.map((g, gi) => `
 <section class="section${gi % 2 ? " alt" : ""}" id="${g.id}"><div class="wrap">
   <div class="section-head"><p class="eyebrow">${esc(g.title)}</p><h2 class="h-lg" data-reveal>${esc(g.heading)}</h2><p class="lede" data-reveal style="--i:1">${esc(g.lede)}</p></div>
@@ -1332,7 +1356,7 @@ ${pageHero(r, { crumbs: [["Products"]], title: "Industry leading instruments, ba
       <label class="finder-search">${icon("search", false)}<input type="search" placeholder="Search ${products.length} instruments by name, range or what they measure" aria-label="Search instruments" autocomplete="off" spellcheck="false"></label>
     </div>` })}
 <section class="section ranges-strip" id="ranges"><div class="wrap">
-  <div class="ranges-head"><h2 class="h-md" data-reveal>Browse by range</h2><p data-reveal style="--i:1">EDS is a manufacturer, and represents leading manufacturers, in water supply and management, wastewater management, flow monitoring and process control.</p></div>
+  <div class="ranges-head"><h2 class="h-md" data-reveal>Browse by range</h2><p data-reveal style="--i:1">EDS makes its own instruments and represents leading manufacturers, across water supply, wastewater, flow monitoring and process control. Every range here is one we install, service and calibrate ourselves.</p></div>
   <div class="range-tiles">
     ${C.brands.map((b, n) => {
       const count = products.filter((p) => p.brand === b).length;
@@ -1536,59 +1560,172 @@ ${ctaSection(r, { ...pg.cta, ...pricing })}`,
 }
 
 /* ---- FlowSense ---- */
+// A tour of the platform in its own screens: each stop is a heading, a short
+// lede and four points beside the screen they describe, in the order the
+// platform's menu runs (Monitor, Analyse, Engineer, Deliver). The Pump
+// Station Manager is the one showpiece band, with its screen pinned. The
+// copy and the screens are `flowsense` in content.mjs. The rate card stays in
+// the brochures, not on the page (EDS, 23 October 2026).
+const FS = C.flowsense;
+const FS_SIZES = {
+  single: "(max-width: 980px) calc(100vw - 40px), 700px",
+  stack: "(max-width: 980px) calc(100vw - 40px), 640px",
+  over: "(max-width: 980px) calc(60vw - 24px), 400px",
+  beside: "(max-width: 980px) calc(57vw - 24px), 400px",
+  besideB: "(max-width: 980px) calc(43vw - 24px), 300px",
+  column: "(max-width: 980px) calc(100vw - 40px), 700px",
+  wide: "(max-width: 980px) calc(100vw - 40px), 1240px",
+  tall: "(max-width: 980px) 70vw, 300px",
+};
+const fsFrame = (name, alt, { sizes, cls = "", eager = false, i } = {}) => `<div class="fs-frame${cls ? ` ${cls}` : ""}" data-reveal${i != null ? ` style="--i:${i}"` : ""}>${shot(name, alt, { sizes, eager })}</div>`;
+const fsPoints = (points) => `<ul class="fs-points">${points.map(([t, d], n) => `<li data-reveal style="--i:${n + 2}"><b>${esc(t)}</b><span>${esc(d)}</span></li>`).join("")}</ul>`;
+const fsTags = (tags) => `<ul class="fs-tags">${tags.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>`;
+function fsStop(s, n) {
+  const [a, b] = s.shots;
+  const media = s.layout === "stack" ? `<div class="fs-media stack">${fsFrame(a[0], a[1], { sizes: FS_SIZES.stack })}${fsFrame(b[0], b[1], { sizes: FS_SIZES.over, cls: "over", i: 2 })}</div>`
+    : s.layout === "beside" ? `<div class="fs-media beside">${fsFrame(a[0], a[1], { sizes: FS_SIZES.beside })}${fsFrame(b[0], b[1], { sizes: FS_SIZES.besideB, i: 2 })}</div>`
+    : s.layout === "column" ? `<div class="fs-media column">${fsFrame(a[0], a[1], { sizes: FS_SIZES.column })}${fsFrame(b[0], b[1], { sizes: FS_SIZES.column, i: 2 })}</div>`
+    : `<div class="fs-media">${fsFrame(a[0], a[1], { sizes: FS_SIZES[s.layout] || FS_SIZES.single })}</div>`;
+  const copy = `<div class="fs-stop-copy">
+    <div class="fs-stop-head">${s.group ? `<p class="eyebrow">${esc(s.group)}</p>` : ""}<h2 data-reveal>${esc(s.heading)}</h2><p class="lede" data-reveal style="--i:1">${esc(s.lede)}</p></div>
+    <div>${fsPoints(s.points)}${s.tools ? `<p class="fs-tags-note" data-reveal>${esc(s.toolsNote)}</p>${fsTags(s.tools)}` : ""}</div>
+  </div>`;
+  const tone = n % 2 ? " alt" : "";
+  if (s.layout === "wide") return `<section class="section band fs-stop wide${tone}" id="${s.id}"><div class="wrap">${copy}${media}</div></section>`;
+  return `<section class="section band fs-stop${n % 2 ? " rev" : ""}${tone}${s.layout === "tall" ? " tall" : ""}" id="${s.id}"><div class="wrap fs-stop-in">${copy}${media}</div></section>`;
+}
+// The section bar for this page: the same bar as the service pages, with
+// the walkthrough as its action.
+const fsBar = (r) => `
+<nav class="secbar" aria-label="On this page"><div class="wrap secbar-in">
+  <ol>${[["platform", "Platform"], ["monitor", "Monitor"], ["blockage-watch", "Blockage Watch"], ["psm", "Pump stations"], ["analyse", "Analyse"], ["engineer", "Engineer"], ["reports", "Reports"], ["connect", "Connect"], ["standards", "Standards"], ["questions", "Questions"], ["documents", "Documents"]].map(([id, label]) => `<li><a href="#${id}">${label}</a></li>`).join("")}</ol>
+  <a class="btn btn-brand secbar-cta" href="${contactHref(r, { topic: "EDS FlowSense" })}">Request a walkthrough</a>
+</div></nav>`;
+// The wet well trace beside the Pump Station Manager: five hours of level
+// drawn as a schematic, filling slowly as sewage arrives and emptying fast
+// as the pumps run, between the start and stop levels.
+const fsTrace = (t) => `
+<figure class="fs-trace" data-reveal>
+  <svg viewBox="0 0 640 230" aria-hidden="true">
+    <g stroke="#dfe5ec" stroke-width="1"><path d="M20 20V200M20 200H620"/></g>
+    <g stroke-dasharray="5 5" stroke-width="1.3"><path d="M20 56H620" stroke="#0d7c72"/><path d="M20 168H620" stroke="#5b6878"/></g>
+    <path d="M20 168 L170 56 L198 168 L348 56 L376 168 L526 56 L554 168 L620 118 V200 H20 Z" fill="#5fb4a6" fill-opacity=".14"/>
+    <path class="draw" pathLength="100" d="M20 168 L170 56 L198 168 L348 56 L376 168 L526 56 L554 168 L620 118" fill="none" stroke="#0c5f59" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
+    <g font-family="Geist, sans-serif" font-size="11.5" fill="#26313f">
+      <text x="572" y="50" font-weight="650">Start</text><text x="574" y="184" font-weight="650">Stop</text>
+      <text x="22" y="216" fill="#5b6878">${esc(t.rise)}</text>
+      <text x="206" y="40" fill="#5b6878">${esc(t.fall)}</text>
+      <text x="22" y="40" fill="#5b6878" font-size="10.5">Wet well level</text>
+    </g>
+    <g fill="none" stroke="#5b6878" stroke-width="1"><path d="M96 203 L96 194 L90 182"/><path d="M212 44 L212 54 L188 100"/></g>
+  </svg>
+  <figcaption><b>${esc(t.title)}</b> ${esc(t.text)}</figcaption>
+</figure>`;
 add({
   file: "flowsense.html",
   title: "EDS FlowSense | Sewer network intelligence",
-  description: "EDS FlowSense: sewer network monitoring, flow analytics and engineering intelligence by Environmental Data Services.",
+  description: "EDS FlowSense: live operations, infiltration and inflow, pump stations and calibrated hydraulic models on one validated record. Built in Australia by EDS.",
   current: "flowsense",
-  body: (r) => `
-${pageHero(r, { crumbs: [["FlowSense"]], iconName: "waves", title: "Sewer network intelligence.", lede: C.flowsense.lede, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${site.flowsenseUrl}" rel="noopener">Open FlowSense ${icon("arrow-up-right")}</a><a class="btn btn-ghost btn-lg" href="${contactHref(r, { topic: "EDS FlowSense" })}">Request a walkthrough</a>`, visual: heroToc([["platform", "Inside the platform"], ["capabilities", "Capabilities", C.flowsense.features.length], ["standards", "Methods and standards"], ["questions", "Questions", C.flowsense.faq.length], ["documents", "Documents", C.flowsense.docs.length]]) })}
-<section class="section fs-band" id="platform"><div class="wrap fs-grid">
-  <div>
-    <p class="eyebrow">Inside the platform</p>
-    <h2 class="h-lg" data-reveal>From a reading in a manhole to a decision.</h2>
-    <div class="fs-list" role="tablist" data-reveal style="--i:1">
-      ${[["flame", "I/I heat map", "One colour per severity band, with arrows showing which way the water runs."], ["siren", "Blockage Watch", "Early warning before a dry weather spill."], ["fan", "Pump Station Manager", "The wet well drawn to scale, with its live level."], ["bell-ring", "Alarms that reach people", "Sent to the email and mobile your team holds that day."]]
-        .map(([ic, t, d], i) => `<button class="fs-item" role="tab" aria-selected="${i === 0}"><span class="card-icon">${icon(ic)}</span><span><b>${t}</b><span>${d}</span></span></button>`).join("")}
-    </div>
+  body: (r) => {
+    const cut = FS.tour.findIndex((s) => s.id === "analyse");
+    const first = FS.tour.slice(0, cut), second = FS.tour.slice(cut);
+    const walkthrough = contactHref(r, { topic: "EDS FlowSense" });
+    return `
+${pageHero(r, { crumbs: [["FlowSense"]], eyebrow: "Sewer network intelligence", title: FS.title, lede: FS.lede, compact: true, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${site.flowsenseUrl}" rel="noopener">Open FlowSense ${icon("arrow-up-right")}</a><a class="btn btn-ghost btn-lg" href="${walkthrough}">Request a walkthrough</a>` })}
+<section class="fs-stage" aria-label="The FlowSense Network Overview">
+  <div class="wrap">
+    <figure class="fs-stage-shot">
+      ${fsFrame(FS.stage.shot, FS.stage.alt, { sizes: FS_SIZES.wide, cls: "lg", eager: true, i: 3 })}
+      <figcaption data-reveal style="--i:4">${esc(FS.stage.caption)}</figcaption>
+    </figure>
+    <ul class="fs-facts">
+      ${FS.facts.map(([v, u, l], n) => `<li data-reveal style="--i:${n}"><b>${esc(v)}${u ? `<small>${esc(u)}</small>` : ""}</b><span>${esc(l)}</span></li>`).join("")}
+    </ul>
   </div>
-  ${fsScreen()}
-</div></section>
-<section class="section" id="capabilities"><div class="wrap">
-  <div class="section-head"><h2 class="h-lg" data-reveal>Everything your network is telling you.</h2></div>
-  <div class="grid c3">
-    ${C.flowsense.features.map(([ic, t, d], n) => `<div class="card hoverable holder" data-reveal style="--i:${n % 3}"><span class="card-icon">${icon(ic)}</span><h3>${esc(t)}</h3><p>${esc(d)}</p></div>`).join("")}
+</section>
+${fsBar(r)}
+<section class="section band alt" id="platform"><div class="wrap">
+  <div class="band-head"><h2 class="h-lg" data-reveal>${esc(FS.layers.heading)}</h2><p class="lede" data-reveal style="--i:1">${esc(FS.layers.lede)}</p></div>
+  <div class="grid c3 fs-layers">
+    ${FS.layers.items.map(([ic, t, d, rep], n) => `<div class="card hoverable holder" data-reveal style="--i:${n}"><span class="card-icon">${icon(ic)}</span><h3>${esc(t)}</h3><p>${esc(d)}</p><small>${esc(rep)}</small></div>`).join("")}
   </div>
 </div></section>
-<section class="section alt" id="standards"><div class="wrap">
-  <div class="section-head"><h2 class="h-lg" data-reveal>${esc(C.flowsense.standards.heading)}</h2><p class="lede" data-reveal style="--i:1">${esc(C.flowsense.standards.lede)}</p></div>
-  <div class="grid c3">
-    ${C.flowsense.standards.items.map(([ic, t, d], n) => `<div class="card hoverable holder" data-reveal style="--i:${n % 3}"><span class="card-icon">${icon(ic)}</span><h3>${esc(t)}</h3><p>${esc(d)}</p></div>`).join("")}
+${first.map(fsStop).join("")}
+<section class="section fs-band fs-psm" id="psm"><div class="wrap">
+  <div class="fs-psm-head">
+    <p class="eyebrow">${esc(FS.psm.eyebrow)}</p>
+    <h2 class="h-lg" data-reveal>${esc(FS.psm.heading)}</h2>
+    <p class="lede" data-reveal style="--i:1">${esc(FS.psm.lede)}</p>
   </div>
-  <p class="note" data-reveal style="margin-top:22px">${esc(C.flowsense.standards.note)}</p>
+  <div class="fs-psm-stage">
+    <figure class="fs-frame lg fs-pinned" data-reveal style="--i:2">
+      ${shot(FS.psm.shot[0], FS.psm.shot[1], { sizes: "(max-width: 980px) calc(100vw - 40px), 760px" })}
+      ${FS.psm.pins.map(([t, , x, y], i) => `<span class="fs-pin" data-n="${i + 1}" style="--x:${x}%;--y:${y}%" aria-hidden="true"><b>${i + 1}</b></span>`).join("")}
+    </figure>
+    <ol class="fs-key" aria-label="What the screen shows">
+      ${FS.psm.pins.map(([t, d], i) => `<li data-n="${i + 1}" data-reveal style="--i:${i + 3}"><span>${i + 1}</span><div><b>${esc(t)}</b><p>${esc(d)}</p></div></li>`).join("")}
+    </ol>
+  </div>
+  <div class="fs-psm-more">
+    ${fsTrace(FS.psm.trace)}
+    ${fsPoints(FS.psm.points)}
+  </div>
+  <p class="fs-psm-needs" data-reveal>${esc(FS.psm.needs)}</p>
+  <div class="hero-actions" data-reveal style="--i:1">
+    <a class="btn btn-primary btn-lg" href="${r}${FS.psm.link[0]}">${esc(FS.psm.link[1])} ${icon("arrow-right")}</a>
+    <a class="btn btn-ghost btn-lg" href="${walkthrough}">Request a walkthrough</a>
+  </div>
 </div></section>
-<section class="section" id="questions"><div class="wrap split rev">
+${second.map(fsStop).join("")}
+<section class="section band" id="connect"><div class="wrap">
+  <div class="band-head"><h2 class="h-lg" data-reveal>${esc(FS.connect.heading)}</h2><p class="lede" data-reveal style="--i:1">${esc(FS.connect.lede)}</p></div>
+  <div class="fs-flow">
+    <div data-reveal><h3>${icon("arrow-down-to-line", false)} In</h3><ul>${FS.connect.in.map((l) => `<li>${icon("check", false)}<span>${esc(l)}</span></li>`).join("")}</ul></div>
+    <div class="mid" data-reveal style="--i:1"><h3>${icon("database", false)} One validated record</h3><ul>${FS.connect.record.map((l) => `<li>${icon("check", false)}<span>${esc(l)}</span></li>`).join("")}</ul></div>
+    <div data-reveal style="--i:2"><h3>${icon("arrow-up-from-line", false)} Out</h3><ul>${FS.connect.out.map((l) => `<li>${icon("check", false)}<span>${esc(l)}</span></li>`).join("")}</ul></div>
+  </div>
+  <p class="fs-flow-note" data-reveal>${esc(FS.connect.note)}</p>
+</div></section>
+<section class="section band alt" id="apart"><div class="wrap">
+  <div class="band-head"><h2 class="h-lg" data-reveal>${esc(FS.apart.heading)}</h2><p class="lede" data-reveal style="--i:1">${esc(FS.apart.lede)}</p></div>
+  <ul class="deliv n4">${FS.apart.items.map(([t, d], n) => `<li data-reveal style="--i:${n % 4}"><b>${esc(t)}</b><p>${esc(d)}</p></li>`).join("")}</ul>
+</div></section>
+<section class="section band" id="standards"><div class="wrap">
+  <div class="band-head"><h2 class="h-lg" data-reveal>${esc(FS.standards.heading)}</h2><p class="lede" data-reveal style="--i:1">${esc(FS.standards.lede)}</p></div>
+  <ul class="fs-std">${FS.standards.items.map(([ic, t, d], n) => `<li data-reveal style="--i:${n % 4}"><span class="card-icon">${icon(ic)}</span><b>${esc(t)}</b><p>${esc(d)}</p></li>`).join("")}</ul>
+  <p class="fs-tags-note" data-reveal>${esc(FS.standards.methodsNote)}</p>
+  ${fsTags(FS.standards.methods)}
+  <ul class="fs-assure">${FS.standards.assurance.map(([ic, t, d], n) => `<li data-reveal style="--i:${n}">${icon(ic, false)}<b>${esc(t)}</b><small>${esc(d)}</small></li>`).join("")}</ul>
+  <div class="fs-trust" data-reveal><p>${esc(FS.standards.instruments)}</p><p class="note">${esc(FS.standards.note)}</p></div>
+  <div class="fs-clients">
+    <p>${esc(FS.standards.clientsHeading)}</p>
+    <ul class="logo-grid" aria-label="Clients">${C.clients.map((c, i) => `<li data-reveal style="--i:${i % 5}"><img src="${c.src}" alt="${esc(c.name)}" loading="lazy"></li>`).join("")}</ul>
+    <p class="note">${esc(FS.standards.clientsNote)}</p>
+  </div>
+</div></section>
+<section class="section band alt" id="questions"><div class="wrap split rev">
   <div class="section-head" style="margin:0"><h2 class="h-lg" data-reveal>What councils and utilities ask us.</h2><p class="lede" data-reveal style="--i:1">If your question is not here, our team will answer it on ${site.phone}.</p></div>
-  <div data-reveal>${faqHtml(C.flowsense.faq)}</div>
+  <div data-reveal>${faqHtml(FS.faq)}</div>
 </div></section>
-<section class="section alt" id="documents"><div class="wrap">
+<section class="section band" id="documents"><div class="wrap">
   <div class="section-head"><h2 class="h-lg" data-reveal>Read more about FlowSense.</h2></div>
   <ul class="doc-list grid c2">
-    ${C.flowsense.docs.map((d, n) => `<li data-reveal style="--i:${n}"><a href="${d.href}" rel="noopener"><span class="card-icon">${icon("file-text")}</span><span>${esc(d.label)}<small>${esc(d.note)} ${docType(d.href)}.</small></span>${icon("download")}</a></li>`).join("")}
+    ${FS.docs.map((d, n) => `<li data-reveal style="--i:${n}"><a href="${d.href}" rel="noopener"><span class="card-icon">${icon("file-text")}</span><span>${esc(d.label)}<small>${esc(d.note)} ${docType(d.href)}.</small></span>${icon("download")}</a></li>`).join("")}
   </ul>
 </div></section>
-${ctaSection(r, { title: "See FlowSense on your own network.", lede: "FlowSense comes with EDS monitoring. Ask us for a walkthrough using your sites.", topic: "EDS FlowSense" })}`,
+${ctaSection(r, { title: "See it on your own network.", lede: "Book a live demonstration on your own sites, and bring your hardest question about how a figure was calculated. We will show you the working behind every number on the screen.", topic: "EDS FlowSense" })}`;
+  },
 });
 
 /* ---- about ---- */
 add({
   file: "about.html",
   title: "About EDS | Environmental Data Services",
-  description: "EDS is an Australian owned and operated company, a market leader in equipment and services for the water and wastewater industry since 1991.",
+  description: "EDS: Australian owned and operated since 1991, and a market leader in equipment and services for the water and wastewater industry.",
   current: "about",
   scripts: ["widgets.js"],
   body: (r) => `
-${pageHero(r, { crumbs: [["About"]], title: "Australian owned and operated since 1991.", lede: "Scientists, engineers and technicians who excel in every facet of environmental monitoring and project delivery.", visual: heroFacts() })}
+${pageHero(r, { crumbs: [["About"]], title: "Australian owned and operated since 1991.", lede: "Scientists, engineers and technicians who know water and wastewater monitoring from the manhole up.", visual: heroFacts() })}
 <section class="section"><div class="wrap split">
   <div class="prose" data-reveal>${C.about.intro.map((p) => `<p>${esc(p)}</p>`).join("")}<h2>Our mission</h2>${C.about.mission.map((p) => `<p>${esc(p)}</p>`).join("")}</div>
   <aside class="aside">
@@ -1652,7 +1789,7 @@ ${pageHero(r, { crumbs: [["Resources"]], title: "White papers, downloads and sup
     ${C.papers.map((p, n) => `
     <a class="card paper tilt" href="${p.href}" rel="noopener" data-reveal style="--i:${n}">
       <div class="paper-top"><span class="card-icon">${icon("file-text")}</span><span class="tag">${p.date}</span></div>
-      <div class="paper-body"><h3>${esc(p.title)}</h3><p>${esc(p.text)}</p><span class="go" aria-hidden="true">${icon("arrow-up-right")}</span></div>
+      <div class="paper-body"><h3>${esc(p.title)}</h3><p>${esc(p.text)}</p><span class="go" aria-hidden="true">${icon("download")}</span></div>
     </a>`).join("")}
   </div>
 </div></section>
@@ -1805,7 +1942,7 @@ add({
   current: "contact",
   scripts: ["widgets.js"],
   body: (r) => `
-${pageHero(r, { crumbs: [["Contact"]], title: "Call or visit. We would like to hear about your project.", lede: `${site.hours}, with one number for every state.`, visual: heroPanel("Quickest ways to reach us", `
+${pageHero(r, { crumbs: [["Contact"]], title: "Give us a call or drop in. We'd love to hear about your project.", lede: `${site.hours}, with one number for every state.`, visual: heroPanel("Quickest ways to reach us", `
   <a class="hero-call" href="${site.phoneHref}">${icon("phone")}<span><small>Call from anywhere in Australia</small><b>${site.phone}</b></span></a>
   <ul class="hero-links">
     <li><a href="#enquiry">${icon("message-square-text")}<span>Start an enquiry</span>${icon("arrow-down")}</a></li>
@@ -1867,16 +2004,34 @@ ${pageHero(r, { crumbs: [["Page not found"]], iconName: "waves", eyebrow: "Error
 });
 
 /* ---- privacy ---- */
+// content/privacy.txt, one paragraph a line: the first line is the page title
+// and the second its lede. A line that starts "1. " (and so on) is a section
+// heading, a run of lines that start "- " is a list, and [words](url) is a link.
 const privacy = (await readFile(path.join(ROOT, "content/privacy.txt"), "utf8")).split("\n").map((l) => l.trim()).filter(Boolean);
+const legalLine = (l) => esc(l).replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (_, words, href) => `<a href="${href}" rel="noopener">${words}</a>`);
+const legalHtml = (lines) => {
+  const out = [];
+  let list = null;
+  for (const l of lines) {
+    if (l.startsWith("- ")) {
+      if (!list) out.push((list = []));
+      list.push(`  <li>${legalLine(l.slice(2))}</li>`);
+      continue;
+    }
+    list = null;
+    out.push(/^\d+\.\s/.test(l) && l.length < 90 ? `<h2>${esc(l)}</h2>` : `<p>${legalLine(l)}</p>`);
+  }
+  return out.map((x) => (Array.isArray(x) ? `<ul>\n${x.join("\n")}\n</ul>` : x)).join("\n");
+};
 add({
   file: "privacy.html",
   title: "Privacy policy | EDS",
-  description: "EDS privacy policy and statement.",
+  description: "What the EDS website collects when you visit or get in touch, why, who sees it, and how to ask us about it.",
   current: "",
   body: (r) => `
-${pageHero(r, { crumbs: [["Privacy policy"]], title: "EDS Privacy Policy & Statement", lede: privacy[1] })}
+${pageHero(r, { crumbs: [["Privacy policy"]], title: privacy[0], lede: privacy[1] })}
 <section class="section"><div class="wrap"><div class="legal">
-  ${privacy.slice(2).map((l) => (/^\d+\.\s/.test(l) && l.length < 90 ? `<h2>${esc(l)}</h2>` : `<p>${esc(l)}</p>`)).join("\n")}
+  ${legalHtml(privacy.slice(2))}
 </div></div></section>`,
 });
 
@@ -1886,7 +2041,7 @@ ${pageHero(r, { crumbs: [["Privacy policy"]], title: "EDS Privacy Policy & State
 // Everything the search palette (search.js) can find, grouped by `g`. Links
 // are relative to the site root, and search.js adds each page's way back to
 // it. `b` is extra text to match on that is never shown; `x` marks links that
-// leave the site.
+// leave the site and `d` the documents, which download rather than open.
 function searchIndex() {
   const items = [];
   const text = (...parts) => parts.flat(Infinity).filter(Boolean).join(" ");
@@ -1904,7 +2059,7 @@ function searchIndex() {
   }
   for (const b of C.brands) put("Product ranges", b.title, b.tag, `products/${b.slug}.html`, { i: b.icon, b: text(b.name, b.summary, b.intro, blockText(b.blocks), b.groups.map((g) => g.name)) });
   put("Pages", "Instrument finder", `All ${products.length} instruments, filtered by type or searched by name.`, "products/index.html#finder", { i: "package-search", b: "products catalogue range brands" });
-  put("Pages", "EDS FlowSense", "Sewer network intelligence: flow analytics and engineering insight.", "flowsense.html", { i: "waves", b: text(C.flowsense.lede, C.flowsense.features.map(([, t, d]) => [t, d]), C.flowsense.standards.items.map(([, t, d]) => [t, d]), C.flowsense.faq) });
+  put("Pages", "EDS FlowSense", "Sewer network intelligence: flow analytics and engineering insight.", "flowsense.html", { i: "waves", b: text(C.flowsense.lede, C.flowsense.tour.flatMap((t) => [[t.heading, t.lede], ...t.points]), [[C.flowsense.psm.heading, C.flowsense.psm.lede], ...C.flowsense.psm.points], C.flowsense.apart.items, C.flowsense.standards.items.map(([, t, d]) => [t, d]), C.flowsense.faq) });
   put("Pages", "About EDS", "Australian owned and operated since 1991.", "about.html", { i: "building-2", b: text(C.about.intro, C.about.mission, C.about.approach.items.map(([, t, d]) => [t, d]), C.about.timeline, "history founders story") });
   put("Pages", "Resources", "White papers, downloads and support.", "resources.html", { i: "book-open", b: "manuals software drivers datasheets passwords rma" });
   put("Pages", "Contact EDS", `${site.hours}. ${site.phone} from anywhere in Australia.`, "contact.html", { i: "messages-square", b: text(site.address, "enquiry form quote") });
@@ -1912,11 +2067,11 @@ function searchIndex() {
   put("Pages", "All solutions", "Monitoring applied to the problem in front of you.", "solutions/index.html", { i: "layout-grid" });
   put("Pages", "Home", site.tagline, "index.html", { i: "house" });
   put("Pages", "Privacy policy", "How EDS handles personal information.", "privacy.html", { i: "lock" });
-  for (const p of C.papers) put("Documents", p.title, `${p.kind || "White paper"} · ${p.date}`, p.href, { i: "file-text", x: 1, b: p.text });
-  for (const g of C.downloads) for (const [label, href] of g.items) put("Documents", label, g.group, plain(href), { i: g.icon, x: 1, b: g.note });
+  for (const p of C.papers) put("Documents", p.title, `${p.kind || "White paper"} · ${p.date}`, p.href, { i: "file-text", d: 1, b: p.text });
+  for (const g of C.downloads) for (const [label, href] of g.items) put("Documents", label, g.group, plain(href), { i: g.icon, d: 1, b: g.note });
   for (const p of products) {
     for (const d of p.docs || []) {
-      if (!items.some((e) => e.h === plain(d.href))) put("Documents", `${p.name}: ${d.label}`, `${p.brand.name} · ${docType(d.href)}`, plain(d.href), { i: "file-text", x: 1, b: text(p.brand.title, p.note) });
+      if (!items.some((e) => e.h === plain(d.href))) put("Documents", `${p.name}: ${d.label}`, `${p.brand.name} · ${docType(d.href)}`, plain(d.href), { i: "file-text", d: 1, b: text(p.brand.title, p.note) });
     }
   }
   put("Contact", `Call ${site.phone}`, `${site.hours}, from anywhere in Australia`, site.phoneHref, { i: "phone", b: "phone ring telephone call" });
@@ -1928,7 +2083,7 @@ function searchIndex() {
   put("Sign in", "Remote data access", "DetectData, for Detectronic instruments", site.remoteDataUrl, { i: "globe", x: 1, b: "login detecdata" });
 
   const icons = {};
-  for (const name of new Set(items.map((e) => e.i).filter(Boolean).concat("arrow-right", "arrow-up-right", "search-x"))) { icon(name); icons[name] = iconCache.get(name); }
+  for (const name of new Set(items.map((e) => e.i).filter(Boolean).concat("arrow-right", "arrow-up-right", "download", "search-x"))) { icon(name); icons[name] = iconCache.get(name); }
   const suggested = ["services/sewer-flow-monitoring.html", "services/inflow-infiltration-studies.html", "services/data-as-a-service.html", "products/lidott-alarm.html", "flowsense.html", "products/index.html#finder", site.phoneHref];
   return { items, icons, suggested };
 }

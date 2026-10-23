@@ -38,10 +38,27 @@
   const onL = (x, yd, a, b, z0, z1) => [P(x + a, yd, z0), P(x + b, yd, z0), P(x + b, yd, z1), P(x + a, yd, z1)];
   const onR = (xw, y, a, b, z0, z1) => [P(xw, y + a, z0), P(xw, y + b, z0), P(xw, y + b, z1), P(xw, y + a, z1)];
   const mix = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+  // The light: a high sun in the north-north-east, so the east faces are lit
+  // and the south faces are in shade (site.css derives both from one
+  // material colour), and every block throws a shadow west-south-west across
+  // the ground. While a district is being built, box() and cyl() add their
+  // footprint to `cast`; build() then draws all of a district's shadows as
+  // one path under it, so they cost one node per district.
+  const SUN = [-0.35, 1];
+  let cast = null;
+  const castOf = (foot, h) => {
+    const s = 0.04 + 0.0038 * h;
+    return hull(foot.concat(foot.map(([x, y]) => [x + SUN[0] * s, y + SUN[1] * s])).map(([x, y]) => P(x, y)));
+  };
+  const round = (cx, cy, r, n = 10) => Array.from({ length: n }, (_, i) => { const t = i / n * Math.PI * 2; return [cx + Math.cos(t) * r, cy + Math.sin(t) * r]; });
+  // the cars, the bin lids and the cafe parasols take their colours in turn
+  const CARS = ["#d9453b", "#f2f4f1", "#5b8fd6", "#e9b63b", "#2f3c42", "#8ac1c9", "#c9c9c7", "#7a4f9e"], LIDS = ["#c62828", "#e0b020", "#2e7d32"], PARAS = ["#f4f1e8", "#d9453b", "#2f8d84", "#f2c14e"];
+  const turns = { car: 0, bin: 0, para: 0 };
 
   /* ---- solids ---- */
   function box(x, y, w, d, h, o = {}) {
     const z = o.z || 0, c = o.cls ? ` ${o.cls}` : "", nodes = [];
+    if (cast && !z && h >= 4) cast.push(castOf([[x, y], [x + w, y], [x + w, y + d], [x, y + d]], h + (o.rh || 0)));
     const L = [P(x, y + d, z), P(x + w, y + d, z), P(x + w, y + d, z + h), P(x, y + d, z + h)];
     const R = [P(x + w, y, z), P(x + w, y + d, z), P(x + w, y + d, z + h), P(x + w, y, z + h)];
     nodes.push(poly("fl" + c, L), poly("fr" + c, R));
@@ -63,39 +80,44 @@
     if (!o.noTop) nodes.push(poly((o.top || "ft") + c, [P(x, y, z + h), P(x + w, y, z + h), P(x + w, y + d, z + h), P(x, y + d, z + h)]));
     // a windowed block's roof sits inside a parapet
     if (o.win && !o.noTop && w > 0.3 && d > 0.3) { const i = 0.05; nodes.push(poly("roofin", [P(x + i, y + i, z + h), P(x + w - i, y + i, z + h), P(x + w - i, y + d - i, z + h), P(x + i, y + d - i, z + h)])); }
+    // the sun catches the two near edges of the top, which keeps every block crisp
+    if (!o.noTop && h >= 3) nodes.push(pl("rim-hl", [P(x, y + d, z + h), P(x + w, y + d, z + h), P(x + w, y, z + h)]));
     return { d: x + w + y + d + (o.bias || 0), nodes };
   }
-  function roof(x, y, w, d, z, rh) {
-    const A = P(x + w / 2, y + d / 2, z + rh);
+  // A hipped roof: four planes named for the way they face, so site.css can
+  // light the north and east planes and shade the south and west ones from
+  // one roof colour (`m`: tile, slate, cb-grey and so on).
+  function roof(x, y, w, d, z, rh, m) {
+    const A = P(x + w / 2, y + d / 2, z + rh), c = m ? ` ${m}` : "";
     return [
-      poly("ft", [P(x, y, z), P(x, y + d, z), A]),
-      poly("ft", [P(x, y, z), P(x + w, y, z), A]),
-      poly("fr", [P(x, y + d, z), P(x + w, y + d, z), A]),
-      poly("fr", [P(x + w, y, z), P(x + w, y + d, z), A]),
+      poly("rf rf-w" + c, [P(x, y, z), P(x, y + d, z), A]),
+      poly("rf rf-n" + c, [P(x, y, z), P(x + w, y, z), A]),
+      poly("rf rf-s" + c, [P(x, y + d, z), P(x + w, y + d, z), A]),
+      poly("rf rf-e" + c, [P(x + w, y, z), P(x + w, y + d, z), A]),
     ];
   }
   function house(x, y, w, d, h, rh, o = {}) {
-    const b = box(x, y, w, d, h, { ...o, noTop: true });
-    b.nodes.push(...roof(x, y, w, d, (o.z || 0) + h, rh));
+    const b = box(x, y, w, d, h, { ...o, noTop: true, rh });
+    b.nodes.push(...roof(x, y, w, d, (o.z || 0) + h, rh, o.roof));
     return b;
   }
   // a gabled block: ridge along x or y, with the gable end that faces the viewer
   function prism(x, y, w, d, h, rh, o = {}) {
-    const z = o.z || 0, t = z + h, b = box(x, y, w, d, h, { ...o, noTop: true });
+    const z = o.z || 0, t = z + h, b = box(x, y, w, d, h, { ...o, noTop: true, rh }), c = o.roof ? ` ${o.roof}` : "", wall = o.cls ? ` ${o.cls}` : "";
     if (o.gable === "y") {
       const r0 = P(x + w / 2, y, t + rh), r1 = P(x + w / 2, y + d, t + rh);
       b.nodes.push(
-        poly("ft", [P(x, y, t), P(x, y + d, t), r1, r0]),
-        poly("fr", [P(x + w, y, t), P(x + w, y + d, t), r1, r0]),
-        poly("fl", [P(x, y + d, t), P(x + w, y + d, t), r1])
+        poly("rf rf-w" + c, [P(x, y, t), P(x, y + d, t), r1, r0]),
+        poly("rf rf-e" + c, [P(x + w, y, t), P(x + w, y + d, t), r1, r0]),
+        poly("fl" + wall, [P(x, y + d, t), P(x + w, y + d, t), r1])
       );
       if (o.skylight) b.nodes.push(poly("lit sky", [P(x + w * 0.6, y + d * 0.15, t + rh * 0.4), P(x + w * 0.85, y + d * 0.15, t + rh * 0.15), P(x + w * 0.85, y + d * 0.85, t + rh * 0.15), P(x + w * 0.6, y + d * 0.85, t + rh * 0.4)]));
     } else {
       const r0 = P(x, y + d / 2, t + rh), r1 = P(x + w, y + d / 2, t + rh);
       b.nodes.push(
-        poly("ft", [P(x, y, t), P(x + w, y, t), r1, r0]),
-        poly("fr", [P(x, y + d, t), P(x + w, y + d, t), r1, r0]),
-        poly("fr", [P(x + w, y, t), P(x + w, y + d, t), r1])
+        poly("rf rf-n" + c, [P(x, y, t), P(x + w, y, t), r1, r0]),
+        poly("rf rf-s" + c, [P(x, y + d, t), P(x + w, y + d, t), r1, r0]),
+        poly("fr" + wall, [P(x + w, y, t), P(x + w, y + d, t), r1])
       );
     }
     return b;
@@ -133,16 +155,16 @@
     return [shapes("eave", eave), shapes("hwin", dark), shapes("hwin hwin-lit", lit), strokes("sill", sills), strokes("tiles", tiles), strokes("ridge", ridge)];
   }
   // An open transit canopy on its platform (z 1): a glass wall at the back,
-  // posts front and back, benches, people waiting, a lit roof on top. It is
+  // posts front and back, benches, people waiting, a white roof on top. It is
   // street furniture, so it stays at street level when the district comes apart.
   const canopy = (x, y, w, d) => {
     const xs = [x + 0.05, x + w / 2, x + w - 0.05], post = (px, py) => seg("det", P(px, py, 1), P(px, py, 9));
     return [
-      item(x + y + 0.1, xs.map((px) => post(px, y + 0.04)), poly("glass", [P(x + 0.05, y + 0.04, 1), P(x + w - 0.05, y + 0.04, 1), P(x + w - 0.05, y + 0.04, 8.4), P(x + 0.05, y + 0.04, 8.4)])),
+      item(x + y + 0.1, xs.map((px) => post(px, y + 0.04)), poly("pane", [P(x + 0.05, y + 0.04, 1), P(x + w - 0.05, y + 0.04, 1), P(x + w - 0.05, y + 0.04, 8.4), P(x + 0.05, y + 0.04, 8.4)])),
       use("bench", x + 0.3, y + 0.12, 1, { cls: "fine", d: x + y + 0.5 }), use("bench", x + w - 0.5, y + 0.12, 1, { cls: "fine", d: x + w + y - 0.2 }),
       who(x + 0.55, y + 0.3, "#e7fff9", { z: 1 }), who(x + 0.68, y + 0.34, "#f2c14e", { z: 1 }), who(x + w - 0.3, y + 0.28, "#38bdf8", { z: 1 }),
       item(x + w + y + d - 0.01, xs.map((px) => post(px, y + d - 0.04))),
-      box(x, y, w, d, 2.4, { z: 9, top: "lit" }),
+      box(x, y, w, d, 2.4, { z: 9, cls: "white" }),
     ].map(lo);
   };
   // a flat roof in sheeting: ribs running across it, painted with the block
@@ -156,6 +178,7 @@
   function cyl(cx, cy, r, h, o = {}) {
     const z = o.z || 0, rx = r * TW / Math.SQRT2, ry = r * TH / Math.SQRT2, c = o.cls ? ` ${o.cls}` : "";
     const [bx, by] = P(cx, cy, z), [, ty] = P(cx, cy, z + h);
+    if (cast && !z && h >= 4) cast.push(castOf(round(cx, cy, r), h));
     const nodes = [
       el("path", { class: "fr" + c, d: `M${f(bx - rx)} ${f(ty)}L${f(bx - rx)} ${f(by)}A${f(rx)} ${f(ry)} 0 0 0 ${f(bx + rx)} ${f(by)}L${f(bx + rx)} ${f(ty)}Z` }),
       el("path", { class: "fl" + c, d: `M${f(bx - rx)} ${f(ty)}L${f(bx - rx)} ${f(by)}A${f(rx)} ${f(ry)} 0 0 0 ${f(bx)} ${f(by + ry)}L${f(bx)} ${f(ty + ry)}A${f(rx)} ${f(ry)} 0 0 1 ${f(bx - rx)} ${f(ty)}Z` }),
@@ -167,6 +190,7 @@
     if (o.ring) nodes.push(el("ellipse", { class: "det", cx: f(bx), cy: f(ty), rx: f(rx * 0.6), ry: f(ry * 0.6) }));
     // the front half of a ring round the shell at height zz above the base
     const arc = (zz) => `M${f(bx - rx)} ${f(by - zz)}A${f(rx)} ${f(ry)} 0 0 0 ${f(bx + rx)} ${f(by - zz)}`;
+    if (h >= 4) nodes.push(el("path", { class: "rim-hl", d: arc(h) }));
     if (o.bands) nodes.push(el("path", { class: "seam", d: Array.from({ length: o.bands }, (_, i) => arc(h * (i + 1) / (o.bands + 1))).join("") }));
     if (o.stripes) nodes.push(el("path", { class: "stripe", d: o.stripes.map((zz) => arc(h - zz)).join("") }));
     if (o.rail) nodes.push(el("ellipse", { class: "tank-rail", cx: f(bx), cy: f(ty - 3), rx: f(rx * 0.94), ry: f(ry * 0.94) }), el("path", { class: "tank-rail", d: [-0.7, -0.25, 0.25, 0.7].map((k) => `M${f(bx + rx * 0.94 * k)} ${f(ty + ry * 0.94 * Math.sqrt(1 - k * k))}v-3`).join("") }));
@@ -178,17 +202,18 @@
     return { d: cx + cy + r * 1.42 + (o.bias || 0), nodes };
   }
   const slab = (x, y, w, d, cls, z = 0, extra) => lo(item(x + w + y + d - 0.5, poly(cls, [P(x, y, z), P(x + w, y, z), P(x + w, y + d, z), P(x, y + d, z)], extra)));
-  // contact shadow under a tall block: the footprint nudged toward the light's far side
-  const ao = (x, y, w, d, h) => {
-    const o = Math.min(14, h * 0.18), k = [P(x, y), P(x + w, y), P(x + w, y + d), P(x, y + d)].map(([a, b]) => [a + o, b + o * 0.45]);
-    return item(0, poly("ao", k));
-  };
+  // (the contact shadows this once drew are cast by box() and cyl() now)
+  const ao = () => item(0);
   // `s` says which layer a part travels with when its district is taken
   // apart: "lo" stays at street level (trees, lamps, cars, fences), anything
   // else lifts with the structures. Symbols placed on a roof lift too.
   const use = (sym, x, y, z = 0, o = {}) => {
     const [px, py] = P(x, y, z);
-    return { ...item(o.d ?? x + y + 0.05, el("use", { href: `#${sym}`, class: o.cls, transform: `translate(${f(px)} ${f(py)})`, style: o.style })), s: z > 0.5 ? "hi" : "lo" };
+    let style = o.style;
+    if (!style && sym.startsWith("car-")) style = `--car:${CARS[turns.car++ % CARS.length]}`;
+    if (!style && sym === "bin") style = `--lid:${LIDS[turns.bin++ % LIDS.length]}`;
+    if (!style && sym === "parasol") style = `--para:${PARAS[turns.para++ % PARAS.length]}`;
+    return { ...item(o.d ?? x + y + 0.05, el("use", { href: `#${sym}`, class: o.cls, transform: `translate(${f(px)} ${f(py)})`, style })), s: z > 0.5 ? "hi" : "lo" };
   };
   const lo = (it) => ({ ...it, s: "lo" });
   // a fence or railing: the top rail at height z, a post every `posts` tiles
@@ -269,22 +294,24 @@
     const D = el("defs", {}, svg);
     const sym = (id, fn) => { const g = el("g", { id }, D); fn(g); return g; };
     const F = (color) => `fill:${color}`;
+    // a palette colour that a lifted district mixes toward its highlight, like the faces do
+    const FM = (v) => `fill:color-mix(in oklab, var(${v}), var(--lit-mix, #eefcf8) var(--lift, 0%))`;
     // trees: a contact shadow on the ground, the canopy shaded on its far
     // side and caught by the light on its near one
     const SHADE = F("rgba(0,0,0,.2)"), SHEEN = F("rgba(255,255,255,.13)");
     for (const [k, s] of [["s", 0.72], ["m", 1], ["l", 1.3]]) sym(`tree-${k}`, (g) => {
       el("ellipse", { cx: f(2 * s), cy: 0.6, rx: f(5.6 * s), ry: f(2.3 * s), style: SHADE }, g);
       g.append(seg("", [0, 0], [0, -6 * s], { style: "stroke:var(--detail);stroke-width:1" }));
-      el("circle", { cx: 0, cy: f(-9 * s), r: f(7 * s), style: F("var(--tree-2)") }, g);
+      el("circle", { cx: 0, cy: f(-9 * s), r: f(7 * s), style: FM("--tree-2") }, g);
       el("circle", { cx: f(2.8 * s), cy: f(-7.2 * s), r: f(4 * s), style: F("rgba(0,0,0,.12)") }, g);
-      el("circle", { cx: -1.5, cy: f(-13 * s), r: f(5 * s), style: F("var(--tree)") }, g);
+      el("circle", { cx: -1.5, cy: f(-13 * s), r: f(5 * s), style: FM("--tree") }, g);
       el("circle", { cx: f(-3.4 * s), cy: f(-15 * s), r: f(2.1 * s), style: SHEEN }, g);
     });
     // a street light on a pole with an arm, the head over the road
     sym("lamp", (g) => {
       el("ellipse", { class: "pool", cx: 0, cy: 0, rx: 13, ry: 6.5, style: F("var(--pool, url(#pool))") }, g);
       g.append(pl("", [[0, 0], [0, -15], [2.2, -16.2]], { style: "fill:none;stroke:rgba(255,255,255,.3);stroke-width:1" }));
-      el("ellipse", { cx: 2.4, cy: -16, rx: 2, ry: 1.1, style: F("#e7fff9") }, g);
+      el("ellipse", { cx: 2.4, cy: -16, rx: 2, ry: 1.1, style: F("#fff1c9") }, g);
     });
     // vehicles: one symbol per direction of travel, so the beam leads
     const vehicle = (id, len, wid, h, cols, dir, o = {}) => sym(id, (g) => {
@@ -302,7 +329,7 @@
         // roof in the body colour, a pillar between the windows
         const along = w >= d, n = along ? w : d, t0 = { e: 0.14, s: 0.14, w: 0.36, n: 0.36 }[dir] ?? 0.25, i = 0.012;
         const c = along ? box(x + n * t0, y + i, n * 0.5, d - 2 * i, h - bh, { z: bh }) : box(x + i, y + n * t0, w - 2 * i, n * 0.5, h - bh, { z: bh });
-        c.nodes[0].style.fill = "#0c2422"; c.nodes[1].style.fill = "#143330"; c.nodes[2].style.fill = cols[0];
+        c.nodes[0].style.fill = "#101d24"; c.nodes[1].style.fill = "#1a2c35"; c.nodes[2].style.fill = cols[0];
         g.append(...c.nodes);
         const m = along ? seg("", P(x + n * (t0 + 0.25), y + d - i, bh), P(x + n * (t0 + 0.25), y + d - i, h)) : seg("", P(x + w - i, y + n * (t0 + 0.25), bh), P(x + w - i, y + n * (t0 + 0.25), h));
         m.style.cssText = `stroke:${cols[0]};stroke-width:.5`;
@@ -332,7 +359,7 @@
       const tail = { e: [[x, y + d * 0.25], [x, y + d * 0.75]], w: [[x + w, y + d * 0.25], [x + w, y + d * 0.75]], s: [[x + w * 0.25, y], [x + w * 0.75, y]], n: [[x + w * 0.25, y + d], [x + w * 0.75, y + d]] }[dir];
       if (tail) for (const [tx, ty] of tail) { const [a, c] = P(tx, ty, h * 0.5); el("circle", { cx: f(a), cy: f(c), r: 0.9, style: F("var(--red)") }, g); }
     });
-    const CAR = ["var(--car, #2f8d84)", "#123b37", "#1c5a54"], VAN = ["#f1fffc", "#6fcfc1", "#a9ebe1"], TRK = ["#8ea9a5", "#2a4744", "#40645f"];
+    const CAR = ["var(--car, #2f8d84)", "color-mix(in oklab, var(--car, #2f8d84), #0a1b24 48%)", "color-mix(in oklab, var(--car, #2f8d84), #0a1b24 26%)"], VAN = ["#f1fffc", "#6fcfc1", "#a9ebe1"], TRK = ["#9ca9ad", "#3b474b", "#5a6a6f"];
     vehicle("car-e", 0.3, 0.16, 4.2, CAR, "e", { cabin: true }); vehicle("car-w", 0.3, 0.16, 4.2, CAR, "w", { cabin: true }); vehicle("car-s", 0.16, 0.3, 4.2, CAR, "s", { cabin: true }); vehicle("car-n", 0.16, 0.3, 4.2, CAR, "n", { cabin: true });
     // the EDS vans, a little larger than the cars to carry the logo
     vehicle("van-e", 0.4, 0.19, 5.6, VAN, "e", { eds: true }); vehicle("van-w", 0.4, 0.19, 5.6, VAN, "w", { eds: true }); vehicle("van-s", 0.19, 0.4, 5.6, VAN, "s", { eds: true }); vehicle("van-n", 0.19, 0.4, 5.6, VAN, "n", { eds: true });
@@ -356,12 +383,12 @@
       if (along) {
         // heading +x: the body behind, the cab nearer the viewer
         paint(box(x, y, len - cab - gap, wid, h), [TRK[1], TRK[2], TRK[0]]);
-        paint(box(x + len - cab, y, cab, wid, h * 0.72), [TRK[1], TRK[2], "#b9cfcb"]);
+        paint(box(x + len - cab, y, cab, wid, h * 0.72), [TRK[1], TRK[2], "#c6d1d4"]);
         g.append(poly("", onR(x + len, y, 0.02, wid - 0.02, h * 0.42, h * 0.68), { style: F("#0c2422") }), poly("", onL(x + len - cab, y + wid, 0.02, cab - 0.03, h * 0.42, h * 0.68), { style: F("#0c2422") }));
       } else {
         // heading -y: the beam, then the cab, which is farther away
         g.append(poly("beam", [P(x, y, 2), P(x + wid, y, 2), P(x + wid + 0.1, y - 0.42, 0), P(x - 0.1, y - 0.42, 0)], { style: F("url(#beam)") }));
-        paint(box(x, y, wid, cab, h * 0.72), [TRK[1], TRK[2], "#b9cfcb"]);
+        paint(box(x, y, wid, cab, h * 0.72), [TRK[1], TRK[2], "#c6d1d4"]);
         paint(box(x, y + cab + gap, wid, len - cab - gap, h), [TRK[1], TRK[2], TRK[0]]);
         g.append(poly("", onR(x + wid, y, 0.02, cab - 0.03, h * 0.42, h * 0.68), { style: F("#0c2422") }));
       }
@@ -414,7 +441,7 @@
     // people: legs, a top in --shirt (set on each one), a head, a small shadow
     sym("person", (g) => {
       el("ellipse", { cx: 0.8, cy: 0.2, rx: 2.2, ry: 0.8, style: SHADE }, g);
-      g.append(shapes("", [[[-1.2, 0], [-0.2, 0], [-0.2, -2.8], [-1.2, -2.8]], [[0.2, 0], [1.2, 0], [1.2, -2.8], [0.2, -2.8]]], { style: F("var(--legs, #1d3a37)") }));
+      g.append(shapes("", [[[-1.2, 0], [-0.2, 0], [-0.2, -2.8], [-1.2, -2.8]], [[0.2, 0], [1.2, 0], [1.2, -2.8], [0.2, -2.8]]], { style: F("var(--legs, #2b3a4a)") }));
       el("rect", { x: -1.4, y: -6.2, width: 2.8, height: 3.8, rx: 1.1, style: F("var(--shirt, #f2c14e)") }, g);
       el("circle", { cx: 0, cy: -7.7, r: 1.6, style: F("var(--skin, #ffe3b3)") }, g);
     });
@@ -430,50 +457,51 @@
       const bark = "fill:none;stroke:var(--bark,#c9c1ad);stroke-linecap:round;stroke-width:";
       el("ellipse", { cx: 2.4, cy: 0.6, rx: 6, ry: 2.4, style: SHADE }, g);
       g.append(pl("", [[0, 0], [0.5, -7], [0.2, -13.5]], { style: `${bark}1.4` }), seg("", [0.4, -8], [-2.8, -12.6], { style: `${bark}.9` }), seg("", [0.3, -10.5], [3, -14.2], { style: `${bark}.9` }));
-      [[-3.1, -14.6, 3.8, 2.6, "--gum-2"], [3.3, -15.6, 3.6, 2.5, "--gum-2"], [0.4, -18.6, 4.3, 3, "--gum"], [-2.3, -17.2, 2.8, 2, "--gum"], [2.6, -13.3, 2.4, 1.7, "--gum"]].forEach(([cx, cy, rx, ry, v]) => el("ellipse", { cx, cy, rx, ry, style: F(`var(${v})`) }, g));
+      [[-3.1, -14.6, 3.8, 2.6, "--gum-2"], [3.3, -15.6, 3.6, 2.5, "--gum-2"], [0.4, -18.6, 4.3, 3, "--gum"], [-2.3, -17.2, 2.8, 2, "--gum"], [2.6, -13.3, 2.4, 1.7, "--gum"]].forEach(([cx, cy, rx, ry, v]) => el("ellipse", { cx, cy, rx, ry, style: FM(v) }, g));
     });
     sym("tree-jac", (g) => {
       el("ellipse", { cx: 2, cy: 0.6, rx: 6, ry: 2.4, style: SHADE }, g);
       g.append(seg("", [0, 0], [0, -6], { style: "stroke:var(--detail);stroke-width:1.1" }));
-      el("ellipse", { cx: 0, cy: -9, rx: 7.6, ry: 4.6, style: F("var(--jac-2)") }, g); el("ellipse", { cx: -1, cy: -11, rx: 5.4, ry: 3.4, style: F("var(--jac)") }, g);
+      el("ellipse", { cx: 0, cy: -9, rx: 7.6, ry: 4.6, style: FM("--jac-2") }, g); el("ellipse", { cx: -1, cy: -11, rx: 5.4, ry: 3.4, style: FM("--jac") }, g);
       // a few fallen flowers on the ground
       el("ellipse", { cx: 4.5, cy: 1.4, rx: 2.6, ry: 1, style: F("var(--jac)"), opacity: 0.35 }, g);
       el("ellipse", { cx: -2.8, cy: -12, rx: 2, ry: 1.2, style: SHEEN }, g);
     });
     sym("tank-rw", (g) => {
       const c = cyl(0, 0, 0.11, 9);
-      ["#8fa5a1", "#b6c8c5", "#dfe9e7"].forEach((col, i) => (c.nodes[i].style.fill = col));
+      ["#8d999b", "#b4bfc1", "#e2e8e9"].forEach((col, i) => (c.nodes[i].style.fill = col));
       g.append(...c.nodes);
       const rx = 0.11 * TW / Math.SQRT2, ry = 0.11 * TH / Math.SQRT2;
       for (const z of [3, 6]) el("path", { d: `M${f(-rx)} ${-z}a${f(rx)} ${f(ry)} 0 0 0 ${f(2 * rx)} 0`, style: "fill:none;stroke:rgba(0,0,0,.22);stroke-width:.7" }, g);
     });
     sym("hoist", (g) => {
-      const st = "stroke:#b9cfcb;stroke-width:.8;fill:none", top = [0, -9], tips = [P(0.17, 0), P(0, 0.17), P(-0.17, 0), P(0, -0.17)].map(([a, b]) => [a, b - 9]);
-      g.append(seg("", [0, 0], top, { style: "stroke:#b9cfcb;stroke-width:1" }), ...tips.map((t) => seg("", top, t, { style: st })), pl("", [...tips, tips[0]], { style: st }));
+      const st = "stroke:#c9d1d3;stroke-width:.8;fill:none", top = [0, -9], tips = [P(0.17, 0), P(0, 0.17), P(-0.17, 0), P(0, -0.17)].map(([a, b]) => [a, b - 9]);
+      g.append(seg("", [0, 0], top, { style: "stroke:#c9d1d3;stroke-width:1" }), ...tips.map((t) => seg("", top, t, { style: st })), pl("", [...tips, tips[0]], { style: st }));
       g.append(poly("", [[tips[0][0] - 3, tips[0][1]], [tips[0][0] - 1, tips[0][1]], [tips[0][0] - 1.4, tips[0][1] + 3], [tips[0][0] - 3.2, tips[0][1] + 2.6]], { style: F("#e7fff9") }));
     });
     sym("dish", (g) => { g.append(seg("", [0, 0], [0, -3], { style: "stroke:rgba(255,255,255,.6)" })); el("ellipse", { cx: 0, cy: -5, rx: 2.4, ry: 3.4, style: F("rgba(255,255,255,.7)") }, g); });
     sym("solar", (g) => { g.append(poly("", [P(0, 0, 1), P(0.3, 0, 1), P(0.3, 0.22, 3), P(0, 0.22, 3)], { style: F("url(#solar-grad)") })); });
-    sym("ac", (g) => { const b = box(0, 0, 0.14, 0.14, 3); b.nodes.forEach((n, i) => (n.style.fill = ["#8fbfb8", "#2a5955", "#3f7a73"][[2, 0, 1][i]])); g.append(...b.nodes); });
+    sym("ac", (g) => { const b = box(0, 0, 0.14, 0.14, 3); b.nodes.forEach((n, i) => (n.style.fill = ["#d6dcdd", "#5c686b", "#8b979a"][[2, 0, 1][i]])); g.append(...b.nodes); });
     sym("chamber", (g) => { el("ellipse", { cx: 0, cy: 0, rx: 7, ry: 3.5, style: "fill:none;stroke:var(--aqua);stroke-width:1;stroke-dasharray:2 3" }, g); g.append(seg("", [-3, -1], [-3, 3], { style: "stroke:var(--aqua);stroke-width:1" }), seg("", [3, -1], [3, 3], { style: "stroke:var(--aqua);stroke-width:1" })); });
-    sym("crossing-x", (g) => { for (let i = 0; i < 5; i++) g.append(poly("", [P(i * 0.11, -0.26), P(i * 0.11 + 0.055, -0.26), P(i * 0.11 + 0.055, 0.26), P(i * 0.11, 0.26)], { style: F("rgba(255,255,255,.16)") })); });
-    sym("crossing-y", (g) => { for (let i = 0; i < 5; i++) g.append(poly("", [P(-0.26, i * 0.11), P(0.26, i * 0.11), P(0.26, i * 0.11 + 0.055), P(-0.26, i * 0.11 + 0.055)], { style: F("rgba(255,255,255,.16)") })); });
-    sym("bench", (g) => { g.append(poly("", [P(0, 0, 3), P(0.22, 0, 3), P(0.22, 0.08, 3), P(0, 0.08, 3)], { style: F("#6fa39b") }), seg("", P(0.02, 0.04, 0), P(0.02, 0.04, 3), { style: "stroke:#6fa39b" }), seg("", P(0.2, 0.04, 0), P(0.2, 0.04, 3), { style: "stroke:#6fa39b" })); });
-    sym("reed", (g) => { for (const [dx, h] of [[-1.5, 7], [0, 9], [1.5, 6]]) g.append(seg("", [dx, 0], [dx * 1.4, -h], { style: "stroke:#4ea58d;stroke-width:1" })); });
-    sym("gully", (g) => { g.append(poly("", [P(0, 0), P(0.16, 0), P(0.16, 0.08), P(0, 0.08)], { style: "fill:var(--gully,#06201e);stroke:rgba(95,180,166,.45);stroke-width:1" }), seg("", P(0.03, 0.04), P(0.13, 0.04), { style: "stroke:rgba(95,180,166,.6);stroke-width:1" })); });
+    sym("crossing-x", (g) => { for (let i = 0; i < 5; i++) g.append(poly("", [P(i * 0.11, -0.26), P(i * 0.11 + 0.055, -0.26), P(i * 0.11 + 0.055, 0.26), P(i * 0.11, 0.26)], { style: F("rgba(255,255,255,.42)") })); });
+    sym("crossing-y", (g) => { for (let i = 0; i < 5; i++) g.append(poly("", [P(-0.26, i * 0.11), P(0.26, i * 0.11), P(0.26, i * 0.11 + 0.055), P(-0.26, i * 0.11 + 0.055)], { style: F("rgba(255,255,255,.42)") })); });
+    sym("bench", (g) => { g.append(poly("", [P(0, 0, 3), P(0.22, 0, 3), P(0.22, 0.08, 3), P(0, 0.08, 3)], { style: F("#b07a4a") }), seg("", P(0.02, 0.04, 0), P(0.02, 0.04, 3), { style: "stroke:#8a5d36" }), seg("", P(0.2, 0.04, 0), P(0.2, 0.04, 3), { style: "stroke:#8a5d36" })); });
+    sym("reed", (g) => { for (const [dx, h] of [[-1.5, 7], [0, 9], [1.5, 6]]) g.append(seg("", [dx, 0], [dx * 1.4, -h], { style: "stroke:#5fa86a;stroke-width:1" })); });
+    sym("gully", (g) => { g.append(poly("", [P(0, 0), P(0.16, 0), P(0.16, 0.08), P(0, 0.08)], { style: "fill:var(--gully,#1b2427);stroke:rgba(255,255,255,.3);stroke-width:1" }), seg("", P(0.03, 0.04), P(0.13, 0.04), { style: "stroke:rgba(255,255,255,.35);stroke-width:1" })); });
     sym("pump-dome", (g) => { const c = cyl(0, 0, 0.13, 4, { dome: true }); g.append(...c.nodes); });
     // street furniture and small parts, placed by the hundred
-    sym("bin", (g) => { const b = box(0, 0, 0.08, 0.08, 4); b.nodes.forEach((n, i) => (n.style.fill = ["#0d3a36", "#164f49", "#2a7a70"][i])); g.append(...b.nodes); });
-    sym("sign", (g) => { g.append(seg("", [0, 0], [0, -10], { style: "stroke:rgba(255,255,255,.45);stroke-width:1" })); el("rect", { x: -2.5, y: -14, width: 5, height: 4, rx: .6, style: F("#6fcfc1") }, g); });
+    // council wheelie bins, dark green with a red, yellow or green lid (--lid)
+    sym("bin", (g) => { const b = box(0, 0, 0.08, 0.08, 4); b.nodes.forEach((n, i) => (n.style.fill = ["#1f4d2a", "#2b6a3a", "var(--lid, #2e7d32)"][i])); g.append(...b.nodes); });
+    sym("sign", (g) => { g.append(seg("", [0, 0], [0, -10], { style: "stroke:rgba(255,255,255,.55);stroke-width:1" })); el("rect", { x: -2.5, y: -14, width: 5, height: 4, rx: .6, style: F("#2f9e63") }, g); });
     sym("tlight", (g) => { g.append(seg("", [0, 0], [0, -14], { style: "stroke:rgba(255,255,255,.45);stroke-width:1.2" })); el("rect", { x: -1.6, y: -21, width: 3.2, height: 7.5, rx: .8, style: F("#06201e") }, g); [["-18.8", "var(--red)"], ["-17.2", "var(--amber)"], ["-15.6", "var(--green)"]].forEach(([y, c]) => el("circle", { cx: 0, cy: y, r: .75, style: F(c) }, g)); });
-    sym("swing", (g) => { const t = P(0, 0, 9), a = P(-0.12, 0.06), b = P(0.12, -0.06), c = P(-0.12, -0.06), d = P(0.12, 0.06); g.append(seg("", a, [t[0] - 4, t[1]], { style: "stroke:#8fbfb8;stroke-width:1" }), seg("", c, [t[0] - 4, t[1]], { style: "stroke:#8fbfb8;stroke-width:1" }), seg("", b, [t[0] + 4, t[1]], { style: "stroke:#8fbfb8;stroke-width:1" }), seg("", d, [t[0] + 4, t[1]], { style: "stroke:#8fbfb8;stroke-width:1" }), seg("", [t[0] - 4, t[1]], [t[0] + 4, t[1]], { style: "stroke:#8fbfb8;stroke-width:1.2" }), seg("", [t[0] - 1.5, t[1]], [t[0] - 1.5, t[1] + 6], { style: "stroke:rgba(255,255,255,.4);stroke-width:.8" }), seg("", [t[0] + 1.5, t[1]], [t[0] + 1.5, t[1] + 6], { style: "stroke:rgba(255,255,255,.4);stroke-width:.8" })); });
-    sym("rock", (g) => { g.append(poly("", [[-3, 0], [-2, -2.5], [1, -3], [3.2, -1], [2.4, 0.8], [-1.5, 1.2]], { style: F("#3d6d66") })); });
-    sym("pallet", (g) => { g.append(poly("", [P(0, 0, 2), P(0.14, 0, 2), P(0.14, 0.14, 2), P(0, 0.14, 2)], { style: F("#7f9d98") }), poly("", [P(0, 0.14, 0), P(0.14, 0.14, 0), P(0.14, 0.14, 2), P(0, 0.14, 2)], { style: F("#365a55") })); });
+    sym("swing", (g) => { const t = P(0, 0, 9), a = P(-0.12, 0.06), b = P(0.12, -0.06), c = P(-0.12, -0.06), d = P(0.12, 0.06); g.append(seg("", a, [t[0] - 4, t[1]], { style: "stroke:#c9d1d3;stroke-width:1" }), seg("", c, [t[0] - 4, t[1]], { style: "stroke:#c9d1d3;stroke-width:1" }), seg("", b, [t[0] + 4, t[1]], { style: "stroke:#c9d1d3;stroke-width:1" }), seg("", d, [t[0] + 4, t[1]], { style: "stroke:#c9d1d3;stroke-width:1" }), seg("", [t[0] - 4, t[1]], [t[0] + 4, t[1]], { style: "stroke:#c9d1d3;stroke-width:1.2" }), seg("", [t[0] - 1.5, t[1]], [t[0] - 1.5, t[1] + 6], { style: "stroke:rgba(255,255,255,.4);stroke-width:.8" }), seg("", [t[0] + 1.5, t[1]], [t[0] + 1.5, t[1] + 6], { style: "stroke:rgba(255,255,255,.4);stroke-width:.8" })); });
+    sym("rock", (g) => { g.append(poly("", [[-3, 0], [-2, -2.5], [1, -3], [3.2, -1], [2.4, 0.8], [-1.5, 1.2]], { style: F("#7a8784") })); });
+    sym("pallet", (g) => { g.append(poly("", [P(0, 0, 2), P(0.14, 0, 2), P(0.14, 0.14, 2), P(0, 0.14, 2)], { style: F("#b58a55") }), poly("", [P(0, 0.14, 0), P(0.14, 0.14, 0), P(0.14, 0.14, 2), P(0, 0.14, 2)], { style: F("#7a5a35") })); });
     sym("bollard", (g) => { g.append(seg("", [0, 0], [0, -5], { style: "stroke:rgba(255,255,255,.4);stroke-width:1.2" })); el("circle", { cx: 0, cy: -5.5, r: 1, style: F("#e7fff9") }, g); });
     sym("antenna", (g) => { g.append(seg("", [0, 0], [0, -11], { style: "stroke:rgba(255,255,255,.5);stroke-width:1" }), seg("", [-3, -9], [3, -9], { style: "stroke:rgba(255,255,255,.5);stroke-width:1" }), seg("", [-2, -6.5], [2, -6.5], { style: "stroke:rgba(255,255,255,.5);stroke-width:1" })); });
-    sym("flag", (g) => { g.append(seg("", [0, 0], [0, -22], { style: "stroke:rgba(255,255,255,.55);stroke-width:1" }), poly("", [[0, -22], [7, -19.5], [0, -17]], { style: F("#6fcfc1") })); });
-    sym("hedge", (g) => { const b = box(0, 0, 0.3, 0.07, 3); b.nodes.forEach((n) => (n.style.fill = "var(--tree-2)")); b.nodes[2].style.fill = "var(--tree)"; g.append(...b.nodes); });
-    sym("letterbox", (g) => { g.append(seg("", [0, 0], [0, -4], { style: "stroke:rgba(255,255,255,.4);stroke-width:1" })); el("rect", { x: -1.5, y: -6.5, width: 3, height: 2.5, style: F("#8fbfb8") }, g); });
+    sym("flag", (g) => { g.append(seg("", [0, 0], [0, -22], { style: "stroke:rgba(255,255,255,.55);stroke-width:1" }), poly("", [[0, -22], [7, -19.5], [0, -17]], { style: F("var(--flag, #6fcfc1)") })); });
+    sym("hedge", (g) => { const b = box(0, 0, 0.3, 0.07, 3); b.nodes.forEach((n) => (n.style.cssText = FM("--tree-2"))); b.nodes[2].style.cssText = FM("--tree"); g.append(...b.nodes); });
+    sym("letterbox", (g) => { g.append(seg("", [0, 0], [0, -4], { style: "stroke:rgba(255,255,255,.4);stroke-width:1" })); el("rect", { x: -1.5, y: -6.5, width: 3, height: 2.5, style: F("#d8dee0") }, g); });
     // shipping containers: ribbed sides, the doors on the end
     for (const [k, top, l, r] of [["a", "#d98a52", "#7c3d16", "#a8592a"], ["b", "#6cc7bb", "#1d5f58", "#2f8d84"], ["c", "#9cb9d0", "#2f4b61", "#4b6b85"], ["d", "#c76a64", "#6a2522", "#8f3a35"]]) sym(`ctr-${k}`, (g) => {
       const b = box(0, 0, 0.36, 0.15, 5.5);
@@ -486,7 +514,7 @@
     sym("parasol", (g) => {
       el("ellipse", { cx: 1.5, cy: 0.4, rx: 5, ry: 2, style: SHADE }, g);
       g.append(seg("", [0, 0], [0, -8], { style: "stroke:rgba(255,255,255,.5);stroke-width:.6" }));
-      el("ellipse", { cx: 0, cy: -3.2, rx: 2.4, ry: 1.2, style: F("#cfe0dd") }, g);
+      el("ellipse", { cx: 0, cy: -3.2, rx: 2.4, ry: 1.2, style: F("#e8e3d6") }, g);
       g.append(poly("", [[-5.2, -7.6], [0, -10.4], [5.2, -7.6], [0, -5.6]], { style: F("var(--para, #f4f1e8)") }), poly("", [[-5.2, -7.6], [0, -5.6], [5.2, -7.6], [5.2, -7], [0, -5], [-5.2, -7]], { style: F("rgba(0,0,0,.2)") }));
     });
     // a kayak and its paddler, drawn heading down the lower reach
@@ -515,7 +543,7 @@
         if (k !== "0") mull.push(rect(3.3 + c * 7, 0.9 + r * 5, 0.4, 3.2));
       }));
       p.append(shapes("", [0, 1, 2, 3].map((r) => rect(0, 4.5 + r * 5, 28, 0.5)), { style: F("rgba(255,255,255,.06)") }));
-      p.append(...[["0", "rgba(0,0,0,.3)"], ["1", "rgba(255,255,255,.22)"], ["2", "rgba(190,240,232,.42)"]].map(([k, c]) => shapes("", cells[k], { style: F(c) })));
+      p.append(...[["0", "rgba(6,16,24,.42)"], ["1", "rgba(255,222,160,.38)"], ["2", "rgba(255,238,200,.58)"]].map(([k, c]) => shapes("", cells[k], { style: F(c) })));
       p.append(shapes("", mull, { style: F("rgba(0,0,0,.28)") }));
     }
     // corrugated cladding: a rib every 2.4 units, skewed to each face
@@ -543,8 +571,9 @@
     grid.append(seg("", [0, TH / 2], [TW / 2, 0], { style: "stroke:rgba(255,255,255,.06);stroke-width:1" }), seg("", [TW / 2, 0], [TW, TH / 2], { style: "stroke:rgba(255,255,255,.06);stroke-width:1" }));
 
     const grad = (id, type, stops, attrs = {}) => { const g = el(type, { id, ...attrs }, D); stops.forEach(([o, c]) => el("stop", { offset: o, "stop-color": c }, g)); };
-    grad("pool", "radialGradient", [[0, "rgba(95,180,166,.26)"], [1, "rgba(95,180,166,0)"]]);
-    grad("pool-bright", "radialGradient", [[0, "rgba(167,230,220,.5)"], [1, "rgba(95,180,166,0)"]]);
+    grad("pool", "radialGradient", [[0, "rgba(255,205,130,.26)"], [1, "rgba(255,205,130,0)"]]);
+    grad("pool-bright", "radialGradient", [[0, "rgba(255,226,170,.52)"], [1, "rgba(255,205,130,0)"]]);
+    grad("slab-grad", "radialGradient", [[0, "#1b3733"], [1, "#0e2421"]], { cx: 0.5, cy: 0.4, r: 0.7 });
     grad("beam", "linearGradient", [[0, "rgba(255,255,255,.34)"], [1, "rgba(255,255,255,0)"]]);
     grad("beam-r", "linearGradient", [[0, "rgba(255,255,255,0)"], [1, "rgba(255,255,255,.34)"]]);
     grad("lift-shadow", "radialGradient", [[0, "rgba(0,0,0,.55)"], [1, "rgba(0,0,0,0)"]]);
@@ -613,7 +642,7 @@
     const behind = el("g", { class: "walkers" }, t);
     const vehicle = (sym, route, dur, begin, cls) => {
       const v = el("g", { class: `veh${sym.startsWith("van") ? " eds" : ""}${cls ? ` ${cls}` : ""}` }, t);
-      el("use", { href: `#${sym}` }, v);
+      el("use", { href: `#${sym}`, style: sym.startsWith("car") ? `--car:${CARS[turns.car++ % CARS.length]}` : undefined }, v);
       el("animateMotion", { dur: `${dur}s`, begin: `${begin}s`, repeatCount: "indefinite", path: "M" + route.map((p) => `${f(p[0])} ${f(p[1])}`).join("L") }, v);
     };
     vehicle("van-e", [P(-0.9, 4.85), P(15.9, 4.85)], 17, 0);
@@ -741,17 +770,17 @@
           ...[[3.3, 0.9], [3.55, 0.85], [3.8, 1.0], [3.95, 1.2], [3.45, 1.3], [3.2, 1.05]].map(([x, y]) => use("reed", x, y, 0, { cls: "fine" })),
           use("bench", 0.7, 3.55, 0, { cls: "fine" }), use("bench", 1.15, 4.3, 0, { cls: "fine" }),
           // weather station: mast, instrument box, solar panel, rain gauge
-          ao(1.45, 0.45, 0.1, 0.1, 30), box(1.45, 0.45, 0.1, 0.1, 30), box(1.3, 0.3, 0.4, 0.4, 5, { z: 30, top: "lit" }), use("solar", 1.32, 0.3, 35, { d: 2.2 }),
-          cyl(0.75, 0.75, 0.16, 9), item(1.7, el("ellipse", { class: "funnel", cx: f(P(0.75, 0.75, 9)[0]), cy: f(P(0.75, 0.75, 9)[1]), rx: 4.5, ry: 2.2 })),
+          box(1.45, 0.45, 0.1, 0.1, 30, { cls: "steel" }), box(1.3, 0.3, 0.4, 0.4, 5, { z: 30, top: "lit", cls: "white" }), use("solar", 1.32, 0.3, 35, { d: 2.2 }),
+          cyl(0.75, 0.75, 0.16, 9, { cls: "white" }), item(1.7, el("ellipse", { class: "funnel", cx: f(P(0.75, 0.75, 9)[0]), cy: f(P(0.75, 0.75, 9)[1]), rx: 4.5, ry: 2.2 })),
           // the gauging weir with its stilling well and staff gauge
-          box(2.12, 1.88, 0.26, 0.84, 3, { cls: "weir" }), line("foam", [P(2.46, 1.95), P(2.46, 2.75)], 5.3),
-          cyl(1.95, 1.25, 0.14, 12), item(3.3, seg("det", P(2.62, 2.78), P(2.62, 2.78, 14)), ...[0, 1, 2, 3, 4].map((i) => seg("det fine", P(2.62, 2.78, 2 + i * 3), [P(2.62, 2.78, 2 + i * 3)[0] + 3, P(2.62, 2.78, 2 + i * 3)[1]]))),
+          box(2.12, 1.88, 0.26, 0.84, 3, { cls: "concrete" }), line("foam", [P(2.46, 1.95), P(2.46, 2.75)], 5.3),
+          cyl(1.95, 1.25, 0.14, 12, { cls: "concrete" }), item(3.3, seg("det", P(2.62, 2.78), P(2.62, 2.78, 14)), ...[0, 1, 2, 3, 4].map((i) => seg("det fine", P(2.62, 2.78, 2 + i * 3), [P(2.62, 2.78, 2 + i * 3)[0] + 3, P(2.62, 2.78, 2 + i * 3)[1]]))),
           // footbridge over the upper reach
-          box(1.07, 0.85, 0.08, 0.1, 4), box(1.07, 1.9, 0.08, 0.1, 4),
+          box(1.07, 0.85, 0.08, 0.1, 4, { cls: "timber" }), box(1.07, 1.9, 0.08, 0.1, 4, { cls: "timber" }),
           flat("deck", [P(1.03, 0.85, 4), P(1.25, 0.85, 4), P(1.25, 2.0, 4), P(1.03, 2.0, 4)], 3.3),
           rail([[1.05, 0.85], [1.05, 2.0]], 8, { posts: 0.3, cls: "fine", d: 3.31 }), rail([[1.23, 0.85], [1.23, 2.0]], 8, { posts: 0.3, cls: "fine", d: 3.32 }),
           // the plant outfall headwall on the south bank, and a thermistor string in the lower reach
-          box(1.38, 2.15, 0.32, 0.2, 4), item(3.75, el("ellipse", { class: "mh", cx: f(P(1.54, 2.35, 2)[0]), cy: f(P(1.54, 2.35, 2)[1]), rx: 2.6, ry: 2 })),
+          box(1.38, 2.15, 0.32, 0.2, 4, { cls: "concrete" }), item(3.75, el("ellipse", { class: "mh", cx: f(P(1.54, 2.35, 2)[0]), cy: f(P(1.54, 2.35, 2)[1]), rx: 2.6, ry: 2 })),
           lo(line("therm", [P(3.4, 3.85), P(3.4, 3.25)], 7.3)), lo(item(7.31, ...[0, 1, 2, 3].map((i) => { const [cx, cy] = P(3.4, 3.8 - i * 0.18); return el("circle", { class: "bead", cx: f(cx), cy: f(cy), r: 1.5, style: `--i:${i}` }); }))),
         ];
         const [tx, ty] = P(0.75, 0.75, 11);
@@ -775,24 +804,26 @@
           flat("oval", ringZ(9.0, 0.8, 0, 0.44, 40)), flat("pitch", [P(8.97, 0.66), P(9.03, 0.66), P(9.03, 0.94), P(8.97, 0.94)]),
           ...[[5.7, 1.1], [5.7, 2.1], [7.05, 2.1], [7.05, 3.1], [8.4, 2.1], [8.4, 3.1]].map(([x, y]) => slab(x + 0.5, y + 0.05, 0.25, 0.22, "drive fine")),
           ...[[5.65, 0.3, 5.65, 4.4], [7.0, 1.3, 7.0, 4.4], [8.35, 1.3, 8.35, 4.4]].map(([a, b, c2, d2]) => line("fence fine", [P(a, b), P(c2, d2)])),
-          ao(7.05, 1.4, 0.75, 0.75, 18), ao(8.4, 2.4, 0.75, 0.75, 18),
         ];
         const vol = [];
         const kinds = ["px", "py", "h", "py", "px", "h", "py", "h", "px", "py", "px"];
+        // terracotta tile on most roofs, slate and Colorbond on the rest; the
+        // walls rendered cream or pale grey, and brick on every third house
+        const roofs = ["tile", "slate", "tile", "cb-green", "tile", "cb-grey", "tile", "slate", "cb-red", "tile", "cb-grey"];
         [[5.7, 0.4], [5.7, 1.4], [5.7, 2.4], [5.7, 3.4], [7.05, 0.4], [7.05, 1.4], [7.05, 2.4], [7.05, 3.4], [8.4, 1.4], [8.4, 2.4], [8.4, 3.4]].forEach(([x, y], i) => {
-          const two = (x === 7.05 && y === 1.4) || (x === 8.4 && y === 2.4), h = two ? 18 : 11, k = kinds[i];
-          const home = k === "px" ? prism(x, y, 0.75, 0.7, h, 7, { gable: "x" }) : k === "py" ? prism(x, y, 0.7, 0.75, h, 6, { gable: "y" }) : house(x, y, 0.75, 0.75, h + 1, 9);
+          const two = (x === 7.05 && y === 1.4) || (x === 8.4 && y === 2.4), h = two ? 18 : 11, k = kinds[i], o = { roof: roofs[i], cls: i % 3 === 2 ? "brick" : i % 3 === 1 ? "render-2" : undefined };
+          const home = k === "px" ? prism(x, y, 0.75, 0.7, h, 7, { gable: "x", ...o }) : k === "py" ? prism(x, y, 0.7, 0.75, h, 6, { gable: "y", ...o }) : house(x, y, 0.75, 0.75, h + 1, 9, o);
           home.nodes.push(...(k === "px" ? homeDetail(x, y, 0.75, 0.7, h, 7, "x", i) : k === "py" ? homeDetail(x, y, 0.7, 0.75, h, 6, "y", i) : homeDetail(x, y, 0.75, 0.75, h + 1, 9, "h", i)).filter(Boolean));
           vol.push(home);
           vol.push(flat("door fine", [P(x + 0.28, y + 0.75, 0), P(x + 0.42, y + 0.75, 0), P(x + 0.42, y + 0.75, 6), P(x + 0.28, y + 0.75, 6)], x + 0.75 + y + 0.75 + 0.001));
-          if (i % 3 === 0) vol.push(box(x + 0.5, y + 0.12, 0.1, 0.1, 5, { z: h + 3, bias: 0.002 }));
-          if (i % 4 === 1) vol.push(box(x + 0.5, y + 0.05, 0.3, 0.3, 7, { bias: 0.003 }));
+          if (i % 3 === 0) vol.push(box(x + 0.5, y + 0.12, 0.1, 0.1, 5, { z: h + 3, bias: 0.002, cls: "brick" }));
+          if (i % 4 === 1) vol.push(box(x + 0.5, y + 0.05, 0.3, 0.3, 7, { bias: 0.003, cls: "zinc" }));
         });
         vol.push(
           ...[[8.7, 0.5, "m"], [9.3, 0.6, "s"], [9.2, 1.15, "m"], [6.2, 0.2, "s"], [7.6, 0.2, "s"], [9.0, 4.4, "s"], [6.3, 4.4, "s"], [7.7, 4.4, "s"], [5.5, 4.4, "s"], [9.45, 2.0, "s"], [9.45, 3.2, "s"]].map(([x, y, s]) => tree(x, y, s)),
           use("bench", 8.6, 1.05, 0, { cls: "fine" }),
           ...[[6.78, 0.9], [6.78, 2.3], [6.78, 3.7], [8.13, 1.7], [8.13, 3.95]].map(([x, y]) => use("lamp", x, y, 0, { d: x + y + 0.06 })),
-          box(9.2, 4.2, 0.4, 0.16, 5, { top: "lit" }),
+          box(9.2, 4.2, 0.4, 0.16, 5, { top: "lit", cls: "white" }),
           manhole(6.78, 1.55), manhole(8.13, 1.0), manhole(6.78, 0.5), manhole(8.13, 3.05),
           // the EDS crew lowering a flow meter down the open manhole
           manhole(6.78, 3.05, { open: true }),
@@ -802,7 +833,7 @@
           use("crew", 6.6, 2.86, 0, { d: 9.47 }), use("crew", 7.0, 3.26, 0, { d: 10.27 }),
           use("van-y", 6.78, 3.95, 0, { d: 10.75 }),
           // the LIDoTT alarm unit on the next manhole
-          box(8.06, 2.98, 0.14, 0.14, 5, { top: "lit", bias: 0.01 }), item(11.2, seg("det", P(8.13, 3.05, 5), P(8.13, 3.05, 14)))
+          box(8.06, 2.98, 0.14, 0.14, 5, { top: "lit", bias: 0.01, cls: "white" }), item(11.2, seg("det", P(8.13, 3.05, 5), P(8.13, 3.05, 14)))
         );
         const [sx, sy] = P(8.13, 3.05);
         const fx = [
@@ -817,19 +848,26 @@
     cbd: {
       rect: [10.4, 0, 15, 4.6], h: 122,
       build(S) {
-        const towers = [[10.8, 0.5, 1.1, 1.1, 86, "a"], [12.4, 0.4, 1.0, 1.0, 118, "b"], [13.9, 0.6, 0.8, 0.9, 64, "c"], [10.9, 2.4, 1.2, 0.9, 46, "b"], [12.6, 2.2, 1.0, 1.2, 72, "a"], [14.0, 2.5, 0.7, 0.8, 54, "c"], [11.95, 1.5, 0.55, 0.6, 38, "c"], [14.2, 1.65, 0.5, 0.6, 30, "a"], [11.7, 3.35, 0.7, 0.5, 26, "b"]];
-        const decals = [slab(10.9, 3.75, 1.1, 0.75, "plaza"), ...towers.filter((t) => t[4] > 40).map(([x, y, w, d, h]) => ao(x, y, w, d, h))];
+        // each tower in its own material: glass, dark glass, sandstone, concrete, brick, rendered white
+        const towers = [[10.8, 0.5, 1.1, 1.1, 86, "a", "glass"], [12.4, 0.4, 1.0, 1.0, 118, "b", "glass-dark"], [13.9, 0.6, 0.8, 0.9, 64, "c", "sand"], [10.9, 2.4, 1.2, 0.9, 46, "b", "grey"], [12.6, 2.2, 1.0, 1.2, 72, "a", "glass"], [14.0, 2.5, 0.7, 0.8, 54, "c", "brick"], [14.2, 1.65, 0.5, 0.6, 30, "a", "white"], [11.7, 3.35, 0.7, 0.5, 26, "b", "sand"]];
+        const decals = [slab(10.9, 3.75, 1.1, 0.75, "plaza")];
         const vol = [
-          ...towers.map(([x, y, w, d, h, v]) => box(x, y, w, d, h, { win: v, entry: true })),
-          box(12.55, 0.55, 0.7, 0.7, 20, { z: 118 }), box(12.75, 0.75, 0.3, 0.3, 8, { z: 138, top: "lit" }),
+          ...towers.map(([x, y, w, d, h, v, m]) => box(x, y, w, d, h, { win: v, entry: true, cls: m })),
+          box(12.55, 0.55, 0.7, 0.7, 20, { z: 118, cls: "glass-dark" }), box(12.75, 0.75, 0.3, 0.3, 8, { z: 138, top: "lit", cls: "white" }),
+          // a tower going up on the vacant lot: the concrete frame to its fourth
+          // floor behind a hoarding, with a tower crane in safety yellow
+          box(11.95, 1.5, 0.55, 0.6, 24, { cls: "concrete", bias: 0.3 }),
+          item(11.95 + 0.55 + 1.5 + 0.6 + 0.301, strokes("floor-line", [6, 12, 18].flatMap((zz) => [[P(11.95, 2.1, zz), P(12.5, 2.1, zz)], [P(12.5, 2.1, zz), P(12.5, 1.5, zz)]]))),
+          rail([[11.9, 1.45], [12.75, 1.45], [12.75, 2.15], [11.9, 2.15], [11.9, 1.45]], 4, { posts: 0.2, cls: "hoarding fine", d: 14.92 }),
+          item(14.95, seg("crane", P(12.68, 1.48), P(12.68, 1.48, 62)), pl("crane", [P(12.9, 1.48, 60), P(12.68, 1.48, 60), P(11.75, 1.48, 60)]), pl("crane-line", [P(12.9, 1.48, 60), P(12.68, 1.48, 68), P(11.75, 1.48, 60)]), seg("crane-line", P(12.05, 1.48, 60), P(12.05, 1.48, 34)), ...box(12.0, 1.44, 0.1, 0.08, 4, { z: 30, cls: "yellow" }).nodes),
           item(14.9, seg("mast", P(12.9, 0.9, 146), P(12.9, 0.9, 162)), el("circle", { class: "blink", cx: f(P(12.9, 0.9, 163)[0]), cy: f(P(12.9, 0.9, 163)[1]), r: 1.8 })),
-          box(12.75, 2.35, 0.7, 0.9, 14, { z: 72 }),
+          box(12.75, 2.35, 0.7, 0.9, 14, { z: 72, cls: "glass" }),
           ...[[11.0, 0.7, 86], [11.5, 1.2, 86], [14.2, 0.8, 64], [12.9, 2.5, 86], [11.3, 2.6, 46]].map(([x, y, z]) => use("ac", x, y, z, { d: x + y + 0.3 })),
-          cyl(11.6, 0.6, 0.11, 6, { z: 86 }), item(14.9, seg("mast", P(14.3, 0.8, 64), P(14.3, 0.8, 78)), seg("mast", P(14.45, 2.65, 54), P(14.45, 2.65, 66))),
+          cyl(11.6, 0.6, 0.11, 6, { z: 86, cls: "steel" }), item(14.9, seg("mast", P(14.3, 0.8, 64), P(14.3, 0.8, 78)), seg("mast", P(14.45, 2.65, 54), P(14.45, 2.65, 66))),
           // the plaza: fountain, trees, a kiosk with the Metalog logger, a transit canopy
-          cyl(11.45, 4.1, 0.2, 2, { water: true, ring: true }),
+          cyl(11.45, 4.1, 0.2, 2, { water: true, ring: true, cls: "concrete" }),
           ...[[10.98, 3.85], [11.9, 3.85], [10.98, 4.4], [11.9, 4.4]].map(([x, y]) => jac(x, y)),
-          box(12.05, 4.2, 0.25, 0.25, 6, { top: "lit" }),
+          box(12.05, 4.2, 0.25, 0.25, 6, { top: "lit", cls: "white" }),
           slab(12.85, 3.75, 1.6, 0.65, "platform", 1, {}), ...canopy(12.9, 3.8, 1.5, 0.55),
           ...[[10.8, 1.6, 1.1], [12.4, 1.4, 1.0], [13.9, 1.5, 0.8]].map(([x, y, w]) => flat("lit shop", [P(x, y, 0.4), P(x + w, y, 0.4), P(x + w, y, 4), P(x, y, 4)], x + w + y + 0.002)),
           box(14.55, 4.15, 0.1, 0.1, 6, { cls: "red" }), manhole(14.6, 4.35),
@@ -845,29 +883,28 @@
       build(S) {
         const decals = [
           slab(0.2, 5.55, 4.2, 4.3, "siteroad"), slab(0.45, 5.8, 3.7, 3.8, "ground2"),
-          ao(3.0, 6.3, 0.9, 0.9, 30), ao(4.0, 7.0, 0.7, 0.7, 22),
         ];
         const [ax, ay] = [2.3, 8.2];
         const vol = [
           // inlet works: screening channel, flume, screen house
-          box(0.3, 5.7, 1.2, 0.45, 6), item(7.66, ...[0, 1, 2, 3, 4].map((i) => seg("det", P(0.45 + i * 0.22, 6.15, 6), P(0.45 + i * 0.22, 6.15, 1)))),
-          flat("wtr flume", [P(0.4, 5.78, 6), P(1.4, 5.78, 6), P(1.4, 6.07, 6), P(0.4, 6.07, 6)], 7.66), box(1.55, 5.7, 0.4, 0.45, 9, { top: "lit", clad: true }),
+          box(0.3, 5.7, 1.2, 0.45, 6, { cls: "concrete" }), item(7.66, ...[0, 1, 2, 3, 4].map((i) => seg("det", P(0.45 + i * 0.22, 6.15, 6), P(0.45 + i * 0.22, 6.15, 1)))),
+          flat("wtr flume", [P(0.4, 5.78, 6), P(1.4, 5.78, 6), P(1.4, 6.07, 6), P(0.4, 6.07, 6)], 7.66), box(1.55, 5.7, 0.4, 0.45, 9, { top: "lit", clad: true, cls: "zinc" }),
           // two clarifiers with turning scraper arms, launder rings and walkways
-          cyl(1.1, 6.55, 0.78, 5, { water: true, arm: true, ring: true }), cyl(1.1, 8.65, 0.78, 5, { water: true, arm: true, ring: true }),
-          cyl(1.1, 6.55, 0.12, 3, { z: 5, bias: 0.01 }), cyl(1.1, 8.65, 0.12, 3, { z: 5, bias: 0.01 }),
-          rail([[0.32, 6.55], [1.1, 6.55]], 8, { posts: 0.26, cls: "fine", d: 7.7 }), rail([[0.32, 8.65], [1.1, 8.65]], 8, { posts: 0.26, cls: "fine", d: 9.8 }),
+          cyl(1.1, 6.55, 0.78, 5, { water: true, arm: true, ring: true, cls: "concrete" }), cyl(1.1, 8.65, 0.78, 5, { water: true, arm: true, ring: true, cls: "concrete" }),
+          cyl(1.1, 6.55, 0.12, 3, { z: 5, bias: 0.01, cls: "steel" }), cyl(1.1, 8.65, 0.12, 3, { z: 5, bias: 0.01, cls: "steel" }),
+          rail([[0.32, 6.55], [1.1, 6.55]], 8, { posts: 0.26, cls: "fine safety", d: 7.7 }), rail([[0.32, 8.65], [1.1, 8.65]], 8, { posts: 0.26, cls: "fine safety", d: 9.8 }),
           // aeration basin with diffusers
-          box(ax, ay, 1.5, 1.3, 5), flat("wtr", [P(ax + 0.12, ay + 0.12, 5), P(ax + 1.38, ay + 0.12, 5), P(ax + 1.38, ay + 1.18, 5), P(ax + 0.12, ay + 1.18, 5)], ax + 1.5 + ay + 1.3 + 0.01),
+          box(ax, ay, 1.5, 1.3, 5, { cls: "concrete" }), flat("wtr", [P(ax + 0.12, ay + 0.12, 5), P(ax + 1.38, ay + 0.12, 5), P(ax + 1.38, ay + 1.18, 5), P(ax + 0.12, ay + 1.18, 5)], ax + 1.5 + ay + 1.3 + 0.01),
           line("wtr-line", [P(ax + 0.2, ay + 0.65, 5), P(ax + 1.3, ay + 0.65, 5)], ax + 1.5 + ay + 1.3 + 0.02),
           item(ax + 1.5 + ay + 1.3 + 0.015, ...[0.35, 0.65, 0.95].map((k) => seg("det fine", P(ax + 0.2, ay + k, 5), P(ax + 1.3, ay + k, 5)))),
           // digesters, the flare and the dosing plant
-          cyl(3.0, 6.3, 0.55, 30, { dome: true, bands: 3 }), cyl(4.0, 7.0, 0.45, 22, { dome: true, bands: 2 }),
+          cyl(3.0, 6.3, 0.55, 30, { dome: true, bands: 3, cls: "green" }), cyl(4.0, 7.0, 0.45, 22, { dome: true, bands: 2, cls: "green" }),
           line("stair fine", [P(2.5, 6.6, 2), P(2.6, 6.5, 10), P(2.75, 6.35, 18), P(2.9, 6.2, 26)], 9.2),
-          cyl(4.45, 6.2, 0.07, 34), box(4.1, 8.3, 0.1, 0.1, 8, { bias: 0.01 }), box(4.3, 8.3, 0.1, 0.1, 8, { bias: 0.011 }), box(4.5, 8.3, 0.1, 0.1, 8, { bias: 0.012 }),
+          cyl(4.45, 6.2, 0.07, 34, { cls: "steel" }), box(4.1, 8.3, 0.1, 0.1, 8, { bias: 0.01, cls: "white" }), box(4.3, 8.3, 0.1, 0.1, 8, { bias: 0.011, cls: "white" }), box(4.5, 8.3, 0.1, 0.1, 8, { bias: 0.012, cls: "white" }),
           // chlorine contact tank, admin and laboratory, the ORI sampler cabinet
-          box(0.3, 9.3, 1.6, 0.4, 6, { top: "wtr" }), item(0.3 + 1.6 + 9.3 + 0.4 + 0.01, seg("det", P(0.8, 9.3, 6), P(0.8, 9.7, 6)), seg("det", P(1.3, 9.3, 6), P(1.3, 9.7, 6))),
-          box(3.5, 9.0, 1.0, 0.6, 14, { win: "b" }), flat("lit", [P(3.9, 9.6, 0), P(4.1, 9.6, 0), P(4.1, 9.6, 6), P(3.9, 9.6, 6)], 3.5 + 1.0 + 9.0 + 0.6 + 0.002),
-          box(3.25, 9.62, 0.25, 0.25, 7, { top: "lit" }),
+          box(0.3, 9.3, 1.6, 0.4, 6, { top: "wtr", cls: "concrete" }), item(0.3 + 1.6 + 9.3 + 0.4 + 0.01, seg("det", P(0.8, 9.3, 6), P(0.8, 9.7, 6)), seg("det", P(1.3, 9.3, 6), P(1.3, 9.7, 6))),
+          box(3.5, 9.0, 1.0, 0.6, 14, { win: "b", cls: "render" }), flat("lit shop", [P(3.9, 9.6, 0), P(4.1, 9.6, 0), P(4.1, 9.6, 6), P(3.9, 9.6, 6)], 3.5 + 1.0 + 9.0 + 0.6 + 0.002),
+          box(3.25, 9.62, 0.25, 0.25, 7, { top: "lit", cls: "white" }),
           // pipe rack linking the process line, the fence, lamps, trees, the service van
           rail([[1.9, 5.95], [2.6, 5.95], [2.6, 8.0], [2.2, 8.0]], 8, { posts: 0.5, cls: "pipe-rack", d: 9.0 }),
           rail([[0.15, 5.5], [4.5, 5.5], [4.5, 9.95]], 5, { posts: 0.55, cls: "fence fine", d: 4.2 }),
@@ -884,19 +921,19 @@
     pump: {
       rect: [5.4, 5.4, 7.2, 10], h: 34,
       build(S) {
-        const decals = [slab(5.55, 5.6, 1.5, 4.3, "ground2"), flat("track", [P(5.4, 8.95), P(5.6, 8.95), P(5.6, 9.2), P(5.4, 9.2)]), ao(5.7, 5.8, 1.15, 1.2, 20)];
+        const decals = [slab(5.55, 5.6, 1.5, 4.3, "ground2"), flat("track", [P(5.4, 8.95), P(5.6, 8.95), P(5.6, 9.2), P(5.4, 9.2)])];
         const vol = [
           rail([[5.55, 5.6], [7.05, 5.6], [7.05, 9.9]], 5, { posts: 0.5, cls: "fence fine", d: 11.1 }), rail([[5.55, 5.6], [5.55, 9.9], [6.5, 9.9]], 5, { posts: 0.5, cls: "fence fine", d: 16.6 }),
-          house(5.7, 5.8, 1.15, 1.2, 20, 8, { clad: true }), flat("door fine", [P(6.1, 7.0, 0), P(6.5, 7.0, 0), P(6.5, 7.0, 12), P(6.1, 7.0, 12)], 5.7 + 1.15 + 5.8 + 1.2 + 0.001),
-          cyl(5.75, 5.85, 0.04, 26), cyl(5.6, 6.1, 0.05, 24, { cap: true }),
+          house(5.7, 5.8, 1.15, 1.2, 20, 8, { cls: "brick", roof: "cb-grey" }), flat("door fine", [P(6.1, 7.0, 0), P(6.5, 7.0, 0), P(6.5, 7.0, 12), P(6.1, 7.0, 12)], 5.7 + 1.15 + 5.8 + 1.2 + 0.001),
+          cyl(5.75, 5.85, 0.04, 26, { cls: "steel" }), cyl(5.6, 6.1, 0.05, 24, { cap: true, cls: "steel" }),
           line("det", [P(6.3, 7.0), P(6.3, 7.5)], 13.4),
           // the wet well with its two pumps and run lights
-          cyl(6.3, 8.05, 0.6, 5, { water: "well" }),
-          use("pump-dome", 6.12, 7.92, 5, { d: 14.08 }), use("pump-dome", 6.48, 8.18, 5, { d: 14.7 }),
-          cyl(6.8, 6.6, 0.35, 10, { bands: 1, rail: true }), box(6.85, 8.6, 0.3, 0.3, 4), item(16.06, el("circle", { class: "det", cx: f(P(6.95, 8.75, 4)[0]), cy: f(P(6.95, 8.75, 4)[1]), r: 1.6 }), el("circle", { class: "det", cx: f(P(7.05, 8.75, 4)[0]), cy: f(P(7.05, 8.75, 4)[1]), r: 1.6 })),
-          box(6.4, 9.3, 0.5, 0.3, 7),
+          cyl(6.3, 8.05, 0.6, 5, { water: "well", cls: "concrete" }),
+          use("pump-dome", 6.12, 7.92, 5, { d: 14.08, style: "--mat:#4f6f85" }), use("pump-dome", 6.48, 8.18, 5, { d: 14.7, style: "--mat:#4f6f85" }),
+          cyl(6.8, 6.6, 0.35, 10, { bands: 1, rail: true, cls: "steel" }), box(6.85, 8.6, 0.3, 0.3, 4, { cls: "white" }), item(16.06, el("circle", { class: "det", cx: f(P(6.95, 8.75, 4)[0]), cy: f(P(6.95, 8.75, 4)[1]), r: 1.6 }), el("circle", { class: "det", cx: f(P(7.05, 8.75, 4)[0]), cy: f(P(7.05, 8.75, 4)[1]), r: 1.6 })),
+          box(6.4, 9.3, 0.5, 0.3, 7, { cls: "zinc" }),
           // the control cabinet with the Pump Station Manager, its antenna and solar panel
-          box(5.75, 9.1, 0.4, 0.4, 12, { top: "lit" }), item(15.66, seg("mast", P(6.1, 9.15, 12), P(6.1, 9.15, 32)), el("circle", { class: "blink", cx: f(P(6.1, 9.15, 33)[0]), cy: f(P(6.1, 9.15, 33)[1]), r: 1.6 })), use("solar", 5.78, 9.2, 12, { d: 15.67 }),
+          box(5.75, 9.1, 0.4, 0.4, 12, { top: "lit", cls: "white" }), item(15.66, seg("mast", P(6.1, 9.15, 12), P(6.1, 9.15, 32)), el("circle", { class: "blink", cx: f(P(6.1, 9.15, 33)[0]), cy: f(P(6.1, 9.15, 33)[1]), r: 1.6 })), use("solar", 5.78, 9.2, 12, { d: 15.67 }),
           use("van-y", 5.62, 9.5, 0, { d: 15.2 }), use("crew", 5.95, 9.6, 0, { d: 15.6 }),
           tree(5.5, 6.9, "s"), tree(7.1, 9.6, "s"),
         ];
@@ -907,18 +944,20 @@
     ops: {
       rect: [8.0, 5.4, 9.6, 10], h: 84,
       build(S) {
-        const decals = [slab(8.3, 9.2, 1.2, 0.7, "yard", 0, { style: "fill:url(#bays)" }), slab(8.2, 8.25, 1.1, 0.95, "ground2"), ao(8.25, 5.8, 1.1, 2.3, 44)];
+        const decals = [slab(8.3, 9.2, 1.2, 0.7, "yard", 0, { style: "fill:url(#bays)" }), slab(8.2, 8.25, 1.1, 0.95, "ground2")];
         const hub = P(8.8, 6.5, 78);
         const vol = [
-          box(8.25, 5.8, 1.1, 2.3, 44, { win: "c" }), flat("lit", [P(9.35, 6.6, 0.4), P(9.35, 7.3, 0.4), P(9.35, 7.3, 9), P(9.35, 6.6, 9)], 8.25 + 1.1 + 5.8 + 2.3 + 0.002),
+          box(8.25, 5.8, 1.1, 2.3, 44, { win: "c", cls: "eds" }), flat("lit", [P(9.35, 6.6, 0.4), P(9.35, 7.3, 0.4), P(9.35, 7.3, 9), P(9.35, 6.6, 9)], 8.25 + 1.1 + 5.8 + 2.3 + 0.002),
           flat("deck", [P(9.35, 6.5, 10), P(9.6, 6.5, 10), P(9.6, 7.4, 10), P(9.35, 7.4, 10)], 8.25 + 1.1 + 5.8 + 2.3 + 0.003),
+          // the EDS wordmark lit on the south face, skewed into the wall like the vans' livery
+          item(8.25 + 1.1 + 5.8 + 2.3 + 0.0035, (() => { const [ox, oy] = P(8.42, 8.1, 33), t = el("text", { class: "eds-sign", transform: `matrix(0.894 0.447 0 1 ${f(ox)} ${f(oy)})` }); t.textContent = "EDS"; return t; })()),
           item(8.25 + 1.1 + 5.8 + 2.3 + 0.004, ...[0, 1, 2].flatMap((i) => [0, 1].map((j) => poly("screen", [P(8.4 + i * 0.3, 8.1, 20 + j * 9), P(8.62 + i * 0.3, 8.1, 20 + j * 9), P(8.62 + i * 0.3, 8.1, 27 + j * 9), P(8.4 + i * 0.3, 8.1, 27 + j * 9)], { style: `--i:${i + j * 3}` })))),
           ...[[8.4, 6.0, 44], [8.4, 6.5, 44], [8.4, 7.0, 44], [8.4, 7.5, 44]].map(([x, y, z]) => use("solar", x, y, z, { d: x + y + 0.3 })),
           use("ac", 8.95, 7.6, 44, { d: 16.9 }), use("ac", 8.95, 7.2, 44, { d: 16.5 }),
           item(16.95, seg("mast", P(8.8, 6.5, 44), P(8.8, 6.5, 76), { style: "stroke-width:2" }), seg("mast", P(8.72, 6.42, 58), P(8.88, 6.58, 58)), seg("mast", P(8.72, 6.42, 66), P(8.88, 6.58, 66)), seg("mast", P(8.74, 6.44, 72), P(8.86, 6.56, 72))),
           use("dish", 8.8, 6.5, 62, { d: 16.96 }), use("dish", 8.86, 6.56, 70, { d: 16.97 }),
           item(16.98, el("ellipse", { class: "hub", cx: f(hub[0]), cy: f(hub[1]), rx: 16, ry: 10 }), el("circle", { class: "beacon", cx: f(hub[0]), cy: f(hub[1]), r: 4 }), el("circle", { class: "blink", cx: f(hub[0]), cy: f(hub[1] - 2), r: 1.8 })),
-          box(8.3, 8.3, 0.9, 0.8, 18, { top: "lit", clad: true }), flat("door fine", [P(8.55, 9.1, 0), P(8.95, 9.1, 0), P(8.95, 9.1, 11), P(8.55, 9.1, 11)], 8.3 + 0.9 + 8.3 + 0.8 + 0.001),
+          box(8.3, 8.3, 0.9, 0.8, 18, { top: "lit", clad: true, cls: "zinc" }), flat("door fine", [P(8.55, 9.1, 0), P(8.95, 9.1, 0), P(8.95, 9.1, 11), P(8.55, 9.1, 11)], 8.3 + 0.9 + 8.3 + 0.8 + 0.001),
           // the EDS fleet parked nose-in, side by side, so each van's logo shows
           ...[[8.5, 9.4], [8.8, 9.4], [9.1, 9.4]].map(([x, y], i) => use("van-y", x, y, 0, { d: x + y + 0.2, cls: i === 2 ? "yard-van" : undefined })), use("car-e", 8.5, 9.68, 0, { d: 18.4 }), use("car-e", 8.9, 9.68, 0, { d: 18.8 }),
           item(19.3, ...[[-0.1, -0.1], [0.1, -0.1], [0.1, 0.1], [-0.1, 0.1]].map(([dx, dy]) => seg("mast", P(9.4 + dx, 9.7 + dy), P(9.4, 9.7, 40))), ...[12, 24, 34].map((z) => pl("mast fine", [P(9.3, 9.6, z), P(9.5, 9.6, z), P(9.5, 9.8, z), P(9.3, 9.8, z), P(9.3, 9.6, z)])), el("circle", { class: "blink", cx: f(P(9.4, 9.7, 41)[0]), cy: f(P(9.4, 9.7, 41)[1]), r: 1.6 })),
@@ -934,27 +973,26 @@
         const decals = [
           slab(13.35, 5.55, 1.5, 0.7, "yard", 0, { style: "fill:url(#bays)" }), slab(10.6, 9.35, 1.1, 0.5, "yard", 0, { style: "fill:url(#bays)" }),
           flat("zone-line fine", [P(10.42, 7.4), P(11.8, 7.4), P(11.8, 8.05), P(10.42, 8.05)]),
-          ao(10.8, 5.8, 2.6, 1.6, 22), ao(13.95, 6.2, 0.34, 0.34, 58), ao(14.45, 6.7, 0.34, 0.34, 46), ao(13.3, 7.9, 1.3, 1.7, 16),
         ];
         const vol = [
           // the big shed with roof monitors and roller doors, trucks at its dock
-          ribbed(box(10.8, 5.8, 2.6, 1.6, 22, { clad: true }), 10.8, 5.8, 2.6, 1.6, 22), ...[0, 1, 2].map((i) => box(10.95 + i * 0.85, 5.95, 0.55, 1.3, 6, { z: 22, bias: 0.02 + i * 0.001, clad: true })),
-          item(10.8 + 2.6 + 5.8 + 1.6 + 0.002, ...[0, 1, 2].map((i) => { const q = [P(11.0 + i * 0.8, 7.4, 0), P(11.5 + i * 0.8, 7.4, 0), P(11.5 + i * 0.8, 7.4, 12), P(11.0 + i * 0.8, 7.4, 12)]; return [poly("door", q), poly("slats", q)]; })),
+          ribbed(box(10.8, 5.8, 2.6, 1.6, 22, { clad: true, cls: "zinc" }), 10.8, 5.8, 2.6, 1.6, 22), ...[0, 1, 2].map((i) => box(10.95 + i * 0.85, 5.95, 0.55, 1.3, 6, { z: 22, bias: 0.02 + i * 0.001, clad: true, cls: "zinc" })),
+          item(10.8 + 2.6 + 5.8 + 1.6 + 0.002, ...[0, 1, 2].map((i) => { const q = [P(11.0 + i * 0.8, 7.4, 0), P(11.5 + i * 0.8, 7.4, 0), P(11.5 + i * 0.8, 7.4, 12), P(11.0 + i * 0.8, 7.4, 12)]; return [poly("door blue-door", q), poly("slats", q)]; })),
           use("truck-x", 12.3, 7.65, 0, { d: 20.1 }), use("truck-x", 11.3, 7.65, 0, { d: 19.1 }),
           // the sawtooth works and its office
-          ...[0, 1, 2].map((i) => prism(13.3 + i * 0.43, 7.9, 0.43, 1.3, 16, 6, { gable: "y", skylight: true, bias: i * 0.001 })), box(13.3, 9.2, 1.3, 0.35, 16, { win: "a" }),
+          ...[0, 1, 2].map((i) => prism(13.3 + i * 0.43, 7.9, 0.43, 1.3, 16, 6, { gable: "y", skylight: true, bias: i * 0.001, cls: "brick", roof: "cb-grey" })), box(13.3, 9.2, 1.3, 0.35, 16, { win: "a", cls: "render" }),
           // the stacks and the tank farm inside its bund
-          cyl(13.95, 6.2, 0.17, 58, { stripes: [3, 9], bands: 4 }), cyl(14.45, 6.7, 0.17, 46, { stripes: [3, 9], bands: 3 }), line("ladder fine", [P(14.1, 6.2, 2), P(14.1, 6.2, 56)], 20.5), line("ladder fine", [P(14.6, 6.7, 2), P(14.6, 6.7, 44)], 21.4),
-          box(10.75, 8.1, 2.4, 0.06, 3), box(10.75, 8.1, 0.06, 1.75, 3, { bias: 0.001 }), box(13.1, 8.1, 0.06, 1.75, 3), box(10.75, 9.8, 2.4, 0.06, 3),
-          cyl(11.3, 8.7, 0.5, 18, { bands: 2, rail: true }), cyl(12.5, 8.7, 0.5, 18, { bands: 2, rail: true }), cyl(11.9, 9.45, 0.28, 12, { bands: 1 }), cyl(12.85, 9.5, 0.22, 10, { bands: 1 }), box(12.35, 9.55, 0.25, 0.2, 5),
+          cyl(13.95, 6.2, 0.17, 58, { stripes: [3, 9], bands: 4, cls: "concrete" }), cyl(14.45, 6.7, 0.17, 46, { stripes: [3, 9], bands: 3, cls: "concrete" }), line("ladder fine", [P(14.1, 6.2, 2), P(14.1, 6.2, 56)], 20.5), line("ladder fine", [P(14.6, 6.7, 2), P(14.6, 6.7, 44)], 21.4),
+          box(10.75, 8.1, 2.4, 0.06, 3, { cls: "concrete" }), box(10.75, 8.1, 0.06, 1.75, 3, { bias: 0.001, cls: "concrete" }), box(13.1, 8.1, 0.06, 1.75, 3, { cls: "concrete" }), box(10.75, 9.8, 2.4, 0.06, 3, { cls: "concrete" }),
+          cyl(11.3, 8.7, 0.5, 18, { bands: 2, rail: true, cls: "steel" }), cyl(12.5, 8.7, 0.5, 18, { bands: 2, rail: true, cls: "steel" }), cyl(11.9, 9.45, 0.28, 12, { bands: 1, cls: "blue" }), cyl(12.85, 9.5, 0.22, 10, { bands: 1, cls: "green" }), box(12.35, 9.55, 0.25, 0.2, 5, { cls: "white" }),
           rail([[11.3, 8.1], [11.3, 7.6], [12.4, 7.6]], 9, { posts: 0.5, cls: "pipe-rack", d: 19.8 }),
           // cooling tower, gate kiosk, weighbridge, gantry and fence
-          box(14.3, 9.2, 0.5, 0.5, 14), item(14.3 + 0.5 + 9.2 + 0.5 + 0.001, ...[3, 6, 9].map((z) => seg("det fine", P(14.3, 9.7, z), P(14.8, 9.7, z)))),
-          slab(10.5, 6.6, 0.4, 0.75, "track"), box(10.5, 6.9, 0.25, 0.25, 7, { top: "lit" }),
-          box(13.55, 5.6, 0.08, 0.08, 20), box(14.55, 5.6, 0.08, 0.08, 20, { bias: 0.001 }), item(20.4, seg("mast", P(13.59, 5.64, 20), P(14.59, 5.64, 20))),
+          box(14.3, 9.2, 0.5, 0.5, 14, { cls: "concrete" }), item(14.3 + 0.5 + 9.2 + 0.5 + 0.001, ...[3, 6, 9].map((z) => seg("det fine", P(14.3, 9.7, z), P(14.8, 9.7, z)))),
+          slab(10.5, 6.6, 0.4, 0.75, "track"), box(10.5, 6.9, 0.25, 0.25, 7, { top: "lit", cls: "white" }),
+          box(13.55, 5.6, 0.08, 0.08, 20, { cls: "yellow" }), box(14.55, 5.6, 0.08, 0.08, 20, { bias: 0.001, cls: "yellow" }), item(20.4, seg("crane", P(13.59, 5.64, 20), P(14.59, 5.64, 20))),
           rail([[10.45, 5.45], [14.95, 5.45]], 5, { posts: 0.6, cls: "fence fine", d: 11 }), rail([[14.95, 5.45], [14.95, 9.95]], 5, { posts: 0.6, cls: "fence fine", d: 25 }),
           // the trade-waste discharge point: inspection chamber, sampling kiosk, meter cabinet
-          manhole(10.85, 7.8), box(10.45, 7.45, 0.3, 0.3, 12, { top: "lit" }), box(11.5, 7.85, 0.2, 0.2, 7),
+          manhole(10.85, 7.8), box(10.45, 7.45, 0.3, 0.3, 12, { top: "lit", cls: "white" }), box(11.5, 7.85, 0.2, 0.2, 7, { cls: "zinc" }),
           ...[[10.7, 9.45], [10.95, 9.45], [11.2, 9.45], [11.45, 9.45]].map(([x, y]) => use("car-s", x, y, 0, { d: x + y + 0.2 })),
           ...[[10.6, 5.6], [14.8, 7.9], [12.7, 9.9]].map(([x, y]) => use("lamp", x, y, 0, { d: x + y + 0.06 })),
           gum(14.85, 9.4), tree(10.5, 8.6, "s"), tree(12.0, 5.55, "s"),
@@ -976,9 +1014,9 @@
       ...many("rock", [[0.35, 1.7], [0.9, 0.55], [1.7, 0.95], [2.0, 2.95], [2.9, 2.55], [3.9, 2.85], [4.3, 4.2], [1.45, 2.05], [3.05, 3.85]], { cls: "fine" }),
       ...many("reed", [[0.55, 1.55], [2.85, 3.75], [3.15, 3.95], [4.4, 4.25], [0.2, 1.45]], { cls: "fine" }),
       ...[[2.35, 0.3, "s"], [4.45, 1.85, "s"], [0.75, 4.4, "s"]].map(([x, y, k]) => tree(x, y, k)), gum(2.55, 4.4), gum(1.75, 3.55),
-      house(3.95, 4.05, 0.3, 0.3, 5, 4), slab(4.1, 2.9, 0.45, 0.5, "track"), use("car-s", 4.2, 3.0, 0, { d: 7.4 }), use("car-s", 4.4, 3.15, 0, { d: 7.75 }),
+      house(3.95, 4.05, 0.3, 0.3, 5, 4, { roof: "cb-green" }), slab(4.1, 2.9, 0.45, 0.5, "track"), use("car-s", 4.2, 3.0, 0, { d: 7.4 }), use("car-s", 4.4, 3.15, 0, { d: 7.75 }),
       rail([[0.5, 0.45], [1.75, 0.45], [1.75, 1.05], [0.5, 1.05], [0.5, 0.45]], 4, { posts: 0.3, cls: "fence fine", d: 2.9 }),
-      use("antenna", 1.95, 1.25, 12, { d: 3.3 }), ...many("bollard", [[0.95, 2.25], [1.15, 2.25], [1.35, 2.25]], { cls: "fine" }),
+      use("antenna", 1.95, 1.25, 12, { d: 3.3 }), ...many("bollard", [[0.95, 2.25], [1.15, 2.25], [1.35, 2.25]], { cls: "fine" }), use("swing", 1.35, 2.95, 0, { cls: "fine" }),
       ...many("sign", [[4.45, 2.35], [0.4, 0.4]], { cls: "fine" }), use("bench", 2.75, 1.65, 0, { cls: "fine" }),
       lo(flat("bank", [P(2.75, 2.75), P(3.1, 2.85), P(3.2, 3.05), P(2.8, 3.0)])),
     ],
@@ -999,9 +1037,9 @@
       ...many("lamp", [[6.78, 4.3], [8.13, 0.55]]),
     ],
     cbd: () => [
-      box(13.35, 1.55, 0.45, 0.5, 34, { win: "b" }), box(10.5, 1.85, 0.3, 0.4, 20, { win: "a" }),
+      box(13.35, 1.55, 0.45, 0.5, 34, { win: "b", cls: "glass" }), box(10.5, 1.85, 0.3, 0.4, 20, { win: "a", cls: "glass" }),
       ...many("antenna", [[11.3, 0.9, 86], [12.95, 0.6, 138], [14.3, 2.9, 54]], { cls: "fine" }),
-      cyl(13.0, 2.95, 0.1, 5, { z: 72 }), cyl(14.3, 1.0, 0.09, 5, { z: 64 }),
+      cyl(13.0, 2.95, 0.1, 5, { z: 72, cls: "steel" }), cyl(14.3, 1.0, 0.09, 5, { z: 64, cls: "steel" }),
       ...many("car-e", [[11.4, 4.45], [13.6, 4.45], [14.2, 4.45]]), ...many("car-s", [[14.8, 1.5], [14.8, 3.0]]),
       ...many("bollard", [[10.95, 3.72], [11.2, 3.72], [11.45, 3.72], [11.7, 3.72], [11.95, 3.72]], { cls: "fine" }),
       ...many("bin", [[11.0, 4.45], [12.4, 3.75], [13.2, 4.5]], { cls: "fine" }), ...many("sign", [[10.6, 2.3], [12.3, 1.4], [14.65, 3.4]], { cls: "fine" }),
@@ -1010,10 +1048,10 @@
       ...[[13.0, 1.3, "s"], [14.9, 1.9, "s"], [11.5, 2.2, "s"], [13.7, 3.6, "s"]].map(([x, y, k]) => tree(x, y, k)),
     ],
     plant: () => [
-      rail([[2.42, 8.32], [3.68, 8.32], [3.68, 9.38], [2.42, 9.38], [2.42, 8.32]], 8, { posts: 0.35, cls: "fine", d: 13.2 }),
-      rail([[0.3, 9.3], [1.9, 9.3]], 9, { posts: 0.4, cls: "fine", d: 11.3 }),
+      rail([[2.42, 8.32], [3.68, 8.32], [3.68, 9.38], [2.42, 9.38], [2.42, 8.32]], 8, { posts: 0.35, cls: "fine safety", d: 13.2 }),
+      rail([[0.3, 9.3], [1.9, 9.3]], 9, { posts: 0.4, cls: "fine safety", d: 11.3 }),
       rail([[3.55, 6.3], [3.55, 5.95], [4.45, 5.95]], 10, { posts: 0.45, cls: "pipe-rack", d: 10.9 }),
-      box(2.1, 6.55, 0.5, 0.35, 8), box(2.0, 7.2, 0.4, 0.4, 6, { top: "lit" }),
+      box(2.1, 6.55, 0.5, 0.35, 8, { cls: "zinc" }), box(2.0, 7.2, 0.4, 0.4, 6, { top: "lit", cls: "white" }),
       ...many("bollard", [[0.4, 5.6], [0.7, 5.6], [1.0, 5.6], [1.3, 5.6], [4.2, 9.85], [3.9, 9.85]], { cls: "fine" }),
       ...many("bin", [[3.4, 9.7], [1.95, 6.2]], { cls: "fine" }), ...many("sign", [[0.3, 6.4], [4.4, 8.9]], { cls: "fine" }),
       use("car-e", 3.6, 9.72, 0, { d: 13.5 }), ...many("pallet", [[4.15, 9.1], [4.3, 9.1]], { cls: "fine" }),
@@ -1022,7 +1060,7 @@
     ],
     pump: () => [
       ...many("solar", [[6.55, 5.7, 3], [6.85, 5.7, 3], [6.55, 5.95, 3], [6.85, 5.95, 3]]),
-      cyl(7.0, 7.3, 0.14, 8), box(6.95, 7.7, 0.2, 0.2, 3), manhole(6.3, 9.0),
+      cyl(7.0, 7.3, 0.14, 8, { cls: "concrete" }), box(6.95, 7.7, 0.2, 0.2, 3, { cls: "white" }), manhole(6.3, 9.0),
       ...many("bollard", [[6.3, 9.95], [6.5, 9.95], [6.7, 9.95], [6.9, 9.95]], { cls: "fine" }), use("sign", 5.5, 9.3, 0, { cls: "fine" }),
       use("bin", 5.75, 7.4, 0, { cls: "fine" }), tree(7.1, 6.1, "s"), tree(5.5, 8.4, "s"),
       item(15.8, seg("det", P(6.65, 9.35, 7), P(6.65, 9.35, 12))),
@@ -1072,7 +1110,7 @@
       ],
       vol: [
         // a picnic shelter: four posts, a hipped roof, a table under it
-        item(3.3 + 4.1 + 0.6, ...[[3.33, 4.13], [3.57, 4.13], [3.57, 4.37], [3.33, 4.37]].map(([x, y]) => seg("det", P(x, y), P(x, y, 8))), box(3.38, 4.2, 0.14, 0.1, 3).nodes, roof(3.3, 4.1, 0.3, 0.3, 8, 5)),
+        item(3.3 + 4.1 + 0.6, ...[[3.33, 4.13], [3.57, 4.13], [3.57, 4.37], [3.33, 4.37]].map(([x, y]) => seg("det", P(x, y), P(x, y, 8))), box(3.38, 4.2, 0.14, 0.1, 3, { cls: "timber" }).nodes, roof(3.3, 4.1, 0.3, 0.3, 8, 5, "cb-green")),
         // someone fishing from the north bank, and a walker on the footbridge
         who(3.75, 2.66, "#5fb4a6"), lo(item(6.42, seg("rod", P(3.76, 2.66, 6), P(3.95, 2.95, 2)))),
         who(1.14, 1.5, "#e7fff9", { z: 4, d: 3.315 }), who(2.2, 3.4, "#f2c14e"), who(2.35, 3.48, "#8a78c0"),
@@ -1097,7 +1135,7 @@
         // Each sorts just after the tower it stands on (x + w + y + d).
         ...[["ac", 12.05, 1.62, 38, 14.65], ["ac", 12.25, 1.72, 38, 14.66], ["ac", 14.05, 2.6, 54, 18.05], ["ac", 14.3, 2.62, 54, 18.06], ["solar", 14.25, 1.72, 30, 17.0], ["solar", 14.25, 1.95, 30, 17.01],
           ["hedge", 11.78, 3.42, 26, 16.28], ["tree-s", 11.95, 3.55, 26, 16.3], ["tree-s", 12.2, 3.65, 26, 16.32], ["vent", 10.95, 2.55, 46, 15.45], ["vent", 11.85, 2.6, 46, 15.46], ["vent", 13.95, 0.7, 64, 16.25]].map(([k, x, y, z, d]) => use(k, x, y, z, { d })),
-        cyl(12.33, 1.95, 0.08, 4, { z: 38, bias: 0.3 }),
+        cyl(12.33, 1.95, 0.08, 4, { z: 38, bias: 0.3, cls: "steel" }),
         // the plaza: a cafe, people about the fountain
         ...many("parasol", [[11.25, 3.9], [11.75, 3.95]], { cls: "fine" }),
         who(11.15, 4.15, "#f2c14e"), who(11.62, 4.38, "#e7fff9"), who(11.8, 4.15, "#8a78c0"), who(11.0, 3.92, "#ef4444"),
@@ -1114,7 +1152,7 @@
     pump: () => ({
       vol: [
         // the standby generator, its exhaust and fuel tank
-        box(5.58, 7.5, 0.2, 0.26, 6, { clad: true }), cyl(5.7, 7.58, 0.02, 4, { z: 6, bias: 0.2 }),
+        box(5.58, 7.5, 0.2, 0.26, 6, { cls: "yellow" }), cyl(5.7, 7.58, 0.02, 4, { z: 6, bias: 0.2, cls: "steel" }),
       ],
     }),
     industry: () => ({
@@ -1541,11 +1579,15 @@
           poly("g", [P(x0, y0), P(x1, y0), P(x1, y1), P(x0, y1)])
         );
         const sensors = (zd.sensors || []).map((s, i) => sensor(s, i, ui));
+        cast = [];
         const parts = z.build(sensors);
         parts.vol.push(...(DETAIL[id] ? DETAIL[id]() : []));
         const fine = FINE[id]?.() || {};
         parts.vol.push(...(fine.vol || []));
         parts.decals.push(...(fine.decals || []));
+        // every block's shadow on the ground, as one path under the district
+        if (cast.length) parts.decals.push(lo(item(0, shapes("cast", cast))));
+        cast = null;
         const dec = el("g", { class: "decals" }, g), vol = el("g", { class: "vol" }, g), cut = el("g", { class: "cut" }, g);
         // the ground's grain: grass in the green districts, paving in the built ones
         dec.append(poly("tex", [P(x0, y0), P(x1, y0), P(x1, y1), P(x0, y1)], { style: `fill:url(#${TEXTURE[id] || "pave"})` }));
@@ -1563,11 +1605,15 @@
         zones[id] = g; zoneFx[id] = gf; slots[id] = order;
         // the shadow the lifted district casts, and its label floating above
         shadows[id] = el("ellipse", { class: "shadow", cx: f(cx), cy: f(cy + 10), rx: f((x1 - x0 + y1 - y0) * TW / 4 * 0.98), ry: f((x1 - x0 + y1 - y0) * TH / 4 * 0.98) }, shadowLayer);
-        const a = P((x0 + x1) / 2, (y0 + y1) / 2, z.h + (id === "cbd" ? 22 : 18));
+        // the label floats above the district's skyline. The CBD's floats
+        // higher: its tallest tower carries a mast light at z 163 and the
+        // asset-score pill sits over the tower beside it, and the district's
+        // lift (scaled 1.07, raised 14) carries both up further.
+        const top = z.h + (id === "cbd" ? 78 : 18), a = P((x0 + x1) / 2, (y0 + y1) / 2, top);
         anchors[id] = a;
         const text = zd.name, wpx = text.length * 6.1 + 22;
         // in the expanded view the labels of the other districts drop onto their own tiles
-        const lg = el("g", { class: "zlabel", "data-zone": id, style: `--drop:${f(z.h + 4)}px` }, labelLayer);
+        const lg = el("g", { class: "zlabel", "data-zone": id, style: `--drop:${f(top - 14)}px` }, labelLayer);
         el("line", { x1: f(a[0]), y1: f(a[1] + 9), x2: f(a[0]), y2: f(a[1] + 20) }, lg);
         el("rect", { x: f(a[0] - wpx / 2), y: f(a[1] - 11), width: f(wpx), height: 21, rx: 10.5 }, lg);
         el("text", { x: f(a[0]), y: f(a[1] + 3.5), "text-anchor": "middle" }, lg).textContent = text;

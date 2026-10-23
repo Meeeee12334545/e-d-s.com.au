@@ -21,20 +21,22 @@
   window.addEventListener("scroll", onScroll, { passive: true });
   onScroll();
 
-  // Mega menus open on hover and on click, and close on Escape or outside
-  // click. A menu opened by a click stays open when the pointer leaves, and a
-  // click on a menu that hover has just opened keeps it open rather than
-  // shutting it in the visitor's face. Closing a menu that holds keyboard focus
-  // hands the focus back to its button, since its links are no longer focusable.
+  // Mega menus open under the pointer and on a click of the chevron beside
+  // the word (the word itself is a link to the page that lists everything in
+  // the menu), and close on Escape or outside click. A menu opened by a click
+  // stays open when the pointer leaves, and a click on a menu that hover has
+  // just opened keeps it open rather than shutting it in the visitor's face.
+  // Closing a menu that holds keyboard focus hands the focus back to its
+  // chevron, since its links are no longer focusable.
   const items = $$(".nav-item.has-mega");
   const shut = (i) => {
-    const btn = $("button", i);
+    const btn = $(".nav-toggle", i);
     i.classList.remove("open"); delete i.dataset.by; btn?.setAttribute("aria-expanded", "false");
     if (btn && i.contains(document.activeElement) && document.activeElement !== btn) btn.focus();
   };
   const closeAll = (except) => items.forEach((i) => { if (i !== except) shut(i); });
   items.forEach((item) => {
-    const btn = $("button", item);
+    const btn = $(".nav-toggle", item);
     let timer;
     const open = (by) => { clearTimeout(timer); closeAll(item); item.classList.add("open"); item.dataset.by = by; btn.setAttribute("aria-expanded", "true"); };
     item.addEventListener("pointerenter", (e) => { if (e.pointerType === "mouse" && item.dataset.by !== "click") open("hover"); else clearTimeout(timer); });
@@ -209,6 +211,20 @@
       b.addEventListener("pointerenter", (e) => { if (e.pointerType === "mouse") { auto = false; show(k); } });
     });
     setInterval(() => { if (auto && !document.hidden) show((i + 1) % fsItems.length); }, 4200);
+  }
+
+  /* ---- Pump Station Manager pins ---- */
+  // On the FlowSense page the PSM screen carries four numbered pins and a
+  // key beside it. Pointing at a line in the key lights its pin, and the
+  // other way round.
+  const pinned = $(".fs-pinned");
+  if (pinned) {
+    const all = $$(".fs-pin, .fs-key li");
+    const light = (n, on) => all.forEach((el) => el.classList.toggle("on", on && el.dataset.n === n));
+    all.forEach((el) => {
+      el.addEventListener("pointerenter", () => light(el.dataset.n, true));
+      el.addEventListener("pointerleave", () => light(el.dataset.n, false));
+    });
   }
 
   /* ---- sidebars follow the page only when they fit on screen ---- */
