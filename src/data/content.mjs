@@ -602,7 +602,7 @@ export const services = [
       },
       {
         heading: "Blockage Watch in FlowSense",
-        lede: "Where flow meters are installed, FlowSense reads the dry weather record for the signs of a developing blockage. It is included on every site. It needs roughly two months of history, and shows that a line is blocking rather than exactly where.",
+        lede: "Where flow meters are installed, FlowSense reads the dry weather record for the signs of a developing blockage. It is included on every site, and shows that a line is blocking rather than exactly where.",
         items: [
           ["Eight blockage signatures", "Six of them from level alone. The strongest, conveyance at matched depth, uses velocity as well."],
           ["Scored, not just flagged", "Each case is scored: watch from 35, warning from 55 and critical from 75. A case closes itself once the signature goes."],
@@ -2243,7 +2243,7 @@ export const flowsense = {
     ["60", "s", "between refreshes of the whole network"],
     ["5", "", "ways in from your SCADA, with no EDS software on it"],
     ["8", "", "blockage signatures, six of them from level alone"],
-    ["90", "days", "free trial, on your own flow history"],
+    ["16", "", "engineering tools on a GIS canvas, by project and scenario"],
   ],
   // Three products in one, and the purchase each one takes the place of.
   layers: {
@@ -2275,7 +2275,7 @@ export const flowsense = {
     },
     {
       id: "usual", heading: "Every site, judged against its own usual.",
-      lede: "The Sites list, each site's page and the sites you pin to the Overview compare the latest hour with that site's usual pattern, learned from its last four weeks for that day and time. They say plainly when a site is running above or below it.",
+      lede: "The Sites list, each site's page and the sites you pin to the Overview compare the latest hour with that site's usual pattern, learned from its own record for that day and time. They say plainly when a site is running above or below it.",
       points: [
         ["Small departures stay quiet", "A move of less than 10% is not called out, so the list is not a wall of amber."],
         ["No reading, no verdict", "A site whose newest reading is more than a day old gets no verdict rather than a guess."],
@@ -2290,7 +2290,7 @@ export const flowsense = {
       points: [
         ["A tile for each measurement", "Set against this time yesterday, with the daily volume, the hours it is based on, and the logger."],
         ["Pumps read as states", "A pump shows how long and how often it ran, never as an average."],
-        ["A month on one time axis", "Each measurement has its own pane, with pump runs and alarms drawn as lanes on the same axis."],
+        ["Any window on one time axis", "Each measurement has its own pane, with pump runs and alarms drawn as lanes on the same axis."],
         ["Honest about gaps", "Every trace breaks where the logger went quiet, rather than drawing across the gap."],
       ],
       layout: "stack", shots: [["site-page", "A FlowSense site page: the verdict against usual beside the site's name, then tiles for flow, depth, velocity and temperature."], ["site-month", "A month of flow, depth, velocity and temperature on one time axis in FlowSense, with a storm and its alarm flagged on the trace."]],
@@ -2332,7 +2332,7 @@ export const flowsense = {
       id: "data-quality", heading: "Check the instrument before you trust the number.",
       lede: "Every figure on this page rests on the record being sound. So FlowSense scores the record first, names the weak channel, and shows its working when it repairs anything.",
       points: [
-        ["Depth against velocity", "A month of pairs, coloured by flow. Silt, surcharge, backwater and a failing meter each leave a different shape."],
+        ["Depth against velocity", "Every depth and velocity pair over the window, coloured by flow. Silt, surcharge, backwater and a failing meter each leave a different shape."],
         ["Three scores, named for what they score", "Operator health, telemetry and anomalies, with each channel's completeness and gaps listed rather than averaged away."],
         ["The full QARTOD test battery", "Gross range, climatology, spikes, rate of change, flatlines and cross channel residuals, each with a recommended repair."],
         ["Repairs never overwrite a reading", "Filled gaps live only in the analysis and the export. The reading the instrument produced is always there to go back to."],
@@ -2410,13 +2410,13 @@ export const flowsense = {
       ["Pump delivery measured, not rated", "Each pump's delivery is the median of its measured days, set against its nameplate or its own first month. Pumps sharing a rising main are never judged against their ratings added up, since together they deliver less."],
       ["Pump condition, with the time each pump has left", "On dry days each pump's output is held against its own reference. A slow decline, a sudden drop and a stopped pump each raise a finding and an alarm, and remaining useful life is given as a range to ISO 13381-1."],
     ],
-    needs: "What it needs from you is small: a wet well level signal scanned at five minutes or better, pump run states as numbers, and the well dimensions. Most stations already produce the first two, which is why this is usually the cheapest flow data an authority can add.",
+    needs: "What it needs from you is small: the wet well level signal, pump run states as numbers, and the well dimensions. Most stations already produce the first two, which is why this is usually the cheapest flow data an authority can add.",
     link: ["services/pump-station-monitoring.html", "Pump station monitoring by EDS"],
   },
   connect: {
     heading: "Bring the fleet you own and the SCADA you run.",
     lede: "Nothing here asks you to replace an instrument or start your record again. Several logger brands, two SCADA systems and a decade of spreadsheets land in one account and read as one network.",
-    in: ["Your loggers, collected by EDS, from several manufacturers", "Your SCADA sends, by HTTPS push or MQTT, with nothing installed on it", "We read your system by API, on a schedule", "We collect your files from your SFTP or FTPS server", "You drop files into an SFTP folder we host for you", "Reviewed CSV import, staged and checked, with a 30 day undo"],
+    in: ["Your loggers, collected by EDS, from several manufacturers", "Your SCADA sends, by HTTPS push or MQTT, with nothing installed on it", "We read your system by API, on a schedule", "We collect your files from your SFTP or FTPS server", "You drop files into an SFTP folder we host for you", "Reviewed CSV import, staged and checked before it lands"],
     record: ["Field time kept, never the time it was collected", "Duplicates dropped, so anything can be safely re-sent", "All or nothing: no half loaded day, ever", "Unknown tags wait for a person to map them, not a guess"],
     out: ["Back to your SCADA, on a schedule", "CSV by SFTP or FTPS, CSV or JSON by MQTT", "A read API and signed webhooks, for your historian or BI stack", "Model exports: EPA SWMM 5, GeoJSON, Excel", "Branded reports, PDF and CSV, under your name", "Everything, on exit: your record leaves with you"],
     note: "Commissioned with you. We set up every connection with your IT or SCADA people, using documents written for them. A connection is not done until a reading has arrived and been checked.",
@@ -2463,14 +2463,6 @@ export const flowsense = {
     clientsHeading: "Since 1991, EDS has measured water and wastewater for",
     clientsNote: "Logos are of organisations EDS has supplied, monitored or worked for since 1991. They are the trademarks of their owners and do not indicate use of FlowSense.",
   },
-  pricing: {
-    heading: "One subscription. Every capability. Priced by the site.",
-    lede: "Published, because a price you can only discover through a sales cycle is itself a cost. No editions, no modules and no per user fees. Everything on this page is in the one subscription, and the only number that moves is how many sites you monitor.",
-    rates: [["First 20 sites", "$30", "per site, per month"], ["Sites 21 and beyond", "$20", "per site, per month"]],
-    examples: { heading: "What that means for a real network", rows: [["Small shire", "5", "$1,800", "$30"], ["Regional council", "20", "$7,200", "$30"], ["Mid size council", "50", "$14,400", "$24"], ["Large regional network", "90", "$24,000", "$22"], ["Bulk utility", "300", "$74,400", "$21"]], cols: ["Sites", "Per year", "Per site, per month"] },
-    start: [["Free trial", "$0", "90 days of the whole platform, on your own uploaded flow history. No hardware required."], ["Assisted onboarding", "$2,500", "Once: GIS, sites, alarms, SCADA and training. Waived from 50 sites."], ["Guided calibration", "$7,500", "Optional, per catchment, done with EDS. The tools are included."]],
-    terms: "AUD excluding GST, billed annually on twelve month terms. Bands are cumulative, so growth never re-prices the sites you have. A site is a monitored location with at least one active channel, and archived sites cost nothing. Unlimited users. SMS is the only pass-through charge, at carrier cost. Rates hold for the term and may change at renewal on 60 days written notice. Either side may end the subscription at renewal on 30 days notice, and your data exports with you in full.",
-  },
   faq: [
     ["Who owns the data?", "You do. Data exports in open formats with no export fee, and if you cancel at renewal, your data exports with you in full."],
     ["Do we need to install anything?", "No. FlowSense runs in the browser on desktop, tablet and phone. Connecting your SCADA needs no agent, connector or gateway on your systems, and FlowSense has no control path into them."],
@@ -2478,14 +2470,14 @@ export const flowsense = {
     ["Where is the data hosted, and how is it secured?", "In Australia, in DigitalOcean's Sydney region. Sign-in supports two-factor codes, access is set per person down to individual sites and channels, and every sign-in, view, change and export is recorded in an audit trail."],
     ["Can the data go back into our SCADA or historian?", "Yes. As scheduled CSV files over SFTP or FTPS, as MQTT messages to your broker, through a read API, and as signed webhooks when an alarm is raised or cleared, a forecast puts a site at risk, or Blockage Watch flags a blockage."],
     ["How many people can use it?", "Unlimited users, with role based access and administration that can be delegated to your own team."],
-    ["What does Blockage Watch not do?", "It is a statistical early warning read from each sensor's own history. It says the pipe reaching that sensor is behaving differently for a reason rain does not explain. It does not locate the obstruction, cannot see one downstream of the meter, and needs roughly two months of history plus enough dry days."],
-    ["How do we get started?", "Send us the flow history you already hold and EDS will set up a 90 day trial of the whole platform on it, with your infiltration ranking the same afternoon. Or ask for a walkthrough using your own sites."],
+    ["What does Blockage Watch not do?", "It is a statistical early warning read from each sensor's own history. It says the pipe reaching that sensor is behaving differently for a reason rain does not explain. It does not locate the obstruction and cannot see one downstream of the meter."],
+    ["How do we get started?", "Ask us for a walkthrough using your own sites. We will demonstrate FlowSense live and show you the working behind every number on the screen."],
   ],
   docs: [
     { label: "Platform overview", note: "The short introduction: what FlowSense does, from the instrument in the pipe to the board paper.", href: localDoc("eds-flowsense-platform-overview.pdf") },
     { label: "Platform brochure", note: "The whole platform at a glance, in sixteen pages: the screens, the standards it follows and the pricing.", href: localDoc("eds-flowsense-brochure.pdf") },
     { label: "Detailed brochure", note: "The longer read: each screen explained, how Blockage Watch and the Pump Station Manager reach a verdict, and the pricing terms in full.", href: localDoc("eds-flowsense-platform-brochure.pdf") },
-    { label: "Platform datasheet", note: "The technical reference: every way data gets in and out, with its limits, the engineering tools, the standards and where the boundaries sit.", href: localDoc("eds-flowsense-datasheet.pdf") },
+    { label: "Platform datasheet", note: "The technical reference: every way data gets in and out, the engineering tools, the standards and where the boundaries sit.", href: localDoc("eds-flowsense-datasheet.pdf") },
     { label: "Features and benefits", note: "What FlowSense does to monitor, analyse and engineer a sewer network.", href: localDoc("eds-flowsense-features-and-benefits.pdf") },
     { label: "The value case", note: "Monitoring, modelling, alerting and the infiltration study in one subscription, priced against what the market publishes.", href: localDoc("eds-flowsense-value-case.pdf") },
     { label: "Competitive brochure", note: "Why depth and velocity together matter, and how FlowSense compares with ADS, StormHarvester and Kallipr.", href: localDoc("eds-flowsense-competitive-brochure.pdf") },
