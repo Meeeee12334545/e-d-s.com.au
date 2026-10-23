@@ -2625,6 +2625,167 @@ html:has(.secbar) .band[id] { scroll-margin-top: calc(16px - clamp(56px, 7vw, 96
    For visitors whose system asks for reduced motion the ambient animation
    stays, but sections fade in rather than slide, and links jump instead of
    scrolling. site.js also leaves out the pointer-driven card tilt. */
+/* ---------- FlowSense page: the platform in its own screens ---------- */
+/* A screen in a thin frame. The frames sit on white, on the pale grey and
+   on the two dark bands, so the shadow is the brand's deep teal everywhere
+   and only the edge changes. */
+.fs-frame { position: relative; margin: 0; border-radius: 14px; overflow: hidden; background: #fff; border: 1px solid rgba(5, 9, 15, .12); box-shadow: 0 30px 70px -24px rgba(6, 48, 44, .4), 0 6px 18px -8px rgba(6, 48, 44, .18); }
+.fs-frame picture, .fs-frame img { display: block; width: 100%; height: auto; }
+.fs-band .fs-frame, .fs-stage .fs-frame { border-color: rgba(255, 255, 255, .22); box-shadow: 0 44px 100px -24px rgba(3, 30, 27, .75), 0 10px 30px -10px rgba(3, 30, 27, .4); }
+
+/* The Network Overview under the hero: the hero's dark band runs on behind
+   the top of the screen and the page's white takes over under it. The split
+   is a share of the screen's width, so it lands on the screen at any size. */
+.fs-stage { --split: calc(min(100vw - var(--gutter) * 2, var(--wrap)) * .3); position: relative; isolation: isolate; padding-bottom: clamp(48px, 6vw, 80px); background: linear-gradient(180deg, var(--deep) 0 var(--split), #fff var(--split) 100%); }
+.fs-stage::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: var(--split); background: var(--grain); pointer-events: none; z-index: -1; }
+.fs-stage-shot { margin: 0; }
+.fs-stage-shot figcaption { margin-top: 16px; max-width: 86ch; font-size: .92rem; line-height: 1.55; color: var(--ink-2); }
+.fs-stage-shot figcaption small { display: block; margin-top: 4px; font-size: .82rem; color: var(--muted); }
+.fs-facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: clamp(36px, 5vw, 56px) 0 0; padding: 0; list-style: none; border-top: 1px solid var(--border); }
+.fs-facts li { padding: 24px 24px 0 0; }
+.fs-facts li + li { padding-left: 24px; border-left: 1px solid var(--border); }
+.fs-facts b { display: block; font-family: var(--font-display); font-size: clamp(2rem, 3.4vw, 2.8rem); font-weight: 650; letter-spacing: -.03em; line-height: 1; color: var(--ink); font-variant-numeric: tabular-nums; }
+.fs-facts b small { font-size: .5em; font-weight: 600; color: var(--brand); margin-left: 3px; }
+.fs-facts span { display: block; margin-top: 8px; font-size: .9rem; line-height: 1.45; color: var(--muted); max-width: 24ch; }
+
+/* Three products in one: the card family, with the purchase each replaces. */
+.fs-layers .card small { display: block; margin-top: auto; padding-top: 14px; font-size: .82rem; font-weight: 600; color: var(--brand-dark); }
+
+/* A stop on the tour: copy beside the screen, swapping sides stop by stop. */
+.fs-stop-in { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: clamp(32px, 5vw, 72px); align-items: center; }
+.fs-stop.rev .fs-stop-copy { order: 2; }
+.fs-stop.tall .fs-stop-in { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); }
+.fs-stop-copy { display: grid; gap: 26px; }
+.fs-stop-head { display: grid; gap: 14px; }
+.fs-stop-head .eyebrow { margin-bottom: 0; }
+.fs-stop h2 { font-size: clamp(1.7rem, 2.8vw, 2.35rem); letter-spacing: -.025em; line-height: 1.12; }
+.fs-stop .lede { font-size: 1.04rem; line-height: 1.58; }
+.fs-points { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 28px; margin: 0; padding: 0; list-style: none; }
+.fs-points li { padding-top: 14px; border-top: 1px solid var(--border-strong); }
+.fs-points b { display: block; font-family: var(--font-display); font-size: 1rem; font-weight: 620; line-height: 1.3; color: var(--ink); margin-bottom: 6px; }
+.fs-points span { display: block; font-size: .9rem; line-height: 1.5; color: var(--muted); }
+.fs-tags-note { margin-top: 24px; font-size: .9rem; font-weight: 600; color: var(--ink); }
+.fs-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 0; padding: 0; list-style: none; }
+.fs-tags li { padding: 5px 11px; border-radius: 999px; background: #fff; border: 1px solid var(--border); font-size: .8rem; font-weight: 550; color: var(--ink-2); }
+.fs-media.stack { position: relative; padding: 0 9% 13% 0; }
+.fs-media.stack .over { position: absolute; right: 0; bottom: 0; width: 58%; }
+.fs-media.beside { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 16px; align-items: end; }
+.fs-media.column { display: grid; gap: 14px; }
+.fs-stop.tall .fs-media { display: grid; justify-items: center; }
+.fs-stop.tall .fs-frame { width: min(100%, 292px); border-radius: 30px; border: 7px solid #0b1512; box-shadow: 0 36px 70px -24px rgba(6, 48, 44, .5), 0 0 0 1px rgba(5, 9, 15, .15); }
+.fs-stop.wide .fs-stop-copy { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(28px, 4vw, 64px); align-items: end; margin-bottom: clamp(28px, 4vw, 48px); }
+
+/* The Pump Station Manager: the one showpiece. Its screen is pinned and
+   keyed, with the wet well trace beside what it reads from it. */
+.fs-band .lede { color: rgba(255, 255, 255, .85); }
+.fs-psm .wrap { display: grid; gap: clamp(36px, 5vw, 64px); }
+.fs-psm-head { max-width: 780px; }
+.fs-psm-head .eyebrow { margin-bottom: 16px; }
+.fs-psm-stage { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: clamp(24px, 4vw, 56px); align-items: center; }
+.fs-pinned { overflow: visible; }
+.fs-pinned picture { border-radius: 14px; overflow: hidden; }
+.fs-pin { position: absolute; left: var(--x); top: var(--y); translate: -50% -50%; z-index: 2; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: #fff; color: var(--chrome); font: 650 .82rem var(--font-display); box-shadow: 0 0 0 3px rgba(12, 95, 89, .45), 0 6px 16px rgba(0, 0, 0, .3); transition: scale .3s var(--ease-spring), background-color .2s var(--ease), color .2s var(--ease); }
+.fs-pin::before { content: ""; position: absolute; inset: -3px; border-radius: 50%; border: 2px solid var(--aqua); opacity: 0; animation: fs-ping 3.2s var(--ease-out) infinite; animation-delay: calc(var(--n, 0) * .35s); }
+.fs-pin[data-n="2"] { --n: 1; } .fs-pin[data-n="3"] { --n: 2; } .fs-pin[data-n="4"] { --n: 3; }
+@keyframes fs-ping { 0% { scale: 1; opacity: .9; } 60%, 100% { scale: 2.1; opacity: 0; } }
+.fs-pin.on { scale: 1.2; background: var(--aqua); color: #04201d; }
+.fs-key { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+.fs-key li { display: grid; grid-template-columns: 30px 1fr; gap: 14px; align-items: start; padding: 14px 16px; border-radius: 14px; border: 1px solid transparent; outline: none; transition: background-color .25s var(--ease), border-color .25s var(--ease); }
+.fs-key li:hover, .fs-key li.on, .fs-key li:focus-visible { background: rgba(255, 255, 255, .1); border-color: rgba(255, 255, 255, .18); }
+.fs-key li > span { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: #fff; color: var(--chrome); font: 650 .82rem var(--font-display); transition: background-color .2s var(--ease); }
+.fs-key li.on > span, .fs-key li:hover > span { background: var(--aqua); color: #04201d; }
+.fs-key b { display: block; font-family: var(--font-display); font-size: 1.02rem; font-weight: 620; color: #fff; line-height: 1.3; }
+.fs-key p { margin-top: 4px; font-size: .9rem; line-height: 1.5; color: rgba(255, 255, 255, .78); }
+.fs-psm-more { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(28px, 4vw, 56px); align-items: start; }
+.fs-trace { margin: 0; padding: 18px 18px 16px; border-radius: 18px; background: #fff; color: var(--ink-2); box-shadow: 0 36px 80px -24px rgba(3, 30, 27, .7); }
+.fs-trace svg { display: block; width: 100%; height: auto; }
+.fs-trace figcaption { margin-top: 12px; font-size: .88rem; line-height: 1.5; color: var(--muted); }
+.fs-trace figcaption b { color: var(--ink); font-weight: 620; }
+.fs-trace .draw { stroke-dasharray: 100; animation: fs-trace 9s linear infinite; }
+@keyframes fs-trace { 0% { stroke-dashoffset: 100; } 72% { stroke-dashoffset: 0; } 100% { stroke-dashoffset: 0; } }
+.fs-psm .fs-points { grid-template-columns: 1fr; gap: 14px; }
+.fs-psm .fs-points li { border-top-color: rgba(255, 255, 255, .22); }
+.fs-psm .fs-points b { color: #fff; font-size: 1.05rem; }
+.fs-psm .fs-points span { color: rgba(255, 255, 255, .8); font-size: .93rem; }
+.fs-psm-needs { max-width: 76ch; padding: 18px 22px; border-left: 3px solid var(--aqua); border-radius: 0 14px 14px 0; background: rgba(255, 255, 255, .07); font-size: 1.02rem; line-height: 1.6; color: rgba(255, 255, 255, .9); }
+.fs-psm .hero-actions { margin-top: 0; }
+
+/* In, one record, out. */
+.fs-flow { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, .95fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.fs-flow > div { padding: 24px 26px 26px; border-radius: var(--radius); border: 1px solid var(--border); background: #fff; }
+.fs-flow > .mid { background: var(--grain), var(--brand-gradient); color: #fff; border-color: transparent; }
+.fs-flow h3 { display: flex; align-items: center; gap: 9px; font-size: 1.08rem; margin-bottom: 14px; }
+.fs-flow h3 .icon { font-size: 19px; color: var(--brand); }
+.fs-flow .mid h3 { color: #fff; } .fs-flow .mid h3 .icon { color: var(--aqua); }
+.fs-flow ul { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.fs-flow li { display: grid; grid-template-columns: 16px 1fr; gap: 10px; align-items: start; font-size: .93rem; line-height: 1.45; color: var(--ink-2); }
+.fs-flow li .icon { font-size: 16px; color: var(--brand); margin-top: 3px; }
+.fs-flow .mid li { color: rgba(255, 255, 255, .92); } .fs-flow .mid li .icon { color: var(--aqua); }
+.fs-flow-note { margin-top: 22px; max-width: 74ch; font-size: .95rem; line-height: 1.55; color: var(--muted); }
+
+/* Standards, methods, assurance and the organisations EDS has measured for. */
+.fs-std { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px 28px; margin: 0; padding: 0; list-style: none; }
+.fs-std li { padding-top: 18px; border-top: 1px solid var(--border-strong); }
+.fs-std .card-icon { width: 40px; height: 40px; font-size: 20px; border-radius: 12px; margin-bottom: 12px; }
+.fs-std b { display: block; font-family: var(--font-display); font-size: 1rem; font-weight: 620; line-height: 1.3; color: var(--ink); margin-bottom: 6px; }
+.fs-std p { font-size: .9rem; line-height: 1.5; color: var(--muted); }
+.fs-assure { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; margin: clamp(32px, 4vw, 48px) 0 0; padding: 0; list-style: none; }
+.fs-assure li { padding: 18px; border-radius: 14px; border: 1px solid var(--border); background: var(--bg-alt); }
+.fs-assure .icon { font-size: 22px; color: var(--brand); margin-bottom: 10px; }
+.fs-assure b { display: block; font-family: var(--font-display); font-size: .96rem; font-weight: 620; line-height: 1.3; color: var(--ink); }
+.fs-assure small { display: block; margin-top: 5px; font-size: .8rem; line-height: 1.45; color: var(--muted); }
+.fs-trust { display: grid; gap: 10px; max-width: 82ch; margin-top: clamp(28px, 4vw, 44px); font-size: .95rem; line-height: 1.6; color: var(--ink-2); }
+.fs-clients { margin-top: clamp(36px, 5vw, 56px); padding-top: clamp(28px, 4vw, 40px); border-top: 1px solid var(--border); }
+.fs-clients > p:first-child { margin-bottom: 20px; font-size: .95rem; font-weight: 500; color: var(--muted); }
+.fs-clients .logo-grid { padding-bottom: 10px; }
+
+/* The rate card. */
+.fs-price { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr); gap: 16px; align-items: stretch; }
+.fs-rates { display: grid; gap: 14px; }
+.fs-rate { display: grid; gap: 6px; align-content: center; padding: 26px 28px; border-radius: var(--radius); background: #fff; border: 1px solid var(--border); }
+.fs-rate small { font-size: .88rem; font-weight: 600; color: var(--brand-dark); }
+.fs-rate b { font-family: var(--font-display); font-size: clamp(2.6rem, 4.5vw, 3.6rem); font-weight: 680; letter-spacing: -.035em; line-height: 1; color: var(--ink); font-variant-numeric: tabular-nums; }
+.fs-rate span { font-size: .92rem; color: var(--muted); }
+.fs-rate.second { background: var(--grain), var(--brand-gradient); border-color: transparent; }
+.fs-rate.second small { color: #c9fff5; } .fs-rate.second b { color: #fff; } .fs-rate.second span { color: rgba(255, 255, 255, .82); }
+.fs-examples { padding: 22px 26px 16px; border-radius: var(--radius); background: #fff; border: 1px solid var(--border); }
+.fs-examples > p { margin-bottom: 8px; font-family: var(--font-display); font-weight: 620; color: var(--ink); }
+.fs-examples table { width: 100%; border-collapse: collapse; font-size: .95rem; font-variant-numeric: tabular-nums; }
+.fs-examples th { padding: 8px 0 10px; border-bottom: 1px solid var(--border); text-align: right; font-size: .78rem; font-weight: 600; color: var(--muted); }
+.fs-examples td { padding: 11px 0; border-bottom: 1px solid var(--border); text-align: right; color: var(--ink-2); }
+.fs-examples th:first-child, .fs-examples td:first-child { text-align: left; }
+.fs-examples td:first-child { font-weight: 600; color: var(--ink); }
+.fs-examples tr:last-child td { border-bottom: 0; }
+.fs-examples th + th, .fs-examples td + td { padding-left: 16px; }
+.fs-start { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin: 16px 0 0; padding: 0; list-style: none; }
+.fs-start li { display: grid; grid-template-columns: auto 1fr; gap: 16px; align-items: start; padding: 22px 24px; border-radius: var(--radius); background: #fff; border: 1px solid var(--border); }
+.fs-start b { font-family: var(--font-display); font-size: 1.5rem; font-weight: 650; letter-spacing: -.02em; line-height: 1.1; color: var(--brand-dark); font-variant-numeric: tabular-nums; }
+.fs-start strong { display: block; margin-bottom: 3px; font-family: var(--font-display); font-weight: 620; color: var(--ink); }
+.fs-start span { font-size: .9rem; line-height: 1.5; color: var(--muted); }
+.fs-terms { margin-top: 20px; max-width: 100ch; line-height: 1.55; }
+
+@media (max-width: 980px) {
+  .fs-stop-in, .fs-stop.tall .fs-stop-in, .fs-stop.wide .fs-stop-copy, .fs-psm-stage, .fs-psm-more, .fs-flow, .fs-price { grid-template-columns: 1fr; }
+  .fs-stop.rev .fs-stop-copy { order: 0; }
+  .fs-stop.wide .fs-stop-copy { align-items: start; }
+  .fs-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .fs-facts li:nth-child(3) { padding-left: 0; border-left: 0; }
+  .fs-facts li:nth-child(n + 3) { padding-top: 20px; }
+  .fs-std, .fs-assure, .fs-start { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .fs-key { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 700px) {
+  .fs-points, .fs-key, .fs-std, .fs-assure, .fs-start { grid-template-columns: 1fr; }
+  .fs-media.beside { grid-template-columns: 1fr; align-items: start; }
+  .fs-media.stack { padding: 0; display: grid; gap: 12px; }
+  .fs-media.stack .over { position: static; width: 100%; }
+  .fs-pin { width: 24px; height: 24px; font-size: .72rem; }
+  .fs-examples { overflow-x: auto; padding-inline: 18px; }
+  .fs-examples table { font-size: .86rem; }
+  .fs-examples th + th, .fs-examples td + td { padding-left: 10px; }
+  .fs-facts b { font-size: 1.9rem; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   .js [data-reveal] { translate: none; scale: none; }
