@@ -149,7 +149,7 @@
     let banks = null, mist = null, curtain = null, glowLayer = null, gg = null;
     const glint = paint(10, 44, (x, y) => {
       const u = (x + 0.5) / 10 - 0.5, t = (y + 0.5) / 44;
-      return [215, 255, 245, Math.exp((-u * u) / 0.03) * Math.pow(1 - t, 1.4) * (0.72 + 0.28 * Math.cos(t * 26 + Math.sin(t * 9) * 2))];
+      return [255, 224, 176, Math.exp((-u * u) / 0.03) * Math.pow(1 - t, 1.4) * (0.72 + 0.28 * Math.cos(t * 26 + Math.sin(t * 9) * 2))];
     });
     // The cloud hangs in the open sky over the slab and never across the
     // buildings: its base follows the city's skyline, read from the drawn
