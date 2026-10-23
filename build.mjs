@@ -853,7 +853,7 @@ function cityLabel(ref) {
 add({
   file: "index.html",
   title: "Environmental Data Services | Water & Wastewater Monitoring",
-  description: "Environmental Data Services (EDS): monitoring instruments, field crews and data services for water and wastewater, across Australia since 1991.",
+  description: "Environmental Data Services (EDS): flow meters, samplers, trained field crews and FlowSense data for water and wastewater. Australian owned since 1991.",
   current: "home",
   scripts: ["city-scene.js", "city-weather.js", "city.js"],
   body: (r) => {
@@ -1053,7 +1053,7 @@ ${waysSection(r)}
     </div>
     <div class="about-block" id="industries" data-reveal style="--i:1">
       <h3 class="h-md">Built for critical infrastructure.</h3>
-      <p>EDS provides the capability, experience and service that clients rely on for critical infrastructure and operational monitoring.</p>
+      <p>Government, utilities and industry rely on EDS for critical infrastructure and operational monitoring, and have for more than thirty years.</p>
       <ul class="mini-grid">
         ${C.industries.map(([ic, t, d]) => `<li><span class="card-icon">${icon(ic)}</span><span><b>${t}</b><span>${d}</span></span></li>`).join("")}
       </ul>
@@ -1077,7 +1077,7 @@ add({
   description: `${C.services.length} services from EDS: sewer flow and I&I monitoring, blockage alarms, water quality, sampling, rainfall, pump stations, SCADA integration, calibration and more.`,
   current: "services",
   body: (r) => `
-${pageHero(r, { crumbs: [["Services"]], title: "Specialised services for water and wastewater networks.", lede: "From a single audit to a national monitoring program, delivered by trained crews in every state.", actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${r}contact.html">Talk to our team ${icon("arrow-right")}</a><a class="btn btn-ghost btn-lg" href="${site.phoneHref}">${icon("phone")} ${site.phone}</a><div class="chips">${C.serviceGroups.map((g) => `<a class="chip" href="#${g.id}">${esc(g.title)}</a>`).join("")}</div>`, visual: heroToc(C.serviceGroups.map((g) => [g.id, g.title, C.services.filter((s) => s.group === g.id).length])) })}
+${pageHero(r, { crumbs: [["Services"]], title: "Specialised services for water and wastewater networks.", lede: "From a single audit to a national monitoring program, delivered by trained EDS crews, Australia wide.", actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${r}contact.html">Talk to our team ${icon("arrow-right")}</a><a class="btn btn-ghost btn-lg" href="${site.phoneHref}">${icon("phone")} ${site.phone}</a><div class="chips">${C.serviceGroups.map((g) => `<a class="chip" href="#${g.id}">${esc(g.title)}</a>`).join("")}</div>`, visual: heroToc(C.serviceGroups.map((g) => [g.id, g.title, C.services.filter((s) => s.group === g.id).length])) })}
 ${C.serviceGroups.map((g, gi) => `
 <section class="section${gi % 2 ? " alt" : ""}" id="${g.id}"><div class="wrap">
   <div class="section-head"><p class="eyebrow">${esc(g.title)}</p><h2 class="h-lg" data-reveal>${esc(g.heading)}</h2><p class="lede" data-reveal style="--i:1">${esc(g.lede)}</p></div>
@@ -1318,7 +1318,7 @@ ${pageHero(r, { crumbs: [["Products"]], title: "Industry leading instruments, ba
       <label class="finder-search">${icon("search", false)}<input type="search" placeholder="Search ${products.length} instruments by name, range or what they measure" aria-label="Search instruments" autocomplete="off" spellcheck="false"></label>
     </div>` })}
 <section class="section ranges-strip" id="ranges"><div class="wrap">
-  <div class="ranges-head"><h2 class="h-md" data-reveal>Browse by range</h2><p data-reveal style="--i:1">EDS is a manufacturer, and represents leading manufacturers, in water supply and management, wastewater management, flow monitoring and process control.</p></div>
+  <div class="ranges-head"><h2 class="h-md" data-reveal>Browse by range</h2><p data-reveal style="--i:1">EDS makes its own instruments and represents leading manufacturers, across water supply, wastewater, flow monitoring and process control. Every range here is one we install, service and calibrate ourselves.</p></div>
   <div class="range-tiles">
     ${C.brands.map((b, n) => {
       const count = products.filter((p) => p.brand === b).length;
@@ -1570,11 +1570,11 @@ ${ctaSection(r, { title: "See FlowSense on your own network.", lede: "FlowSense 
 add({
   file: "about.html",
   title: "About EDS | Environmental Data Services",
-  description: "EDS is an Australian owned and operated company, a market leader in equipment and services for the water and wastewater industry since 1991.",
+  description: "EDS: Australian owned and operated since 1991, and a market leader in equipment and services for the water and wastewater industry.",
   current: "about",
   scripts: ["widgets.js"],
   body: (r) => `
-${pageHero(r, { crumbs: [["About"]], title: "Australian owned and operated since 1991.", lede: "Scientists, engineers and technicians who excel in every facet of environmental monitoring and project delivery.", visual: heroFacts() })}
+${pageHero(r, { crumbs: [["About"]], title: "Australian owned and operated since 1991.", lede: "Scientists, engineers and technicians who know water and wastewater monitoring from the manhole up.", visual: heroFacts() })}
 <section class="section"><div class="wrap split">
   <div class="prose" data-reveal>${C.about.intro.map((p) => `<p>${esc(p)}</p>`).join("")}<h2>Our mission</h2>${C.about.mission.map((p) => `<p>${esc(p)}</p>`).join("")}</div>
   <aside class="aside">
@@ -1791,7 +1791,7 @@ add({
   current: "contact",
   scripts: ["widgets.js"],
   body: (r) => `
-${pageHero(r, { crumbs: [["Contact"]], title: "Call or visit. We would like to hear about your project.", lede: `${site.hours}, with one number for every state.`, visual: heroPanel("Quickest ways to reach us", `
+${pageHero(r, { crumbs: [["Contact"]], title: "Give us a call or drop in. We'd love to hear about your project.", lede: `${site.hours}, with one number for every state.`, visual: heroPanel("Quickest ways to reach us", `
   <a class="hero-call" href="${site.phoneHref}">${icon("phone")}<span><small>Call from anywhere in Australia</small><b>${site.phone}</b></span></a>
   <ul class="hero-links">
     <li><a href="#enquiry">${icon("message-square-text")}<span>Start an enquiry</span>${icon("arrow-down")}</a></li>
