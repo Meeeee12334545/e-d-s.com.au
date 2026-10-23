@@ -401,7 +401,10 @@ ${searchDialog()}
 ${scripts.map((s) => `<script src="${asset(r, `js/${s}`)}" defer></script>`).join("\n")}${tracker(r, file)}
 </body>
 </html>
-`.replaceAll("@root/", r);
+`.replaceAll("@root/", r)
+    // Every link to a document (a datasheet, manual, brochure, white paper or
+    // download in assets/docs) saves the file rather than opening it in the tab.
+    .replace(/<a\s[^>]*href="[^"]*assets\/docs\/[^"]*"[^>]*>/g, (a) => (/\sdownload(?=[\s>=])/.test(a) ? a : a.replace(/>$/, " download>")));
   // In-page links, product deep links and form labels all rely on ids being unique.
   const ids = [...out.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]);
   const dupes = ids.filter((id, i) => ids.indexOf(id) !== i);
@@ -1638,7 +1641,7 @@ ${pageHero(r, { crumbs: [["Resources"]], title: "White papers, downloads and sup
     ${C.papers.map((p, n) => `
     <a class="card paper tilt" href="${p.href}" rel="noopener" data-reveal style="--i:${n}">
       <div class="paper-top"><span class="card-icon">${icon("file-text")}</span><span class="tag">${p.date}</span></div>
-      <div class="paper-body"><h3>${esc(p.title)}</h3><p>${esc(p.text)}</p><span class="go" aria-hidden="true">${icon("arrow-up-right")}</span></div>
+      <div class="paper-body"><h3>${esc(p.title)}</h3><p>${esc(p.text)}</p><span class="go" aria-hidden="true">${icon("download")}</span></div>
     </a>`).join("")}
   </div>
 </div></section>
@@ -1890,7 +1893,7 @@ ${pageHero(r, { crumbs: [["Privacy policy"]], title: privacy[0], lede: privacy[1
 // Everything the search palette (search.js) can find, grouped by `g`. Links
 // are relative to the site root, and search.js adds each page's way back to
 // it. `b` is extra text to match on that is never shown; `x` marks links that
-// leave the site.
+// leave the site and `d` the documents, which download rather than open.
 function searchIndex() {
   const items = [];
   const text = (...parts) => parts.flat(Infinity).filter(Boolean).join(" ");
@@ -1916,11 +1919,11 @@ function searchIndex() {
   put("Pages", "All solutions", "Monitoring applied to the problem in front of you.", "solutions/index.html", { i: "layout-grid" });
   put("Pages", "Home", site.tagline, "index.html", { i: "house" });
   put("Pages", "Privacy policy", "How EDS handles personal information.", "privacy.html", { i: "lock" });
-  for (const p of C.papers) put("Documents", p.title, `${p.kind || "White paper"} · ${p.date}`, p.href, { i: "file-text", x: 1, b: p.text });
-  for (const g of C.downloads) for (const [label, href] of g.items) put("Documents", label, g.group, plain(href), { i: g.icon, x: 1, b: g.note });
+  for (const p of C.papers) put("Documents", p.title, `${p.kind || "White paper"} · ${p.date}`, p.href, { i: "file-text", d: 1, b: p.text });
+  for (const g of C.downloads) for (const [label, href] of g.items) put("Documents", label, g.group, plain(href), { i: g.icon, d: 1, b: g.note });
   for (const p of products) {
     for (const d of p.docs || []) {
-      if (!items.some((e) => e.h === plain(d.href))) put("Documents", `${p.name}: ${d.label}`, `${p.brand.name} · ${docType(d.href)}`, plain(d.href), { i: "file-text", x: 1, b: text(p.brand.title, p.note) });
+      if (!items.some((e) => e.h === plain(d.href))) put("Documents", `${p.name}: ${d.label}`, `${p.brand.name} · ${docType(d.href)}`, plain(d.href), { i: "file-text", d: 1, b: text(p.brand.title, p.note) });
     }
   }
   put("Contact", `Call ${site.phone}`, `${site.hours}, from anywhere in Australia`, site.phoneHref, { i: "phone", b: "phone ring telephone call" });
@@ -1932,7 +1935,7 @@ function searchIndex() {
   put("Sign in", "Remote data access", "DetectData, for Detectronic instruments", site.remoteDataUrl, { i: "globe", x: 1, b: "login detecdata" });
 
   const icons = {};
-  for (const name of new Set(items.map((e) => e.i).filter(Boolean).concat("arrow-right", "arrow-up-right", "search-x"))) { icon(name); icons[name] = iconCache.get(name); }
+  for (const name of new Set(items.map((e) => e.i).filter(Boolean).concat("arrow-right", "arrow-up-right", "download", "search-x"))) { icon(name); icons[name] = iconCache.get(name); }
   const suggested = ["services/sewer-flow-monitoring.html", "services/inflow-infiltration-studies.html", "services/data-as-a-service.html", "products/lidott-alarm.html", "flowsense.html", "products/index.html#finder", site.phoneHref];
   return { items, icons, suggested };
 }
