@@ -2229,22 +2229,215 @@ export const productPages = [
 /* FlowSense                                                           */
 /* ------------------------------------------------------------------ */
 export const flowsense = {
-  lede: "Monitoring, flow analytics and engineering insight for the sites EDS measures, in one platform.",
-  features: [
-    ["map", "Your network on one map", "Every monitored site, its status and its alarms, on a live network map with weather overlaid."],
-    ["flame", "I/I heat map", "One colour per severity band, every pipe outlined, with animated arrows showing which way the water runs."],
-    ["siren", "Blockage Watch", "Watches every monitored line for depth creeping upward while flow does not, and gives crews a shortlist before a choke becomes an overflow."],
-    ["bell-ring", "Alarms that reach people", "Name people from your team on an alarm rule and each message reaches the email and mobile they hold that day."],
-    ["fan", "Pump Station Manager", "The wet well drawn to scale, with its start, stop, surcharge and overflow levels and the live water level."],
-    ["cloud-rain", "Rainfall outlook", "A forecast that states its odds, with overflow risk judged against a pipe capacity the site's own readings support."],
-    ["git-compare-arrows", "Compare two sites", "Draw a second site's flow, depth or velocity over the same window, shifted by a travel time."],
-    ["drafting-compass", "Calibration scorecards", "Every model calibration scored per storm against published industry acceptance bands."],
-    ["plug-zap", "Connects to SCADA", "Five ways to connect SCADA, including a hosted SFTP folder so nothing is exposed at your end."],
-    ["calculator", "Shows its working", "A \"How this is calculated\" note beside every derived figure: the method, constants and assumptions in plain language."],
+  title: "The whole network. Understood.",
+  lede: "Live operations, infiltration and inflow, pump stations and calibrated hydraulic models, all on one validated record.",
+  // The Network Overview under the hero, and the line every screen on the
+  // page shares: they are photographs of the demonstration account.
+  stage: {
+    shot: "overview",
+    alt: "The FlowSense Network Overview: six status figures across the top, a list of the sites that need attention, and a map of the network on aerial imagery.",
+    caption: "The Network Overview opens on what needs attention, worst first, beside a map of where it is, and refreshes every sixty seconds.",
+    demoNote: "Screens on this page are photographed from the FlowSense demonstration account. Its sites and readings are synthetic.",
+  },
+  facts: [
+    ["60", "s", "between refreshes of the whole network"],
+    ["5", "", "ways in from your SCADA, with no EDS software on it"],
+    ["8", "", "blockage signatures, six of them from level alone"],
+    ["90", "days", "free trial, on your own flow history"],
   ],
+  // Three products in one, and the purchase each one takes the place of.
+  layers: {
+    heading: "Three products in one, and one record underneath them.",
+    lede: "Each layer is normally bought separately, from a different supplier, with a spreadsheet in between. In FlowSense they share one database, one set of units and one timeline. The number in the board paper and the reading in the chamber are the same number, and you can trace one to the other without leaving the browser.",
+    items: [
+      ["activity", "Monitor", "Live fleet status, site detail, alarms, telemetry and battery health, rainfall context, and early warning of blockages weeks before a pipe surcharges.", "Replaces the logger vendor's portal"],
+      ["chart-line", "Analyse", "Rainfall derived infiltration and inflow in kilolitres, dry weather flow profiled, depth and velocity hydraulics, catchment flow balance and data quality scores.", "Replaces spreadsheets and manual I&I studies"],
+      ["drafting-compass", "Engineer", "Project workspaces for calibrated rainfall response (RTK) models, a dynamic wave network model, the I/I heat map, and the cost per kilolitre of infiltration removed.", "Replaces a modelling consultancy engagement"],
+    ],
+  },
+  // The tour: one stop per screen, in the order the platform's own menu
+  // runs (Monitor, Analyse, Engineer, Deliver). `group` labels the first stop
+  // of each part. `shots` are [name, alt], laid out by `layout`: one screen,
+  // a `stack` (the second overlapping the first), two `beside` each other,
+  // a `column` (one above the other), `wide` (across the page under the
+  // copy) or `tall` (a phone beside the copy).
+  tour: [
+    {
+      id: "monitor", group: "Monitor", heading: "Every site, every minute. Worst first.",
+      lede: "The Overview opens with the sites that need attention, listed beside a map that shows where they are. Point at a row and its site is ringed on the map. Filter the map by what is wrong, then click through to the site.",
+      points: [
+        ["Six figures across the top", "Five open their own list. Alarms to acknowledge are kept apart from any still breaching."],
+        ["Since you last looked", "One line on what changed since your last visit: alarms raised, blockage warnings, sites gone quiet."],
+        ["Needs attention, worst first", "One row per site with its reason: alarms newest first, then recent failures, then the backlog."],
+        ["Where it is", "Every site on aerial imagery, ringed amber while an alarm waits and red while one is breaching. Rain radar is one click away."],
+      ],
+      layout: "single", shots: [["network-map", "The FlowSense network map on aerial imagery, with the Layers panel narrowing it to alarms, telemetry, battery and hydraulic risk."]],
+    },
+    {
+      id: "usual", heading: "Every site, judged against its own usual.",
+      lede: "The Sites list, each site's page and the sites you pin to the Overview compare the latest hour with that site's usual pattern, learned from its last four weeks for that day and time. They say plainly when a site is running above or below it.",
+      points: [
+        ["Small departures stay quiet", "A move of less than 10% is not called out, so the list is not a wall of amber."],
+        ["No reading, no verdict", "A site whose newest reading is more than a day old gets no verdict rather than a guess."],
+        ["Weather is not a fault", "Rain in the last day is shown beside the verdict, so a rise after rain is never read as a problem."],
+        ["Every channel, not only flow", "The list shows whatever a site measures: pH, conductivity, rain, gas, pump runs, power."],
+      ],
+      layout: "single", shots: [["flow-analytics", "The FlowSense Flow Analytics page: a card for every site with its 24 hour trend, latest readings and status."]],
+    },
+    {
+      id: "sites", heading: "Whatever the site measures, in the form that suits it.",
+      lede: "A gravity sewer, a pump station, a trade waste discharge and an overflow chamber each open on one page, laid out for what that site carries: levels, flows, pump runs, pH, conductivity, rain, power. Every chart zooms, pans and exports, and its window travels in the link you send a colleague.",
+      points: [
+        ["A tile for each measurement", "Set against this time yesterday, with the daily volume, the hours it is based on, and the logger."],
+        ["Pumps read as states", "A pump shows how long and how often it ran, never as an average."],
+        ["A month on one time axis", "Each measurement has its own pane, with pump runs and alarms drawn as lanes on the same axis."],
+        ["Honest about gaps", "Every trace breaks where the logger went quiet, rather than drawing across the gap."],
+      ],
+      layout: "stack", shots: [["site-page", "A FlowSense site page: the verdict against usual beside the site's name, then tiles for flow, depth, velocity and temperature."], ["site-month", "A month of flow, depth, velocity and temperature on one time axis in FlowSense, with a storm and its alarm flagged on the trace."]],
+    },
+    {
+      id: "fleet", heading: "The failing logger, named before it goes quiet.",
+      lede: "A monitoring program fails quietly. A battery flattens, a modem stops answering, and the quarter's report is already wrong. FlowSense watches the fleet itself, and puts what needs attention first.",
+      points: [
+        ["A replace-by date for every battery", "Projected from the site's own discharge trend and battery chemistry. A dying logger becomes a planned visit."],
+        ["Late, judged site by site", "Offline means a site missed its own delivery deadline, so a twice daily logger is never reported late at hour three."],
+        ["Alarms that reach a person", "Threshold, no data and pump condition rules send email and SMS once, when the state changes. They go to people, not to addresses."],
+        ["Monday, in the inbox", "Each reader gets a summary of their own network, waiting at the start of the week."],
+      ],
+      layout: "stack", shots: [["fleet-health", "FlowSense Fleet Health: every logger on the account with its battery, delivery record and a replace-by date."], ["alarms", "The FlowSense alarm queue: every rule that has tripped, unanswered first, with cleared alarms kept apart from those still breaching."]],
+    },
+    {
+      id: "blockage-watch", heading: "Blockages found in dry weather, weeks before they overflow.",
+      lede: "A sewer drains almost empty overnight, and an obstruction shows in that trough long before anyone rings the council. Blockage Watch reads it twice a day, sets rain aside, and runs on every gravity sewer you monitor without being asked.",
+      points: [
+        ["A decision, ranked", "What needs a decision first, with its case number, then the sites behaving normally."],
+        ["The call that saves a crew", "The level is up because more water is arriving: increased load, not an obstruction. No jetting."],
+        ["The numbers behind it", "Overnight level and its trend, the headroom left in the pipe, evidence strength and dry days judged."],
+        ["Tested on your own history", "A one click backtest replays the detector against the overflows already in your register. The hit rate you see is yours."],
+      ],
+      layout: "beside", shots: [["blockage-watch", "FlowSense Blockage Watch: the sites needing a decision first, each with its score, mechanism and case, and clear sites folded below."], ["blockage-case", "A Blockage Watch case file in FlowSense: the verdict on its score ladder, the key numbers, and every night of evidence behind it."]],
+    },
+    {
+      id: "analyse", group: "Analyse", heading: "Infiltration and inflow, in kilolitres.",
+      lede: "“This catchment is wet” is not a business case. A volume, a peak, a lag and a percentage over dry weather flow is. FlowSense separates the storm from the sewage beneath it and reports what the difference is worth, per catchment and per storm.",
+      points: [
+        ["A baseline that moves", "Dry weather flow from qualifying dry days only, split by day type, so a weekend or a wet winter is never charged to the storm."],
+        ["The three way split", "Sanitary flow, groundwater infiltration and rainfall derived inflow, summing exactly to the metered total."],
+        ["Catchment closure", "Upstream against downstream, aligned on travel time, so you know how much of the flow is accounted for."],
+        ["A price on the water", "Volumes priced at your own treatment and pumping rates, carried into the capital plan unchanged."],
+      ],
+      layout: "column", shots: [["ii-figures", "The infiltration and inflow figures for one site in FlowSense: peak inflow, volume in kilolitres, percentage over dry weather flow, lag, dry weather flow and night baseline."], ["rdii-hydrograph", "An RDII hydrograph in FlowSense: measured flow in blue, the modelled dry weather baseline dashed beneath it, and the rainfall derived inflow in red."]],
+    },
+    {
+      id: "data-quality", heading: "Check the instrument before you trust the number.",
+      lede: "Every figure on this page rests on the record being sound. So FlowSense scores the record first, names the weak channel, and shows its working when it repairs anything.",
+      points: [
+        ["Depth against velocity", "A month of pairs, coloured by flow. Silt, surcharge, backwater and a failing meter each leave a different shape."],
+        ["Three scores, named for what they score", "Operator health, telemetry and anomalies, with each channel's completeness and gaps listed rather than averaged away."],
+        ["The full QARTOD test battery", "Gross range, climatology, spikes, rate of change, flatlines and cross channel residuals, each with a recommended repair."],
+        ["Repairs never overwrite a reading", "Filled gaps live only in the analysis and the export. The reading the instrument produced is always there to go back to."],
+      ],
+      layout: "beside", shots: [["scattergraph", "A FlowSense scattergraph of depth against velocity, coloured by flow, with the correlation, ranges and sample count beneath it."], ["site-diagnostics", "FlowSense site diagnostics: operator health, telemetry and anomaly scores, with each channel's completeness, gaps and last reading."]],
+    },
+    {
+      id: "engineer", group: "Engineer", heading: "Severity painted onto the real network.",
+      lede: "FlowSense attributes infiltration and inflow along the gravity network, by catchment and flow direction, and gives each estimate its confidence. The result is a ranked list of the pipes worth sending a camera down.",
+      points: [
+        ["Six methods", "You choose the method, and the platform says where your data cannot support it."],
+        ["Along the pipes", "Severity follows the way the sewer drains, not a circle drawn round a meter."],
+        ["Confidence, 0 to 1", "Pipes far from a gauge fade, rather than pretend to a number."],
+        ["Your GIS, as supplied", "The council's sewer layer loads from the file it came in, and the map exports as an A4 report."],
+      ],
+      layout: "wide", shots: [["heat-map", "The FlowSense I/I heat map: severity painted along the sewer network over aerial imagery, with the inspection priority list of the pipes most likely to be sources."]],
+    },
+    {
+      id: "modelling", heading: "A calibrated model you keep, not a report you file.",
+      lede: "FlowSense runs calibration, validation and a dynamic wave network model as a project your engineers keep. When the question comes back next year, you run it again instead of commissioning it again.",
+      points: [
+        ["Every storm scored on its own", "Simulated peak within 15% below to 25% above observed, and event volume within 10% below to 20% above, to the CIWEM Code of Practice."],
+        ["Honest about its own ceiling", "Observed inflow carries the baseline's noise, so the workspace shows the best score available on the record beside the score achieved."],
+        ["Dynamic wave hydraulics", "Pipes, pumps, gates and control rules, run from the network's own dry weather state and exported to EPA SWMM 5."],
+        ["The capital plan", "Options ranked by net present value, benefit cost ratio and cost per kilolitre removed."],
+      ],
+      tools: ["I/I Heat Map", "RTK Calibration", "RTK Validation", "Hydraulics", "Scattergraph", "Pump Station", "Overflow Forecast", "Capital Plan", "Compliance", "Catchment Model", "Dry Weather Flow", "Events", "Data Scrubbing", "QA and QC", "Compare", "Export"],
+      toolsNote: "Sixteen tools on a GIS canvas, organised by project and scenario.",
+      layout: "single", shots: [["rtk-calibration", "A rainfall response (RTK) calibration scored in FlowSense: the fit score beside the best score available on this record, and each storm scored separately."]],
+    },
+    {
+      id: "reports", group: "Deliver", heading: "The board paper, from the record your operators use.",
+      lede: "Seven templates, each written for a different reader and generated from the same validated record, under your logo. The quarterly pack stops being a fortnight of copying charts.",
+      points: [
+        ["A template for every reader", "Executive summary, flow totals, flow analysis, engineering diagnostic, site investigation, network performance, and pump stations."],
+        ["Context, not just totals", "Each period is set against five other windows, including the same weeks last year."],
+        ["In the inbox, by the calendar", "Daily, weekly or monthly by email, each over whole days, so one issue compares with the last."],
+        ["Feeds on a schedule", "CSV by SFTP or FTPS, CSV or JSON by MQTT, with run history. A failed send never skips a window."],
+      ],
+      layout: "beside", shots: [["report-builder", "The FlowSense report builder: template, sections, sites and period, previewed before anything is exported."], ["report", "A generated FlowSense executive summary: headline figures, the network's daily volume stacked by site, and telemetry health for every site."]],
+    },
+    {
+      id: "field", heading: "The office and the manhole see the same thing.",
+      lede: "Your account works on a phone, with nothing to install and no second licence. What the crew finds sits beside the data it explains, where next year's engineer will find it.",
+      points: [
+        ["Notes with photographs", "Observation, maintenance and calibration notes, with photos and video from the phone in the crew's pocket."],
+        ["Surveys that write the paperwork", "The pre-installation survey fills in the inspection report, manhole diagram included."],
+        ["A link for the contractor", "A single use link with no login opens one job and nothing else. What they find comes back as a field note, photographs attached."],
+        ["The instrument's history", "Zero checks, reference readings and meter comparisons kept against the site, for the year somebody asks."],
+      ],
+      layout: "tall", shots: [["phone", "The FlowSense Network Overview on a phone: what needs attention first, and a tab bar for the pages used most."]],
+    },
+  ],
+  // The showpiece. PSM is the oldest idea in EDS and one of the most used
+  // tools in FlowSense. The pins sit on the screen at fractions of its width
+  // and height; check them after the brochure is replaced.
+  psm: {
+    eyebrow: "Pump Station Manager",
+    heading: "Station flow from the pumps you already run. No flow meter.",
+    lede: "A wet well fills as sewage arrives and empties as the pumps move it. So its level, the pump run states and its size make a flow record. EDS has built PSM on that since 1991, and it is one of the most popular tools in FlowSense.",
+    shot: ["psm", "The FlowSense Pump Station Manager: the station's figures across the top, the wet well drawn to scale with its set-points, a briefing in words, and each pump's delivery against its rating on a dial."],
+    pins: [
+      ["The station's figures first", "What arrived, what was pumped out, and the balance of the two over whole pump cycles.", 18.5, 42.5],
+      ["The wet well, in kilolitres", "An engineer's section of the well, with its start and stop levels and the volume each cycle moves.", 16.2, 55.5],
+      ["A briefing, in words", "What is worth watching and what is for the record, each with a button to its evidence.", 49.5, 55.5],
+      ["Pump condition, with a date", "Each pump against its rating, a warning when its output slips, and remaining useful life as a range.", 49.5, 69.5],
+    ],
+    trace: {
+      title: "Two slopes and a well volume are enough.",
+      text: "One slope gives the inflow, the other gives what each pump is actually delivering today. Five hours of wet well level, one station: a schematic, not measured data.",
+      rise: "Filling at the rate sewage arrives", fall: "Emptying at the rate the pumps move it",
+    },
+    points: [
+      ["Station flow without a flow meter", "Arriving flow at every timestamp from the wet well level, plus volume pumped, starts and run hours, with the well itself in kilolitres. No chamber work, no meter to buy, no confined space entry."],
+      ["Pump delivery measured, not rated", "Each pump's delivery is the median of its measured days, set against its nameplate or its own first month. Pumps sharing a rising main are never judged against their ratings added up, since together they deliver less."],
+      ["Pump condition, with the time each pump has left", "On dry days each pump's output is held against its own reference. A slow decline, a sudden drop and a stopped pump each raise a finding and an alarm, and remaining useful life is given as a range to ISO 13381-1."],
+    ],
+    needs: "What it needs from you is small: a wet well level signal scanned at five minutes or better, pump run states as numbers, and the well dimensions. Most stations already produce the first two, which is why this is usually the cheapest flow data an authority can add.",
+    link: ["services/pump-station-monitoring.html", "Pump station monitoring by EDS"],
+  },
+  connect: {
+    heading: "Bring the fleet you own and the SCADA you run.",
+    lede: "Nothing here asks you to replace an instrument or start your record again. Several logger brands, two SCADA systems and a decade of spreadsheets land in one account and read as one network.",
+    in: ["Your loggers, collected by EDS, from several manufacturers", "Your SCADA sends, by HTTPS push or MQTT, with nothing installed on it", "We read your system by API, on a schedule", "We collect your files from your SFTP or FTPS server", "You drop files into an SFTP folder we host for you", "Reviewed CSV import, staged and checked, with a 30 day undo"],
+    record: ["Field time kept, never the time it was collected", "Duplicates dropped, so anything can be safely re-sent", "All or nothing: no half loaded day, ever", "Unknown tags wait for a person to map them, not a guess"],
+    out: ["Back to your SCADA, on a schedule", "CSV by SFTP or FTPS, CSV or JSON by MQTT", "A read API and signed webhooks, for your historian or BI stack", "Model exports: EPA SWMM 5, GeoJSON, Excel", "Branded reports, PDF and CSV, under your name", "Everything, on exit: your record leaves with you"],
+    note: "Commissioned with you. We set up every connection with your IT or SCADA people, using documents written for them. A connection is not done until a reading has arrived and been checked.",
+  },
+  apart: {
+    heading: "Eight things you won't find together anywhere else.",
+    lede: "No other platform sold in Australia carries a reading the whole way, from the chamber to the capital plan, on one record and in one subscription. Each of these answers a question an authority is asked every year.",
+    items: [
+      ["One record, end to end", "The reading in the chamber and the figure in the board paper are the same number, never retyped."],
+      ["Blockages read from the pipe", "Eight dry weather signatures that name the mechanism and the action, backtested on your own overflows."],
+      ["Flow from every pump station", "Station inflow and pump condition from the level and run signals you already have."],
+      ["Infiltration that adds up", "Sanitary, groundwater and rainfall derived flow, summing exactly to the metered total."],
+      ["Models you keep", "Storm by storm calibration, a dynamic wave network and a costed plan, in one workspace."],
+      ["Data both ways", "Your SCADA in five ways, and the validated record back out to it."],
+      ["Every number shows its working", "“How this is calculated” on the figures that matter, naming the method and the standard."],
+      ["A price on the page", "Per site, everything included, unlimited users, and no editions to choose between."],
+    ],
+  },
   standards: {
-    heading: "Built to the published standards.",
-    lede: "Each method in FlowSense follows a published standard, so results can be checked, compared and defended.",
+    heading: "Built to the published standards, and tested against them.",
+    lede: "Each calculation in FlowSense cites the standard it follows, in the product, where your reviewer can read it. The list is generated from the running software, so a standard nothing implements cannot appear on it, and conformance is held by tests against the code rather than asserted once.",
     items: [
       ["drafting-compass", "CIWEM UDG Code of Practice (2017)", "Per-storm calibration acceptance bands, and dry weather flow as a daily pattern for each type of day."],
       ["droplets", "WEF MOP FD-6 and WPCF MOP No. 36", "Dry weather flow as sanitary flow plus groundwater infiltration, from qualifying dry days only."],
@@ -2252,8 +2445,31 @@ export const flowsense = {
       ["cloud-rain", "AR&R 2019 and AS/NZS 3500.3", "Areal reduction factors, design rainfall temporal patterns, and the Rational Method for ungauged subcatchments."],
       ["list-checks", "QARTOD", "The quality control tests and flag vocabulary used to score each record before it is trusted."],
       ["git-branch", "EPA SWMM", "Dynamic wave routing, and the three-component RTK method for rainfall-derived infiltration and inflow."],
+      ["fan", "ISO 13381-1", "A pump's remaining useful life, counted down to a stated limit and given with its uncertainty."],
+      ["scale", "NSW Liquid Trade Waste Guidelines (2021)", "Trade waste charges: the annual fee, usage, excess mass and pH charges, on a trade waste account."],
     ],
+    methods: ["Saint-Venant", "Preissmann slot", "Manning", "Colebrook-White", "Muskingum-Cunge", "Rational Method", "Nash-Sutcliffe", "Kling-Gupta", "Theil-Sen", "Hampel", "Matérn 3/2 Gaussian process", "ISO 8601 on every boundary", "WCAG 2.1 AA contrast"],
+    methodsNote: "Published methods implemented rather than approximated.",
+    instruments: "The instruments EDS supplies carry certification in their own right. The Detectronic LIDoTT range is MCERTS certified for flow metering and rated ATEX and IECEx Zone 0 for hazardous atmospheres, and a certified meter keeps its certification when its readings arrive in FlowSense, which stores the field time and the raw value it produced.",
     note: "FlowSense is built to these standards and tested against them on every release. EDS does not describe the software as certified, accredited or endorsed by the bodies that publish them.",
+    assurance: [
+      ["server", "Hosted in Sydney", "DigitalOcean's Sydney region, backed up nightly."],
+      ["lock", "Encrypted in transit", "Current TLS, with strict transport security."],
+      ["shield-check", "Two-factor sign-in", "Time based codes, to RFC 6238, which EDS can require by role."],
+      ["users", "Access down to the channel", "Roles, pages, sites and channels, set by you."],
+      ["scroll-text", "A full audit trail", "Who signed in, viewed, changed and exported, kept for at least a year."],
+      ["key-round", "Tokens that only write", "A leaked token cannot read a stored value."],
+    ],
+    clientsHeading: "Since 1991, EDS has measured water and wastewater for",
+    clientsNote: "Logos are of organisations EDS has supplied, monitored or worked for since 1991. They are the trademarks of their owners and do not indicate use of FlowSense.",
+  },
+  pricing: {
+    heading: "One subscription. Every capability. Priced by the site.",
+    lede: "Published, because a price you can only discover through a sales cycle is itself a cost. No editions, no modules and no per user fees. Everything on this page is in the one subscription, and the only number that moves is how many sites you monitor.",
+    rates: [["First 20 sites", "$30", "per site, per month"], ["Sites 21 and beyond", "$20", "per site, per month"]],
+    examples: { heading: "What that means for a real network", rows: [["Small shire", "5", "$1,800", "$30"], ["Regional council", "20", "$7,200", "$30"], ["Mid size council", "50", "$14,400", "$24"], ["Large regional network", "90", "$24,000", "$22"], ["Bulk utility", "300", "$74,400", "$21"]], cols: ["Sites", "Per year", "Per site, per month"] },
+    start: [["Free trial", "$0", "90 days of the whole platform, on your own uploaded flow history. No hardware required."], ["Assisted onboarding", "$2,500", "Once: GIS, sites, alarms, SCADA and training. Waived from 50 sites."], ["Guided calibration", "$7,500", "Optional, per catchment, done with EDS. The tools are included."]],
+    terms: "AUD excluding GST, billed annually on twelve month terms. Bands are cumulative, so growth never re-prices the sites you have. A site is a monitored location with at least one active channel, and archived sites cost nothing. Unlimited users. SMS is the only pass-through charge, at carrier cost. Rates hold for the term and may change at renewal on 60 days written notice. Either side may end the subscription at renewal on 30 days notice, and your data exports with you in full.",
   },
   faq: [
     ["Who owns the data?", "You do. Data exports in open formats with no export fee, and if you cancel at renewal, your data exports with you in full."],
@@ -2262,7 +2478,8 @@ export const flowsense = {
     ["Where is the data hosted, and how is it secured?", "In Australia, in DigitalOcean's Sydney region. Sign-in supports two-factor codes, access is set per person down to individual sites and channels, and every sign-in, view, change and export is recorded in an audit trail."],
     ["Can the data go back into our SCADA or historian?", "Yes. As scheduled CSV files over SFTP or FTPS, as MQTT messages to your broker, through a read API, and as signed webhooks when an alarm is raised or cleared, a forecast puts a site at risk, or Blockage Watch flags a blockage."],
     ["How many people can use it?", "Unlimited users, with role based access and administration that can be delegated to your own team."],
-    ["How do we get started?", "Send us the flow history you already hold and EDS will set up a 90 day trial of the whole platform on it. Or ask for a walkthrough using your own sites."],
+    ["What does Blockage Watch not do?", "It is a statistical early warning read from each sensor's own history. It says the pipe reaching that sensor is behaving differently for a reason rain does not explain. It does not locate the obstruction, cannot see one downstream of the meter, and needs roughly two months of history plus enough dry days."],
+    ["How do we get started?", "Send us the flow history you already hold and EDS will set up a 90 day trial of the whole platform on it, with your infiltration ranking the same afternoon. Or ask for a walkthrough using your own sites."],
   ],
   docs: [
     { label: "Platform overview", note: "The short introduction: what FlowSense does, from the instrument in the pipe to the board paper.", href: localDoc("eds-flowsense-platform-overview.pdf") },

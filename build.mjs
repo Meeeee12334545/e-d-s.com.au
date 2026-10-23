@@ -105,6 +105,23 @@ const photoFigure = (f, { i, sizes } = {}) => `
   <div class="photo-frame"${f.pos ? ` style="--pos:${esc(f.pos)}"` : ""}>${photo(f.photo, f.alt, { sizes })}</div>
   ${f.caption ? `<figcaption>${esc(f.caption)}</figcaption>` : ""}
 </figure>`;
+// FlowSense screens. tools/flowsense_screens.py lifts them out of the
+// brochures into src/assets/img/flowsense as <name>-<w>x<h>.jpg with a WebP
+// twin, at one or two widths, laid out like the photographs above. Shown
+// in their own colours: they are the platform, not a photograph.
+const SHOTS = {};
+for (const f of readdirSync(path.join(ROOT, "src/assets/img/flowsense"))) {
+  const m = f.match(/^(.+)-(\d+)x(\d+)\.jpg$/);
+  if (m) (SHOTS[m[1]] ||= []).push({ w: +m[2], h: +m[3] });
+}
+for (const list of Object.values(SHOTS)) list.sort((a, b) => b.w - a.w);
+function shot(name, alt, { sizes = "(max-width: 980px) calc(100vw - 40px), 700px", eager = false } = {}) {
+  const v = SHOTS[name];
+  if (!v) throw new Error(`No FlowSense screen named "${name}" in src/assets/img/flowsense (see tools/flowsense_screens.py)`);
+  const set = (ext) => v.map((s) => `@root/assets/img/flowsense/${name}-${s.w}x${s.h}.${ext} ${s.w}w`).join(", ");
+  const [big] = v;
+  return `<picture><source type="image/webp" srcset="${set("webp")}" sizes="${sizes}"><img src="@root/assets/img/flowsense/${name}-${big.w}x${big.h}.jpg" srcset="${set("jpg")}" sizes="${sizes}" width="${big.w}" height="${big.h}" alt="${esc(alt)}"${eager ? ' fetchpriority="high"' : ' loading="lazy"'} decoding="async"></picture>`;
+}
 // Two photographs side by side, across the page.
 const figureRow = (figs) => `<div class="photo-row">${figs.map((f, i) => photoFigure(f, { i, sizes: "(max-width: 700px) calc(100vw - 40px), (max-width: 980px) calc(50vw - 28px), 612px" })).join("")}</div>`;
 // A product shot or drawing in the sidebar: { src, alt, caption, w, h }.
@@ -1529,48 +1546,172 @@ ${ctaSection(r, { ...pg.cta, ...pricing })}`,
 }
 
 /* ---- FlowSense ---- */
+// A tour of the platform in its own screens: each stop is a heading, a short
+// lede and four points beside the screen they describe, in the order the
+// platform's menu runs (Monitor, Analyse, Engineer, Deliver). The Pump
+// Station Manager is the one showpiece band, with its screen pinned. The
+// copy and the screens are `flowsense` in content.mjs.
+const FS = C.flowsense;
+const FS_SIZES = {
+  single: "(max-width: 980px) calc(100vw - 40px), 700px",
+  stack: "(max-width: 980px) calc(100vw - 40px), 640px",
+  over: "(max-width: 980px) calc(60vw - 24px), 400px",
+  beside: "(max-width: 980px) calc(57vw - 24px), 400px",
+  besideB: "(max-width: 980px) calc(43vw - 24px), 300px",
+  column: "(max-width: 980px) calc(100vw - 40px), 700px",
+  wide: "(max-width: 980px) calc(100vw - 40px), 1240px",
+  tall: "(max-width: 980px) 70vw, 300px",
+};
+const fsFrame = (name, alt, { sizes, cls = "", eager = false, i } = {}) => `<div class="fs-frame${cls ? ` ${cls}` : ""}" data-reveal${i != null ? ` style="--i:${i}"` : ""}>${shot(name, alt, { sizes, eager })}</div>`;
+const fsPoints = (points) => `<ul class="fs-points">${points.map(([t, d], n) => `<li data-reveal style="--i:${n + 2}"><b>${esc(t)}</b><span>${esc(d)}</span></li>`).join("")}</ul>`;
+const fsTags = (tags) => `<ul class="fs-tags">${tags.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>`;
+function fsStop(s, n) {
+  const [a, b] = s.shots;
+  const media = s.layout === "stack" ? `<div class="fs-media stack">${fsFrame(a[0], a[1], { sizes: FS_SIZES.stack })}${fsFrame(b[0], b[1], { sizes: FS_SIZES.over, cls: "over", i: 2 })}</div>`
+    : s.layout === "beside" ? `<div class="fs-media beside">${fsFrame(a[0], a[1], { sizes: FS_SIZES.beside })}${fsFrame(b[0], b[1], { sizes: FS_SIZES.besideB, i: 2 })}</div>`
+    : s.layout === "column" ? `<div class="fs-media column">${fsFrame(a[0], a[1], { sizes: FS_SIZES.column })}${fsFrame(b[0], b[1], { sizes: FS_SIZES.column, i: 2 })}</div>`
+    : `<div class="fs-media">${fsFrame(a[0], a[1], { sizes: FS_SIZES[s.layout] || FS_SIZES.single })}</div>`;
+  const copy = `<div class="fs-stop-copy">
+    <div class="fs-stop-head">${s.group ? `<p class="eyebrow">${esc(s.group)}</p>` : ""}<h2 data-reveal>${esc(s.heading)}</h2><p class="lede" data-reveal style="--i:1">${esc(s.lede)}</p></div>
+    <div>${fsPoints(s.points)}${s.tools ? `<p class="fs-tags-note" data-reveal>${esc(s.toolsNote)}</p>${fsTags(s.tools)}` : ""}</div>
+  </div>`;
+  const tone = n % 2 ? " alt" : "";
+  if (s.layout === "wide") return `<section class="section band fs-stop wide${tone}" id="${s.id}"><div class="wrap">${copy}${media}</div></section>`;
+  return `<section class="section band fs-stop${n % 2 ? " rev" : ""}${tone}${s.layout === "tall" ? " tall" : ""}" id="${s.id}"><div class="wrap fs-stop-in">${copy}${media}</div></section>`;
+}
+// The section bar for this page: the same bar as the service pages, with
+// the walkthrough as its action.
+const fsBar = (r) => `
+<nav class="secbar" aria-label="On this page"><div class="wrap secbar-in">
+  <ol>${[["platform", "Platform"], ["monitor", "Monitor"], ["blockage-watch", "Blockage Watch"], ["psm", "Pump stations"], ["analyse", "Analyse"], ["engineer", "Engineer"], ["reports", "Reports"], ["connect", "Connect"], ["standards", "Standards"], ["pricing", "Pricing"], ["questions", "Questions"], ["documents", "Documents"]].map(([id, label]) => `<li><a href="#${id}">${label}</a></li>`).join("")}</ol>
+  <a class="btn btn-brand secbar-cta" href="${contactHref(r, { topic: "EDS FlowSense" })}">Request a walkthrough</a>
+</div></nav>`;
+// The wet well trace beside the Pump Station Manager: five hours of level
+// drawn as a schematic, filling slowly as sewage arrives and emptying fast
+// as the pumps run, between the start and stop levels.
+const fsTrace = (t) => `
+<figure class="fs-trace" data-reveal>
+  <svg viewBox="0 0 640 230" aria-hidden="true">
+    <g stroke="#dfe5ec" stroke-width="1"><path d="M20 20V200M20 200H620"/></g>
+    <g stroke-dasharray="5 5" stroke-width="1.3"><path d="M20 56H620" stroke="#0d7c72"/><path d="M20 168H620" stroke="#5b6878"/></g>
+    <path d="M20 168 L170 56 L198 168 L348 56 L376 168 L526 56 L554 168 L620 118 V200 H20 Z" fill="#5fb4a6" fill-opacity=".14"/>
+    <path class="draw" pathLength="100" d="M20 168 L170 56 L198 168 L348 56 L376 168 L526 56 L554 168 L620 118" fill="none" stroke="#0c5f59" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
+    <g font-family="Geist, sans-serif" font-size="11.5" fill="#26313f">
+      <text x="572" y="50" font-weight="650">Start</text><text x="574" y="184" font-weight="650">Stop</text>
+      <text x="22" y="216" fill="#5b6878">${esc(t.rise)}</text>
+      <text x="206" y="40" fill="#5b6878">${esc(t.fall)}</text>
+      <text x="22" y="40" fill="#5b6878" font-size="10.5">Wet well level</text>
+    </g>
+    <g fill="none" stroke="#5b6878" stroke-width="1"><path d="M96 203 L96 194 L90 182"/><path d="M212 44 L212 54 L188 100"/></g>
+  </svg>
+  <figcaption><b>${esc(t.title)}</b> ${esc(t.text)}</figcaption>
+</figure>`;
 add({
   file: "flowsense.html",
   title: "EDS FlowSense | Sewer network intelligence",
-  description: "EDS FlowSense: sewer network monitoring, flow analytics and engineering intelligence by Environmental Data Services.",
+  description: "EDS FlowSense: live operations, infiltration and inflow, pump stations and calibrated hydraulic models on one validated record. Built in Australia by EDS.",
   current: "flowsense",
-  body: (r) => `
-${pageHero(r, { crumbs: [["FlowSense"]], iconName: "waves", title: "Sewer network intelligence.", lede: C.flowsense.lede, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${site.flowsenseUrl}" rel="noopener">Open FlowSense ${icon("arrow-up-right")}</a><a class="btn btn-ghost btn-lg" href="${contactHref(r, { topic: "EDS FlowSense" })}">Request a walkthrough</a>`, visual: heroToc([["platform", "Inside the platform"], ["capabilities", "Capabilities", C.flowsense.features.length], ["standards", "Methods and standards"], ["questions", "Questions", C.flowsense.faq.length], ["documents", "Documents", C.flowsense.docs.length]]) })}
-<section class="section fs-band" id="platform"><div class="wrap fs-grid">
-  <div>
-    <p class="eyebrow">Inside the platform</p>
-    <h2 class="h-lg" data-reveal>From a reading in a manhole to a decision.</h2>
-    <div class="fs-list" role="tablist" data-reveal style="--i:1">
-      ${[["flame", "I/I heat map", "One colour per severity band, with arrows showing which way the water runs."], ["siren", "Blockage Watch", "Early warning before a dry weather spill."], ["fan", "Pump Station Manager", "The wet well drawn to scale, with its live level."], ["bell-ring", "Alarms that reach people", "Sent to the email and mobile your team holds that day."]]
-        .map(([ic, t, d], i) => `<button class="fs-item" role="tab" aria-selected="${i === 0}"><span class="card-icon">${icon(ic)}</span><span><b>${t}</b><span>${d}</span></span></button>`).join("")}
+  body: (r) => {
+    const cut = FS.tour.findIndex((s) => s.id === "analyse");
+    const first = FS.tour.slice(0, cut), second = FS.tour.slice(cut);
+    const walkthrough = contactHref(r, { topic: "EDS FlowSense" });
+    return `
+${pageHero(r, { crumbs: [["FlowSense"]], eyebrow: "Sewer network intelligence", title: FS.title, lede: FS.lede, compact: true, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${site.flowsenseUrl}" rel="noopener">Open FlowSense ${icon("arrow-up-right")}</a><a class="btn btn-ghost btn-lg" href="${walkthrough}">Request a walkthrough</a>` })}
+<section class="fs-stage" aria-label="The FlowSense Network Overview">
+  <div class="wrap">
+    <figure class="fs-stage-shot">
+      ${fsFrame(FS.stage.shot, FS.stage.alt, { sizes: FS_SIZES.wide, cls: "lg", eager: true, i: 3 })}
+      <figcaption data-reveal style="--i:4">${esc(FS.stage.caption)} <small>${esc(FS.stage.demoNote)}</small></figcaption>
+    </figure>
+    <ul class="fs-facts">
+      ${FS.facts.map(([v, u, l], n) => `<li data-reveal style="--i:${n}"><b>${esc(v)}${u ? `<small>${esc(u)}</small>` : ""}</b><span>${esc(l)}</span></li>`).join("")}
+    </ul>
+  </div>
+</section>
+${fsBar(r)}
+<section class="section band alt" id="platform"><div class="wrap">
+  <div class="band-head"><h2 class="h-lg" data-reveal>${esc(FS.layers.heading)}</h2><p class="lede" data-reveal style="--i:1">${esc(FS.layers.lede)}</p></div>
+  <div class="grid c3 fs-layers">
+    ${FS.layers.items.map(([ic, t, d, rep], n) => `<div class="card hoverable holder" data-reveal style="--i:${n}"><span class="card-icon">${icon(ic)}</span><h3>${esc(t)}</h3><p>${esc(d)}</p><small>${esc(rep)}</small></div>`).join("")}
+  </div>
+</div></section>
+${first.map(fsStop).join("")}
+<section class="section fs-band fs-psm" id="psm"><div class="wrap">
+  <div class="fs-psm-head">
+    <p class="eyebrow">${esc(FS.psm.eyebrow)}</p>
+    <h2 class="h-lg" data-reveal>${esc(FS.psm.heading)}</h2>
+    <p class="lede" data-reveal style="--i:1">${esc(FS.psm.lede)}</p>
+  </div>
+  <div class="fs-psm-stage">
+    <figure class="fs-frame lg fs-pinned" data-reveal style="--i:2">
+      ${shot(FS.psm.shot[0], FS.psm.shot[1], { sizes: "(max-width: 980px) calc(100vw - 40px), 760px" })}
+      ${FS.psm.pins.map(([t, , x, y], i) => `<span class="fs-pin" data-n="${i + 1}" style="--x:${x}%;--y:${y}%" aria-hidden="true"><b>${i + 1}</b></span>`).join("")}
+    </figure>
+    <ol class="fs-key" aria-label="What the screen shows">
+      ${FS.psm.pins.map(([t, d], i) => `<li data-n="${i + 1}" data-reveal style="--i:${i + 3}"><span>${i + 1}</span><div><b>${esc(t)}</b><p>${esc(d)}</p></div></li>`).join("")}
+    </ol>
+  </div>
+  <div class="fs-psm-more">
+    ${fsTrace(FS.psm.trace)}
+    ${fsPoints(FS.psm.points)}
+  </div>
+  <p class="fs-psm-needs" data-reveal>${esc(FS.psm.needs)}</p>
+  <div class="hero-actions" data-reveal style="--i:1">
+    <a class="btn btn-primary btn-lg" href="${r}${FS.psm.link[0]}">${esc(FS.psm.link[1])} ${icon("arrow-right")}</a>
+    <a class="btn btn-ghost btn-lg" href="${walkthrough}">Request a walkthrough</a>
+  </div>
+</div></section>
+${second.map(fsStop).join("")}
+<section class="section band" id="connect"><div class="wrap">
+  <div class="band-head"><h2 class="h-lg" data-reveal>${esc(FS.connect.heading)}</h2><p class="lede" data-reveal style="--i:1">${esc(FS.connect.lede)}</p></div>
+  <div class="fs-flow">
+    <div data-reveal><h3>${icon("arrow-down-to-line", false)} In</h3><ul>${FS.connect.in.map((l) => `<li>${icon("check", false)}<span>${esc(l)}</span></li>`).join("")}</ul></div>
+    <div class="mid" data-reveal style="--i:1"><h3>${icon("database", false)} One validated record</h3><ul>${FS.connect.record.map((l) => `<li>${icon("check", false)}<span>${esc(l)}</span></li>`).join("")}</ul></div>
+    <div data-reveal style="--i:2"><h3>${icon("arrow-up-from-line", false)} Out</h3><ul>${FS.connect.out.map((l) => `<li>${icon("check", false)}<span>${esc(l)}</span></li>`).join("")}</ul></div>
+  </div>
+  <p class="fs-flow-note" data-reveal>${esc(FS.connect.note)}</p>
+</div></section>
+<section class="section band alt" id="apart"><div class="wrap">
+  <div class="band-head"><h2 class="h-lg" data-reveal>${esc(FS.apart.heading)}</h2><p class="lede" data-reveal style="--i:1">${esc(FS.apart.lede)}</p></div>
+  <ul class="deliv n4">${FS.apart.items.map(([t, d], n) => `<li data-reveal style="--i:${n % 4}"><b>${esc(t)}</b><p>${esc(d)}</p></li>`).join("")}</ul>
+</div></section>
+<section class="section band" id="standards"><div class="wrap">
+  <div class="band-head"><h2 class="h-lg" data-reveal>${esc(FS.standards.heading)}</h2><p class="lede" data-reveal style="--i:1">${esc(FS.standards.lede)}</p></div>
+  <ul class="fs-std">${FS.standards.items.map(([ic, t, d], n) => `<li data-reveal style="--i:${n % 4}"><span class="card-icon">${icon(ic)}</span><b>${esc(t)}</b><p>${esc(d)}</p></li>`).join("")}</ul>
+  <p class="fs-tags-note" data-reveal>${esc(FS.standards.methodsNote)}</p>
+  ${fsTags(FS.standards.methods)}
+  <ul class="fs-assure">${FS.standards.assurance.map(([ic, t, d], n) => `<li data-reveal style="--i:${n}">${icon(ic, false)}<b>${esc(t)}</b><small>${esc(d)}</small></li>`).join("")}</ul>
+  <div class="fs-trust" data-reveal><p>${esc(FS.standards.instruments)}</p><p class="note">${esc(FS.standards.note)}</p></div>
+  <div class="fs-clients">
+    <p>${esc(FS.standards.clientsHeading)}</p>
+    <ul class="logo-grid" aria-label="Clients">${C.clients.map((c, i) => `<li data-reveal style="--i:${i % 5}"><img src="${c.src}" alt="${esc(c.name)}" loading="lazy"></li>`).join("")}</ul>
+    <p class="note">${esc(FS.standards.clientsNote)}</p>
+  </div>
+</div></section>
+<section class="section band alt" id="pricing"><div class="wrap">
+  <div class="band-head"><h2 class="h-lg" data-reveal>${esc(FS.pricing.heading)}</h2><p class="lede" data-reveal style="--i:1">${esc(FS.pricing.lede)}</p></div>
+  <div class="fs-price">
+    <div class="fs-rates">${FS.pricing.rates.map(([k, v, u], i) => `<div class="fs-rate${i ? " second" : ""}" data-reveal style="--i:${i}"><small>${esc(k)}</small><b>${esc(v)}</b><span>${esc(u)}</span></div>`).join("")}</div>
+    <div class="fs-examples" data-reveal style="--i:2">
+      <p>${esc(FS.pricing.examples.heading)}</p>
+      <table><thead><tr><th>Network</th>${FS.pricing.examples.cols.map((c) => `<th>${esc(c)}</th>`).join("")}</tr></thead><tbody>${FS.pricing.examples.rows.map((row) => `<tr>${row.map((c) => `<td>${esc(c)}</td>`).join("")}</tr>`).join("")}</tbody></table>
     </div>
   </div>
-  ${fsScreen()}
+  <ul class="fs-start">${FS.pricing.start.map(([k, v, d], n) => `<li data-reveal style="--i:${n}"><b>${esc(v)}</b><span><strong>${esc(k)}</strong>${esc(d)}</span></li>`).join("")}</ul>
+  <p class="note fs-terms" data-reveal>${esc(FS.pricing.terms)}</p>
 </div></section>
-<section class="section" id="capabilities"><div class="wrap">
-  <div class="section-head"><h2 class="h-lg" data-reveal>Everything your network is telling you.</h2></div>
-  <div class="grid c3">
-    ${C.flowsense.features.map(([ic, t, d], n) => `<div class="card hoverable holder" data-reveal style="--i:${n % 3}"><span class="card-icon">${icon(ic)}</span><h3>${esc(t)}</h3><p>${esc(d)}</p></div>`).join("")}
-  </div>
-</div></section>
-<section class="section alt" id="standards"><div class="wrap">
-  <div class="section-head"><h2 class="h-lg" data-reveal>${esc(C.flowsense.standards.heading)}</h2><p class="lede" data-reveal style="--i:1">${esc(C.flowsense.standards.lede)}</p></div>
-  <div class="grid c3">
-    ${C.flowsense.standards.items.map(([ic, t, d], n) => `<div class="card hoverable holder" data-reveal style="--i:${n % 3}"><span class="card-icon">${icon(ic)}</span><h3>${esc(t)}</h3><p>${esc(d)}</p></div>`).join("")}
-  </div>
-  <p class="note" data-reveal style="margin-top:22px">${esc(C.flowsense.standards.note)}</p>
-</div></section>
-<section class="section" id="questions"><div class="wrap split rev">
+<section class="section band" id="questions"><div class="wrap split rev">
   <div class="section-head" style="margin:0"><h2 class="h-lg" data-reveal>What councils and utilities ask us.</h2><p class="lede" data-reveal style="--i:1">If your question is not here, our team will answer it on ${site.phone}.</p></div>
-  <div data-reveal>${faqHtml(C.flowsense.faq)}</div>
+  <div data-reveal>${faqHtml(FS.faq)}</div>
 </div></section>
-<section class="section alt" id="documents"><div class="wrap">
+<section class="section band alt" id="documents"><div class="wrap">
   <div class="section-head"><h2 class="h-lg" data-reveal>Read more about FlowSense.</h2></div>
   <ul class="doc-list grid c2">
-    ${C.flowsense.docs.map((d, n) => `<li data-reveal style="--i:${n}"><a href="${d.href}" rel="noopener"><span class="card-icon">${icon("file-text")}</span><span>${esc(d.label)}<small>${esc(d.note)} ${docType(d.href)}.</small></span>${icon("download")}</a></li>`).join("")}
+    ${FS.docs.map((d, n) => `<li data-reveal style="--i:${n}"><a href="${d.href}" rel="noopener"><span class="card-icon">${icon("file-text")}</span><span>${esc(d.label)}<small>${esc(d.note)} ${docType(d.href)}.</small></span>${icon("download")}</a></li>`).join("")}
   </ul>
 </div></section>
-${ctaSection(r, { title: "See FlowSense on your own network.", lede: "FlowSense comes with EDS monitoring. Ask us for a walkthrough using your sites.", topic: "EDS FlowSense" })}`,
+${ctaSection(r, { title: "See it on your own network.", lede: "Send us the flow history you already hold. We will stand up a 90 day trial on it and show you your infiltration ranking the same afternoon. Or book a live demonstration, and bring your hardest question about how a figure was calculated.", topic: "EDS FlowSense" })}`;
+  },
 });
 
 /* ---- about ---- */
@@ -1915,7 +2056,7 @@ function searchIndex() {
   }
   for (const b of C.brands) put("Product ranges", b.title, b.tag, `products/${b.slug}.html`, { i: b.icon, b: text(b.name, b.summary, b.intro, blockText(b.blocks), b.groups.map((g) => g.name)) });
   put("Pages", "Instrument finder", `All ${products.length} instruments, filtered by type or searched by name.`, "products/index.html#finder", { i: "package-search", b: "products catalogue range brands" });
-  put("Pages", "EDS FlowSense", "Sewer network intelligence: flow analytics and engineering insight.", "flowsense.html", { i: "waves", b: text(C.flowsense.lede, C.flowsense.features.map(([, t, d]) => [t, d]), C.flowsense.standards.items.map(([, t, d]) => [t, d]), C.flowsense.faq) });
+  put("Pages", "EDS FlowSense", "Sewer network intelligence: flow analytics and engineering insight.", "flowsense.html", { i: "waves", b: text(C.flowsense.lede, C.flowsense.tour.flatMap((t) => [[t.heading, t.lede], ...t.points]), [[C.flowsense.psm.heading, C.flowsense.psm.lede], ...C.flowsense.psm.points], C.flowsense.apart.items, C.flowsense.standards.items.map(([, t, d]) => [t, d]), C.flowsense.faq) });
   put("Pages", "About EDS", "Australian owned and operated since 1991.", "about.html", { i: "building-2", b: text(C.about.intro, C.about.mission, C.about.approach.items.map(([, t, d]) => [t, d]), C.about.timeline, "history founders story") });
   put("Pages", "Resources", "White papers, downloads and support.", "resources.html", { i: "book-open", b: "manuals software drivers datasheets passwords rma" });
   put("Pages", "Contact EDS", `${site.hours}. ${site.phone} from anywhere in Australia.`, "contact.html", { i: "messages-square", b: text(site.address, "enquiry form quote") });

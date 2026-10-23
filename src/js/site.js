@@ -213,6 +213,20 @@
     setInterval(() => { if (auto && !document.hidden) show((i + 1) % fsItems.length); }, 4200);
   }
 
+  /* ---- Pump Station Manager pins ---- */
+  // On the FlowSense page the PSM screen carries four numbered pins and a
+  // key beside it. Pointing at a line in the key lights its pin, and the
+  // other way round.
+  const pinned = $(".fs-pinned");
+  if (pinned) {
+    const all = $$(".fs-pin, .fs-key li");
+    const light = (n, on) => all.forEach((el) => el.classList.toggle("on", on && el.dataset.n === n));
+    all.forEach((el) => {
+      el.addEventListener("pointerenter", () => light(el.dataset.n, true));
+      el.addEventListener("pointerleave", () => light(el.dataset.n, false));
+    });
+  }
+
   /* ---- sidebars follow the page only when they fit on screen ---- */
   // A sticky sidebar taller than the window hides its last cards until the
   // end of the page, so those scroll with the page instead.
