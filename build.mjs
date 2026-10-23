@@ -1699,7 +1699,7 @@ ${second.map(fsStop).join("")}
     ${FS.docs.map((d, n) => `<li data-reveal style="--i:${n}"><a href="${d.href}" rel="noopener"><span class="card-icon">${icon("file-text")}</span><span>${esc(d.label)}<small>${esc(d.note)} ${docType(d.href)}.</small></span>${icon("download")}</a></li>`).join("")}
   </ul>
 </div></section>
-${ctaSection(r, { title: "See it on your own network.", lede: "Send us the flow history you already hold. We will stand up a 90 day trial on it and show you your infiltration ranking the same afternoon. Or book a live demonstration, and bring your hardest question about how a figure was calculated.", topic: "EDS FlowSense" })}`;
+${ctaSection(r, { title: "See it on your own network.", lede: "Book a live demonstration on your own sites, and bring your hardest question about how a figure was calculated. We will show you the working behind every number on the screen.", topic: "EDS FlowSense" })}`;
   },
 });
 
