@@ -78,7 +78,7 @@
   };
   const describe = (p) => {
     const extra = Math.max(0, p.q - p.base);
-    return `${hhmm(p.t)}. Flow ${fmt(p.q, 1)} litres a second, dry weather ${fmt(p.base, 1)}, inflow and infiltration ${fmt(extra, 1)}, rain ${fmt(p.rain)} millimetres an hour.`;
+    return `Day ${day(p.t)} · ${hhmm(p.t)}. Flow ${fmt(p.q, 1)} litres a second, dry weather ${fmt(p.base, 1)}, inflow and infiltration ${fmt(extra, 1)}, rain ${fmt(p.rain)} millimetres an hour.`;
   };
   const clearCursor = () => { cursor = null; cursorBy = ""; tip.classList.remove("on"); draw(); };
 
@@ -204,7 +204,7 @@
     $("lab-q").textContent = last.q.toFixed(1);
     $("lab-d").textContent = Math.round(hr * D * 1000);
     $("lab-v").textContent = v.toFixed(2);
-    const dq = last.q - last.base;
+    const dq = Math.max(0, last.q - last.base);
     delta.textContent = `${dq < 0 ? "−" : "+"}${Math.abs(dq).toFixed(1)}`;
     delta.parentElement.toggleAttribute("data-up", dq > 8);
     clock.textContent = `Day ${day(last.t)} · ${hhmm(last.t)}`;
