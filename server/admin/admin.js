@@ -292,7 +292,7 @@
   // What each kind of click is called, and its colour in the lists and timeline.
   const KINDS = {
     link: ["Link", "t-click"], button: ["Button", "t-click"], toggle: ["Menu or question", "t-click"], tab: ["Tab", "t-click"],
-    download: ["Download", "t-goal"], contact: ["Email or phone", "t-goal"], form: ["Form sent", "t-goal"],
+    download: ["Download", "t-goal"], contact: ["Email or phone", "t-goal"], form: ["Form sent", "t-goal"], form_failed: ["Form not sent", "t-warn"],
     outbound: ["Other site", "t-leave"], search: ["Search", "t-search"], choice: ["Choice", "t-search"],
   };
   const quoted = (v) => (v ? `“${v}”` : "");
@@ -468,6 +468,8 @@
           : { tag: "Email", cls: "t-goal", icon: "mail", what: ["Clicked the email address ", b(contact(st.target))], where: [area] };
       case "form":
         return { tag: "Form sent", cls: "t-goal", icon: "send", what: ["Sent the form ", q(st.label)], where: [area] };
+      case "form_failed":
+        return { tag: "Form not sent", cls: "t-warn", icon: "send", what: ["Could not send the form ", q(st.label)], where: [area] };
       case "outbound":
         return { tag: "Left the site", cls: "t-leave", icon: "external-link", what: ["Followed a link to another site: ", b(site(st.target))], where: [st.label && `the link ${quoted(st.label)}`, area] };
       case "search":
