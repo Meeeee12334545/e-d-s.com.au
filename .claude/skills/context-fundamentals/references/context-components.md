@@ -161,11 +161,11 @@ Structure message history to preserve key information:
 
 ```python
 {
-    "role": "user" | "assistant" | "tool",
+    "role": "user, assistant, or tool",
     "content": "message text",
     "reasoning": "optional chain-of-thought",
-    "tool_calls": [list if role="assistant"],
-    "tool_output": "output if role="tool"",
+    "tool_calls": ["tool call objects for assistant messages"],
+    "tool_output": "tool output text",
     "summary": "compact summary if conversation is long"
 }
 ```
@@ -280,4 +280,3 @@ def get_reference(file_reference):
 ```
 
 This pattern ensures files are loaded once and cached for the session.
-
