@@ -1078,7 +1078,7 @@
         p.setAttribute("cx", (p.x + p.vx * k / 4).toFixed(1)); p.setAttribute("cy", (p.y + p.vy * k / 4).toFixed(1));
         p.setAttribute("r", (1.6 + age * 11).toFixed(1)); p.setAttribute("opacity", (0.88 * (1 - age / 0.7)).toFixed(2));
       }
-      if (dR > L + 1 && dC > L + 1) { g.remove(); stunting = false; scheduleStunt(15000 + Math.random() * 15000); return; }
+      if (dR > L + 1 && dC > L + 1) { g.remove(); stunting = false; scheduleStunt(Math.max(0, 15000 + Math.random() * 15000 - (performance.now() - t0))); return; }
       requestAnimationFrame(step);
     };
     requestAnimationFrame(step);
