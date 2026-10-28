@@ -3155,6 +3155,8 @@ export const cityStorm = {
 export const oldPages = {
   home: "index.html",
   "what-we-do": "about.html",
+  // A 2017 page of EDS's safety and quality documents for one client.
+  "logan-water-infrastructure-alliance": "about.html",
   "contact-2": "contact.html",
   "contact-eds": "contact.html",
   // The old /enquire is served by the enquiry page itself, enquire.html.
@@ -3309,6 +3311,7 @@ export const oldPages = {
   "pressure-sensors": "products/eds.html",
   ilab: "products/eds.html",
   "e-flow": "products/e-flow-3.html",
+  metalog: "products/metalog-4g.html",
   "flowsense-1": "flowsense.html",
   detectronics: "products/detectronic.html",
   msfm: "products/detectronic.html",
