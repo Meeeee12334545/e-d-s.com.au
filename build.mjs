@@ -911,8 +911,7 @@ add({
   <div class="wrap hero-body">
     <div class="hero-main">
       <div>
-        <p class="eyebrow">Water · Wastewater · Trade waste · Environment</p>
-        <h1 class="h-xl" aria-label="Every drop, measured.">${words.map((w, i) => `<span class="w" aria-hidden="true"><span style="--i:${i}">${i === 2 ? `<em>${w}</em>` : w}</span></span>`).join(" ")}</h1>
+        <h1 class="h-xl" aria-label="Every drop, measured.">${words.map((w, i) => `<span class="w" aria-hidden="true"><span style="--i:${i}">${w}</span></span>`).join(" ")}</h1>
         <p class="lede" data-reveal style="--i:4">${esc(C.homeLede)}</p>
         <div class="hero-actions" data-reveal style="--i:5">
           <a class="btn btn-primary btn-lg" data-magnetic href="${r}services/index.html">Our services ${icon("arrow-right")}</a>
@@ -1580,7 +1579,7 @@ for (const pg of C.productPages) {
     description: pg.description,
     current: "products",
     body: (r) => `
-${pageHero(r, { crumbs: [["Products", "products/index.html"], [b.name, `products/${b.slug}.html`], [pg.name]], iconName: pg.icon, eyebrow: `${b.name} · ${pg.tag}`, title: pg.name, lede: pg.lede, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${contactHref(r, pricing)}">Request pricing ${icon("arrow-right")}</a>${quoteBtn(quoteItem(products.find((p) => p.href === `products/${pg.slug}.html`)), "btn-lg on-dark")}<a class="btn btn-ghost btn-lg" href="${datasheet.href}" rel="noopener">${icon("download")} Datasheet</a>`, visual: heroProduct(pg.image, pg.name) })}
+${pageHero(r, { crumbs: [["Products", "products/index.html"], [b.name, `products/${b.slug}.html`], [pg.name]], iconName: pg.icon, eyebrow: pg.tag, title: pg.name, lede: pg.lede, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${contactHref(r, pricing)}">Request pricing ${icon("arrow-right")}</a>${quoteBtn(quoteItem(products.find((p) => p.href === `products/${pg.slug}.html`)), "btn-lg on-dark")}<a class="btn btn-ghost btn-lg" href="${datasheet.href}" rel="noopener">${icon("download")} Datasheet</a>`, visual: heroProduct(pg.image, pg.name) })}
 <section class="section dark" style="padding-top:0"><div class="wrap">
   <div class="hl-grid">${pg.highlights.map(([ic, t, d], i) => `<div class="hl holder" data-reveal style="--i:${i % 3}">${icon(ic)}<b>${esc(t)}</b><span>${esc(d)}</span></div>`).join("")}</div>
 </div></section>

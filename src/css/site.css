@@ -75,7 +75,7 @@
   --radius: 16px;
   --radius-sm: 10px;
   --header-h: 84px;
-  --band-pad: clamp(48px, 6vw, 84px);
+  --band-pad: clamp(44px, 5.5vw, 76px);
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -271,12 +271,16 @@ ul { margin: 0; padding: 0; list-style: none; }
 .progress { position: fixed; inset: 0 0 auto 0; height: 2px; z-index: 110; background: var(--aqua); transform-origin: 0 50%; scale: 0 1; pointer-events: none; }
 
 /* ---------- section scaffolding ---------- */
-.section { padding-block: clamp(64px, 8vw, 112px); position: relative; }
+.section { padding-block: clamp(56px, 7vw, 96px); position: relative; }
 .section.alt { background: var(--bg-alt); }
 .dark { background: var(--grain), var(--deep); color: var(--on-dark-soft); }
 .dark h1, .dark h2, .dark h3, .dark h4 { color: #fff; }
-.eyebrow { display: inline-flex; align-items: center; gap: 10px; font-size: .78rem; font-weight: 650; letter-spacing: .14em; text-transform: uppercase; color: var(--brand); margin-bottom: 18px; }
-.eyebrow::before { content: ""; width: 26px; height: 2px; background: currentColor; border-radius: 2px; }
+/* A label over a heading is set like the services index kicker: the display
+   face in sentence case, in the brand, with a short rule before it. Small
+   uppercase is kept for group headings on panels, menus and tables, and for
+   instrument readouts, where it is a convention rather than a flourish. */
+.eyebrow { display: inline-flex; align-items: center; gap: 10px; font-family: var(--font-display); font-size: .95rem; font-weight: 620; letter-spacing: -.005em; color: var(--brand-dark); margin-bottom: 16px; }
+.eyebrow::before { content: ""; width: 22px; height: 2px; background: currentColor; border-radius: 2px; opacity: .8; }
 .dark .eyebrow { color: var(--aqua); }
 .h-xl { font-size: clamp(2.6rem, 6.4vw, 5.2rem); letter-spacing: -.035em; font-weight: 680; line-height: 1; }
 .h-lg { font-size: clamp(2rem, 4vw, 3.1rem); letter-spacing: -.03em; }
@@ -291,7 +295,7 @@ ul { margin: 0; padding: 0; list-style: none; }
 .lede { font-size: clamp(1.06rem, 1.5vw, 1.25rem); line-height: 1.55; color: var(--muted); max-width: 34em; text-wrap: balance; }
 .lede-proof { color: var(--ink-2); }
 .dark .lede { color: var(--on-dark-soft); }
-.section-head { display: grid; gap: 16px; margin-bottom: clamp(32px, 4vw, 52px); max-width: 820px; }
+.section-head { display: grid; gap: 14px; margin-bottom: clamp(28px, 3.5vw, 44px); max-width: 820px; }
 .section-head.split { max-width: none; grid-template-columns: 1fr auto; align-items: end; }
 /* a label sits closer to its heading than the heading to its lede */
 .section-head > .eyebrow { margin-bottom: -4px; }
@@ -299,16 +303,18 @@ ul { margin: 0; padding: 0; list-style: none; }
 .dark .note { color: var(--on-dark-faint); }
 
 /* ---------- reveal on scroll ---------- */
-.js [data-reveal] { opacity: 0; translate: 0 26px; transition: opacity .8s var(--ease-out), translate .8s var(--ease-out); transition-delay: calc(var(--i, 0) * 70ms); }
-.js [data-reveal="left"] { translate: -30px 0; }
-.js [data-reveal="right"] { translate: 30px 0; }
-.js [data-reveal="scale"] { translate: 0 0; scale: .94; transition-property: opacity, scale; }
+/* A short rise as a block comes into view: enough to feel the page settle,
+   not enough to read as a slide show. */
+.js [data-reveal] { opacity: 0; translate: 0 14px; transition: opacity .6s var(--ease-out), translate .6s var(--ease-out); transition-delay: calc(var(--i, 0) * 60ms); }
+.js [data-reveal="left"] { translate: -16px 0; }
+.js [data-reveal="right"] { translate: 16px 0; }
+.js [data-reveal="scale"] { translate: 0 0; scale: .97; transition-property: opacity, scale; }
 .js [data-reveal].in { opacity: 1; translate: 0 0; scale: 1; }
 /* Stacked layouts have no side column to slide in from, and a 30px nudge
    pushes a full-width block past a 20px phone gutter, which lets the page
    scroll sideways until it reveals. Below the stacking width they rise. */
 @media (max-width: 980px) {
-  .js :is([data-reveal="left"], [data-reveal="right"]) { translate: 0 26px; }
+  .js :is([data-reveal="left"], [data-reveal="right"]) { translate: 0 14px; }
 }
 
 /* ---------- hero ---------- */
@@ -1141,7 +1147,13 @@ a.card:hover { border-color: rgba(13, 124, 114, .45); }
 .card:hover::after { opacity: 1; }
 .dark .card { --edge: rgba(150, 230, 216, .8); }
 .card-icon { width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center; font-size: 24px; color: var(--brand); background: rgba(13, 124, 114, .09); transition: background-color .25s var(--ease), color .25s var(--ease); }
-a.card:hover .card-icon { background: var(--brand); color: #fff; }
+/* A card carries its icon plain, drawn large in the brand: the chip is kept
+   for a row in a list, where the icon is the row's bullet, and for a tile
+   that fills when it is picked. */
+.card > .card-icon, .range-tile .card-icon, .ind .card-icon { width: auto; height: 32px; border-radius: 0; background: none; font-size: 30px; justify-content: start; }
+a.card:hover > .card-icon { color: var(--brand-dark); }
+.card > .card-icon .icon { transition: translate .4s var(--ease-out); }
+a.card:hover > .card-icon .icon { translate: 0 -2px; }
 .card h3 { font-size: 1.22rem; letter-spacing: -.015em; }
 .card p { font-size: .95rem; color: var(--muted); }
 .card .link-arrow { align-self: flex-start; margin-top: auto; padding-top: 8px; font-size: .9rem; }
@@ -1149,20 +1161,22 @@ a.card:hover .card-icon { background: var(--brand); color: #fff; }
 .dark .card::before { background: radial-gradient(340px circle at var(--mx, 50%) var(--my, 0%), rgba(95, 180, 166, .16), transparent 65%); }
 .dark .card p { color: var(--on-dark-soft); }
 .dark .card-icon { background: var(--aqua-soft); color: var(--aqua); }
+.dark .card > .card-icon { background: none; }
 .dark a.card:hover { border-color: rgba(95, 180, 166, .5); box-shadow: 0 20px 50px rgba(0, 0, 0, .35); }
-.dark a.card:hover .card-icon { background: var(--aqua); color: #04201d; }
+.dark a.card:hover > .card-icon { color: #fff; }
 .tilt { transform-style: preserve-3d; }
 /* The card's one affordance: an arrow in the corner, in place of a "Learn
    more" label on every card. It fills with the brand when the card is hovered. */
-.card .go { position: absolute; top: 20px; right: 20px; z-index: 2; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; border: 1px solid var(--border-strong); background: #fff; color: var(--brand); font-size: 16px; transition: background-color .25s var(--ease), color .25s var(--ease), border-color .25s var(--ease); }
+.card .go { position: absolute; top: 24px; right: 24px; z-index: 2; width: 28px; height: 28px; display: grid; place-items: center; color: var(--brand); font-size: 20px; transition: color .25s var(--ease); }
 .card .go .icon { transition: translate .3s var(--ease-out); }
-a.card:hover .go { background: var(--brand); border-color: var(--brand); color: #fff; }
-a.card:hover .go .icon { translate: 2px 0; }
+a.card:hover .go { color: var(--brand-dark); }
+a.card:hover .go .icon { translate: 4px 0; }
 .card:has(> .go) > h3:first-child { padding-right: 44px; }
-.card:has(> .card-icon) > .go { top: 34px; right: 28px; }
+.card:has(> .card-icon) > .go { top: 30px; right: 28px; }
 .bento-lead > .go { top: calc(clamp(28px, 3vw, 40px) + 10px); right: clamp(28px, 3vw, 40px); }
-.dark .card .go, .card.bento-wide .go { background: transparent; border-color: var(--line-dark-strong); color: #fff; }
-.dark a.card:hover .go, a.card.bento-wide:hover .go { background: var(--aqua); border-color: var(--aqua); color: #04201d; }
+.dark .card .go, .card.bento-wide .go { color: #fff; }
+.dark a.card:hover .go, a.card.bento-wide:hover .go { color: var(--aqua); }
+.card.bento-wide:hover .go { color: #c9fff5; }
 .card-for { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; padding-top: 10px; font-size: .8rem; }
 .card-for span { padding: 3px 9px; border-radius: 999px; background: var(--bg-alt); color: var(--muted); font-weight: 550; }
 .card.bento-wide .card-for span { background: rgba(4, 21, 19, .28); color: #fff; }
@@ -1186,7 +1200,7 @@ div.card:not(.bento-wide) { background: var(--bg-alt); border-color: transparent
 .bento-lead { grid-column: span 2; grid-row: span 2; min-height: 470px; padding: clamp(28px, 3vw, 40px); background: linear-gradient(160deg, #fff 38%, #e4f1ee 100%); }
 .bento-lead h3 { font-size: clamp(1.6rem, 2.4vw, 2.15rem); letter-spacing: -.028em; max-width: 11ch; margin-top: 8px; }
 .bento-lead p { font-size: 1.02rem; max-width: 25ch; }
-.bento-lead .card-icon { width: 56px; height: 56px; font-size: 28px; border-radius: 16px; }
+.bento-lead > .card-icon { height: 40px; font-size: 38px; }
 /* The frame itself blends (it is its own layer), which drops the photo's
    white background into the card's tint. */
 .bento-shot { position: absolute; right: -1%; bottom: -4%; width: 50%; height: 80%; display: flex; align-items: flex-end; justify-content: flex-end; pointer-events: none; z-index: -1; mix-blend-mode: multiply; }
@@ -1196,9 +1210,9 @@ div.card:not(.bento-wide) { background: var(--bg-alt); border-color: transparent
   background: var(--grain), radial-gradient(110% 140% at 100% 0%, rgba(95, 180, 166, .3), transparent 55%), var(--brand-gradient); }
 .bento-wide h3 { color: #fff; }
 .card.bento-wide p { color: rgba(255, 255, 255, .92); max-width: 46ch; }
-.bento-wide .card-icon { background: rgba(255, 255, 255, .14); color: #fff; }
+.bento-wide > .card-icon { color: #fff; }
 a.card.bento-wide:hover { border-color: transparent; box-shadow: 0 24px 50px -10px rgba(6, 48, 44, .45); }
-a.card.bento-wide:hover .card-icon { background: #fff; color: var(--chrome); }
+a.card.bento-wide:hover > .card-icon { color: #c9fff5; }
 .bento-wide .link-arrow { color: #c9fff5; }
 .bento-wide::before { background: radial-gradient(340px circle at var(--mx, 50%) var(--my, 0%), rgba(255, 255, 255, .13), transparent 65%); }
 
@@ -1366,7 +1380,7 @@ input[type="range"]:active::-moz-range-thumb { cursor: grabbing; box-shadow: 0 0
 .ind > div + div { border-left: 1px solid var(--border); }
 .ind > div:hover { background: var(--chrome); color: rgba(255, 255, 255, .85); }
 .ind > div:hover h3 { color: #fff; }
-.ind > div:hover .card-icon { background: rgba(255, 255, 255, .14); color: #fff; }
+.ind > div:hover .card-icon { color: #fff; }
 .ind h3 { font-size: 1.15rem; transition: color .3s var(--ease); }
 .ind p { font-size: .92rem; }
 .certs { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; margin-top: 28px; padding: 22px 26px; border-radius: var(--radius); background: var(--bg-alt); }
@@ -1450,12 +1464,12 @@ input[type="range"]:active::-moz-range-thumb { cursor: grabbing; box-shadow: 0 0
 .signup input:focus { outline: 2px solid var(--aqua); outline-offset: 1px; }
 
 /* ---------- inner pages ---------- */
-.page-hero { position: relative; overflow: hidden; isolation: isolate; padding: calc(var(--header-h) + clamp(48px, 8vw, 96px)) 0 clamp(48px, 7vw, 88px); }
+.page-hero { position: relative; overflow: hidden; isolation: isolate; padding: calc(var(--header-h) + clamp(32px, 5vw, 56px)) 0 clamp(44px, 6vw, 72px); }
 .page-hero::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(90deg, rgba(4, 21, 19, .9) 0%, rgba(4, 21, 19, .55) 60%, rgba(4, 21, 19, .15) 100%), linear-gradient(0deg, var(--deep) 0%, rgba(4, 21, 19, 0) 40%); }
 .page-hero .lede { margin-top: 22px; }
 .page-hero h1 { max-width: 18ch; }
 /* a shorter hero, for a page whose content should be in view straight away */
-.page-hero.compact { padding: calc(var(--header-h) + clamp(32px, 5vw, 60px)) 0 clamp(36px, 5vw, 60px); }
+.page-hero.compact { padding: calc(var(--header-h) + clamp(24px, 4vw, 44px)) 0 clamp(32px, 4.5vw, 52px); }
 .crumbs { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: .84rem; color: var(--on-dark-faint); margin-bottom: 26px; }
 .crumbs a:hover { color: var(--aqua); }
 .crumbs .icon { font-size: 12px; rotate: -90deg; opacity: .6; }
@@ -2303,12 +2317,16 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: 6
   .prod h3 { font-size: .95rem; }
   .prod p { font-size: .8rem; }
   /* the filter rail becomes rows of chips, and the table view a list:
-     shot, name and type, and the compare toggle */
-  .cat { grid-template-columns: 1fr; gap: 10px; }
-  .cat-rail { position: static; gap: 6px; }
+     shot, name and type, and the compare toggle. The rows scroll sideways,
+     so every track above them is minmax(0, 1fr): a plain 1fr track's
+     automatic minimum let the chip rows widen the whole page (31 October 2026). */
+  .cat { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .cat-rail { position: static; grid-template-columns: minmax(0, 1fr); gap: 6px; min-width: 0; }
+  .cat-group { min-width: 0; }
   .cat-h { margin: 0 0 4px; }
   .cat-rail ul { display: flex; gap: 6px; overflow-x: auto; margin-inline: calc(var(--gutter) * -1); padding: 2px var(--gutter) 6px; scrollbar-width: none; }
   .cat-rail ul::-webkit-scrollbar { display: none; }
+  .cat-rail li { flex: none; }
   .cat-opt { flex: none; width: auto; padding: 7px 12px; border: 1px solid var(--border-strong); border-radius: 999px; background: #fff; font-size: .84rem; }
   .cat-opt [data-n] { padding-left: 6px; }
   .cat-opt[aria-pressed="true"] { background: var(--chrome); border-color: var(--chrome); color: #fff; }
@@ -2541,8 +2559,10 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: 6
 .range-link:hover { border-color: rgba(13, 124, 114, .45); translate: 0 -3px; box-shadow: var(--shadow-md); }
 .range-link b { display: block; font-family: var(--font-display); font-size: .98rem; font-weight: 620; line-height: 1.25; }
 .range-link small { display: block; margin-top: 2px; font-size: .8rem; color: var(--muted); }
-.range-link .go { flex: none; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; border: 1px solid var(--border-strong); color: var(--brand); font-size: 15px; transition: background-color .25s var(--ease), color .25s var(--ease), border-color .25s var(--ease); }
-.range-link:hover .go { background: var(--brand); border-color: var(--brand); color: #fff; }
+.range-link .go { flex: none; width: 28px; height: 28px; display: grid; place-items: center; color: var(--brand); font-size: 19px; transition: color .25s var(--ease); }
+.range-link .go .icon { transition: translate .3s var(--ease-out); }
+.range-link:hover .go { color: var(--brand-dark); }
+.range-link:hover .go .icon { translate: 4px 0; }
 @media (max-width: 1180px) {
   .shelf { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 36px 32px; }
   .inst { grid-template-rows: 240px auto; }
@@ -2673,7 +2693,7 @@ html:has(.secbar) .band[id] { scroll-margin-top: calc(16px - var(--band-pad)); }
 .range-tiles { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 12px; }
 .range-tile { display: grid; gap: 8px; align-content: start; padding: 18px 16px; border-radius: 14px; border: 1px solid var(--border); background: #fff; transition: border-color .25s var(--ease), translate .3s var(--ease-out), box-shadow .3s var(--ease); }
 .range-tile:hover { border-color: rgba(13, 124, 114, .45); translate: 0 -3px; box-shadow: var(--shadow-md); }
-.range-tile .card-icon { width: 38px; height: 38px; font-size: 18px; border-radius: 11px; }
+.range-tile .card-icon { height: 28px; font-size: 26px; }
 .range-tile b { font-family: var(--font-display); font-size: .98rem; font-weight: 620; line-height: 1.25; color: var(--ink); }
 .range-tile small { font-size: .8rem; color: var(--muted); }
 .finder-results { padding-top: clamp(40px, 5vw, 64px); }
@@ -2981,11 +3001,11 @@ body.is-touring { overscroll-behavior-y: contain; }
   .hero-actions > .chips::-webkit-scrollbar { display: none; }
   .hero-actions > .chips .chip { flex: none; min-height: 40px; }
   /* a card that is a link: icon beside the text, so a list of twenty is not twenty screens */
-  .grid > a.card:has(> .card-icon):not(.bento-lead) { display: grid; grid-template-columns: 44px minmax(0, 1fr); column-gap: 14px; row-gap: 6px; align-items: start; padding: 20px 20px 22px; }
-  .grid > a.card:has(> .card-icon):not(.bento-lead) > .card-icon { grid-row: 1 / span 3; width: 44px; height: 44px; font-size: 21px; border-radius: 12px; }
+  .grid > a.card:has(> .card-icon):not(.bento-lead) { display: grid; grid-template-columns: 30px minmax(0, 1fr); column-gap: 14px; row-gap: 6px; align-items: start; padding: 20px 20px 22px; }
+  .grid > a.card:has(> .card-icon):not(.bento-lead) > .card-icon { grid-row: 1 / span 3; height: 28px; font-size: 26px; margin-top: 1px; }
   .grid > a.card:has(> .card-icon):not(.bento-lead) > :is(h3, p) { grid-column: 2; }
   .grid > a.card:has(> .card-icon):not(.bento-lead) > h3 { padding-right: 36px; font-size: 1.1rem; }
-  .grid > a.card:has(> .card-icon):not(.bento-lead) > .go { top: 18px; right: 16px; width: 32px; height: 32px; }
+  .grid > a.card:has(> .card-icon):not(.bento-lead) > .go { top: 20px; right: 16px; }
   .grid > a.card:has(> .card-icon):not(.bento-lead) > .card-for { grid-column: 2; padding-top: 4px; }
   .checks.cols { grid-auto-flow: row; grid-template-rows: none; }
   .glance li:nth-child(n + 3) { display: none; }
