@@ -617,7 +617,17 @@
     const dense = canvas.dataset.flowfield === "dense";
     let w = 0, h = 0, dpr = 1, parts = [], raf = 0, visible = false, t = 0;
     const pointer = { x: -9999, y: -9999, active: false };
-    const BG = "4, 21, 19";
+    // The canvas is see-through: the band behind it is the water, and old
+    // strokes fade by wearing away (destination-out) rather than by painting
+    // the band's colour over them, so one script serves the light heroes and
+    // the teal closing band. The three stroke colours come from the
+    // stylesheet (--ff-1 to --ff-3), read once per resize.
+    let inks = [];
+    const readInks = () => {
+      const cs = getComputedStyle(canvas);
+      inks = [1, 2, 3].map((i) => cs.getPropertyValue(`--ff-${i}`).trim());
+      if (inks.some((c) => !c)) inks = ["rgba(95, 180, 166, .4)", "rgba(56, 189, 248, .5)", "rgba(255, 255, 255, .6)"];
+    };
 
     const spawn = (p, anywhere) => {
       p.x = anywhere ? Math.random() * w : -10;
@@ -634,11 +644,20 @@
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       const n = Math.round(Math.max(160, Math.min(dense ? 1100 : 700, (w * h) / (dense ? 1300 : 2200))));
       parts = Array.from({ length: n }, () => { const p = {}; spawn(p, true); return p; });
-      ctx.fillStyle = `rgb(${BG})`; ctx.fillRect(0, 0, w, h);
+      readInks();
+      ctx.clearRect(0, 0, w, h);
     };
     const step = () => {
       t += 1;
-      ctx.fillStyle = `rgba(${BG}, .07)`; ctx.fillRect(0, 0, w, h);
+      // Fade every fourth frame by what four frames of .07 would take
+      // (.93^4 = .75). At .07 a frame the step rounds to nothing below an
+      // alpha of 7/255, so old trails were never cleared and built up into a
+      // haze over the hero; at .25 nothing outlives 1/255.
+      if (t % 4 === 0) {
+        ctx.globalCompositeOperation = "destination-out";
+        ctx.fillStyle = "rgba(0, 0, 0, .25)"; ctx.fillRect(0, 0, w, h);
+        ctx.globalCompositeOperation = "source-over";
+      }
       ctx.lineWidth = 1.1;
       ctx.lineCap = "round";
       for (const p of parts) {
@@ -654,7 +673,7 @@
           }
         }
         const nx = p.x + vx, ny = p.y + vy;
-        ctx.strokeStyle = p.hue < 0.72 ? "rgba(95, 180, 166, .4)" : p.hue < 0.93 ? "rgba(56, 189, 248, .5)" : "rgba(255, 255, 255, .6)";
+        ctx.strokeStyle = p.hue < 0.72 ? inks[0] : p.hue < 0.93 ? inks[1] : inks[2];
         ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(nx, ny); ctx.stroke();
         p.x = nx; p.y = ny;
         if (--p.life < 0 || nx > w + 10 || ny < -10 || ny > h + 10) spawn(p, Math.random() < 0.35);

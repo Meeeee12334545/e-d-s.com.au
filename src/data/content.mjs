@@ -36,6 +36,7 @@ export const site = {
   url: "https://www.e-d-s.com.au",
   // Head office hours, in head office time. Drives the "open now" status.
   openingHours: { days: [1, 2, 3, 4, 5], opens: "07:30", closes: "16:30", timeZone: "Australia/Brisbane" },
+  logo: img("eds-logo-colour.png"),
   logoWhite: img("eds-logo-white-large.png"),
   flowsenseUrl: "https://edsflowsense.au/",
   remoteDataUrl: "https://www.detecdata-en.com/",

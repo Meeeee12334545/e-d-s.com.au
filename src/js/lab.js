@@ -107,7 +107,7 @@
     const X = (min) => L + ((min - (t - WINDOW)) / WINDOW) * pw;
     const Y = (q) => T + ph - (Math.min(q, Q_MAX) / Q_MAX) * ph;
     ctx.clearRect(0, 0, w, h);
-    ctx.font = "500 11px Geist, sans-serif";
+    ctx.font = "500 11px 'EDS Text', 'Helvetica Neue', sans-serif";
     ctx.textBaseline = "middle";
 
     // grid + axes
@@ -180,7 +180,7 @@
     const p = sampleAt(cursor), x = X(p.t);
     ctx.strokeStyle = "rgba(255,255,255,.35)"; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(x, T); ctx.lineTo(x, T + ph); ctx.stroke();
-    const dot = (y, fill, r) => { ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fillStyle = fill; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = "#041513"; ctx.stroke(); };
+    const dot = (y, fill, r) => { ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fillStyle = fill; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = "#133533"; ctx.stroke(); };
     dot(Y(p.base), "#fff", 3.5); dot(Y(p.q), "#5fb4a6", 4.5);
     const extra = Math.max(0, p.q - p.base);
     tipOut.time.textContent = `Day ${day(p.t)} · ${hhmm(p.t)}`;
