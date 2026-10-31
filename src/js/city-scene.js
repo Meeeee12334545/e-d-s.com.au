@@ -349,7 +349,7 @@
         const ink = "fill:none;stroke:#ffffff;stroke-width:.42;stroke-linecap:round";
         el("path", { d: "M.3 -1.5a1.05 1.05 0 0 1 2.1 0", style: ink }, logo);
         el("path", { d: "M0 -.35q.55 -.5 1.1 0t1.1 0", style: ink }, logo);
-        el("text", { x: 3, y: 0, style: 'font:800 3.15px Geist, "Helvetica Neue", Arial, sans-serif;letter-spacing:-.06px;fill:#ffffff' }, logo).textContent = "EDS";
+        el("text", { x: 3, y: 0, style: 'font:700 3.15px "EDS Display", "Helvetica Neue", Arial, sans-serif;letter-spacing:-.06px;fill:#ffffff' }, logo).textContent = "EDS";
         const [, by] = P(0, 0, h);
         el("rect", { x: -2, y: f(by - 2.4), width: 4, height: 2.2, rx: 0.9, style: F("var(--vb, #6fcfc1)") }, g);
         // the end the viewer sees: a windscreen when it is the front, windows in the back doors when not

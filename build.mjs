@@ -205,7 +205,7 @@ function header(r, current, menuTab) {
   <div class="progress" aria-hidden="true"></div>
   <header class="header">
     <div class="wrap">
-      <a class="logo" href="${r}index.html" aria-label="EDS home"><img src="${site.logoWhite}" alt="EDS, Environmental Data Services" width="182" height="48"></a>
+      <a class="logo" href="${r}index.html" aria-label="EDS home"><img src="${site.logo}" alt="EDS, Environmental Data Services" width="189" height="48"></a>
       <nav class="nav" aria-label="Main">
         ${tabbed}
         ${mega("Products", "products", pItems, { href: "products/index.html", label: "All products" })}
@@ -226,7 +226,7 @@ function header(r, current, menuTab) {
     <div class="drawer-scrim"></div>
     <div class="drawer-panel">
       <div class="drawer-head">
-        <a class="logo" href="${r}index.html"><img src="${site.logoWhite}" alt="EDS" width="182" height="48"></a>
+        <a class="logo" href="${r}index.html"><img src="${site.logo}" alt="EDS" width="189" height="48"></a>
         <button class="burger drawer-close" style="display:inline-flex" aria-label="Close menu">${icon("x", false)}</button>
       </div>
       <button class="drawer-search" type="button" data-search-open>${icon("search", false)}<span>Search products, services, documents</span></button>
@@ -248,7 +248,7 @@ function footer(r) {
     <div class="wrap">
       <div class="footer-grid">
         <div>
-          <a class="logo" href="${r}index.html"><img src="${site.logoWhite}" alt="EDS, Environmental Data Services" width="106" height="28" loading="lazy"></a>
+          <a class="logo" href="${r}index.html"><img src="${site.logo}" alt="EDS, Environmental Data Services" width="110" height="28" loading="lazy"></a>
           <p>${site.tagline}</p>
           <div class="footer-contact">
             <a href="${site.phoneHref}">${icon("phone")}${site.phone}</a>
@@ -397,7 +397,7 @@ function layout({ file, title, description, current, menuTab, body, scripts = []
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(description)}">
-<meta name="theme-color" content="#041513">${process.env.PREVIEW ? '\n<meta name="robots" content="noindex, nofollow">' : ""}${file === "404.html" ? "" : `\n<link rel="canonical" href="${url}">`}
+<meta name="theme-color" content="#ffffff">${process.env.PREVIEW ? '\n<meta name="robots" content="noindex, nofollow">' : ""}${file === "404.html" ? "" : `\n<link rel="canonical" href="${url}">`}
 <meta property="og:site_name" content="EDS, Environmental Data Services">
 <meta property="og:locale" content="en_AU">
 <meta property="og:type" content="website">
@@ -411,7 +411,7 @@ function layout({ file, title, description, current, menuTab, body, scripts = []
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" type="image/png" sizes="32x32" href="${r}assets/img/favicon-32.png">
 <link rel="apple-touch-icon" href="${r}assets/img/apple-touch-icon.png">
-<link rel="preload" href="${r}assets/fonts/geist-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="${r}assets/fonts/saira-semiexpanded-latin.woff2" as="font" type="font/woff2" crossorigin>
 <script>document.documentElement.classList.add("js")</script>
 <link rel="stylesheet" href="${asset(r, "css/site.css")}">
 ${jsonLd(file, crumbs)}
@@ -456,7 +456,7 @@ ${scripts.map((s) => `<script src="${asset(r, `js/${s}`)}" defer></script>`).joi
 /* ------------------------------------------------------------------ */
 // `visual` fills the right of the hero on wide screens: a product photo on
 // brand pages, an "On this page" list on longer service pages.
-const pageHero = (r, { crumbs = [], iconName, eyebrow, title, lede, actions = "", after = "", visual = "", compact = false }) => {
+const pageHero = (r, { crumbs = [], iconName, eyebrow, title, lede, actions = "", after = "", visual = "", compact = false, cls = "" }) => {
   heroCrumbs = crumbs;
   const copy = `
     <nav class="crumbs" aria-label="Breadcrumb"><a href="${r}index.html">Home</a>${crumbs.map(([label, href]) => `${icon("chevron-down", false)}${href ? `<a href="${r}${href}">${esc(label)}</a>` : `<span aria-current="page">${esc(label)}</span>`}`).join("")}</nav>
@@ -467,7 +467,7 @@ const pageHero = (r, { crumbs = [], iconName, eyebrow, title, lede, actions = ""
     ${actions ? `<div class="hero-actions" data-reveal style="--i:2">${actions}</div>` : ""}
     ${after}`;
   return `
-<section class="page-hero dark${visual ? " has-visual" : ""}${compact ? " compact" : ""}">
+<section class="page-hero${visual ? " has-visual" : ""}${compact ? " compact" : ""}${cls ? ` ${cls}` : ""}">
   <canvas data-flowfield aria-hidden="true"></canvas>
   <div class="wrap">${visual ? `<div class="hero-copy">${copy}</div>${visual}` : copy}</div>
 </section>`;
@@ -624,9 +624,9 @@ const lidottDemo = ({ link = "" } = {}) => `
       <rect id="lid-water" x="0" y="300" width="360" height="80" fill="url(#lid-wg)" clip-path="url(#lid-clip)"/>
       <clipPath id="lid-clip"><rect x="100" y="42" width="160" height="340"/><rect x="0" y="330" width="100" height="50"/><rect x="260" y="330" width="100" height="50"/></clipPath>
       <polygon id="lid-beam" points="180,96 170,300 190,300" fill="rgba(95,180,166,.22)" stroke="rgba(95,180,166,.7)" stroke-dasharray="3 4"/>
-      <line x1="100" x2="260" y1="225" y2="225" stroke="#f59e0b" stroke-dasharray="5 5"/><text x="268" y="229" fill="#f59e0b" font-size="12" font-weight="600">High 2.0 m</text>
-      <line x1="100" x2="260" y1="147.500" y2="147.500" stroke="#ef4444" stroke-dasharray="5 5"/><text x="268" y="151" fill="#f87171" font-size="12" font-weight="600">High-high 3.0 m</text>
-      <rect x="92" y="28" width="176" height="12" rx="3" fill="#26313f" stroke="rgba(255,255,255,.3)"/>
+      <line x1="100" x2="260" y1="225" y2="225" stroke="#f59e0b" stroke-dasharray="5 5"/><text x="268" y="229" fill="#f59e0b" font-size="12" font-weight="500">High 2.0 m</text>
+      <line x1="100" x2="260" y1="147.500" y2="147.500" stroke="#ef4444" stroke-dasharray="5 5"/><text x="268" y="151" fill="#f87171" font-size="12" font-weight="500">High-high 3.0 m</text>
+      <rect x="92" y="28" width="176" height="12" rx="3" fill="#2e4543" stroke="rgba(255,255,255,.3)"/>
       <rect x="168" y="42" width="24" height="10" fill="#8fa3c0"/>
       <rect x="160" y="52" width="40" height="44" rx="8" fill="#e8f3f1" stroke="#5fb4a6" stroke-width="2"/>
       <circle class="lid-led" cx="180" cy="68" r="5" fill="#22c55e"/>
@@ -663,7 +663,7 @@ function easDemo() {
       ${ticks}
       <line id="eas-needle" x1="200" y1="200" x2="200" y2="78" stroke="#fff" stroke-width="4" stroke-linecap="round" style="transition:transform .25s linear"/>
       <circle cx="200" cy="200" r="9" fill="#fff"/>
-      <text id="eas-num" x="200" y="250" text-anchor="middle" fill="#fff" font-size="40" font-weight="650" font-family="Geist, sans-serif">930</text>
+      <text id="eas-num" x="200" y="250" text-anchor="middle" fill="#fff" font-size="40" font-weight="560" font-family="'EDS Display', sans-serif">930</text>
       <polyline id="eas-spark" fill="none" stroke="#5fb4a6" stroke-width="2" stroke-linejoin="round"/>
       <text x="200" y="314" text-anchor="middle" fill="rgba(255,255,255,.5)" font-size="10">last 60 minutes</text>
     </svg>
@@ -692,26 +692,26 @@ function fsScreen() {
     ${pipe("M40 60H230", "#3b82f6")}${pipe("M230 60H440", "#eab308")}${pipe("M90 60V150", "#3b82f6")}${pipe("M230 60V150", "#f97316", 6)}${pipe("M370 60V150", "#eab308")}
     ${pipe("M40 150H230", "#eab308")}${pipe("M230 150H440", "#ef4444", 7)}${pipe("M230 150V230", "#ef4444", 7)}${pipe("M90 230H230", "#f97316", 6)}${pipe("M230 230H420", "#3b82f6")}
     <g fill="#fff" stroke="#0c5f59" stroke-width="2"><circle cx="230" cy="60" r="5"/><circle cx="230" cy="150" r="5"/><circle cx="90" cy="150" r="5"/><circle cx="370" cy="150" r="5"/><circle cx="230" cy="230" r="5"/></g>
-    <g font-size="10" font-family="Geist, sans-serif" fill="#26313f"><rect x="330" y="186" width="136" height="72" rx="8" fill="#fff" stroke="#dfe5ec"/><text x="342" y="204" font-weight="600">I/I severity</text>
+    <g font-size="10" font-family="'EDS Text', 'Helvetica Neue', sans-serif" fill="#2e4543"><rect x="330" y="186" width="136" height="72" rx="8" fill="#fff" stroke="#dfe5ec"/><text x="342" y="204" font-weight="500">I/I severity</text>
     <rect x="342" y="212" width="14" height="6" rx="3" fill="#3b82f6"/><text x="362" y="218">Low</text><rect x="402" y="212" width="14" height="6" rx="3" fill="#eab308"/><text x="422" y="218">Moderate</text>
     <rect x="342" y="232" width="14" height="6" rx="3" fill="#f97316"/><text x="362" y="238">High</text><rect x="402" y="232" width="14" height="6" rx="3" fill="#ef4444"/><text x="422" y="238">Severe</text></g></svg>`;
   const blockage = `<svg viewBox="0 0 480 270" preserveAspectRatio="xMidYMid meet">
     <g stroke="#eef2f6"><path d="M40 50H460M40 100H460M40 150H460M40 200H460"/></g>
     <path class="fs-draw" pathLength="100" d="M40 190 C90 186 120 188 160 180 S230 168 270 150 S350 110 390 86 S440 62 460 54" fill="none" stroke="#dc2626" stroke-width="3" stroke-linecap="round"/>
     <path class="fs-draw" pathLength="100" d="M40 120 C80 114 110 126 150 120 S220 114 260 122 S340 116 380 121 S440 118 460 120" fill="none" stroke="#0d7c72" stroke-width="3" stroke-linecap="round"/>
-    <g font-size="11" font-family="Geist, sans-serif"><text x="46" y="210" fill="#b91c1c" font-weight="600">Depth, creeping upward</text><text x="46" y="108" fill="#095f57" font-weight="600">Flow, unchanged</text>
-    <rect x="296" y="22" width="164" height="26" rx="13" fill="#fef2f2" stroke="#fecaca"/><text x="310" y="39" fill="#b91c1c" font-weight="600">Likely obstruction building</text></g></svg>`;
+    <g font-size="11" font-family="'EDS Text', 'Helvetica Neue', sans-serif"><text x="46" y="210" fill="#b91c1c" font-weight="500">Depth, creeping upward</text><text x="46" y="108" fill="#095f57" font-weight="500">Flow, unchanged</text>
+    <rect x="296" y="22" width="164" height="26" rx="13" fill="#fef2f2" stroke="#fecaca"/><text x="310" y="39" fill="#b91c1c" font-weight="500">Likely obstruction building</text></g></svg>`;
   const psm = `<svg viewBox="0 0 480 270" preserveAspectRatio="xMidYMid meet">
     <rect x="150" y="30" width="180" height="210" rx="6" fill="#f4f7fa" stroke="#c8d2dc" stroke-width="2"/>
     <rect class="fs-well" x="152" y="130" width="176" height="108" fill="#5cc2b6" opacity=".85"/>
-    <g font-size="10" font-family="Geist, sans-serif" stroke-dasharray="5 4">
-      <path d="M130 60H350" stroke="#dc2626"/><path d="M130 92H350" stroke="#d97706"/><path d="M130 130H350" stroke="#0d7c72"/><path d="M130 200H350" stroke="#5b6878"/></g>
-    <g font-size="10.5" font-family="Geist, sans-serif" fill="#26313f"><text x="358" y="63">Overflow</text><text x="358" y="95">Surcharge</text><text x="358" y="133">Pump start</text><text x="358" y="203">Pump stop</text></g>
+    <g font-size="10" font-family="'EDS Text', 'Helvetica Neue', sans-serif" stroke-dasharray="5 4">
+      <path d="M130 60H350" stroke="#dc2626"/><path d="M130 92H350" stroke="#d97706"/><path d="M130 130H350" stroke="#0d7c72"/><path d="M130 200H350" stroke="#4e6361"/></g>
+    <g font-size="10.5" font-family="'EDS Text', 'Helvetica Neue', sans-serif" fill="#2e4543"><text x="358" y="63">Overflow</text><text x="358" y="95">Surcharge</text><text x="358" y="133">Pump start</text><text x="358" y="203">Pump stop</text></g>
     <g transform="translate(46 118) scale(2.4)" fill="none" stroke="#0c5f59" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g class="fs-fan">${iconCache.get("fan") || ""}</g></g>
-    <text x="34" y="200" font-size="10.5" font-family="Geist, sans-serif" fill="#26313f" font-weight="600">Pump 1 running</text></svg>`;
+    <text x="34" y="200" font-size="10.5" font-family="'EDS Text', 'Helvetica Neue', sans-serif" fill="#2e4543" font-weight="500">Pump 1 running</text></svg>`;
   const alarms = `<svg viewBox="0 0 480 270" preserveAspectRatio="xMidYMid meet">
     ${[["#dc2626", "#fef2f2", "High-high level", "Site 07 · 2 min ago · SMS sent to duty officer", 26], ["#d97706", "#fffbeb", "Blockage Watch: depth drifting", "Site 14 · dry weather only · ranked 1 of 38", 104], ["#16a34a", "#f0fdf4", "Returned to normal", "Site 22 · acknowledged by the duty officer", 182]]
-      .map(([c, bg, t, s, y], i) => `<g class="fs-toast" style="--i:${i}"><rect x="30" y="${y}" width="420" height="62" rx="12" fill="${bg}" stroke="${c}" stroke-opacity=".35"/><circle cx="60" cy="${y + 31}" r="9" fill="${c}"/><text x="84" y="${y + 27}" font-size="13" font-weight="650" font-family="Geist, sans-serif" fill="#05090f">${t}</text><text x="84" y="${y + 45}" font-size="10.5" font-family="Geist, sans-serif" fill="#5b6878">${s}</text></g>`).join("")}</svg>`;
+      .map(([c, bg, t, s, y], i) => `<g class="fs-toast" style="--i:${i}"><rect x="30" y="${y}" width="420" height="62" rx="12" fill="${bg}" stroke="${c}" stroke-opacity=".35"/><circle cx="60" cy="${y + 31}" r="9" fill="${c}"/><text x="84" y="${y + 27}" font-size="13" font-weight="650" font-family="'EDS Text', 'Helvetica Neue', sans-serif" fill="#0f2b2a">${t}</text><text x="84" y="${y + 45}" font-size="10.5" font-family="'EDS Text', 'Helvetica Neue', sans-serif" fill="#4e6361">${s}</text></g>`).join("")}</svg>`;
   const views = [["I/I heat map", "Severity by pipe", heat], ["Blockage Watch", "Dry days only", blockage], ["Pump Station Manager", "Wet well, to scale", psm], ["Alarms", "Sent to people, not addresses", alarms]];
   return `
   <div class="fs-screen" data-reveal="right">
@@ -730,7 +730,7 @@ const liveCard = () => `
   <div class="live-value"><b data-live="q">41.8</b><span>L/s</span></div>
   <p class="live-label">Flow over the last 24 hours</p>
   <svg class="live-chart" viewBox="0 0 300 86" aria-hidden="true">
-    <defs><linearGradient id="live-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5fb4a6" stop-opacity=".32"/><stop offset="1" stop-color="#5fb4a6" stop-opacity="0"/></linearGradient></defs>
+    <defs><linearGradient id="live-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3d9991" stop-opacity=".26"/><stop offset="1" stop-color="#3d9991" stop-opacity="0"/></linearGradient></defs>
     <path class="live-area" fill="url(#live-fill)"/><path class="live-dwf"/><path class="live-line"/><circle class="live-dot" r="3.5"/>
   </svg>
   <div class="live-read">
@@ -906,7 +906,7 @@ add({
     // to action. The flow lab lives on the sewer flow and I&I pages, the white
     // papers on Resources, and the office map on About and Contact.
     return `
-<section class="hero dark">
+<section class="hero">
   <canvas class="hero-canvas" data-flowfield="dense" aria-hidden="true"></canvas>
   <div class="wrap hero-body">
     <div class="hero-main">
@@ -1501,9 +1501,11 @@ add({
   current: "products",
   scripts: ["widgets.js"],
   body: (r) => `
-${pageHero(r, { crumbs: [["Products", "products/index.html"], ["Detectronic", "products/detectronic.html"], ["LIDoTT Alarm"]], iconName: "bell", eyebrow: "Detectronic", title: "LIDoTT Alarm", lede: C.lidott.lede, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${contactHref(r, { topic: "Product pricing", product: "LIDoTT Alarm (Detectronic)" })}">Request pricing ${icon("arrow-right")}</a>${quoteBtn(quoteItem(products.find((p) => p.href === "products/lidott-alarm.html")), "btn-lg on-dark")}<a class="btn btn-ghost btn-lg" href="${C.lidott.datasheet}" rel="noopener">${icon("download")} Datasheet</a>`, visual: heroProduct(C.lidott.image, "LIDoTT Alarm") })}
-<section class="section dark" style="padding-top:0"><div class="wrap">
-  <div class="hl-grid" style="margin-bottom:clamp(40px,5vw,64px)">${C.lidott.highlights.map(([ic, t, d], i) => `<div class="hl holder" data-reveal style="--i:${i % 3}">${icon(ic)}<b>${t}</b><span>${d}</span></div>`).join("")}</div>
+${pageHero(r, { crumbs: [["Products", "products/index.html"], ["Detectronic", "products/detectronic.html"], ["LIDoTT Alarm"]], iconName: "bell", eyebrow: "Detectronic", title: "LIDoTT Alarm", lede: C.lidott.lede, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${contactHref(r, { topic: "Product pricing", product: "LIDoTT Alarm (Detectronic)" })}">Request pricing ${icon("arrow-right")}</a>${quoteBtn(quoteItem(products.find((p) => p.href === "products/lidott-alarm.html")), "btn-lg")}<a class="btn btn-ghost btn-lg" href="${C.lidott.datasheet}" rel="noopener">${icon("download")} Datasheet</a>`, visual: heroProduct(C.lidott.image, "LIDoTT Alarm") })}
+<section class="section hl-band"><div class="wrap">
+  <div class="hl-grid">${C.lidott.highlights.map(([ic, t, d], i) => `<div class="hl holder" data-reveal style="--i:${i % 3}">${icon(ic)}<b>${t}</b><span>${d}</span></div>`).join("")}</div>
+</div></section>
+<section class="section dark band"><div class="wrap">
   <div class="section-head"><p class="eyebrow">See it work</p><h2 class="h-lg" data-reveal>Raise the water. Watch the alarm.</h2></div>
   ${lidottDemo()}
 </div></section>
@@ -1527,9 +1529,9 @@ add({
   description: "All-in-one radar level monitor with alarms, up to 20 m range with ± 5 mm accuracy. LoRaWAN or 4G connectivity, battery over 5 years.",
   current: "products",
   body: (r) => `
-${pageHero(r, { crumbs: [["Products", "products/index.html"], ["Detectronic", "products/detectronic.html"], ["Alarm2"]], iconName: "bell-ring", eyebrow: "Detectronic", title: "Alarm2", lede: C.alarm2.lede, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${contactHref(r, { topic: "Product pricing", product: "Alarm2 (Detectronic)" })}">Request pricing ${icon("arrow-right")}</a>${quoteBtn(quoteItem(products.find((p) => p.href === "products/alarm2.html")), "btn-lg on-dark")}<a class="btn btn-ghost btn-lg" href="${C.alarm2.datasheet}" rel="noopener">${icon("download")} Datasheet</a><a class="btn btn-ghost btn-lg" href="${C.alarm2.manual}" rel="noopener">${icon("download")} Manual</a>`, visual: heroProduct(C.alarm2.image, "Alarm2") })}
-<section class="section dark" style="padding-top:0"><div class="wrap">
-  <div class="hl-grid" style="margin-bottom:clamp(40px,5vw,64px)">${C.alarm2.highlights.map(([ic, t, d], i) => `<div class="hl holder" data-reveal style="--i:${i % 3}">${icon(ic)}<b>${t}</b><span>${d}</span></div>`).join("")}</div>
+${pageHero(r, { crumbs: [["Products", "products/index.html"], ["Detectronic", "products/detectronic.html"], ["Alarm2"]], iconName: "bell-ring", eyebrow: "Detectronic", title: "Alarm2", lede: C.alarm2.lede, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${contactHref(r, { topic: "Product pricing", product: "Alarm2 (Detectronic)" })}">Request pricing ${icon("arrow-right")}</a>${quoteBtn(quoteItem(products.find((p) => p.href === "products/alarm2.html")), "btn-lg")}<a class="btn btn-ghost btn-lg" href="${C.alarm2.datasheet}" rel="noopener">${icon("download")} Datasheet</a><a class="btn btn-ghost btn-lg" href="${C.alarm2.manual}" rel="noopener">${icon("download")} Manual</a>`, visual: heroProduct(C.alarm2.image, "Alarm2") })}
+<section class="section hl-band"><div class="wrap">
+  <div class="hl-grid">${C.alarm2.highlights.map(([ic, t, d], i) => `<div class="hl holder" data-reveal style="--i:${i % 3}">${icon(ic)}<b>${t}</b><span>${d}</span></div>`).join("")}</div>
 </div></section>
 <section class="section"><div class="wrap split">
   <div>
@@ -1579,8 +1581,8 @@ for (const pg of C.productPages) {
     description: pg.description,
     current: "products",
     body: (r) => `
-${pageHero(r, { crumbs: [["Products", "products/index.html"], [b.name, `products/${b.slug}.html`], [pg.name]], iconName: pg.icon, eyebrow: pg.tag, title: pg.name, lede: pg.lede, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${contactHref(r, pricing)}">Request pricing ${icon("arrow-right")}</a>${quoteBtn(quoteItem(products.find((p) => p.href === `products/${pg.slug}.html`)), "btn-lg on-dark")}<a class="btn btn-ghost btn-lg" href="${datasheet.href}" rel="noopener">${icon("download")} Datasheet</a>`, visual: heroProduct(pg.image, pg.name) })}
-<section class="section dark" style="padding-top:0"><div class="wrap">
+${pageHero(r, { crumbs: [["Products", "products/index.html"], [b.name, `products/${b.slug}.html`], [pg.name]], iconName: pg.icon, eyebrow: pg.tag, title: pg.name, lede: pg.lede, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${contactHref(r, pricing)}">Request pricing ${icon("arrow-right")}</a>${quoteBtn(quoteItem(products.find((p) => p.href === `products/${pg.slug}.html`)), "btn-lg")}<a class="btn btn-ghost btn-lg" href="${datasheet.href}" rel="noopener">${icon("download")} Datasheet</a>`, visual: heroProduct(pg.image, pg.name) })}
+<section class="section hl-band"><div class="wrap">
   <div class="hl-grid">${pg.highlights.map(([ic, t, d], i) => `<div class="hl holder" data-reveal style="--i:${i % 3}">${icon(ic)}<b>${esc(t)}</b><span>${esc(d)}</span></div>`).join("")}</div>
 </div></section>
 <section class="section"><div class="wrap split">
@@ -1655,16 +1657,16 @@ const fsTrace = (t) => `
 <figure class="fs-trace" data-reveal>
   <svg viewBox="0 0 640 230" aria-hidden="true">
     <g stroke="#dfe5ec" stroke-width="1"><path d="M20 20V200M20 200H620"/></g>
-    <g stroke-dasharray="5 5" stroke-width="1.3"><path d="M20 56H620" stroke="#0d7c72"/><path d="M20 168H620" stroke="#5b6878"/></g>
+    <g stroke-dasharray="5 5" stroke-width="1.3"><path d="M20 56H620" stroke="#0d7c72"/><path d="M20 168H620" stroke="#4e6361"/></g>
     <path d="M20 168 L170 56 L198 168 L348 56 L376 168 L526 56 L554 168 L620 118 V200 H20 Z" fill="#5fb4a6" fill-opacity=".14"/>
     <path class="draw" pathLength="100" d="M20 168 L170 56 L198 168 L348 56 L376 168 L526 56 L554 168 L620 118" fill="none" stroke="#0c5f59" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
-    <g font-family="Geist, sans-serif" font-size="11.5" fill="#26313f">
+    <g font-family="'EDS Text', 'Helvetica Neue', sans-serif" font-size="11.5" fill="#2e4543">
       <text x="572" y="50" font-weight="650">Start</text><text x="574" y="184" font-weight="650">Stop</text>
-      <text x="22" y="216" fill="#5b6878">${esc(t.rise)}</text>
-      <text x="206" y="40" fill="#5b6878">${esc(t.fall)}</text>
-      <text x="22" y="40" fill="#5b6878" font-size="10.5">Wet well level</text>
+      <text x="22" y="216" fill="#4e6361">${esc(t.rise)}</text>
+      <text x="206" y="40" fill="#4e6361">${esc(t.fall)}</text>
+      <text x="22" y="40" fill="#4e6361" font-size="10.5">Wet well level</text>
     </g>
-    <g fill="none" stroke="#5b6878" stroke-width="1"><path d="M96 203 L96 194 L90 182"/><path d="M212 44 L212 54 L188 100"/></g>
+    <g fill="none" stroke="#4e6361" stroke-width="1"><path d="M96 203 L96 194 L90 182"/><path d="M212 44 L212 54 L188 100"/></g>
   </svg>
   <figcaption><b>${esc(t.title)}</b> ${esc(t.text)}</figcaption>
 </figure>`;
@@ -1678,7 +1680,7 @@ add({
     const first = FS.tour.slice(0, cut), second = FS.tour.slice(cut);
     const walkthrough = contactHref(r, { topic: "EDS FlowSense" });
     return `
-${pageHero(r, { crumbs: [["FlowSense"]], eyebrow: "Sewer network intelligence", title: FS.title, lede: FS.lede, compact: true, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${site.flowsenseUrl}" rel="noopener">Open FlowSense ${icon("arrow-up-right")}</a><a class="btn btn-ghost btn-lg" href="${walkthrough}">Request a walkthrough</a>` })}
+${pageHero(r, { cls: "fs-hero", crumbs: [["FlowSense"]], eyebrow: "Sewer network intelligence", title: FS.title, lede: FS.lede, compact: true, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${site.flowsenseUrl}" rel="noopener">Open FlowSense ${icon("arrow-up-right")}</a><a class="btn btn-ghost btn-lg" href="${walkthrough}">Request a walkthrough</a>` })}
 <section class="fs-stage" aria-label="The FlowSense Network Overview">
   <div class="wrap">
     <figure class="fs-stage-shot">
@@ -2146,9 +2148,14 @@ await cp(path.join(ROOT, "src/css"), path.join(DIST, "assets/css"), { recursive:
 await cp(path.join(ROOT, "src/js"), path.join(DIST, "assets/js"), { recursive: true });
 await cp(path.join(ROOT, "src/assets/img"), path.join(DIST, "assets/img"), { recursive: true });
 await cp(path.join(ROOT, "src/assets/docs"), path.join(DIST, "assets/docs"), { recursive: true });
-for (const [pkg, f] of [["geist", "geist-latin-wght-normal.woff2"], ["geist-mono", "geist-mono-latin-wght-normal.woff2"]]) {
-  await cp(path.join(ROOT, `node_modules/@fontsource-variable/${pkg}/files/${f}`), path.join(DIST, "assets/fonts", f));
+// Saira for headings, cut to its semi-expanded width by tools/fonts.py;
+// Aileron, which stands in for Helvetica Neue where a visitor has none; and
+// Geist Mono for readouts.
+await cp(path.join(ROOT, "src/assets/fonts"), path.join(DIST, "assets/fonts"), { recursive: true });
+for (const f of ["aileron-latin-400-normal.woff2", "aileron-latin-600-normal.woff2", "aileron-latin-700-normal.woff2"]) {
+  await cp(path.join(ROOT, `node_modules/@fontsource/aileron/files/${f}`), path.join(DIST, "assets/fonts", f));
 }
+await cp(path.join(ROOT, "node_modules/@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2"), path.join(DIST, "assets/fonts/geist-mono-latin-wght-normal.woff2"));
 // Google shows about 60 characters of a title and 160 of a description, and
 // pages that share either are hard to tell apart in its results.
 for (const [i, p] of pages.entries()) {
