@@ -81,6 +81,7 @@
     const set = (m) => {
       m = Math.max(0.2, Math.min(3.8, m));
       range.value = m;
+      range.setAttribute("aria-valuetext", `${m.toFixed(2)} metres`);
       const wy = y(m);
       water.setAttribute("y", wy); water.setAttribute("height", BOT - wy);
       beam.setAttribute("points", `180,${TOP + 26} ${180 - (wy - TOP - 26) * 0.09 - 3},${wy} ${180 + (wy - TOP - 26) * 0.09 + 3},${wy}`);

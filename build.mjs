@@ -100,9 +100,10 @@ function photo(name, alt, { sizes = "(max-width: 980px) calc(100vw - 40px), 740p
 // A captioned photograph: { photo, alt, caption }. Every photo is shown in
 // the same 3:2 frame with the same grade (site.css); `pos` says which part
 // to keep when the crop bites ("50% 20%" favours the top), and `plain: true`
-// is for a drawing, shown whole and in its own colours.
-const photoFigure = (f, { i, sizes } = {}) => `
-<figure class="photo${f.plain ? " photo-plain" : ""}" data-reveal${i != null ? ` style="--i:${i}"` : ""}>
+// is for a drawing, shown whole and in its own colours. A panorama under a
+// page's opening text (`cls: "pano"`, overviewHtml()) is shown whole too.
+const photoFigure = (f, { i, sizes, cls = "" } = {}) => `
+<figure class="photo${f.plain ? " photo-plain" : ""}${cls ? ` ${cls}` : ""}" data-reveal${i != null ? ` style="--i:${i}"` : ""}>
   <div class="photo-frame"${f.pos ? ` style="--pos:${esc(f.pos)}"` : ""}>${photo(f.photo, f.alt, { sizes })}</div>
   ${f.caption ? `<figcaption>${esc(f.caption)}</figcaption>` : ""}
 </figure>`;
@@ -141,8 +142,9 @@ const logoGrid = () => `<ul class="logo-grid" aria-label="Clients">${C.clients.m
 const proofRow = () => `<div class="proof-row">${C.proof.map((p, i) => `<div data-reveal style="--i:${i}"><b>${esc(p.lead)}</b><span>${esc(p.text)}</span></div>`).join("")}</div>`;
 // Two photographs side by side, across the page.
 const figureRow = (figs) => `<div class="photo-row">${figs.map((f, i) => photoFigure(f, { i, sizes: "(max-width: 700px) calc(100vw - 40px), (max-width: 980px) calc(50vw - 28px), 612px" })).join("")}</div>`;
-// A product shot or drawing in the sidebar: { src, alt, caption, w, h }.
-const asideFigure = (s) => (s.asideFigure ? `<figure class="aside-card aside-figure" data-reveal="right"><img src="${s.asideFigure.src}" alt="${esc(s.asideFigure.alt)}" width="${s.asideFigure.w}" height="${s.asideFigure.h}" loading="lazy"><figcaption>${esc(s.asideFigure.caption)}</figcaption></figure>` : "");
+// A product shot beside the opening text: { src, alt, caption, w, h }, on a
+// tonal plate with its caption under it, like the photographs.
+const asideFigure = (s) => (s.asideFigure ? `<figure class="aside-figure" data-reveal><div class="aside-plate"><img src="${s.asideFigure.src}" alt="${esc(s.asideFigure.alt)}" width="${s.asideFigure.w}" height="${s.asideFigure.h}" loading="lazy"></div><figcaption>${esc(s.asideFigure.caption)}</figcaption></figure>` : "");
 
 /* ------------------------------------------------------------------ */
 /* layout                                                              */
@@ -643,7 +645,7 @@ const labSection = ({ eyebrow = "", title = "See what a storm does to a sewer.",
         <div class="panel-head">
           <div class="panel-title">${icon("activity", false)} Sewer hydrograph</div>
           <div class="lab-status">
-            <span class="lab-chip" id="lab-raining" role="status">${icon("cloud-rain", false)}Raining <b id="lab-rain-out">0</b>&nbsp;mm/h</span>
+            <span class="lab-chip" id="lab-raining">${icon("cloud-rain", false)}Raining <b id="lab-rain-out">0</b>&nbsp;mm/h</span>
             <time class="lab-clock" id="lab-clock" aria-label="Simulated time">Day 1 · 06:00</time>
           </div>
         </div>
@@ -1283,20 +1285,22 @@ const blockHtml = (b) => `
 
 // The sections of a service or solution page, for the section bar under the
 // hero: its blocks, plus any comparison table, results or demo below them.
+// Labels are short so the bar fits on a desktop: a block's `nav` is its name
+// in the bar ("" leaves it out), and the ids still come from the headings.
 function sectionsOf(s) {
-  const list = [...(s.blocks || []).map((b) => [slugify(b.heading), b.heading])];
-  if (s.compare) list.push([slugify(s.compare.heading), s.compare.heading]);
+  const list = [...(s.blocks || []).map((b) => [slugify(b.heading), b.nav ?? (b.faq ? "Questions" : b.heading)])];
+  if (s.compare) list.push([slugify(s.compare.heading), s.compare.nav ?? s.compare.heading]);
   // The evidence sits straight after the first feature band (bandsOf()), so
   // a visitor meets a result before the reference material.
   if (resultsFor(s.slug).length) {
     const after = (s.blocks || []).findIndex((b) => b.items);
-    list.splice(after < 0 ? list.length : after + 1, 0, ["results", "Results from the field"]);
+    list.splice(after < 0 ? list.length : after + 1, 0, ["results", "Results"]);
   }
-  if (s.process) list.push(["how-it-runs", "How a program runs"]);
-  if (s.widget === "lab") list.push(["flow-lab", "Try the flow lab"]);
-  if (s.widget === "lidott") list.push(["alarm-demo", "Try the alarm"]);
+  if (s.process) list.push(["how-it-runs", "How it runs"]);
+  if (s.widget === "lab") list.push(["flow-lab", "Flow lab"]);
+  if (s.widget === "lidott") list.push(["alarm-demo", "Alarm demo"]);
   if (s.widget === "eas") list.push(["asset-score", "Try the EDS Asset Score"]);
-  return list;
+  return list.filter(([, label]) => label);
 }
 
 // A slim bar of the page's sections. It sits under the hero, sticks under the
@@ -1328,7 +1332,10 @@ const glanceOf = (s) => {
 function overviewHtml(s) {
   const paras = (list) => list.map((p) => `<p>${esc(p)}</p>`).join("");
   const sizes = "(max-width: 980px) calc(100vw - 40px), 580px";
-  const visual = s.figure ? photoFigure(s.figure, { sizes })
+  // A panorama is shown whole, across the page under the text: cropped to
+  // 3:2 beside the text it lost most of the picture and was drawn soft.
+  const pano = s.figure && PHOTOS[s.figure.photo]?.[0].w / PHOTOS[s.figure.photo]?.[0].h > 2.4;
+  const visual = s.figure ? (pano ? "" : photoFigure(s.figure, { sizes }))
     : s.diagram ? diagram(s.diagram, C.diagrams[s.diagram])
     : s.screen ? screenFigure(s.screen, { tall: true, sizes })
     : asideFigure(s);
@@ -1339,6 +1346,7 @@ function overviewHtml(s) {
   return `
 <section class="section band" id="overview"><div class="wrap">
   <div class="intro">${text}${visual}</div>
+  ${pano ? photoFigure(s.figure, { sizes: "(max-width: 1320px) 94vw, 1240px", cls: "pano" }) : ""}
   ${s.figures ? figureRow(s.figures) : ""}
 </div></section>`;
 }
@@ -1351,8 +1359,9 @@ const paperLinks = (ids = []) => ids.map((id) => { const p = C.papers.find((x) =
 // Each section gets the whole width and a layout that suits it, so no two
 // neighbours look alike: the first feature list as cards, later feature
 // lists as a row of deliverables, checklists in two columns, tables across
-// the page, questions beside their heading, numbered steps in a row. Every
-// band heading is set at the same size.
+// the page, questions beside their heading, numbered steps in a row. A list
+// of two, or one that follows a list of the same kind, sits beside its
+// heading as ruled rows instead. Every band heading is set at the same size.
 const isSteps = (b) => Boolean(b.list && (b.steps || b.heading.includes("approach")));
 const bandHead = (b) => `<div class="band-head"><h2 class="h-lg" data-reveal>${esc(b.heading)}</h2>${b.lede ? `<p class="lede" data-reveal style="--i:1">${esc(b.lede)}</p>` : ""}</div>`;
 const flatItems = (items) => `<ul class="flat-list">${items.map(([t, d], n) => `<li data-reveal style="--i:${n % 4}"><span><b>${esc(t)}</b><span>${esc(d)}</span></span></li>`).join("")}</ul>`;
@@ -1378,6 +1387,11 @@ function bandsOf(s, r) {
     } else if (b.items && !cards) {
       cards = true;
       out.push({ id, cls: "band-cards", html: `${bandHead(b)}<div class="feature-grid n${b.items.length}">${b.items.map(([t, d], n) => `<div class="feature holder" data-reveal style="--i:${n % 4}"><div><b>${esc(t)}</b><span>${esc(d)}</span></div></div>`).join("")}</div>${bandShot(b)}` });
+    } else if (b.items && (b.items.length <= 2 || out.at(-1)?.cls === "band-deliv")) {
+      // two points, or a list straight after a row of deliverables: ruled
+      // rows beside the heading, so a short band is not mostly empty and
+      // two neighbours never share a layout
+      out.push({ id, cls: "band-split", html: `<div class="split-band">${bandHead(b)}${flatItems(b.items)}</div>${bandShot(b)}` });
     } else if (b.items) {
       // what a program includes: one column per item, across the page
       out.push({ id, cls: "band-deliv", html: `${bandHead(b)}<ul class="deliv n${b.items.length}">${b.items.map(([t, d], n) => `<li data-reveal style="--i:${n % 5}"><b>${esc(t)}</b><p>${esc(d)}</p></li>`).join("")}</ul>${bandShot(b)}` });
@@ -1387,6 +1401,9 @@ function bandsOf(s, r) {
       out.push({ id, cls: "band-split", html: `<div class="split-band">${bandHead(b)}<div data-reveal>${faqHtml(b.faq)}</div></div>` });
     } else if (isSteps(b)) {
       out.push({ id, cls: "band-steps", html: `${bandHead(b)}<ol class="step-grid n${b.list.length}">${b.list.map((l, n) => `<li data-reveal style="--i:${n % 4}"><span>${String(n + 1).padStart(2, "0")}</span><p>${esc(l)}</p></li>`).join("")}</ol>` });
+    } else if (out.at(-1)?.cls === "band-list") {
+      // a checklist straight after another sits beside its heading
+      out.push({ id, cls: "band-split", html: `<div class="split-band">${bandHead(b)}${checkList(b.list)}</div>` });
     } else {
       out.push({ id, cls: "band-list", html: `${bandHead(b)}<ul class="checks cols" data-reveal style="--rows:${Math.ceil(b.list.length / 2)}">${b.list.map((l) => `<li>${icon("check", false)}<span>${esc(l)}</span></li>`).join("")}</ul>` });
     }
@@ -1445,7 +1462,7 @@ for (const s of C.services) {
 ${pageHero(r, { crumbs: [["Services", "services/index.html"], [s.short || s.title]], title: s.title, lede: s.summary, compact: true, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${contactHref(r, { topic: s.title })}">Start an enquiry ${icon("arrow-right")}</a>${s.widget === "lab" ? `<a class="btn btn-ghost btn-lg" href="#flow-lab">${icon("cloud-rain")} Try the flow lab</a>` : ""}${s.widget === "lidott" ? `<a class="btn btn-ghost btn-lg" href="#alarm-demo">${icon("bell")} Try the alarm</a>` : ""}`, visual: glanceOf(s) })}
 <div class="secbar-scope">${sectionBar(r, s)}
 ${detailBody(r, s, {
-  related: [["Related services", svcLinks(r, s.related)], ["Related solutions", solLinks(r, s.solutions)], ["Instruments we use", brandLinks(r, s.products)], ["White papers", paperLinks(s.papers)]],
+  related: [["Services", svcLinks(r, s.related)], ["Solutions", solLinks(r, s.solutions)], ["Instruments we use", brandLinks(r, s.products)], ["White papers", paperLinks(s.papers)], ["Downloads", (s.downloads || []).map(([href, label]) => (href.startsWith("@root/") ? [href, label, "download", true] : [`${r}${href}`, label]))]],
   demo: s.widget === "lab" ? labSection({ title: s.slug.startsWith("inflow") ? "Watch inflow and infiltration happen." : "What the flow meter sees in a storm." })
     : s.widget === "lidott" ? `<section class="section dark band" id="alarm-demo"><div class="wrap"><div class="section-head"><h2 class="h-lg" data-reveal>Raise the water. Watch the alarm.</h2></div>${lidottDemo({ link: `${r}products/lidott-alarm.html` })}</div></section>` : "",
 })}</div>
@@ -1484,8 +1501,8 @@ for (const s of C.solutions) {
 ${pageHero(r, { crumbs: [["Solutions", "solutions/index.html"], [s.title]], title: s.title, lede: s.summary, compact: true, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${contactHref(r, { topic: s.title })}">Start an enquiry ${icon("arrow-right")}</a>`, visual: glanceOf(s) })}
 <div class="secbar-scope">${sectionBar(r, s)}
 ${detailBody(r, s, {
-  related: [["Related solutions", solLinks(r, s.related)], ["Related services", svcLinks(r, C.services.filter((x) => x.solutions?.includes(s.slug)).map((x) => x.slug))], ["Instruments we use", brandLinks(r, s.productLinks)]],
-  demo: s.widget === "eas" ? `<section class="section dark band" id="asset-score"><div class="wrap"><div class="section-head"><p class="eyebrow">EDS Asset Score</p><h2 class="h-lg" data-reveal>One score, watched around the clock.</h2></div>${easDemo()}</div></section>` : "",
+  related: [["Solutions", solLinks(r, s.related)], ["Services", svcLinks(r, C.services.filter((x) => x.solutions?.includes(s.slug)).map((x) => x.slug))], ["Instruments we use", brandLinks(r, s.productLinks)]],
+  demo: s.widget === "eas" ? `<section class="section dark band" id="asset-score"><div class="wrap"><div class="section-head"><h2 class="h-lg" data-reveal>One score, watched around the clock.</h2></div>${easDemo()}</div></section>` : "",
 })}</div>
 ${ctaSection(r, { topic: s.title })}`,
   });
