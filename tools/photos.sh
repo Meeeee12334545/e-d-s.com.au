@@ -21,7 +21,7 @@ P "$D/Inflow Infiltration/Inflow infiltration.jpeg" infiltration-joints
 P "$D/Back Up/EDS/Services/5898804_orig.jpg" inflow-manhole-rain
 P "$D/Back Up/Banner Images/city-sewer-backup.jpg" sewer-overflow-street --widths 1400,800 --quality 74
 P "$D/Back Up/Banner Images/wastewaterpic.jpg" treatment-plant-clarifier --widths 1400,800 --quality 78
-P "$D/Data Cloud/Wastewater1.jpeg" treatment-plant-aerial --widths 1600,900 --quality 78
+P "$D/Data Cloud/Wastewater1.jpeg" treatment-plant-aerial --crop 0.2,0,0.6736,1 --widths 900,600 --quality 80
 P "$D/Dynaflox/doppler_2.jpg" clamp-on-ultrasonic
 # Detectronic's drawing of the LIDoTT Alarm in place: not graded.
 P "$D/Detectronics/lidott-alarm2-web.jpg" lidott-alarm-site --quality 86 --no-grade
