@@ -1992,6 +1992,7 @@ export const diagrams = {
 
 export const lidott = {
   title: "LIDoTT Alarm",
+  tag: "Self contained water level alarm",
   maker: "Detectronic",
   lede: "Self contained water level measurement and alarm device.",
   image: img("lidott-alarm-3.png"),
@@ -2031,6 +2032,7 @@ export const lidott = {
 
 export const alarm2 = {
   title: "Alarm2",
+  tag: "Radar level monitor with alarms",
   maker: "Detectronic",
   lede: "All-in-one radar level monitor with alarms, up to 20 m, LoRaWAN or 4G.",
   image: img("detectronic-alarm2.png"),

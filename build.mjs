@@ -147,14 +147,15 @@ const asideFigure = (s) => (s.asideFigure ? `<figure class="aside-card aside-fig
 /* ------------------------------------------------------------------ */
 /* layout                                                              */
 /* ------------------------------------------------------------------ */
-function header(r, current, menuTab) {
+function header(r, current, menuTab, file) {
   // The Services menu holds the services and the solutions: a rail of tabs
   // down its left, one per service group and one for the solutions, and the
   // open tab's links beside it, so only one group is read at a time. It
   // opens on the tab of the page the visitor is on (`menuTab`: a service
-  // group's id or "solutions"), or the first. Products is a plain two
-  // column list. Each link carries a one-line description: the service's
-  // or solution's summary, the brand's summary, the product's lede.
+  // group's id or "solutions"), or the first. Products has two labelled
+  // columns, the ranges and the instruments with a page of their own. Each
+  // link carries a one-line description: the service's or solution's
+  // summary, the brand's or product's tag.
   const mLink = (i) => `<a href="${r}${i.href}">${icon(i.icon)}<span><b>${esc(i.label)}</b>${i.desc ? `<small>${esc(i.desc)}</small>` : ""}</span></a>`;
   // Services and Products are each a link to the page that lists them all,
   // with a chevron beside it that opens the menu (the menu also opens under
@@ -191,21 +192,25 @@ function header(r, current, menuTab) {
           <div class="mega-foot"><span>Not sure which service fits? Tell us about the site or the problem and we will point you to the right one.</span><a href="${r}enquire.html">Start an enquiry ${icon("arrow-right")}</a></div>
         </div>
       </div>`;
-  const pItems = [...C.brands.map((b) => ({ href: `products/${b.slug}.html`, icon: b.icon, label: b.name, desc: b.tag })), ...C.productPages.map((pg) => ({ href: `products/${pg.slug}.html`, icon: pg.icon, label: pg.name, desc: pg.tag })), { href: "products/lidott-alarm.html", icon: "bell", label: "LIDoTT Alarm", desc: C.lidott.lede }, { href: "products/alarm2.html", icon: "bell-ring", label: "Alarm2", desc: C.alarm2.lede }];
-  const mega = (label, key, items, all) => `
+  const pRanges = C.brands.map((b) => ({ href: `products/${b.slug}.html`, icon: b.icon, label: b.name, desc: b.tag }));
+  const pInstruments = [...C.productPages.map((pg) => ({ href: `products/${pg.slug}.html`, icon: pg.icon, label: pg.name, desc: pg.tag })), { href: "products/lidott-alarm.html", icon: "bell", label: "LIDoTT Alarm", desc: C.lidott.tag }, { href: "products/alarm2.html", icon: "bell-ring", label: "Alarm2", desc: C.alarm2.tag }];
+  const productsMenu = `
       <div class="nav-item has-mega">
-        ${navSplit(label, all.href, [key])}
-        <div class="mega cols-2" id="mega-${key}">
-          ${items.map(mLink).join("")}
-          <a class="mega-all" href="${r}${all.href}"><span>${all.label}</span>${icon("arrow-right")}</a>
+        ${navSplit("Products", "products/index.html", ["products"])}
+        <div class="mega cols-2" id="mega-products">
+          <div class="mega-col"><p class="mega-head">Ranges</p>${pRanges.map(mLink).join("")}</div>
+          <div class="mega-col"><p class="mega-head">Instruments</p>${pInstruments.map(mLink).join("")}</div>
+          <div class="mega-foot"><span>All ${products.length} instruments, filtered by type or searched by name.</span><a href="${r}products/index.html">All products ${icon("arrow-right")}</a></div>
         </div>
       </div>`;
   const link = (href, label, key) => `<div class="nav-item"><a class="nav-link" href="${r}${href}"${current === key ? ' aria-current="page"' : ""}>${label}</a></div>`;
   // The phone menu lists the same: each section has a heading, its links and,
-  // where it says so, a "View all" link after them.
-  const dLink = (i) => `<a href="${r}${i.href}">${icon(i.icon, false)}${esc(i.label)}</a>`;
+  // where it says so, a "View all" link after them. The group holding the
+  // page the visitor is on opens with that page marked.
+  const here = (href) => (href === file ? ' aria-current="page"' : "");
+  const dLink = (i) => `<a href="${r}${i.href}"${here(i.href)}>${icon(i.icon, false)}${esc(i.label)}</a>`;
   const dGroup = (label, sections) => `
-        <details><summary>${label}${icon("chevron-down", false)}</summary><div>
+        <details${sections.some((g) => g.items.some((i) => i.href === file)) ? " open" : ""}><summary>${label}${icon("chevron-down", false)}</summary><div>
           ${sections.map((g) => `${g.label ? `<p class="drawer-sub">${esc(g.label)}</p>` : ""}${g.items.map(dLink).join("")}${g.all ? `<a href="${r}${g.all.href}">${icon("arrow-right", false)}${g.all.label}</a>` : ""}`).join("")}
         </div></details>`;
   const dSections = tabs.map((t, i) => ({ label: t.label, items: t.items, all: t.id === "solutions" ? t.all : i === C.serviceGroups.length - 1 ? { href: "services/index.html", label: "All services" } : null }));
@@ -214,10 +219,10 @@ function header(r, current, menuTab) {
   <div class="progress" aria-hidden="true"></div>
   <header class="header">
     <div class="wrap">
-      <a class="logo" href="${r}index.html" aria-label="EDS home"><img src="${site.logo}" alt="EDS, Environmental Data Services" width="189" height="48"></a>
+      <a class="logo" href="${r || "./"}" aria-label="EDS home"><img src="${site.logo}" alt="EDS, Environmental Data Services" width="189" height="48"></a>
       <nav class="nav" aria-label="Main">
         ${tabbed}
-        ${mega("Products", "products", pItems, { href: "products/index.html", label: "All products" })}
+        ${productsMenu}
         ${link("flowsense.html", "FlowSense", "flowsense")}
         ${link("about.html", "About", "about")}
         ${link("resources.html", "Resources", "resources")}
@@ -225,25 +230,25 @@ function header(r, current, menuTab) {
       <div class="header-cta">
         <button class="header-search" type="button" data-search-open aria-label="Search the site" aria-keyshortcuts="Control+K Meta+K /">${icon("search")}<kbd data-kbd>Ctrl K</kbd></button>
         <a class="header-phone" href="${site.phoneHref}" aria-label="Call EDS on ${site.phone}">${icon("phone")}<span>${site.phone}</span></a>
-        <a class="header-quote" href="${r}enquire.html" data-quote-link hidden>${icon("clipboard-list")}<span class="sr-only">Quote list, </span><b data-quote-count>0</b><span class="sr-only"> items</span></a>
+        <a class="header-quote" href="${r}enquire.html" data-quote-link hidden>${icon("clipboard-list")}<span class="sr-only">Products in your quote list: </span><b data-quote-count>0</b></a>
         <a class="btn btn-primary" href="${r}contact.html">Contact us</a>
       </div>
-      <button class="burger" aria-label="Open menu" aria-expanded="false" data-track-label="Menu">${icon("menu", false)}</button>
+      <button class="burger" aria-label="Open menu" aria-expanded="false" aria-controls="drawer-panel" data-track-label="Menu">${icon("menu", false)}</button>
     </div>
   </header>
-  <div class="drawer" aria-label="Menu">
+  <div class="drawer">
     <div class="drawer-scrim"></div>
-    <div class="drawer-panel">
+    <div class="drawer-panel" id="drawer-panel" role="dialog" aria-modal="true" aria-label="Menu">
       <div class="drawer-head">
-        <a class="logo" href="${r}index.html"><img src="${site.logo}" alt="EDS" width="189" height="48"></a>
-        <button class="burger drawer-close" style="display:inline-flex" aria-label="Close menu">${icon("x", false)}</button>
+        <a class="logo" href="${r || "./"}"><img src="${site.logo}" alt="EDS" width="189" height="48"></a>
+        <button class="burger drawer-close" aria-label="Close menu">${icon("x", false)}</button>
       </div>
       <button class="drawer-search" type="button" data-search-open>${icon("search", false)}<span>Search products, services, documents</span></button>
       ${dGroup("Services", dSections)}
-      ${dGroup("Products", [{ items: pItems, all: { href: "products/index.html", label: "All products" } }])}
-      <a class="drawer-link" href="${r}flowsense.html">FlowSense</a>
-      <a class="drawer-link" href="${r}about.html">About</a>
-      <a class="drawer-link" href="${r}resources.html">Resources</a>
+      ${dGroup("Products", [{ label: "Ranges", items: pRanges }, { label: "Instruments", items: pInstruments, all: { href: "products/index.html", label: "All products" } }])}
+      <a class="drawer-link" href="${r}flowsense.html"${here("flowsense.html")}>FlowSense</a>
+      <a class="drawer-link" href="${r}about.html"${here("about.html")}>About</a>
+      <a class="drawer-link" href="${r}resources.html"${here("resources.html")}>Resources</a>
       <a class="drawer-link" href="${r}enquire.html" data-quote-link hidden>Your quote list <b class="count" data-quote-count>0</b></a>
       <a class="btn btn-primary btn-lg" href="${r}contact.html">Contact us</a>
       <a class="btn btn-ghost btn-lg" href="${site.phoneHref}">${icon("phone", false)}${site.phone}</a>
@@ -257,7 +262,7 @@ function footer(r) {
     <div class="wrap">
       <div class="footer-grid">
         <div>
-          <a class="logo" href="${r}index.html"><img src="${site.logo}" alt="EDS, Environmental Data Services" width="110" height="28" loading="lazy"></a>
+          <a class="logo" href="${r || "./"}"><img src="${site.logo}" alt="EDS, Environmental Data Services" width="110" height="28" loading="lazy"></a>
           <p>${site.tagline}</p>
           <div class="footer-contact">
             <a href="${site.phoneHref}">${icon("phone")}${site.phone}</a>
@@ -271,7 +276,7 @@ function footer(r) {
         </div>
         <div>
           <h2>Products</h2>
-          <ul>${C.brands.map((b) => `<li><a href="${r}products/${b.slug}.html">${esc(b.name)}</a></li>`).join("")}</ul>
+          <ul>${C.brands.map((b) => `<li><a href="${r}products/${b.slug}.html">${esc(b.name)}</a></li>`).join("")}<li><a href="${r}products/index.html">All products</a></li></ul>
         </div>
         <div>
           <h2>Company</h2>
@@ -287,26 +292,26 @@ function footer(r) {
         <div>
           <h2>Head office</h2>
           <address>${site.address.join("<br>")}</address>
-          <p style="margin-top:10px">${site.hours}</p>
+          <p class="footer-hours">${site.hours}</p>
           ${openStatus()}
           <form class="signup" ${formSend} data-subject="Register for EDS updates" data-track="Updates sign-up">
             <label for="f-email">Register for updates on projects, equipment and servicing</label>
             <input id="f-email" name="Email" type="email" placeholder="Your email" autocomplete="email" required>
             ${botcheck}
-            <button class="btn btn-primary" type="submit" aria-label="Register for updates">${icon("arrow-right")}</button>
+            <button class="btn btn-primary" type="submit" aria-label="Register for updates">${icon("arrow-right")}<i class="spin" aria-hidden="true"></i></button>
             <p class="signup-done" role="status" data-done="sent" hidden>${icon("check", false)} Thanks, you are registered for EDS updates.</p>
             <p class="signup-done form-error" role="alert" data-done="error" hidden>${icon("circle-alert", false)} That did not go through. Please try again in a moment.</p>
           </form>
         </div>
       </div>
-      <div class="footer-creds" aria-label="Credentials">
+      <div class="footer-creds" role="group" aria-label="Credentials">
         <span class="mark"><img src="${C.img("ex-logo.gif")}" alt="Ex hazardous area mark" loading="lazy"><img src="${C.img("iecex.png")}" alt="IECEx" loading="lazy"></span>
         <span>Intrinsically safe equipment certified under ATEX and IECEx</span>
         <span>Australian owned since ${site.founded}</span>
         <span>Sydney Water panel provider</span>
       </div>
       <div class="footer-base">
-        <span>© ${year} ${site.legal}. All rights reserved. <a href="${r}privacy.html" style="text-decoration:underline">Privacy policy</a></span>
+        <span>© ${year} ${site.legal}. All rights reserved. <a href="${r}privacy.html">Privacy policy</a></span>
         <a class="to-top" href="#top">Back to top ${icon("arrow-up", "nudge-up")}</a>
       </div>
     </div>
@@ -332,6 +337,7 @@ const searchDialog = () => `
     <button class="search-close" type="button" data-search-close aria-label="Close search"><kbd>Esc</kbd>${icon("x", false)}</button>
   </div>
   <div class="search-results" id="search-results" role="listbox" aria-label="Search results"></div>
+  <p class="sr-only" role="status" data-search-status></p>
   <div class="search-foot" aria-hidden="true"><span><kbd>↑</kbd><kbd>↓</kbd> move</span><span><kbd>↵</kbd> open</span><span><kbd>Esc</kbd> close</span></div>
 </dialog>`;
 
@@ -340,7 +346,7 @@ const actionBar = (r, current) => `
 <nav class="actionbar" aria-label="Quick actions">
   <a href="${site.phoneHref}" data-open-dot>${icon("phone", false)}<span>Call</span></a>
   <button type="button" data-search-open>${icon("search", false)}<span>Search</span></button>
-  <a class="primary" href="${["contact", "enquire"].includes(current) ? "#enquiry" : `${r}enquire.html`}">${icon("message-square-text", false)}<span>Enquire</span><b class="count" data-quote-count hidden>0</b></a>
+  <a class="primary" href="${["contact", "enquire"].includes(current) ? "#enquiry" : `${r}enquire.html`}">${icon("message-square-text", false)}<span>Enquire</span><span class="sr-only" data-quote-link hidden>, products in your quote list:</span><b class="count" data-quote-count hidden>0</b></a>
 </nav>`;
 
 // Structured data for search engines. The organisation is described in full
@@ -474,10 +480,14 @@ function layout({ file, title, description, current, menuTab, body, scripts = []
   const url = pageUrl(file);
   const image = shareImage(file, html);
   // Preview copies stay out of search. The live pages let Google show a
-  // large image beside them in results and in Discover. The ownership
+  // large image beside them in results and in Discover; the not-found page,
+  // which the host also serves at /404.html, stays out. The ownership
   // tokens, when set, go on the home page only.
-  const robots = process.env.PREVIEW ? "noindex, nofollow" : "max-image-preview:large";
+  const robots = process.env.PREVIEW ? "noindex, nofollow" : file === "404.html" ? "noindex" : "max-image-preview:large";
   const verify = file === "index.html" && !process.env.PREVIEW ? [["google-site-verification", site.verify.google], ["msvalidate.01", site.verify.bing]].filter(([, v]) => v).map(([k, v]) => `\n<meta name="${k}" content="${esc(v)}">`).join("") : "";
+  // The "js" class hides the blocks that rise into view (site.css). If
+  // site.js fails to load, or stops before its reveal code has run (it sets
+  // EDS_READY), the class comes off and the page shows as it is.
   const out = `<!doctype html>
 <html lang="en-AU" data-root="${r}">
 <head>
@@ -501,19 +511,19 @@ function layout({ file, title, description, current, menuTab, body, scripts = []
 <link rel="icon" type="image/png" sizes="32x32" href="${r}assets/img/favicon-32.png">
 <link rel="apple-touch-icon" href="${r}assets/img/apple-touch-icon.png">
 <link rel="preload" href="${r}assets/fonts/saira-semiexpanded-latin.woff2" as="font" type="font/woff2" crossorigin>
-<script>document.documentElement.classList.add("js")</script>
+<script>document.documentElement.classList.add("js");setTimeout(function(){if(!window.EDS_READY)document.documentElement.classList.remove("js")},4000)</script>
 <link rel="stylesheet" href="${asset(r, "css/site.css")}">
 ${jsonLd(file, crumbs, { description, service, image })}
 </head>
 <body id="top">
-${header(r, current, menuTab)}
+${header(r, current, menuTab, file)}
 <main id="main">
 ${html}
 </main>
 ${footer(r)}
 ${actionBar(r, current)}
 ${searchDialog()}
-<script src="${asset(r, "js/site.js")}" defer></script>
+<script src="${asset(r, "js/site.js")}" defer onerror="document.documentElement.classList.remove('js')"></script>
 <script src="${asset(r, "js/search.js")}" defer></script>
 <script src="${asset(r, "js/quote.js")}" defer></script>
 ${scripts.map((s) => `<script src="${asset(r, `js/${s}`)}" defer></script>`).join("\n")}${tracker(r, file)}
@@ -527,12 +537,16 @@ ${scripts.map((s) => `<script src="${asset(r, `js/${s}`)}" defer></script>`).joi
     // don't) becomes ’ everywhere, copy and alt text alike. No page script
     // holds such a tick, so code is untouched.
     .replace(/(\p{L})'(\p{L})/gu, "$1’$2")
-    // A number and its unit never part at a line end (8.4 m, ±5 mm, Zone 0).
-    // Text between tags only, never inside a script or a stylesheet.
+    // A number and its unit never part at a line end (8.4 m, ±5 mm, 12 weeks,
+    // Zone 0), nor a standard's name from its number (AS/NZS 3500.3, No. 36),
+    // nor the groups of the phone number. Text between tags only, never
+    // inside a script or a stylesheet.
     .replace(/(<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>)|>([^<]+)(?=<)/g, (m, code, text) => (code ? m : `>${text
-      .replace(/(\d) (?=(?:mm|m|km|kPa|kL|L|°C|mA|V|MB|h)(?![\p{L}\d]))/gu, "$1\u00a0")
+      .replace(/(\d) (?=(?:mm|m|km|kPa|MPa|kL|L|°C|mA|V|MB|h|weeks?|days?|months?|years?|hours?|minutes?)(?![\p{L}\d]))/gu, "$1\u00a0")
       .replace(/± (?=\d)/g, "±\u00a0")
-      .replace(/\bZone (?=\d)/g, "Zone\u00a0")}`));
+      .replace(/\bZone (?=\d)/g, "Zone\u00a0")
+      .replace(/\b(No\.|ISO|RFC|SWMM|WSA|AS\/NZS) (?=\d)/g, "$1\u00a0")
+      .replace(/\b1300 (\d{3}) (\d{3})\b/g, "1300\u00a0$1\u00a0$2")}`));
   // In-page links, product deep links and form labels all rely on ids being unique.
   const ids = [...out.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]);
   const dupes = ids.filter((id, i) => ids.indexOf(id) !== i);
@@ -548,7 +562,7 @@ ${scripts.map((s) => `<script src="${asset(r, `js/${s}`)}" defer></script>`).joi
 const pageHero = (r, { crumbs = [], iconName, eyebrow, title, lede, actions = "", after = "", visual = "", compact = false, cls = "" }) => {
   heroCrumbs = crumbs;
   const copy = `
-    <nav class="crumbs" aria-label="Breadcrumb"><a href="${r}index.html">Home</a>${crumbs.map(([label, href]) => `${icon("chevron-down", false)}${href ? `<a href="${r}${href}">${esc(label)}</a>` : `<span aria-current="page">${esc(label)}</span>`}`).join("")}</nav>
+    <nav class="crumbs" aria-label="Breadcrumb"><a href="${r || "./"}">Home</a>${crumbs.map(([label, href]) => `${icon("chevron-down", false)}${href ? `<a href="${r}${href}">${esc(label)}</a>` : `<span aria-current="page">${esc(label)}</span>`}`).join("")}</nav>
     ${iconName && !visual ? `<div class="hero-icon holder" data-reveal="scale">${icon(iconName)}</div>` : ""}
     ${eyebrow ? `<p class="eyebrow">${esc(eyebrow)}</p>` : ""}
     <h1 class="h-lg" data-reveal>${esc(title)}</h1>
@@ -2200,6 +2214,7 @@ function searchIndex() {
   for (const s of C.services) put("Services", s.title, s.summary, `services/${s.slug}.html`, { i: s.icon, b: text(s.short, C.serviceGroups.find((g) => g.id === s.group)?.title, s.intro, blockText(s.blocks), s.compare?.rows || []) });
   for (const s of C.solutions) put("Solutions", s.title, s.summary, `solutions/${s.slug}.html`, { i: s.icon, b: text(s.intro, blockText(s.blocks)) });
   put("Products", "LIDoTT Alarm", `Detectronic · ${C.lidott.lede}`, "products/lidott-alarm.html", { img: plain(C.lidott.image), b: text("level radar alarm", C.lidott.description, C.lidott.sections, C.lidott.specs) });
+  put("Products", "Alarm2", `Detectronic · ${C.alarm2.tag}`, "products/alarm2.html", { img: plain(C.alarm2.image), b: text("radar level alarm LoRaWAN 4G", C.alarm2.description, C.alarm2.sections, C.alarm2.highlights.map(([, t, d]) => [t, d]), C.alarm2.specs) });
   for (const pg of C.productPages) put("Products", pg.name, `EDS · ${pg.tag}`, `products/${pg.slug}.html`, { img: plain(pg.image), b: text(pg.lede, pg.intro, pg.features, pg.specs.map(([g, rows]) => [g, rows])) });
   for (const p of products) {
     if (p.href) continue; // has a page of its own, listed above
@@ -2215,8 +2230,8 @@ function searchIndex() {
   put("Pages", "All solutions", "Monitoring applied to the problem in front of you.", "solutions/index.html", { i: "layout-grid" });
   put("Pages", "Home", site.tagline, "index.html", { i: "house" });
   put("Pages", "Privacy policy", "How EDS handles personal information.", "privacy.html", { i: "lock" });
-  for (const p of C.papers) put("Documents", p.title, `${p.kind || "White paper"} · ${p.date}`, p.href, { i: "file-text", d: 1, b: p.text });
-  for (const g of C.downloads) for (const [label, href] of g.items) put("Documents", label, g.group, plain(href), { i: g.icon, d: 1, b: g.note });
+  for (const p of C.papers) put("Documents", p.title, [p.kind || "White paper", p.date].filter((x, i, a) => x && a.indexOf(x) === i).join(" · "), plain(p.href), { i: "file-text", d: 1, b: p.text });
+  for (const g of C.downloads) for (const [label, href] of g.items) if (!items.some((e) => e.h === plain(href))) put("Documents", label, g.group, plain(href), { i: g.icon, d: 1, b: g.note });
   for (const p of products) {
     for (const d of p.docs || []) {
       if (!items.some((e) => e.h === plain(d.href))) put("Documents", `${p.name}: ${d.label}`, `${p.brand.name} · ${docType(d.href)}`, plain(d.href), { i: "file-text", d: 1, b: text(p.brand.title, p.note) });
@@ -2326,7 +2341,11 @@ for (const [from, to] of Object.entries(C.oldFiles)) {
     throw new Error(`oldFiles: "${from}" points at missing document ${to}`);
   });
 }
-await writeFile(path.join(DIST, "assets/js/search-index.js"), `// Generated by build.mjs from src/data/content.mjs. Do not edit.\nwindow.EDS_SEARCH = ${JSON.stringify(searchIndex())};\n`);
+const searchData = JSON.stringify(searchIndex());
+// The index is written straight to disk, not through layout(), so a path
+// left as "@root/" here would 404 from the search palette.
+if (searchData.includes("@root/")) throw new Error("search index has unresolved @root/ paths");
+await writeFile(path.join(DIST, "assets/js/search-index.js"), `// Generated by build.mjs from src/data/content.mjs. Do not edit.\nwindow.EDS_SEARCH = ${searchData};\n`);
 await writeFile(
   path.join(DIST, "sitemap.xml"),
   `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${pages
