@@ -378,6 +378,7 @@ export const services = [
     blocks: [
       {
         heading: "Why I&I matters",
+        nav: "Why it matters",
         items: [
           ["Operational", "Overloaded networks in wet weather, bypass pumping and emergency response, and higher pumping and treatment costs for water that should never have reached the sewer."],
           ["Environmental", "A greater risk of overflows during peak events, faster asset deterioration, and more energy and emissions spent pumping and treating extraneous flow."],
@@ -387,6 +388,7 @@ export const services = [
       },
       {
         heading: "Our I&I services",
+        nav: "Our services",
         items: [
           ["Find the sources", "Flow meters and rain gauges across the catchment show which subcatchments let the water in, and how much."],
           ["Watch it happen", "Intrinsically safe meters report over 4G, so you see each storm's response as it happens."],
@@ -396,6 +398,7 @@ export const services = [
       },
       {
         heading: "What you gain",
+        nav: "",
         items: [
           ["Fewer overflows", "Less stormwater in the sewer means fewer untreated discharges into local waterways."],
           ["Lower treatment costs", "Every litre of rain you keep out of the sewer is a litre you don't have to pump and treat."],
@@ -405,6 +408,7 @@ export const services = [
       },
       {
         heading: "Short term and long term monitoring",
+        nav: "Short or long term",
         lede: "Most I&I programs use one or both. The right choice depends on the decision the data has to support.",
         table: {
           neutral: true,
@@ -421,6 +425,7 @@ export const services = [
       },
       {
         heading: "Monitoring done properly",
+        nav: "How we monitor",
         list: [
           "High resolution logging, typically at 1 to 5 minute intervals, so storm events and the daily pattern are captured accurately",
           "Pre-installation inspections that assess hydraulics, access and the risk of ragging or debris before a site is chosen",
@@ -431,6 +436,7 @@ export const services = [
       },
       {
         heading: "From data to action",
+        nav: "Data to action",
         lede: "In EDS's experience, consistent with findings across the water industry, about 20% of a sewer network typically accounts for 80% of its I&I. Finding that 20% is what makes a program pay back.",
         items: [
           ["Targeted remediation", "Data driven prioritisation finds the worst performing segments for relining, grouting and manhole sealing, instead of blanket rehabilitation."],
@@ -641,6 +647,7 @@ export const services = [
       },
       {
         heading: "Level alarms for every chamber",
+        nav: "Level alarms",
         lede: "Three Detectronic radar instruments, all ATEX and IECEx certified for Zone 0, the most hazardous classification.",
         products: [
           { name: "LIDoTT Alarm", maker: "Detectronic", href: "products/lidott-alarm.html", image: img("lidott-alarm-cut.png"), fit: 92,
@@ -653,6 +660,7 @@ export const services = [
       },
       {
         heading: "Blockage Watch in FlowSense",
+        nav: "Blockage Watch",
         lede: "Where flow meters are installed, FlowSense reads the dry weather record and finds a developing blockage weeks before it overflows. It is included on every site, and shows that a line is blocking rather than exactly where; a level alarm in the chamber warns as the depth rises.",
         items: [
           ["Eight blockage signatures", "Six of them from level alone. The strongest, conveyance at matched depth, uses velocity as well."],
@@ -663,6 +671,7 @@ export const services = [
       },
       {
         heading: "What it helps you catch",
+        nav: "What it catches",
         list: [
           "Blockages in main, domestic and lateral sewers",
           "Surcharges caused by sewer collapses",
@@ -767,7 +776,7 @@ export const services = [
   },
   {
     slug: "sampling-programs",
-    asideFigure: { src: img("nemo-1-mh-cut.png"), alt: "The ORI NEMO 1 M mobile sampler: a black drum with its pump and controller on top, and the suction hose coiled beside it", caption: "ORI NEMO 1 M, approved under ATEX and IECEx for Zones 1 and 2", w: 322, h: 457 },
+    asideFigure: { src: img("nemo-1-mh-cut.png"), alt: "The ORI NEMO 1 M mobile sampler: a black drum with its pump and controller on top, and the suction hose coiled beside it", caption: "ORI NEMO 1 M, approved under ATEX and IECEx for Zones 1 and 2.", w: 322, h: 457 },
     title: "Sampling & Sampler Hire",
     pageTitle: "Sampling Programs & Sampler Hire | EDS",
     icon: "test-tubes",
@@ -947,7 +956,7 @@ export const services = [
         ],
       },
     ],
-    asideFigure: { src: img("tipping-bucket-rain-gauge.png"), alt: "A tipping bucket rain gauge: a stainless steel cylinder with a bronze funnel on a levelling base", caption: "Tipping bucket rain gauge", w: 360, h: 500 },
+    asideFigure: { src: img("tipping-bucket-rain-gauge.png"), alt: "A tipping bucket rain gauge: a stainless steel cylinder with a bronze funnel on a levelling base", caption: "A tipping bucket rain gauge.", w: 360, h: 500 },
     related: ["inflow-infiltration-studies", "sewer-model-calibration", "sewer-flow-monitoring"],
     solutions: ["environmental-monitoring"],
     products: ["eds"],
@@ -1376,6 +1385,7 @@ export const services = [
     ],
     related: ["auditing-calibration", "network-assessment", "equipment-rental"],
     products: ["eds", "hach-flow", "dynaflox"],
+    downloads: [["resources.html#downloads", "Software, drivers and manuals"], [localDoc("eds-ems-flow-user-manual.pdf"), "EMS-Flow software user manual"]],
   },
 ];
 

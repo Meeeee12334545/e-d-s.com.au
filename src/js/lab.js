@@ -276,6 +276,7 @@
     const label = () => {
       const v = parseFloat(input.value);
       out.textContent = id === "lab-size" ? `${v} mm` : v < 0.5 ? "Tight" : v < 1.1 ? "Typical" : "Leaky";
+      input.setAttribute("aria-valuetext", out.textContent);
     };
     input.addEventListener("input", label); label();
   });
