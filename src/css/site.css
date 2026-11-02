@@ -904,6 +904,13 @@ ul { margin: 0; padding: 0; list-style: none; }
 .city-tab { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line-dark); font-size: .85rem; font-weight: 500; color: var(--on-dark-soft); transition: all .2s var(--ease); }
 .city-tab:hover { border-color: var(--line-dark-strong); color: #fff; }
 .city-tab[aria-selected="true"] { background: var(--aqua); border-color: var(--aqua); color: #04201d; }
+/* between the phone row and the full row, the seven tabs drop their icons
+   to stay on one line */
+@media (max-width: 1180px) and (min-width: 981px) {
+  .city-tabs { gap: 6px; }
+  .city-tab { padding-inline: 11px; font-size: .82rem; }
+  .city-tab > .icon { display: none; }
+}
 /* Every card sits in the same cell, so the panel is as tall as the longest
    one and nothing jumps as the districts change. */
 .city-panel { grid-area: panel; display: grid; }
@@ -923,16 +930,24 @@ ul { margin: 0; padding: 0; list-style: none; }
 
 /* the bar under the stage: the controls, the caption the tour and storm
    speak through, the readings tiles, the illustrative note and the key */
-.city-bar { grid-area: bar; display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "tools caption" "hud hud" "legend legend" "note note"; gap: 10px 16px; align-items: center; padding: 12px 0 0; min-width: 0; }
+.city-bar { grid-area: bar; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-areas: "tools" "caption" "hud" "legend" "note"; gap: 10px 16px; align-items: center; align-self: start; padding: 12px 0 0; min-width: 0; }
 .city-toolbar { grid-area: tools; display: flex; align-items: center; gap: 8px; }
 .city-btn { touch-action: manipulation; }
 .btn.city-btn { padding: .72em 1.05em; font-size: .88rem; }
 .btn.city-btn .icon { font-size: 16px; }
-.btn.city-btn[aria-pressed="true"] { background: var(--aqua); border-color: var(--aqua); color: #04201d; }
-.btn.city-btn[aria-pressed="true"]:hover { background: #7bc1b5; border-color: #7bc1b5; }
+.btn.city-btn[data-pressed="true"] { background: rgba(95, 180, 166, .2); border-color: var(--aqua); color: #fff; }
+.btn.city-btn[data-pressed="true"]:hover { background: rgba(95, 180, 166, .3); border-color: var(--aqua); }
 /* the tour button carries both glyphs; the pressed state (paused) shows play */
-.city-caption { grid-area: caption; margin: 0; min-width: 0; min-height: 2.6em; font-size: .92rem; font-weight: 550; line-height: 1.35; color: #fff; text-wrap: pretty; transition: opacity .25s var(--ease); }
+.city-caption { grid-area: caption; margin: 0; min-width: 0; min-height: 2.7em; font-size: .92rem; font-weight: 550; line-height: 1.35; color: #fff; text-wrap: pretty; transition: opacity .25s var(--ease); }
 .city-caption:empty { opacity: 0; }
+/* Beside the card, the panel's spare height goes to the bar's row, so the
+   stage row is exactly as tall as the stage and the bar sits right under it,
+   still while a storm grows the card. The buttons wrap rather than run under
+   the card. */
+@media (min-width: 981px) {
+  .city-grid { grid-template-rows: auto minmax(0, 1fr) auto; }
+  .city-toolbar { flex-wrap: wrap; min-width: 0; }
+}
 .city-hud { grid-area: hud; display: flex; flex-wrap: wrap; gap: 8px; min-width: 0; }
 /* one tile per reading, in the readout look: label, value, unit */
 .city-tile { flex: none; display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 4px; min-width: 76px; padding: 9px 12px 8px; border-radius: 14px; background: rgba(var(--abyss-rgb), .45); border: 1px solid var(--line-dark); transition: border-color .3s var(--ease), background-color .3s var(--ease); }
@@ -945,13 +960,14 @@ ul { margin: 0; padding: 0; list-style: none; }
 .city-tile[data-alarm] .icon { display: block; }
 .city-tile-spark { flex: 1 1 150px; min-width: 150px; }
 .city-spark { display: block; width: 100%; height: 30px; margin-top: 3px; overflow: visible; }
-.city-spark path { fill: none; stroke: var(--aqua); stroke-width: 1.5; stroke-linejoin: round; opacity: 0; transition: opacity .4s var(--ease); }
+.city-spark path { fill: none; stroke: var(--aqua); stroke-width: 1.5; stroke-linejoin: round; vector-effect: non-scaling-stroke; opacity: 0; transition: opacity .4s var(--ease); }
 .city-spark path.on { opacity: 1; }
 .city-spark path.area { fill: var(--aqua); stroke: none; opacity: 0; }
 .city-spark path.area.on { opacity: .12; }
 .city-spark path.dwf { stroke: rgba(255, 255, 255, .5); stroke-width: 1; stroke-dasharray: 3 4; opacity: 1; }
 .city-spark rect { fill: var(--water); opacity: .35; }
-.city-spark circle { fill: #fff; }
+/* the trace stretches to the tile's width, which would draw the end dot as an oval */
+.city-spark circle { display: none; }
 .city-note { grid-area: note; display: flex; align-items: flex-start; gap: 8px; margin: 0; color: var(--on-dark-faint); text-wrap: pretty; }
 .city-note .icon { flex: none; font-size: 15px; margin-top: .15em; }
 .city-legend { grid-area: legend; display: flex; flex-wrap: wrap; justify-content: flex-start; gap: 6px 16px; font-size: .76rem; color: var(--on-dark-faint); }
@@ -1008,8 +1024,8 @@ body.city-lock { overflow: hidden; }
 .city-stage.is-exploded .city-view, .city-stage.is-asset .city-view { overflow: hidden; }
 .btn.city-btn[aria-disabled="true"] { opacity: .4; pointer-events: none; }
 .city-btn[data-act="explode"] .icon + .icon, .city-btn[data-act="asset-toggle"] .icon + .icon { display: none; }
-.city-btn[aria-pressed="true"][data-act="explode"] .icon:first-child, .city-btn[aria-pressed="true"][data-act="asset-toggle"] .icon:first-child { display: none; }
-.city-btn[aria-pressed="true"][data-act="explode"] .icon + .icon, .city-btn[aria-pressed="true"][data-act="asset-toggle"] .icon + .icon { display: block; }
+.city-btn[data-pressed="true"][data-act="explode"] .icon:first-child, .city-btn[data-pressed="true"][data-act="asset-toggle"] .icon:first-child { display: none; }
+.city-btn[data-pressed="true"][data-act="explode"] .icon + .icon, .city-btn[data-pressed="true"][data-act="asset-toggle"] .icon + .icon { display: block; }
 /* the layers: a block of ground below, guides at the corners, a ghost floor
    under the lifted structures (opacity and offsets come from city.js) */
 .city-svg .below-block, .city-svg .below-fx, .city-svg .ghost, .city-svg .guide { opacity: 0; }
@@ -1074,7 +1090,7 @@ body.city-lock { overflow: hidden; }
 .city-asset.is-leaving { opacity: 0; }
 .city-asset-svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
 .city-asset-bar { position: absolute; z-index: 4; top: 10px; left: 50%; translate: -50% 0; display: flex; gap: 8px; }
-.city-asset-bar .btn.city-btn:not([aria-pressed="true"]) { background: rgba(var(--deep-rgb), .8); }
+.city-asset-bar .btn.city-btn:not([data-pressed="true"]) { background: rgba(var(--deep-rgb), .8); }
 .city-asset-detail { position: absolute; z-index: 4; left: 50%; bottom: 10px; translate: -50% 0; width: min(560px, calc(100% - 2 * var(--col, 0px) - 40px)); margin: 0; padding: 9px 14px; border-radius: 12px; background: rgba(var(--deep-rgb), .88); border: 1px solid var(--line-dark); font-size: .84rem; line-height: 1.45; color: var(--on-dark-soft); text-align: center; text-wrap: pretty; }
 .city-asset-detail b { color: #fff; font-weight: 620; }
 .city-asset-detail a { color: var(--aqua); font-weight: 500; white-space: nowrap; }
@@ -1437,6 +1453,11 @@ input[type="range"]:active::-moz-range-thumb { cursor: grabbing; box-shadow: 0 0
 .fs-fan { animation: ic-spin 1.4s linear infinite; transform-box: fill-box; transform-origin: center; }
 .fs-view.active .fs-toast { animation: sms-in .6s var(--ease-spring) both; animation-delay: calc(var(--i) * .18s + .1s); transform-box: fill-box; }
 .fs-caption { position: absolute; left: 14px; bottom: 12px; font-size: .75rem; color: var(--muted); background: rgba(255, 255, 255, .85); padding: 3px 8px; border-radius: 6px; }
+/* On a phone the screen takes a squarer frame so the drawings fill it, and
+   their finest labels give way, as the city's do (an alarm's title then
+   centres on its dot). */
+@media (max-width: 600px) { .fs-view svg .fine { display: none; } .fs-toast text:not(.fine) { translate: 0 9px; } }
+@media (max-width: 560px) { .fs-screen { aspect-ratio: 5 / 4; } .fs-view { padding: 12px; } }
 
 /* ---------- products rail ---------- */
 /* The rail runs to both edges of the window, its first card lined up with
@@ -1461,7 +1482,7 @@ input[type="range"]:active::-moz-range-thumb { cursor: grabbing; box-shadow: 0 0
   .grid.c4 > .brand-card .link-arrow { align-self: end; justify-self: start; margin-top: 0; padding: 18px 0 24px; }
 }
 
-/* ---------- industries / certs ---------- */
+/* ---------- industries ---------- */
 .ind { display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: #fff; }
 .ind > div { padding: 30px 26px; display: grid; gap: 10px; align-content: start; transition: background-color .3s var(--ease), color .3s var(--ease); }
 .ind > div + div { border-left: 1px solid var(--border); }
@@ -1470,11 +1491,6 @@ input[type="range"]:active::-moz-range-thumb { cursor: grabbing; box-shadow: 0 0
 .ind > div:hover .card-icon { color: #fff; }
 .ind h3 { font-size: 1.15rem; transition: color .3s var(--ease); }
 .ind p { font-size: .92rem; }
-.certs { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; margin-top: 28px; padding: 22px 26px; border-radius: var(--radius); background: var(--bg-alt); }
-.alt .certs { background: #fff; }
-.certs img { height: 54px; width: auto; }
-.certs p { font-size: .95rem; flex: 1; min-width: 240px; }
-.certs strong { color: var(--ink); }
 
 /* ---------- timeline ---------- */
 .timeline { position: relative; display: grid; gap: 0; margin-top: 12px; }
@@ -2403,12 +2419,12 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: 6
   /* the bar stacks; the tiles and the tabs scroll sideways, the progress
      strip keeping its row under the tabs */
   .city-bar { grid-template-columns: minmax(0, 1fr); grid-template-areas: "tools" "caption" "hud" "note" "legend"; gap: 12px; padding-top: 0; }
-  .city-toolbar { overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: none; margin-inline: calc(var(--gutter) * -1); padding-inline: var(--gutter); }
+  .city-toolbar { overflow-x: auto; scroll-snap-type: x proximity; scroll-padding-inline: var(--gutter); scrollbar-width: none; margin-inline: calc(var(--gutter) * -1); padding-inline: var(--gutter); }
   .city-toolbar::-webkit-scrollbar { display: none; }
   .city-toolbar > .btn { flex: none; scroll-snap-align: start; }
   .city-bar .btn.city-btn { min-height: 44px; }
   .city-caption { min-height: 0; }
-  .city-hud, .city-tabs { overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: none; margin-inline: calc(var(--gutter) * -1); padding-inline: var(--gutter); }
+  .city-hud, .city-tabs { overflow-x: auto; scroll-snap-type: x proximity; scroll-padding-inline: var(--gutter); scrollbar-width: none; margin-inline: calc(var(--gutter) * -1); padding-inline: var(--gutter); }
   .city-hud::-webkit-scrollbar, .city-tabs::-webkit-scrollbar { display: none; }
   .city-hud { padding-bottom: 2px; }
   .city-tile { scroll-snap-align: start; }
@@ -2417,6 +2433,12 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: 6
   .city-legend { justify-content: flex-start; }
   .section-head.split { grid-template-columns: 1fr; }
   .section-head.split > .btn { justify-self: start; }
+  /* one column: the screen sits right under the tools that change it, the
+     buttons after it (lifted above its deep shadow) */
+  .fs-grid { row-gap: 0; }
+  .fs-grid > div:first-child { display: contents; }
+  .fs-grid > .fs-screen { order: 1; margin-top: 28px; }
+  .fs-grid .hero-actions { order: 2; position: relative; z-index: 1; }
 }
 @media (max-width: 700px) {
   body { font-size: 16px; }
@@ -2445,7 +2467,6 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: 6
   .compare th, .compare td { padding: 11px 12px; font-size: .86rem; }
   .chart-box { min-height: 260px; }
   .city-stage { margin-inline: calc(var(--gutter) * -1); }
-  .city-sensors { max-height: 126px; overflow-y: auto; overscroll-behavior: contain; }
   .city-tile-spark { flex-basis: 130px; min-width: 130px; }
 }
 @media (max-width: 700px) and (hover: none) {
@@ -2655,8 +2676,11 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: 6
 .ways { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
 /* Each card spans four rows of the parent grid, so the intros, checklists
    and buttons line up across the three however long each intro runs. */
-.way { display: grid; grid-row: span 4; grid-template-rows: subgrid; row-gap: 18px; padding: 28px; border-radius: var(--radius); background: #fff; border: 1px solid var(--border); }
+.way { display: grid; grid-row: span 4; grid-template-rows: subgrid; row-gap: 18px; padding: 28px; border-radius: var(--radius); background: var(--bg-alt); }
+/* not links, so a tone on the band with the icon drawn plain, as on the cards */
+.alt .way:not(.way-feature) { background: #fff; }
 .way-head { display: flex; align-items: center; gap: 14px; }
+.way-head > .card-icon { width: auto; height: 32px; border-radius: 0; background: none; font-size: 30px; justify-content: start; }
 .way h3 { font-size: 1.45rem; }
 .way-line { margin-top: 4px; font-size: .9rem; font-weight: 550; color: var(--brand); }
 .way > p { font-size: .97rem; line-height: 1.6; color: var(--muted); }
@@ -2668,7 +2692,7 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: 6
 .way-feature { position: relative; isolation: isolate; overflow: hidden; border: 0; background: var(--grain), var(--brand-gradient); color: rgba(255, 255, 255, .94); box-shadow: var(--shadow-lg); }
 .way-feature h3, .way-feature .way-points li { color: #fff; }
 .way-feature .way-line { color: #c3ebe3; }
-.way-feature .card-icon { background: rgba(255, 255, 255, .13); color: #fff; }
+.way-feature .card-icon { color: #fff; }
 .way-feature .way-points { border-top-color: rgba(255, 255, 255, .18); }
 .way-feature .way-points .icon { color: #a8e0d6; }
 .way-feature .link-arrow { color: #fff; }
@@ -2727,11 +2751,12 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: 6
 .proof { padding-block: 46px clamp(44px, 6vw, 68px); border-bottom: 0; }
 /* The proof row under the logos: four statements at one weight, no counters.
    Each is a claim made elsewhere on the site, brought up to the first screen. */
-.proof-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid var(--border); }
-.proof-row > div { padding: 24px 24px 0 0; }
+.proof-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-rows: auto auto; border-top: 1px solid var(--border); }
+/* each statement spans two shared rows, so the texts start level under headings of any length */
+.proof-row > div { display: grid; grid-row: span 2; grid-template-rows: subgrid; row-gap: 7px; padding: 24px 24px 0 0; }
 .proof-row > div + div { padding-left: 24px; border-left: 1px solid var(--border); }
 .proof-row b { display: block; font-family: var(--font-display); font-size: 1.1rem; font-weight: 640; letter-spacing: -.015em; line-height: 1.3; color: var(--ink); text-wrap: balance; }
-.proof-row span { display: block; margin-top: 7px; font-size: .9rem; line-height: 1.45; color: var(--muted); }
+.proof-row span { display: block; margin-top: 0; font-size: .9rem; line-height: 1.45; color: var(--muted); }
 
 /* Home: the instrument shelf. Four flagship instruments large on one white
    plate, as on a catalogue plate, each named with its maker, one line and two
@@ -2765,6 +2790,7 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: 6
   .inst { grid-template-rows: 240px auto; }
 }
 @media (max-width: 980px) {
+  .range-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .proof-row { grid-template-columns: 1fr 1fr; }
   .proof-row > div:nth-child(3) { padding-left: 0; border-left: 0; }
   .proof-row > div:nth-child(n + 3) { margin-top: 20px; }
@@ -2792,9 +2818,7 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: 6
 .mini-grid b { display: block; font-family: var(--font-display); font-size: 1.02rem; font-weight: 620; color: var(--ink); }
 .mini-grid b em { font-style: normal; margin-left: 6px; font-size: .72rem; font-weight: 700; letter-spacing: .1em; color: var(--brand); }
 .mini-grid li > span > span { display: block; margin-top: 2px; font-size: .88rem; line-height: 1.45; color: var(--muted); }
-.about-block .certs { margin-top: 8px; padding: 18px 0 0; gap: 16px; background: none; border-radius: 0; border-top: 1px solid var(--border); }
 .mini-grid.plain li { grid-template-columns: minmax(0, 1fr); }
-.about-block .certs img { height: 44px; }
 
 /* Service and solution pages: facts in the hero, a section bar, then bands. */
 .glance li::after { display: none; }
@@ -2906,6 +2930,8 @@ html:has(.secbar) .band[id] { scroll-margin-top: calc(16px - var(--band-pad)); }
 @media (max-width: 1180px) {
   .hero-main { grid-template-columns: minmax(0, 1fr) 300px; gap: 40px; }
   .live { width: 300px; }
+  .live-site { white-space: nowrap; }
+  .live-tag { letter-spacing: .06em; }
   .feature-grid.n4 > * { grid-column: span 6; }
   .range-tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
@@ -2924,7 +2950,8 @@ html:has(.secbar) .band[id] { scroll-margin-top: calc(16px - var(--band-pad)); }
 }
 @media (max-width: 860px) {
   .hero-main { grid-template-columns: 1fr; gap: 36px; }
-  .live { width: min(100%, 360px); }
+  /* stacked under the buttons it would push the client logos out of the first screen */
+  .hero .live { display: none; }
 }
 @media (max-width: 700px) {
   .feature-grid > *, .feature-grid.n4 > *, .feature-grid.n2 > *, .feature-grid.n5 > :nth-child(-n + 2) { grid-column: 1 / -1; }
@@ -3203,7 +3230,6 @@ body.is-touring { overscroll-behavior-y: contain; }
   /* on a phone a balanced lede leaves a ragged gap on the right; let it run */
   .lede { text-wrap: pretty; }
   .signup input { font-size: 1rem; }
-  .hero .live { display: none; }
   .page-hero .hero-actions > .btn-ghost[href^="tel:"] { display: none; }
   .hero-actions > .chips { flex-wrap: nowrap; overflow-x: auto; margin-inline: calc(var(--gutter) * -1); padding: 2px var(--gutter) 6px; scrollbar-width: none; }
   .hero-actions > .chips::-webkit-scrollbar { display: none; }
@@ -3224,6 +3250,8 @@ body.is-touring { overscroll-behavior-y: contain; }
   .shelf { padding: 24px 20px; }
 }
 @media (max-width: 560px) {
+  /* the industries list goes to one column; the offices stay two across */
+  .mini-grid:not(.plain) { grid-template-columns: 1fr; }
   .compare { table-layout: auto; }
   .compare thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
   .compare, .compare tbody, .compare tr, .compare td { display: block; }
