@@ -2464,7 +2464,7 @@ export const flowsense = {
     },
     {
       id: "data-quality", heading: "Check the instrument before you trust the number.",
-      lede: "Every figure on this page rests on the record being sound. So FlowSense scores the record first, names the weak channel, and shows its working when it repairs anything.",
+      lede: "Every figure in FlowSense rests on the record being sound. So it scores the record first, names the weak channel, and shows its working when it repairs anything.",
       points: [
         ["Depth against velocity", "Every depth and velocity pair over the window, coloured by flow. Silt, surcharge, backwater and a failing meter each leave a different shape."],
         ["Three scores, named for what they score", "Operator health, telemetry and anomalies, with each channel's completeness and gaps listed rather than averaged away."],
@@ -2522,22 +2522,23 @@ export const flowsense = {
   ],
   // The showpiece. PSM is the oldest idea in EDS and one of the most used
   // tools in FlowSense. The pins sit on the screen at fractions of its width
-  // and height; check them after the brochure is replaced.
+  // and height, each in its panel's own white space so it hides no text;
+  // check them after the brochure is replaced.
   psm: {
     eyebrow: "Pump Station Manager",
     heading: "Station flow from the pumps you already run. No flow meter.",
-    lede: "A wet well fills as sewage arrives and empties as the pumps move it. So its level, the pump run states and its size make a flow record. EDS has built PSM on that since 1991, and it is one of the most popular tools in FlowSense.",
+    lede: "A wet well fills as sewage arrives and empties as the pumps move it. So its level, the pump run states and its size make a flow record. EDS has built PSM on that idea since 1991. Today it's one of the most popular tools in FlowSense.",
     shot: ["psm", "The FlowSense Pump Station Manager: the station's figures across the top, the wet well drawn to scale with its set-points, a briefing in words, and each pump's delivery against its rating on a dial."],
     pins: [
-      ["The station's figures first", "What arrived, what was pumped out, and the balance of the two over whole pump cycles.", 18.5, 42.5],
-      ["The wet well, in kilolitres", "An engineer's section of the well, with its start and stop levels and the volume each cycle moves.", 16.2, 55.5],
-      ["A briefing, in words", "What is worth watching and what is for the record, each with a button to its evidence.", 49.5, 55.5],
-      ["Pump condition, with a date", "Each pump against its rating, a warning when its output slips, and remaining useful life as a range.", 49.5, 69.5],
+      ["The station's figures first", "What arrived, what was pumped out, and the balance of the two over whole pump cycles.", 26.8, 42.9],
+      ["The wet well, in kilolitres", "An engineer's section of the well, with its start and stop levels and the volume each cycle moves.", 31.1, 56.4],
+      ["A briefing, in words", "What is worth watching and what is for the record, each with a button to its evidence.", 84.7, 55.4],
+      ["Pump condition, with a date", "Each pump against its rating, a warning when its output slips, and remaining useful life as a range.", 90.4, 70.4],
     ],
     trace: {
       title: "Two slopes and a well volume are enough.",
       text: "One slope gives the inflow, the other gives what each pump is actually delivering today. Five hours of wet well level, one station: a schematic, not measured data.",
-      rise: "Filling at the rate sewage arrives", fall: "Emptying at the rate the pumps move it",
+      rise: "Filling as sewage arrives", fall: "Emptying as the pumps run",
     },
     points: [
       ["Station flow without a flow meter", "Arriving flow at every timestamp from the wet well level, plus volume pumped, starts and run hours, with the well itself in kilolitres. No chamber work, no meter to buy, no confined space entry."],
@@ -2556,7 +2557,7 @@ export const flowsense = {
     note: "Commissioned with you. We set up every connection with your IT or SCADA people, using documents written for them. A connection is not done until a reading has arrived and been checked.",
   },
   apart: {
-    heading: "Eight things you won't find together anywhere else.",
+    heading: "Eight things you won't find together elsewhere in Australia.",
     lede: "No other platform sold in Australia carries a reading the whole way, from the chamber to the capital plan, on one record and in one subscription. Each of these answers a question an authority is asked every year.",
     items: [
       ["One record, end to end", "The reading in the chamber and the figure in the board paper are the same number, never retyped."],
@@ -2566,19 +2567,19 @@ export const flowsense = {
       ["Models you keep", "Storm by storm calibration, a dynamic wave network and a costed plan, in one workspace."],
       ["Data both ways", "Your SCADA in five ways, and the validated record back out to it."],
       ["Every number shows its working", "“How this is calculated” on the figures that matter, naming the method and the standard."],
-      ["A price on the page", "Per site, everything included, unlimited users, and no editions to choose between."],
+      ["Priced by the site", "Everything included, unlimited users, and no editions to choose between."],
     ],
   },
   standards: {
     heading: "Built to the published standards, and tested against them.",
     lede: "Each calculation in FlowSense cites the standard it follows, in the product, where your reviewer can read it. The list is generated from the running software, so a standard nothing implements cannot appear on it, and conformance is held by tests against the code rather than asserted once.",
     items: [
-      ["drafting-compass", "CIWEM UDG Code of Practice (2017)", "Per-storm calibration acceptance bands, and dry weather flow as a daily pattern for each type of day."],
+      ["drafting-compass", "CIWEM UDG Code of Practice (2017)", "Storm by storm calibration acceptance bands, and dry weather flow as a daily pattern for each type of day."],
       ["droplets", "WEF MOP FD-6 and WPCF MOP No. 36", "Dry weather flow as sanitary flow plus groundwater infiltration, from qualifying dry days only."],
       ["ruler", "WSA 02 Sewerage Code of Australia", "Self-cleansing velocity, level of service checks, and Colebrook-White friction for each pipe."],
       ["cloud-rain", "AR&R 2019 and AS/NZS 3500.3", "Areal reduction factors, design rainfall temporal patterns, and the Rational Method for ungauged subcatchments."],
       ["list-checks", "QARTOD", "The quality control tests and flag vocabulary used to score each record before it is trusted."],
-      ["git-branch", "EPA SWMM", "Dynamic wave routing, and the three-component RTK method for rainfall-derived infiltration and inflow."],
+      ["git-branch", "EPA SWMM", "Dynamic wave routing, and the three component RTK method for rainfall derived infiltration and inflow."],
       ["fan", "ISO 13381-1", "A pump's remaining useful life, counted down to a stated limit and given with its uncertainty."],
       ["scale", "NSW Liquid Trade Waste Guidelines (2021)", "Trade waste charges: the annual fee, usage, excess mass and pH charges, on a trade waste account."],
     ],

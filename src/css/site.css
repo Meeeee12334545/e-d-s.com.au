@@ -3170,14 +3170,15 @@ body.is-touring { overscroll-behavior-y: contain; }
 /* Three products in one: the card family, with the purchase each replaces. */
 .fs-layers .card small { display: block; margin-top: auto; padding-top: 14px; font-size: .82rem; font-weight: 500; color: var(--brand-dark); }
 
-/* A stop on the tour: copy beside the screen, swapping sides stop by stop. */
+/* A stop on the tour: copy beside the screen, swapping sides stop by stop.
+   Whichever side it is on, the screen takes the wider column. */
 .fs-stop-in { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: clamp(32px, 5vw, 72px); align-items: center; }
 .fs-stop.rev .fs-stop-copy { order: 2; }
-.fs-stop.tall .fs-stop-in { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); }
+.fs-stop.rev .fs-stop-in, .fs-stop.tall .fs-stop-in { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); }
 .fs-stop-copy { display: grid; gap: 26px; }
 .fs-stop-head { display: grid; gap: 14px; }
 .fs-stop-head .eyebrow { margin-bottom: 0; }
-.fs-stop h2 { font-size: clamp(1.7rem, 2.8vw, 2.35rem); letter-spacing: -.015em; line-height: 1.12; }
+.fs-stop h2 { letter-spacing: -.015em; line-height: 1.12; }
 .fs-stop .lede { font-size: 1.04rem; line-height: 1.58; }
 .fs-points { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 28px; margin: 0; padding: 0; list-style: none; }
 .fs-points li { padding-top: 14px; border-top: 1px solid var(--border-strong); }
@@ -3201,9 +3202,9 @@ body.is-touring { overscroll-behavior-y: contain; }
 .fs-psm-head { max-width: 780px; }
 .fs-psm-head .eyebrow { margin-bottom: 16px; }
 .fs-psm-stage { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: clamp(24px, 4vw, 56px); align-items: center; }
-.fs-pinned { overflow: visible; }
+.fs-pinned { overflow: visible; container-type: inline-size; }
 .fs-pinned picture { border-radius: 14px; overflow: hidden; }
-.fs-pin { position: absolute; left: var(--x); top: var(--y); translate: -50% -50%; z-index: 2; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: #fff; color: var(--chrome); font: 650 .82rem var(--font-display); box-shadow: 0 0 0 3px rgba(12, 95, 89, .45), 0 6px 16px rgba(var(--abyss-rgb), .35); transition: scale .3s var(--ease-spring), background-color .2s var(--ease), color .2s var(--ease); }
+.fs-pin { position: absolute; left: var(--x); top: var(--y); translate: -50% -50%; z-index: 2; width: clamp(22px, 4.2cqi, 30px); height: clamp(22px, 4.2cqi, 30px); border-radius: 50%; display: grid; place-items: center; background: #fff; color: var(--chrome); font: 650 .82rem var(--font-display); box-shadow: 0 0 0 3px rgba(12, 95, 89, .45), 0 6px 16px rgba(var(--abyss-rgb), .35); transition: scale .3s var(--ease-spring), background-color .2s var(--ease), color .2s var(--ease); }
 .fs-pin::before { content: ""; position: absolute; inset: -3px; border-radius: 50%; border: 2px solid var(--aqua); opacity: 0; animation: fs-ping 3.2s var(--ease-out) infinite; animation-delay: calc(var(--n, 0) * .35s); }
 .fs-pin[data-n="2"] { --n: 1; } .fs-pin[data-n="3"] { --n: 2; } .fs-pin[data-n="4"] { --n: 3; }
 @keyframes fs-ping { 0% { scale: 1; opacity: .9; } 60%, 100% { scale: 2.1; opacity: 0; } }
@@ -3218,6 +3219,12 @@ body.is-touring { overscroll-behavior-y: contain; }
 .fs-psm-more { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(28px, 4vw, 56px); align-items: start; }
 .fs-trace { margin: 0; padding: 18px 18px 16px; border-radius: 18px; background: #fff; color: var(--ink-2); box-shadow: 0 36px 80px -24px rgba(var(--abyss-rgb), .7); }
 .fs-trace svg { display: block; width: 100%; height: auto; }
+/* The labels are drawn in viewBox units, so a narrow figure draws them
+   larger to keep them at about 12 px on screen. */
+.fs-trace { container-type: inline-size; }
+@container (max-width: 620px) { .fs-trace text { font-size: 14px; } }
+@container (max-width: 480px) { .fs-trace text { font-size: 17px; } }
+@container (max-width: 380px) { .fs-trace text { font-size: 20px; } }
 .fs-trace figcaption { margin-top: 12px; font-size: .88rem; line-height: 1.5; color: var(--muted); }
 .fs-trace figcaption b { color: var(--ink); font-weight: 620; }
 .fs-trace .draw { stroke-dasharray: 100; animation: fs-trace 9s linear infinite; }
@@ -3230,7 +3237,7 @@ body.is-touring { overscroll-behavior-y: contain; }
 .fs-psm .hero-actions { margin-top: 0; }
 
 /* In, one record, out. */
-.fs-flow { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, .95fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.fs-flow { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, .95fr) minmax(0, 1fr); gap: 16px; align-items: stretch; }
 .fs-flow > div { padding: 24px 26px 26px; border-radius: var(--radius); border: 1px solid transparent; background: var(--bg-alt); }
 .fs-flow > .mid { background: var(--grain), var(--brand-gradient); color: #fff; border-color: transparent; }
 .fs-flow h3 { display: flex; align-items: center; gap: 9px; font-size: 1.08rem; margin-bottom: 14px; }
@@ -3257,9 +3264,11 @@ body.is-touring { overscroll-behavior-y: contain; }
 .fs-clients { margin-top: clamp(36px, 5vw, 56px); padding-top: clamp(28px, 4vw, 40px); border-top: 1px solid var(--border); }
 .fs-clients > p:first-child { margin-bottom: 20px; font-size: .95rem; font-weight: 500; color: var(--muted); }
 .fs-clients .logo-grid { padding-bottom: 10px; }
+#questions .band-head .lede a { color: var(--brand-dark); font-weight: 500; white-space: nowrap; text-decoration: underline; text-decoration-color: rgba(13, 124, 114, .35); text-underline-offset: 3px; }
+#questions .band-head .lede a:hover { text-decoration-color: currentColor; }
 
 @media (max-width: 980px) {
-  .fs-stop-in, .fs-stop.tall .fs-stop-in, .fs-stop.wide .fs-stop-copy, .fs-psm-stage, .fs-psm-more, .fs-flow { grid-template-columns: 1fr; }
+  .fs-stop-in, .fs-stop.rev .fs-stop-in, .fs-stop.tall .fs-stop-in, .fs-stop.wide .fs-stop-copy, .fs-psm-stage, .fs-psm-more, .fs-flow { grid-template-columns: 1fr; }
   .fs-stop.rev .fs-stop-copy { order: 0; }
   .fs-stop.wide .fs-stop-copy { align-items: start; }
   .fs-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -3273,7 +3282,7 @@ body.is-touring { overscroll-behavior-y: contain; }
   .fs-media.beside { grid-template-columns: 1fr; align-items: start; }
   .fs-media.stack { padding: 0; display: grid; gap: 12px; }
   .fs-media.stack .over { position: static; width: 100%; }
-  .fs-pin { width: 24px; height: 24px; font-size: .72rem; }
+  .fs-pin { font-size: .72rem; }
   .fs-facts b { font-size: 1.9rem; }
 }
 
