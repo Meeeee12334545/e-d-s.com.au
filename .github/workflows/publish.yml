@@ -49,3 +49,9 @@ jobs:
           git add -A
           git commit -q -m "Build of ${GITHUB_SHA::7}"
           git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" gh-pages
+      # Bing and the other IndexNow engines hear which pages changed as soon as
+      # they are live. A failure here leaves the publish as it is.
+      - name: Tell IndexNow which pages changed
+        continue-on-error: true
+        timeout-minutes: 12
+        run: node tools/indexnow.mjs "$RUNNER_TEMP/page-dates.json" dist/assets/page-dates.json
