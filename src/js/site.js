@@ -27,7 +27,8 @@
   // stays open when the pointer leaves, and a click on a menu that hover has
   // just opened keeps it open rather than shutting it in the visitor's face.
   // Closing a menu that holds keyboard focus hands the focus back to its
-  // chevron, since its links are no longer focusable.
+  // chevron, since its links are no longer focusable. Tabbing out of a menu
+  // closes it, so it never hides what the focus moves on to.
   const items = $$(".nav-item.has-mega");
   const shut = (i) => {
     const btn = $(".nav-toggle", i);
@@ -42,6 +43,7 @@
     item.addEventListener("pointerenter", (e) => { if (e.pointerType === "mouse" && item.dataset.by !== "click") open("hover"); else clearTimeout(timer); });
     item.addEventListener("pointerleave", (e) => { if (e.pointerType === "mouse" && item.dataset.by === "hover") timer = setTimeout(() => shut(item), 140); });
     btn.addEventListener("click", () => (item.dataset.by === "click" ? shut(item) : open("click")));
+    item.addEventListener("focusout", (e) => { if (e.relatedTarget && !item.contains(e.relatedTarget)) shut(item); });
   });
   document.addEventListener("click", (e) => { if (!e.target.closest(".nav-item")) closeAll(); });
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") { closeAll(); setDrawer(false); } });
@@ -120,6 +122,13 @@
     { rootMargin: "0px 0px -8% 0px", threshold: 0.08 }
   );
   $$("[data-reveal], [data-count]").forEach((el) => io.observe(el));
+  // The page's inline script keeps the blocks hidden only while this flag
+  // can still be set; if this script fails first, they show as they are.
+  window.EDS_READY = true;
+
+  /* ---- print: the questions print with their answers ---- */
+  addEventListener("beforeprint", () => $$(".faq-item:not([open])").forEach((d) => { d.open = true; d.dataset.printOpen = ""; }));
+  addEventListener("afterprint", () => $$(".faq-item[data-print-open]").forEach((d) => { d.open = false; delete d.dataset.printOpen; }));
 
   /* ---- counters ---- */
   function count(el) {
