@@ -834,7 +834,10 @@ const liveCard = () => `
 // carries paths from the site root, since the list is shown on other pages.
 const plainPath = (src) => src.replace("@root/", "");
 const quoteItem = (p) => ({ id: `${p.brand.slug}-${p.id}`, name: p.name, brand: p.brand.name, image: plainPath(p.image), href: p.href || `products/${p.brand.slug}.html#${p.id}` });
-const quoteBtn = (item, cls = "") => `<button class="quote-add${cls ? ` ${cls}` : ""}" type="button" data-quote="${esc(JSON.stringify(item))}">${icon("list-plus", false)}${icon("check", false)}<span>Add to quote</span></button>`;
+// `by` names the element that says which product it is (a card's title), for
+// screen readers among many cards.
+const describedBy = (by) => (by ? ` aria-describedby="${by}"` : "");
+const quoteBtn = (item, cls = "", by = "") => `<button class="quote-add${cls ? ` ${cls}` : ""}" type="button" data-quote="${esc(JSON.stringify(item))}"${describedBy(by)}>${icon("list-plus", false)}${icon("check", false)}<span>Add to quote</span></button>`;
 
 // Buy, hire or Data as a Service: one card each, with the enquiry form
 // opened on the right topic and way of working.
@@ -880,7 +883,7 @@ const processSection = (tone = "alt") => `
 
 // "PDF", "ZIP": shown in the Documents panel so people know what they will get.
 const docType = (href) => href.split(".").pop().toUpperCase();
-const prodDocs = (p) => `<ul class="prod-docs">${p.docs.map((d) => `<li><a href="${d.href}" rel="noopener">${icon("download")}<span>${esc(d.label)}</span></a></li>`).join("")}</ul>`;
+const prodDocs = (p, by = "") => `<ul class="prod-docs">${p.docs.map((d) => `<li><a href="${d.href}" rel="noopener"${describedBy(by)}>${icon("download")}<span>${esc(d.label)}</span></a></li>`).join("")}</ul>`;
 
 // The structured specifications a product has on the site: the EDS product
 // pages, LIDoTT Alarm and Alarm2. Shown first in the quick view and in the
@@ -891,6 +894,8 @@ const specsOf = (p) => p.href === "products/lidott-alarm.html" ? [["Specificatio
 // details the quick view and the compare view show travel with the card as
 // JSON. The body is grouped so the table view on the products page can lay
 // the same card out as a row: shot, name and note, type, documents, actions.
+// The quick view button comes first, so a screen reader meets the product
+// before its actions, and each action names its product.
 const productCard = (r, p, { id = p.id, showBrand = false, n = 0 } = {}) => {
   const t = typeOf(p.type);
   // The product's own documents, then the ones that cover its whole brand.
@@ -898,14 +903,14 @@ const productCard = (r, p, { id = p.id, showBrand = false, n = 0 } = {}) => {
   const item = quoteItem(p);
   const data = { id: item.id, name: p.name, note: p.note || "", image: p.image, brand: p.brand.name, brandHref: `${r}products/${p.brand.slug}.html`, range: p.range, type: t.label, page: p.href ? `${r}${p.href}` : "", docs, specs: specsOf(p), quote: item };
   return `
-<article class="card prod" id="${id}" data-type="${p.type}" data-brand="${p.brand.slug}" data-docs="${docs.length ? 1 : 0}" data-search="${esc([p.name, p.note, p.brand.name, p.brand.title, p.brand.tag, p.group, t.label].join(" ").toLowerCase())}" data-product="${esc(JSON.stringify(data))}" data-reveal style="--i:${n % 5}">
+<article class="card prod" id="${id}" data-type="${p.type}" data-brand="${p.brand.slug}" data-docs="${docs.length ? 1 : 0}" data-search="${esc([p.name, p.note, p.brand.name, p.group, t.label].join(" ").toLowerCase())}" data-product="${esc(JSON.stringify(data))}" data-reveal style="--i:${n % 5}">
+  <button class="prod-open" type="button" aria-haspopup="dialog" aria-label="Quick view: ${esc(p.name)}${showBrand ? `, ${esc(p.brand.name)}` : ""}"><span>${icon("zoom-in", false)}Quick view</span></button>
   <div class="brand-shot"><img src="${p.image}" alt="${esc(p.name)}" loading="lazy"></div>
   <div class="prod-body">
-    <div class="prod-name">${showBrand ? `<span class="tag">${esc(p.brand.name)}</span>` : ""}<h3>${esc(p.name)}</h3>${p.note ? `<p>${esc(p.note)}</p>` : ""}</div>
+    <div class="prod-name">${showBrand ? `<span class="tag">${esc(p.brand.name)}</span>` : ""}<h3 id="${id}-name">${esc(p.name)}</h3>${p.note ? `<p>${esc(p.note)}</p>` : ""}</div>
     <span class="prod-type">${esc(t.label)}</span>
-    <div class="prod-foot">${p.docs ? prodDocs(p) : `<span class="prod-nodocs"><span class="sr-only">No documents online</span></span>`}<div class="prod-actions">${quoteBtn(item, "sm")}<button class="prod-cmp" type="button" aria-pressed="false" data-track-label="Compare" data-track-item="${esc(p.name)}">${icon("git-compare-arrows", false)}<span>Compare</span></button></div></div>
+    <div class="prod-foot">${p.docs ? prodDocs(p, `${id}-name`) : `<span class="prod-nodocs"><span class="sr-only">No documents online</span></span>`}<div class="prod-actions">${quoteBtn(item, "sm", `${id}-name`)}<button class="prod-cmp" type="button" aria-pressed="false" aria-describedby="${id}-name" data-track-label="Compare" data-track-item="${esc(p.name)}">${icon("git-compare-arrows", false)}<span>Compare</span></button></div></div>
   </div>
-  <button class="prod-open" type="button" aria-haspopup="dialog" aria-label="Quick view: ${esc(p.name)}${showBrand ? `, ${esc(p.brand.name)}` : ""}"><span>${icon("zoom-in", false)}Quick view</span></button>
 </article>`;
 };
 
@@ -919,6 +924,7 @@ const quickView = () => `
     <button class="qv-copy" type="button" data-qv-copy>${icon("link", false)}<span>Copy link</span></button>
     <button class="qv-btn" type="button" data-qv-close aria-label="Close">${icon("x", false)}</button>
   </div>
+  <p class="sr-only" aria-live="polite" data-qv="say"></p>
   <div class="qv-shot"><img data-qv="image" alt=""></div>
   <div class="qv-body">
     <p class="tag" data-qv="brand"></p>
@@ -926,7 +932,7 @@ const quickView = () => `
     <p class="qv-note" data-qv="note"></p>
     <dl class="qv-facts">
       <div><dt>Type</dt><dd data-qv="type"></dd></div>
-      <div><dt>Range</dt><dd data-qv="range"></dd></div>
+      <div><dt>Family</dt><dd data-qv="range"></dd></div>
       <div><dt>Brand</dt><dd><a data-qv="brandLink"></a></dd></div>
     </dl>
     <div class="qv-actions">
@@ -1491,25 +1497,27 @@ add({
     const opt = (value, label, n, ic = "") => `<li><button type="button" class="cat-opt" data-value="${esc(value)}" aria-pressed="${value === "" ? "true" : "false"}" data-track-label="${esc(label)}">${ic ? icon(ic, false) : ""}<span>${esc(label)}</span><span data-n>${n}</span></button></li>`;
     const rail = `
     <aside class="cat-rail" aria-label="Filter the instruments">
-      <div class="cat-group" data-cat-filter="type"><p class="cat-h">Type</p><ul>${opt("", "All instruments", products.length)}${C.productTypes.map((t) => opt(t.id, t.label, products.filter((p) => p.type === t.id).length, t.icon)).join("")}</ul></div>
-      <div class="cat-group" data-cat-filter="brand"><p class="cat-h">Range</p><ul>${opt("", "All ranges", products.length)}${C.brands.map((b) => opt(b.slug, b.name, products.filter((p) => p.brand === b).length)).join("")}</ul></div>
-      <div class="cat-group" data-cat-filter="docs"><p class="cat-h">Documents</p><ul>${opt("", "Any", products.length)}${opt("1", "With a datasheet or manual", products.filter((p) => (p.docs || []).length || (p.brand.docs || []).length).length)}</ul></div>
+      <div class="cat-group" role="group" aria-labelledby="cat-h-type" data-cat-filter="type"><p class="cat-h" id="cat-h-type">Type</p><ul>${opt("", "All instruments", products.length)}${C.productTypes.map((t) => opt(t.id, t.label, products.filter((p) => p.type === t.id).length, t.icon)).join("")}</ul></div>
+      <div class="cat-group" role="group" aria-labelledby="cat-h-brand" data-cat-filter="brand"><p class="cat-h" id="cat-h-brand">Range</p><ul>${opt("", "All ranges", products.length)}${C.brands.map((b) => opt(b.slug, b.name, products.filter((p) => p.brand === b).length)).join("")}</ul></div>
+      <div class="cat-group" role="group" aria-labelledby="cat-h-docs" data-cat-filter="docs"><p class="cat-h" id="cat-h-docs">Documents</p><ul>${opt("", "Any", products.length)}${opt("1", "Datasheet or manual", products.filter((p) => (p.docs || []).length || (p.brand.docs || []).length).length)}</ul></div>
     </aside>`;
     return `
 ${pageHero(r, { crumbs: [["Products"]], title: "Industry leading instruments, backed by people who use them.", compact: true, after: `
     <div class="finder-bar" id="finder" data-reveal style="--i:2">
-      <label class="finder-search">${icon("search", false)}<input type="search" placeholder="Search ${products.length} instruments by name, range or what they measure" aria-label="Search instruments" autocomplete="off" spellcheck="false"></label>
+      <label class="finder-search">${icon("search", false)}<input type="search" placeholder="Try “flow”, “Hach” or “level”" aria-label="Search ${products.length} instruments by name, range or what they measure" autocomplete="off" spellcheck="false"></label>
+      <p class="finder-live" hidden><span data-finder-live></span> <a class="link-arrow" href="#instruments">See them ${icon("arrow-right")}</a></p>
     </div>` })}
 <section class="section ranges-strip" id="ranges"><div class="wrap">
   <div class="ranges-head"><h2 class="h-md" data-reveal>Browse by range</h2><p data-reveal style="--i:1">EDS makes its own instruments and represents leading manufacturers, across water supply, wastewater, flow monitoring and process control. Every range here is one we install, service and calibrate ourselves.</p></div>
   <div class="range-tiles">
     ${C.brands.map((b, n) => {
       const count = products.filter((p) => p.brand === b).length;
-      return `<a class="range-tile" href="${r}products/${b.slug}.html" data-reveal style="--i:${n % 4}"><span class="card-icon">${icon(b.icon)}</span><b>${esc(b.title)}</b><small>${count} ${count === 1 ? "instrument" : "instruments"}</small></a>`;
+      return `<a class="range-tile" href="${r}products/${b.slug}.html" data-reveal style="--i:${n % 4}"><span class="card-icon">${icon(b.icon)}</span><b>${esc(b.title)}</b><small>${count} ${count === 1 ? "instrument" : "instruments"}</small><span class="go" aria-hidden="true">${icon("arrow-right")}</span></a>`;
     }).join("")}
   </div>
 </div></section>
 <section class="section alt finder-results" id="instruments"><div class="wrap">
+  <h2 class="sr-only">Instruments</h2>
   <div class="finder cat">
     ${rail}
     <div class="cat-main">
@@ -1525,16 +1533,16 @@ ${pageHero(r, { crumbs: [["Products"]], title: "Industry leading instruments, ba
         <span class="card-icon">${icon("search-x")}</span>
         <h3>No instruments match</h3>
         <p>Try another word or filter, or ask our team which instrument suits your application.</p>
-        <div class="hero-actions"><button class="btn btn-outline" type="button" data-finder-reset>Show all instruments</button><a class="btn btn-brand" href="${contactHref(r, { topic: "Product pricing" })}">Ask our team ${icon("arrow-right")}</a></div>
+        <div class="hero-actions"><button class="btn btn-outline" type="button" data-finder-reset>Show all instruments</button><a class="btn btn-brand" href="${contactHref(r, { topic: "Product pricing" })}">Start an enquiry ${icon("arrow-right")}</a></div>
       </div>
     </div>
   </div>
 </div></section>
 ${quickView()}
 <section class="section" id="featured"><div class="wrap split" style="align-items:center">
-  <div><p class="eyebrow">Featured</p><h2 class="h-lg" data-reveal>LIDoTT Alarm</h2><p class="lede" data-reveal style="--i:1;margin-top:16px">${C.lidott.lede} Radar level sensor, battery, modem and aerial in one compact, Zone 0 certified device.</p>
+  <div><p class="eyebrow">Featured</p><h2 class="h-lg" data-reveal>LIDoTT Alarm</h2><p class="lede" data-reveal style="--i:1;margin-top:16px">${C.lidott.lede} Radar level sensor, battery, modem and aerial in one compact unit, certified for Zone 0.</p>
   <div class="hero-actions"><a class="btn btn-brand btn-lg" href="${r}products/lidott-alarm.html">See how it works ${icon("arrow-right")}</a></div></div>
-  <div class="brand-shot" style="border:1px solid var(--border);border-radius:24px;aspect-ratio:1" data-reveal="right"><img src="${C.lidott.image}" alt="LIDoTT Alarm" loading="lazy"></div>
+  <div class="brand-shot" style="border:1px solid var(--border);border-radius:var(--radius);aspect-ratio:1" data-reveal="right"><img src="${C.lidott.image}" alt="LIDoTT Alarm" loading="lazy"></div>
 </div></section>
 ${waysSection(r, { cls: "alt" })}
 ${ctaSection(r, { title: "Need help choosing an instrument?", lede: "Our team has installed, serviced and calibrated all of them. Ask us which suits your application.", topic: "Product pricing" })}`;

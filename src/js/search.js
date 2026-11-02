@@ -123,7 +123,8 @@
         for (const [label, items] of groups) {
           let body = items.slice(0, PER_GROUP).map((e) => row(e, raw)).join("");
           if (label === "Products" && items.length > PER_GROUP) {
-            body += `<a class="sr sr-more" role="option" href="${root}products/index.html?q=${encodeURIComponent(raw)}#finder"><span class="sr-icon">${svg("package-search") || svg("arrow-right")}</span><span class="sr-text"><b>See all ${items.length} matching instruments</b><small>In the instrument finder</small></span>${svg("arrow-right")}</a>`;
+            // No count: the finder matches its own way, so its number can differ.
+            body += `<a class="sr sr-more" role="option" href="${root}products/index.html?q=${encodeURIComponent(raw)}#instruments"><span class="sr-icon">${svg("package-search") || svg("arrow-right")}</span><span class="sr-text"><b>See all matching instruments</b><small>In the instrument finder</small></span>${svg("arrow-right")}</a>`;
           }
           html += group(label, body);
         }

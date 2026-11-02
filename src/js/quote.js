@@ -22,17 +22,28 @@
     refresh();
   };
   const has = (id) => load().some((x) => x.id === id);
+  const inList = (n) => `${n} ${n === 1 ? "product" : "products"} in your quote list`;
+  const bump = () => $$("[data-quote-link]").forEach((el) => {
+    el.classList.remove("bump");
+    void el.offsetWidth; // restart the animation
+    el.classList.add("bump");
+  });
 
   function add(item) {
     const list = load();
     if (!list.some((x) => x.id === item.id)) list.push({ ...item, qty: 1 });
     save(list);
-    toast(item.name);
-    $$("[data-quote-link]").forEach((el) => {
-      el.classList.remove("bump");
-      void el.offsetWidth; // restart the animation
-      el.classList.add("bump");
-    });
+    toast(`${item.name} added. ${inList(list.length)}.`);
+    bump();
+  }
+  // Several at once (the compare view's "Add all to quote"), with one toast.
+  function addMany(items) {
+    const list = load();
+    const fresh = items.filter((i) => !list.some((x) => x.id === i.id));
+    if (!fresh.length) return;
+    save([...list, ...fresh.map((i) => ({ ...i, qty: 1 }))]);
+    toast(`${fresh.length === 1 ? fresh[0].name : `${fresh.length} instruments`} added. ${inList(list.length + fresh.length)}.`);
+    bump();
   }
   const remove = (id) => save(load().filter((x) => x.id !== id));
 
@@ -45,7 +56,8 @@
       try { item = JSON.parse(b.dataset.quote); } catch { return; }
       const added = list.some((x) => x.id === item.id);
       b.classList.toggle("added", added);
-      $("span", b).textContent = added ? "Added to quote" : "Add to quote";
+      // Pressing it again takes the product out, so a screen reader says so.
+      $("span", b).innerHTML = added ? 'Added to quote<span class="sr-only">, press to remove</span>' : "Add to quote";
     });
     $$("[data-quote-count]").forEach((el) => {
       el.textContent = n;
@@ -53,13 +65,13 @@
     });
     $$("[data-quote-link]").forEach((el) => {
       el.hidden = !n;
-      el.title = `${n} ${n === 1 ? "product" : "products"} in your quote list`;
+      el.title = inList(n);
     });
     renderBox(list);
   }
 
   let toastEl, toastTimer;
-  function toast(name) {
+  function toast(text, link = true) {
     if (!toastEl) {
       toastEl = document.createElement("div");
       toastEl.className = "quote-toast";
@@ -68,14 +80,31 @@
     }
     // A modal dialog (the quick view) sits above everything in the body, so
     // the toast goes inside it while one is open.
-    (document.querySelector("dialog[open]") || document.body).appendChild(toastEl);
-    const n = load().length;
-    $("span", toastEl).textContent = `${name} added. ${n} ${n === 1 ? "product" : "products"} in your quote list.`;
+    const dlg = document.querySelector("dialog[open]");
+    const host = dlg || document.body;
+    const moved = toastEl.parentNode !== host;
+    if (moved) host.appendChild(toastEl);
+    // Above the compare tray when one is showing, or the compare view's
+    // buttons, so neither hides the other (the tray by offsetTop, since its
+    // entrance moves it with translate).
+    const tray = !dlg && $(".cmp-tray:not([hidden])");
+    const foot = dlg && $(".cmp-foot", dlg);
+    const top = tray ? tray.offsetTop : foot ? foot.getBoundingClientRect().top : 0;
+    toastEl.style.bottom = top ? `${Math.round(innerHeight - top + 12)}px` : "";
     // Where the form is on the page the list is already there, so no link.
-    $("a", toastEl).hidden = !!$("[data-quote-box]");
-    toastEl.classList.add("show");
+    $("a", toastEl).hidden = !link || !!$("[data-quote-box]");
+    const say = () => {
+      $("span", toastEl).textContent = text;
+      toastEl.classList.add("show");
+      toastTimer = setTimeout(() => toastEl.classList.remove("show"), 4200);
+    };
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => toastEl.classList.remove("show"), 4200);
+    // A live region is read out only when its words change after it is in
+    // place, so a toast just put in place gets its words a beat later.
+    if (moved) {
+      $("span", toastEl).textContent = "";
+      toastTimer = setTimeout(say, 100);
+    } else say();
   }
 
   document.addEventListener("click", (e) => {
@@ -85,8 +114,12 @@
     e.stopPropagation();
     let item;
     try { item = JSON.parse(b.dataset.quote); } catch { return; }
-    if (has(item.id)) remove(item.id);
-    else add(item);
+    if (has(item.id)) {
+      // A second press takes it out again: say so, with no link once the list is empty.
+      remove(item.id);
+      const n = load().length;
+      toast(n ? `${item.name} removed. ${inList(n)}.` : `${item.name} removed. Your quote list is empty.`, n > 0);
+    } else add(item);
   });
 
   /* ---- the list inside the enquiry form ---- */
@@ -164,6 +197,6 @@
   // Another tab added or removed something.
   window.addEventListener("storage", (e) => e.key === KEY && refresh());
 
-  window.EDS = Object.assign(window.EDS || {}, { quote: { refresh, clear: () => save([]) } });
+  window.EDS = Object.assign(window.EDS || {}, { quote: { refresh, clear: () => save([]), addMany } });
   refresh();
 })();
