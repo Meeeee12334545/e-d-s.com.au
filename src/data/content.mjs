@@ -41,6 +41,19 @@ export const site = {
   flowsenseUrl: "https://edsflowsense.au/",
   remoteDataUrl: "https://www.detecdata-en.com/",
   legal: "EDS & DAUS Pty Ltd",
+  // EDS's own profiles elsewhere (LinkedIn, YouTube, the Google Business
+  // Profile's share link and so on). They go into the structured data as
+  // `sameAs`, which is how Google ties those profiles to this site.
+  profiles: [],
+  // Site ownership tokens: the `content` of the meta tag Google Search
+  // Console and Bing Webmaster Tools each offer under "HTML tag". Each goes
+  // on the home page when set. Not needed for a domain verified by DNS.
+  verify: { google: "", bing: "" },
+  // The IndexNow key (https://www.indexnow.org). The build publishes it as
+  // /<key>.txt, and the publish workflow uses it to tell Bing and the other
+  // IndexNow search engines which pages changed (tools/indexnow.mjs). Any
+  // 32 hex characters; changing it only means the next publish sends every page.
+  indexNowKey: "d968c1e599ceeb8a6cdacc2021cf1270",
 };
 
 export const offices = [
@@ -100,6 +113,10 @@ export const stats = [
 // Google and the browser tab, in place of "<title> | EDS", where the short
 // title leaves out the words people search for. Keep it to 60 characters and
 // to words the page's own copy uses; the build warns when a title runs longer.
+// `description` (also on solutions and brands) is the line Google shows under
+// that title, in place of the `summary`, where the summary is too short to
+// say what the page offers. Keep it between about 120 and 155 characters and
+// to claims the page already makes.
 export const serviceGroups = [
   { id: "sewer", title: "Sewer networks", heading: "Know what is in the pipe, and what should not be.", lede: "Measure what flows through the network, find where the water gets in, and prove the fixes worked.", proof: "Intrinsically safe instruments certified for Zone 0, from the company awarded the largest sewer monitoring project in Australia in recent years." },
   { id: "water", title: "Water & environment", heading: "Quality, sampling and rainfall, measured properly.", lede: "For utilities, industry and environmental projects, with full pipe flow measured alongside.", proof: "The widest range of automatic samplers in Australia, including the only true intrinsically safe sampler." },
@@ -348,6 +365,7 @@ export const services = [
     process: true,
     featured: true,
     summary: "Find where stormwater and groundwater enter the sewer, and how much, so investment goes where it counts.",
+    description: "Find where stormwater and groundwater get into the sewer, and how much. EDS I&I studies run through wet weather, with rain gauges in the catchment.",
     intro: [
       "Stormwater and groundwater getting into the sewer is one of the most expensive problems a council or utility can have, and one of the hardest to see. Finding it is what EDS does best.",
       "Industry data suggests inflow and infiltration (I&I) can make up half the flow in an older network during a storm. Left alone, it hides the true capacity of the system, muddies the hydraulic model and skews investment planning, so pipes and plants end up sized too big or too small.",
@@ -516,6 +534,7 @@ export const services = [
     process: true,
     featured: true,
     summary: "Flow and rainfall monitoring designed to calibrate your hydraulic model, scored storm by storm.",
+    description: "Flow and rainfall monitoring designed to calibrate your hydraulic model: logged every 1 to 5 minutes, scored storm by storm and ready for EPA SWMM.",
     intro: [
       "A hydraulic model is only as good as the field data behind it. EDS designs and delivers the monitoring programs that calibrate new models and bring existing ones back into line with the network, from the first site visit to the final dataset.",
       "Modelling is how communities plan and future-proof their wastewater infrastructure. To simulate the network properly in dry weather and in storms, the model needs high resolution flow and rainfall data from the pipes themselves.",
@@ -843,6 +862,7 @@ export const services = [
     icon: "cylinder",
     group: "water",
     summary: "Magnetic, ultrasonic and contacting technologies to measure and totalise flow in full pipes.",
+    description: "Magnetic, ultrasonic, pressure and contacting flow meters for full pipes. EDS helps you choose, then supplies, installs, audits and calibrates them.",
     intro: [
       "Measuring flow in a full pipe comes down to choosing the right technology for the liquid, the pipe and the job. There are several to choose from, and each has its strengths.",
       "The options include magnetic and ultrasonic flow meters, pressure transmitters and contacting technologies such as capacitance, TDR (time domain reflectometry) and paddle wheel, to measure and totalise the flow.",
@@ -933,6 +953,7 @@ export const services = [
     group: "data",
     featured: true,
     summary: "Rugged 4G monitoring that reports to one map and to the SCADA you already run, with alarms that reach people.",
+    description: "Rugged 4G monitoring that reports to one map and to the SCADA you already run, with email and SMS alarms when a level rises or a logger goes quiet.",
     intro: [
       "When a level rises or a logger goes quiet, you want to know now, not next week. EDS supplies rugged wireless monitoring equipment built for the most demanding and critical sites, reporting over 4G to one map and to the SCADA you already run.",
       "And we don't just ship the boxes. We install, commission and support the equipment, so the data keeps arriving for the life of the program.",
@@ -1033,6 +1054,7 @@ export const services = [
     icon: "plug-zap",
     group: "data",
     summary: "Monitoring data delivered into the SCADA, telemetry and building management systems you already run.",
+    description: "Monitoring data delivered into the SCADA, telemetry and building systems you already run: ClearSCADA, Schneider CITECT and ELPRO, or by API and MQTT.",
     intro: [
       "Telemetry is in EDS's roots. Before founding EDS, Graham Harper started Elpro, now one of the world's largest SCADA suppliers.",
       "Our monitoring equipment works with leading SCADA architectures including ClearSCADA, Schneider CITECT and ELPRO. Data can also reach your systems from our platform by API, and real-time analytical sensors can be integrated into new or existing building management systems.",
@@ -1233,6 +1255,7 @@ export const services = [
     icon: "package-check",
     group: "field",
     summary: "Long and short term hire of monitoring and analytical equipment built for the harshest applications.",
+    description: "Hire flow meters, loggers, samplers and analytical equipment from the EDS fleet, short or long term, installed by you or by trained EDS crews.",
     intro: [
       "Not every program needs you to own the instruments. The EDS hire fleet covers flow meters, loggers, samplers and analytical equipment, all built for the harshest and most demanding applications, for a short study or a long program.",
       "EDS is one of the leading suppliers of rugged scientific and measurement equipment across a wide range of applications, and we back the fleet with advice from people who use it in the field.",
@@ -1350,6 +1373,7 @@ export const solutions = [
     title: "Structure Performance & Monitoring",
     icon: "landmark",
     summary: "24/7 condition scoring of critical structures with the EDS Asset Score (EAS).",
+    description: "24/7 condition monitoring of critical structures with the EDS Asset Score: one number from 0 to 1000, and alarms to the right people when it changes.",
     intro: [
       "A structure can change condition faster than an annual inspection will catch. EDS has worked with Australia's largest industries to deliver detailed condition reports on critical assets, and offers a complete product and service solution for reporting that condition in real time.",
       "At its heart is the patent pending EDS Asset Score (EAS): one number from 0 to 1000, recorded around the clock, that tells you how a structure is doing and whether it's changing. When something shifts, subtly or suddenly, the people responsible hear about it as soon as possible.",
@@ -1385,6 +1409,7 @@ export const solutions = [
     title: "Asset & Network Assessment",
     icon: "scan-search",
     summary: "Catch blockages, structural defects and cross connections early, and see where to spend first.",
+    description: "Network assessments that catch blockages, structural defects and cross connections early, and map inflow across catchments so you know where to spend.",
     intro: [
       "A deteriorating network rarely fails all at once. It costs more to run first, in staff time and maintenance, long before anything fails outright.",
       "Regular, consistent assessments from EDS catch that slide early and keep your network and assets performing at their best.",
@@ -1419,6 +1444,7 @@ export const solutions = [
     title: "Network Thermal Monitoring",
     icon: "thermometer",
     summary: "Temperature studies that find exactly where water gets into a pipe, in water and wastewater networks alike.",
+    description: "Temperature studies that pinpoint where water gets into a pipe, with Beadedstream cables of up to 125 sensors, in water and wastewater networks alike.",
     intro: [
       "Water getting into a pipe is usually a different temperature from what's already in it. EDS runs short to long term temperature studies in reticulated networks that use that difference to find exactly where the water gets in. The method works in water and wastewater networks, and in most atmospheric or pressurised networks besides.",
       "Temperature is a growing practice in network assessment because it is accurate, low cost, and pinpoints specific ingress sources.",
@@ -1451,6 +1477,7 @@ export const solutions = [
     pageTitle: "Wastewater Flow & Quality Monitoring | EDS",
     icon: "droplets",
     summary: "Flow and quality monitoring, from a single EC point to thousands of deployed field instruments.",
+    description: "Wastewater flow and quality monitoring from Australia's largest service contractor for water and wastewater studies, from one EC point to thousands.",
     intro: [
       "Flow and quality monitoring for the wastewater industry is where EDS began, and decades later it's still the heart of what we do.",
       "Today EDS is Australia's largest service contractor for water and wastewater monitoring studies, short and long term.",
@@ -1489,6 +1516,7 @@ export const solutions = [
     pageTitle: "Automatic Water & Wastewater Sampling | EDS",
     icon: "flask-conical",
     summary: "Australia's widest range of automated water and wastewater samplers, for sale or hire.",
+    description: "Australia's widest range of automatic water and wastewater samplers, including the only true intrinsically safe sampler in the country. Buy or hire.",
     intro: [
       "EDS has the largest range of automatic water and wastewater samplers in Australia, and supplies the only true intrinsically safe sampler in the country.",
       "Buy from the widest range of sampler configurations in Australia, or hire from our select rental fleet for a short study or a long program.",
@@ -1579,6 +1607,7 @@ export const brands = [
     icon: "cpu",
     tag: "Designed and built by EDS",
     summary: "Data loggers, sensors and the Pump Station Manager, manufactured by EDS.",
+    description: "Data loggers, sensors and the Pump Station Manager, designed and built by EDS, including the 4G Hawk and Metalog loggers and the E-Flow 3 sewer flowmeter.",
     cover: img("e-flow-3.png"),
     intro: [
       "EDS designs and builds its own instruments, and represents leading manufacturers, across water supply, wastewater, flow monitoring and process control. When you buy an EDS instrument, the people who designed it are the people who support it.",
@@ -1618,6 +1647,7 @@ export const brands = [
     icon: "radar",
     tag: "Sewer and wastewater network monitoring",
     summary: "Ultrasonic flow, level and water quality instruments engineered for sewer networks.",
+    description: "Detectronic ultrasonic flow, level and water quality instruments for sewer networks, including the MSFM and LIDoTT, supplied and installed by EDS.",
     logo: img("detectronic-logocolour.png"),
     cover: img("detectronic-msfm-s2-lidott.png"),
     coverName: "MSFM S2 flow monitor and LIDoTT level sensor",
@@ -1663,6 +1693,7 @@ export const brands = [
     icon: "flask-conical",
     tag: "ATEX and IECEx certified sampling",
     summary: "Rugged mobile and stationary samplers from the world's leading maker of certified sampling systems.",
+    description: "ORI mobile and stationary samplers from the world's leading maker of ATEX and IECEx certified sampling systems, brought to Australia by EDS.",
     logo: img("ori-logo.png"),
     intro: [
       "EDS is proud to bring the ORI range to Australia. It's a long partnership, and together we put some of the most rugged, reliable and high performance sampling equipment available into the field.",
@@ -1713,6 +1744,7 @@ export const brands = [
     icon: "gauge",
     tag: "Open channel flow measurement",
     summary: "Loggers and sensors from Hach, including the Sigma and Marsh-McBirney legacy lines.",
+    description: "Hach flow loggers and sensors, including the FL900, FL1500, Flo-Dar and the Sigma and Marsh-McBirney lines. Supplied by EDS since the 1990s.",
     intro: [
       "Hach Flow, with its legacy brands Sigma and Marsh-McBirney, has a long record of innovation and accuracy in open channel flow measurement. EDS has supplied the range since the Marsh-McBirney days in the 1990s.",
       "True, timely flow data lets you manage wastewater flow before it becomes a problem, and make the critical decisions with confidence rather than reacting afterwards.",
@@ -1764,6 +1796,7 @@ export const brands = [
     icon: "thermometer",
     tag: "Temperature data logging",
     summary: "Temperature loggers, thermistor strings and cloud data, proven in the extremes of Alaska.",
+    description: "Beadedstream temperature loggers, thermistor strings and cloud data, proven in Alaska. EDS lays the cables in sewers to find where groundwater gets in.",
     logo: img("logo-dark.png"),
     intro: [
       "EDS represents Beadedstream, a leader in temperature data logging. Its loggers, sensors and data systems measure air, soil and water temperature in the most challenging environments.",
@@ -1803,6 +1836,7 @@ export const brands = [
     icon: "test-tubes",
     tag: "Composite samplers",
     summary: "Portable, permanent and refrigerated composite samplers for wastewater and process liquids.",
+    description: "MicroLevel MICROSAMPLER composite samplers: the portable 10P, fixed 10B and refrigerated 10R, for wastewater, drains, manholes and process liquids.",
     intro: [
       "The MicroLevel MICROSAMPLER range takes composite samples from wastewater, factory drains and manholes, water channels and any liquid that needs to be examined.",
       "The range covers three configurations: the portable 10P, the fixed 10B for industrial wastewater, manholes, streams and channels, and the stationary, refrigerated 10R for samples that must be kept cool until collection.",
@@ -1827,6 +1861,7 @@ export const brands = [
     icon: "flask-round",
     tag: "Nitrate and nitrite analyser",
     summary: "Real-time nitrate and nitrite measurement with laboratory accuracy in the field.",
+    description: "Aquamonitrix measures nitrate and nitrite in the field in real time, with laboratory accuracy, and handles wastewater without sample pre-treatment.",
     intro: [
       "Aquamonitrix brings laboratory accuracy for nitrate and nitrite out into the field. It measures raw, process and effluent water in real time, and sends the results straight to your SCADA or telemetry system and to its own Datamonitrix data platform.",
       "It holds lab quality accuracy and precision over a broad range, with calibration that stays stable over long deployments and little need for intervention. It can be up and running within a couple of hours, and it's easy to operate and service, which keeps operating and lifetime costs low.",
@@ -1861,6 +1896,7 @@ export const brands = [
     icon: "audio-waveform",
     tag: "Ultrasonic water and flow meters",
     summary: "Ultrasonic water meters and flow meters to ISO and AWWA standards.",
+    description: "Dynaflox ultrasonic water meters and flow meters, made to ISO and AWWA standards. EDS supplies, installs and calibrates them for full pipe flow.",
     intro: [
       "Dynaflox (formerly Dynameters) was established in 1998 and is a leading manufacturer of ultrasonic water meters and flow meters for wide ranging applications.",
       "All Dynaflox products meet world standards of quality and performance, including ISO and AWWA standards. Its system is certified to ISO 9001:2008 and ISO 14001, and its products hold the CE mark. Every system is individually tested and inspected.",
