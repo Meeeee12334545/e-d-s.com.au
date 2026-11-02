@@ -56,7 +56,7 @@
     }
     $("specs").querySelector("tbody").innerHTML = rows.join("");
     $("specsAll").hidden = !(d.page && specs.length > 6);
-    if (d.page) $("specsAll").href = d.page;
+    if (d.page) $("specsAll").href = `${d.page}#specifications`;
     // One link to the product's page: "All specifications" when it shows.
     $("page").hidden = !d.page || !$("specsAll").hidden;
     if (d.page) $("page").href = d.page;

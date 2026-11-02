@@ -1323,8 +1323,8 @@ export const services = [
     group: "field",
     summary: "Facility management with the monitoring built in, for major corporate and government organisations including Defence.",
     intro: [
-      "For more than thirty years, major corporate and government organisations across Australia have trusted EDS to look after their facilities. Today that includes Defence, since 2003, and Transurban, from 2026.",
-      "Facility management is more than maintenance. It's keeping your assets performing, safe and sustainable, with as little downtime as possible and every regulation and industry standard met. We work closely with each client, and because one team delivers several services together, the integration cuts costs.",
+      "For more than thirty years, major corporate and government organisations across Australia have trusted EDS to look after their facilities, and today that includes Defence and Transurban.",
+      "Facility management is more than maintenance. It's keeping your assets performing, safe and sustainable, with as little downtime as possible and every regulation and industry standard met. We work closely with each client, and because one team delivers several services together, costs come down.",
       "Because we're a monitoring company, our facility management comes with the monitoring built in: sensors, data platforms and real-time reporting, alongside deep experience of complex facilities. Every solution is custom built around your environment, budget, risk, compliance and legislative requirements, because no two facilities are the same.",
     ],
     blocks: [
@@ -1759,7 +1759,7 @@ export const brands = [
         ],
       },
     ],
-    docs: [{ label: "ORI water analytics catalogue", href: localDoc("ori-water-analytics-catalogue.pdf") }, { label: "PumpModul datasheet", href: localDoc("ori-pumpmodul-datasheet.pdf") }],
+    docs: [{ label: "ORI water analytics catalogue", href: localDoc("ori-water-analytics-catalogue.pdf") }, { label: "PumpModul datasheet", href: localDoc("ori-pumpmodul-datasheet.pdf"), pageOnly: true }],
   },
   {
     slug: "hach-flow",
@@ -1999,7 +1999,7 @@ export const diagrams = {
 
 export const lidott = {
   title: "LIDoTT Alarm",
-  tag: "Self contained water level alarm",
+  tag: "Self-contained water level alarm",
   maker: "Detectronic",
   lede: "Self-contained water level measurement and alarm device.",
   image: img("lidott-alarm-3.png"),

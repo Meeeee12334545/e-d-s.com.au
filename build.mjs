@@ -212,8 +212,8 @@ function header(r, current, menuTab, file) {
   const here = (href) => (href === file ? ' aria-current="page"' : "");
   const dLink = (i) => `<a href="${r}${i.href}"${here(i.href)}>${icon(i.icon, false)}${esc(i.label)}</a>`;
   const dGroup = (label, sections) => `
-        <details${sections.some((g) => g.items.some((i) => i.href === file)) ? " open" : ""}><summary>${label}${icon("chevron-down", false)}</summary><div>
-          ${sections.map((g) => `${g.label ? `<p class="drawer-sub">${esc(g.label)}</p>` : ""}${g.items.map(dLink).join("")}${g.all ? `<a href="${r}${g.all.href}">${icon("arrow-right", false)}${g.all.label}</a>` : ""}`).join("")}
+        <details${sections.some((g) => g.items.some((i) => i.href === file) || g.all?.href === file) ? ' class="has-current"' : ""}><summary>${label}${icon("chevron-down", false)}</summary><div>
+          ${sections.map((g) => `${g.label ? `<p class="drawer-sub">${esc(g.label)}</p>` : ""}${g.items.map(dLink).join("")}${g.all ? `<a href="${r}${g.all.href}"${here(g.all.href)}>${icon("arrow-right", false)}${g.all.label}</a>` : ""}`).join("")}
         </div></details>`;
   const dSections = tabs.map((t, i) => ({ label: t.label, items: t.items, all: t.id === "solutions" ? t.all : i === C.serviceGroups.length - 1 ? { href: "services/index.html", label: "All services" } : null }));
   return `
@@ -915,7 +915,7 @@ const specsOf = (p) => p.href === "products/lidott-alarm.html" ? [["Specificatio
 const productCard = (r, p, { id = p.id, showBrand = false, n = 0 } = {}) => {
   const t = typeOf(p.type);
   // The product's own documents, then the ones that cover its whole brand.
-  const docs = [...(p.docs || []), ...(p.brand.docs || [])];
+  const docs = [...(p.docs || []), ...(p.brand.docs || []).filter((d) => !d.pageOnly)];
   const item = quoteItem(p);
   const data = { id: item.id, name: p.name, note: p.note || "", image: p.image, brand: p.brand.name, brandHref: `${r}products/${p.brand.slug}.html`, range: p.range, type: t.label, page: p.href ? `${r}${p.href}` : "", docs, specs: specsOf(p), quote: item };
   return `
@@ -1141,7 +1141,7 @@ add({
     <div class="city-tour-stage" id="city-tour-stage"></div>
     <div class="city-tour-top">
       <div class="city-tour-where"><p class="eyebrow">${esc(C.cityUi.tour.title)}</p><p class="city-tour-title" id="city-tour-title"></p><p class="city-tour-sub" id="city-tour-sub"></p></div>
-      <button type="button" class="btn btn-ghost city-btn city-tour-leave" data-act="tour-leave">${icon("x", false)}<span>${esc(C.cityUi.tour.leave)}</span><kbd>Esc</kbd></button>
+      <button type="button" class="btn btn-ghost city-btn city-tour-leave" data-act="tour-leave" aria-label="${esc(C.cityUi.tour.leave)}" aria-keyshortcuts="Escape">${icon("x", false)}<span>${esc(C.cityUi.tour.leave)}</span><kbd aria-hidden="true">Esc</kbd></button>
     </div>
     <div class="city-tour-rail" id="city-tour-rail" role="group" aria-label="${esc(C.cityUi.tour.railLabel)}"></div>
     <div class="city-tour-card" id="city-tour-card"><p class="city-tour-num"></p><h3></h3><p class="city-tour-blurb"></p><div class="chips"></div><button type="button" class="city-tour-open" data-act="tour-open">${esc(C.cityUi.tour.open)}${icon("arrow-right", false)}</button></div>
@@ -1447,7 +1447,7 @@ ${overviewHtml(s)}
 ${bands}
 ${process}
 ${demo}
-${groups.length ? band(relatedTone, `${relatedHead}<div class="related-grid">${groups.map(([title, links], i) => `<div data-reveal style="--i:${i}"><h3>${title}</h3><ul class="aside-links">${links.map(([href, label, ic = "arrow-right", ext]) => `<li><a href="${href}"${ext ? ' rel="noopener"' : ""}>${esc(label)}${icon(ic)}</a></li>`).join("")}</ul></div>`).join("")}</div>`, { id: "related", cls: "band-related" }) : ""}`;
+${groups.length ? band(relatedTone, `${relatedHead}<div class="related-grid n${groups.length}">${groups.map(([title, links], i) => `<div data-reveal style="--i:${i}"><h3>${title}</h3><ul class="aside-links">${links.map(([href, label, ic = "arrow-right", ext]) => `<li><a href="${href}"${ext ? ' rel="noopener"' : ""}>${esc(label)}${icon(ic)}</a></li>`).join("")}</ul></div>`).join("")}</div>`, { id: "related", cls: "band-related" }) : ""}`;
 }
 
 for (const s of C.services) {
@@ -1647,8 +1647,8 @@ ${pageHero(r, { crumbs: [["Products", "products/index.html"], ["Detectronic", "p
     ${photoFigure(C.lidott.figure)}
   </div>
   <aside class="aside">
-    <figure class="aside-card aside-figure" data-reveal="right"><img src="${C.lidott.image2}" alt="Drawing of LIDoTT Alarm in section" loading="lazy"><figcaption>LIDoTT Alarm, in section</figcaption></figure>
-    <div class="aside-card" data-reveal="right"><h2>Specifications</h2><table class="specs"><tbody>${C.lidott.specs.map(([k, v]) => `<tr><th>${k}</th><td>${v}</td></tr>`).join("")}</tbody></table></div>
+    <figure class="aside-figure" data-reveal="right"><div class="aside-plate"><img src="${C.lidott.image2}" alt="Drawing of LIDoTT Alarm in section" loading="lazy"></div><figcaption>LIDoTT Alarm, in section</figcaption></figure>
+    <div class="aside-card" id="specifications" data-reveal="right"><h2>Specifications</h2><table class="specs"><tbody>${C.lidott.specs.map(([k, v]) => `<tr><th>${k}</th><td>${v}</td></tr>`).join("")}</tbody></table></div>
     <div class="aside-card" data-reveal="right"><h2>Documents</h2><ul class="aside-links docs"><li><a href="${C.lidott.datasheet}" rel="noopener"><span>LIDoTT Alarm datasheet<small>${docType(C.lidott.datasheet)}</small></span>${icon("download")}</a></li></ul></div>
   </aside>
 </div></section>
@@ -1671,7 +1671,7 @@ ${pageHero(r, { crumbs: [["Products", "products/index.html"], ["Detectronic", "p
     <div class="feature-list" style="margin-top:40px">${C.alarm2.sections.map(([t, d]) => `<div class="feature holder" data-reveal><div><b>${esc(t)}</b><span>${esc(d)}</span></div></div>`).join("")}</div>
   </div>
   <aside class="aside">
-    <div class="aside-card" data-reveal="right"><h2>Specifications</h2><table class="specs"><tbody>${C.alarm2.specs.map(([k, v]) => `<tr><th>${k}</th><td>${v}</td></tr>`).join("")}</tbody></table></div>
+    <div class="aside-card" id="specifications" data-reveal="right"><h2>Specifications</h2><table class="specs"><tbody>${C.alarm2.specs.map(([k, v]) => `<tr><th>${k}</th><td>${v}</td></tr>`).join("")}</tbody></table></div>
     <div class="aside-card" data-reveal="right"><h2>Documents</h2><ul class="aside-links docs">${[["Alarm2 datasheet", C.alarm2.datasheet], ["Alarm2 4G manual", C.alarm2.manual]].map(([t, href]) => `<li><a href="${href}" rel="noopener"><span>${t}<small>${docType(href)}</small></span>${icon("download")}</a></li>`).join("")}</ul></div>
   </aside>
 </div></section>
@@ -1724,7 +1724,7 @@ ${pageHero(r, { crumbs: [["Products", "products/index.html"], [b.name, `products
     <div class="feature-list" style="margin-top:40px">${pg.features.map(([t, d]) => `<div class="feature holder" data-reveal><div><b>${esc(t)}</b><span>${esc(d)}</span></div></div>`).join("")}</div>
   </div>
   <aside class="aside">
-    <figure class="aside-card aside-figure" data-reveal="right"><img src="${pg.figure.src}" alt="${esc(pg.figure.alt)}" loading="lazy"><figcaption>${esc(pg.figure.caption)}</figcaption></figure>
+    <figure class="aside-figure" data-reveal="right"><div class="aside-plate"><img src="${pg.figure.src}" alt="${esc(pg.figure.alt)}" loading="lazy"></div><figcaption>${esc(pg.figure.caption)}</figcaption></figure>
     <div class="aside-card" data-reveal="right"><h2>Documents</h2><ul class="aside-links docs">${pg.docs.map((d) => `<li><a href="${d.href}" rel="noopener"><span>${esc(`${pg.name} ${d.label.toLowerCase()}`)}<small>${docType(d.href)} · ${esc(d.note)}</small></span>${icon("download")}</a></li>`).join("")}</ul></div>
     <div class="aside-card" data-reveal="right"><h2>Works with</h2><ul class="aside-links docs">${pg.worksWith.map(([href, t, d]) => `<li><a href="${r}${href}"><span>${esc(t)}<small>${esc(d)}</small></span>${icon("arrow-right")}</a></li>`).join("")}</ul></div>
   </aside>
@@ -2225,9 +2225,9 @@ add({
   current: "",
   body: (r) => `
 ${pageHero(r, { crumbs: [["Privacy policy"]], title: privacy[0], lede: privacy[1], after: privacyDate ? `<p class="note legal-date" data-reveal style="--i:2">Last updated ${privacyDate}</p>` : "" })}
-<section class="section"><div class="wrap legal-wrap"><div class="legal">
+<section class="section"><div class="wrap legal-wrap">${heroToc(privacySections)}<div class="legal">
   ${legalHtml(privacy.slice(2))}
-</div>${heroToc(privacySections)}</div></section>`,
+</div></div></section>`,
 });
 
 /* ------------------------------------------------------------------ */
