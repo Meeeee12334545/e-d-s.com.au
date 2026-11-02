@@ -544,7 +544,7 @@ ${scripts.map((s) => `<script src="${asset(r, `js/${s}`)}" defer></script>`).joi
     // nor the groups of the phone number. Text between tags only, never
     // inside a script or a stylesheet.
     .replace(/(<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>)|>([^<]+)(?=<)/g, (m, code, text) => (code ? m : `>${text
-      .replace(/(\d) (?=(?:mm|m|km|kPa|MPa|kL|L|°C|mA|V|MB|h|weeks?|days?|months?|years?|hours?|minutes?)(?![\p{L}\d]))/gu, "$1\u00a0")
+      .replace(/(\d) (?=(?:mm|m|km|kPa|MPa|kL|L|°C|mA|µA|V|VDC|W|kV|Ah|Hz|kHz|MHz|GHz|Ω|MB|GB|ms|s|kg|ppm|%|h|weeks?|days?|months?|years?|hours?|minutes?)(?![\p{L}\d]))/gu, "$1\u00a0")
       .replace(/± (?=\d)/g, "±\u00a0")
       .replace(/\bZone (?=\d)/g, "Zone\u00a0")
       .replace(/\b(No\.|ISO|RFC|SWMM|WSA|AS\/NZS) (?=\d)/g, "$1\u00a0")
@@ -925,7 +925,7 @@ const productCard = (r, p, { id = p.id, showBrand = false, n = 0 } = {}) => {
   <div class="prod-body">
     <div class="prod-name">${showBrand ? `<span class="tag">${esc(p.brand.name)}</span>` : ""}<h3 id="${id}-name">${esc(p.name)}</h3>${p.note ? `<p>${esc(p.note)}</p>` : ""}</div>
     <span class="prod-type">${esc(t.label)}</span>
-    <div class="prod-foot">${p.docs ? prodDocs(p, `${id}-name`) : `<span class="prod-nodocs"><span class="sr-only">No documents online</span></span>`}<div class="prod-actions">${quoteBtn(item, "sm", `${id}-name`)}<button class="prod-cmp" type="button" aria-pressed="false" aria-describedby="${id}-name" data-track-label="Compare" data-track-item="${esc(p.name)}">${icon("git-compare-arrows", false)}<span>Compare</span></button></div></div>
+    <div class="prod-foot">${p.docs ? prodDocs(p, `${id}-name`) : `<span class="prod-nodocs"><span class="sr-only">No documents online</span></span>`}${p.href ? `<a class="link-arrow prod-page" href="${r}${p.href}" aria-describedby="${id}-name">See how it works ${icon("arrow-right")}</a>` : ""}<div class="prod-actions">${quoteBtn(item, "sm", `${id}-name`)}<button class="prod-cmp" type="button" aria-pressed="false" aria-describedby="${id}-name" data-track-label="Compare" data-track-item="${esc(p.name)}">${icon("git-compare-arrows", false)}<span>Compare</span></button></div></div>
   </div>
 </article>`;
 };
@@ -1566,7 +1566,7 @@ ${pageHero(r, { crumbs: [["Products"]], title: "Industry leading instruments, ba
 </div></section>
 ${quickView()}
 <section class="section" id="featured"><div class="wrap split" style="align-items:center">
-  <div><p class="eyebrow">Featured</p><h2 class="h-lg" data-reveal>LIDoTT Alarm</h2><p class="lede" data-reveal style="--i:1;margin-top:16px">${C.lidott.lede} Radar level sensor, battery, modem and aerial in one compact unit, certified for Zone 0.</p>
+  <div><p class="eyebrow">Featured</p><h2 class="h-lg" data-reveal>LIDoTT Alarm</h2><p class="lede" data-reveal style="--i:1;margin-top:16px">${C.lidott.lede} Radar level sensor, battery, modem and antenna in one compact unit, certified for Zone 0.</p>
   <div class="hero-actions"><a class="btn btn-brand btn-lg" href="${r}products/lidott-alarm.html">See how it works ${icon("arrow-right")}</a></div></div>
   <div class="brand-shot" style="border:1px solid var(--border);border-radius:var(--radius);aspect-ratio:1" data-reveal="right"><img src="${C.lidott.image}" alt="LIDoTT Alarm" loading="lazy"></div>
 </div></section>
@@ -1926,7 +1926,7 @@ ${pageHero(r, { crumbs: [["About"]], title: "Australian owned and operated since
 </div></section>
 <section class="section alt"><div class="wrap origins">
   <div class="section-head"><p class="eyebrow">EDS origins</p><h2 class="h-lg" data-reveal>Founded by Graham and Cynthia Harper.</h2>
-  <p class="lede" data-reveal style="--i:1">EDS began in Queensland in 1991, following Graham's success with Elpro, and alongside the release of the Pump Station Manager.</p></div>
+  <p class="lede" data-reveal style="--i:1">EDS began in Queensland in 1991, following Graham's success with ELPRO, and alongside the release of the Pump Station Manager.</p></div>
   <div class="timeline">
     <span class="timeline-fill"></span>
     ${C.about.timeline.map(([when, t, d], i) => `${i === C.about.timeline.findIndex(([w]) => w.startsWith("2022")) ? '<p class="tl-group" id="projects">Recent projects</p>' : ""}<div class="tl" data-reveal><time>${when}</time><i></i><div><h3>${t}</h3><p>${d}</p></div></div>`).join("")}
@@ -1960,8 +1960,8 @@ const LIBRARY_ROWS = 12;
 
 add({
   file: "resources.html",
-  title: "Resources | EDS white papers, downloads and manuals",
-  description: "EDS white papers on inflow and infiltration, plus software, drivers, datasheets and selection guides.",
+  title: "White Papers, Downloads & Manuals | EDS",
+  description: "EDS white papers on inflow and infiltration, and on locating it with thermistor strings, plus software, drivers, datasheets and selection guides.",
   current: "resources",
   scripts: ["library.js"],
   body: (r) => `
@@ -2251,7 +2251,7 @@ function searchIndex() {
   for (const pg of C.productPages) put("Products", pg.name, `EDS · ${pg.tag}`, `products/${pg.slug}.html`, { img: plain(pg.image), b: text(pg.lede, pg.intro, pg.features, pg.specs.map(([g, rows]) => [g, rows])) });
   for (const p of products) {
     if (p.href) continue; // has a page of its own, listed above
-    put("Products", p.name, `${p.brand.name} · ${p.note || p.range || typeOf(p.type).label}`, `products/${p.brand.slug}.html#${p.id}`, { img: plain(p.image), b: text(typeOf(p.type).label, p.brand.title, p.brand.tag, p.group) });
+    put("Products", p.name, `${p.brand.name} · ${p.note || p.range || typeOf(p.type).label}`, `products/${p.brand.slug}.html#${p.id}`, { img: plain(p.image), b: text(typeOf(p.type).label, p.group) });
   }
   for (const b of C.brands) put("Product ranges", b.title, b.tag, `products/${b.slug}.html`, { i: b.icon, b: text(b.name, b.summary, b.intro, blockText(b.blocks), b.groups.map((g) => g.name)) });
   put("Pages", "Instrument finder", `All ${products.length} instruments, filtered by type or searched by name.`, "products/index.html#finder", { i: "package-search", b: "products catalogue range brands" });
@@ -2290,7 +2290,10 @@ function searchIndex() {
 icon("fan"); // fsScreen() reuses the fan glyph, so make sure it is cached
 await rm(DIST, { recursive: true, force: true });
 await mkdir(path.join(DIST, "assets/fonts"), { recursive: true });
-await cp(path.join(ROOT, "src/css"), path.join(DIST, "assets/css"), { recursive: true });
+// The stylesheet ships without its comments (about a fifth of its weight);
+// they stay in src/css for whoever edits it. No string in it holds "/*".
+await mkdir(path.join(DIST, "assets/css"), { recursive: true });
+for (const f of readdirSync(path.join(ROOT, "src/css"))) await writeFile(path.join(DIST, "assets/css", f), (await readFile(path.join(ROOT, "src/css", f), "utf8")).replace(/\/\*[\s\S]*?\*\//g, "").replace(/\n\s*\n+/g, "\n"));
 await cp(path.join(ROOT, "src/js"), path.join(DIST, "assets/js"), { recursive: true });
 await cp(path.join(ROOT, "src/assets/img"), path.join(DIST, "assets/img"), { recursive: true });
 await cp(path.join(ROOT, "src/assets/docs"), path.join(DIST, "assets/docs"), { recursive: true });

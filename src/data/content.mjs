@@ -96,7 +96,7 @@ export const shelf = {
     { name: "MSFM S2 with LIDoTT", maker: "Detectronic", href: "products/detectronic.html", image: img("detectronic-msfm-s2-lidott.png"), fit: 100,
       text: "The area velocity meter our sewer fleet runs on, with the level sensor that keeps measuring as the chamber surcharges.", specs: ["ATEX and IECEx Zone 0", "LIDoTT level to ± 2 mm"] },
     { name: "LIDoTT Alarm", maker: "Detectronic", href: "products/lidott-alarm.html", image: img("lidott-alarm-cut.png"), fit: 90,
-      text: "Radar level sensor, battery, modem and aerial in one device, for early warning of blockages and overflows.", specs: ["Radar level to ± 5 mm", "Up to seven years on battery"] },
+      text: "Radar level sensor, battery, modem and antenna in one device, for early warning of blockages and overflows.", specs: ["Radar level to ± 5 mm", "Up to seven years on battery"] },
     { name: "Hawk", maker: "EDS", href: "products/hawk.html", image: img("hawk.png"), fit: 94,
       text: "The 4G logger built for Australian sewer networks. It lives inside the manhole, with no cabinet to build and no power to bring to site.", specs: ["IP68 submersible", "Designed and built by EDS"] },
     { name: "E-Flow 3", maker: "EDS", href: "products/e-flow-3.html", image: img("e-flow-3.png"), fit: 72,
@@ -639,7 +639,7 @@ export const services = [
     summary: "Level alarms that warn as a sewer surcharges, and Blockage Watch in FlowSense that finds a blockage weeks before it overflows.",
     intro: [
       "Blockages and surcharges give warning if something is watching. EDS deploys level monitoring through sewer networks that alerts crews to rising wastewater depth, so utilities can react quickly to a blockage, or a surcharge caused by a sewer collapse, before it becomes a spill.",
-      "Detectronic's LIDoTT Alarm puts a radar level sensor, battery, modem and aerial into one Zone 0 certified device, suited to deployment throughout sewer networks and in domestic or lateral sewers. We supply and install it across Australia and run it in our own monitoring fleet. EDS is also a Sydney Water panel provider for sewer flow and level instrumentation.",
+      "Detectronic's LIDoTT Alarm puts a radar level sensor, battery, modem and antenna into one Zone 0 certified device, suited to deployment throughout sewer networks and in domestic or lateral sewers. We supply and install it across Australia and run it in our own monitoring fleet. EDS is also a Sydney Water panel provider for sewer flow and level instrumentation.",
       "Where flow meters are already installed, the data does the watching too. A steady rise in depth with no rain to explain it points to a developing blockage or sediment build-up, often long before field crews would report it.",
     ],
     blocks: [
@@ -789,7 +789,7 @@ export const services = [
     summary: "Automatic water and wastewater samplers to buy or hire, including the only true intrinsically safe sampler in Australia.",
     intro: [
       "If you need to sample water or wastewater, EDS has the widest range of automatic samplers in Australia. Buy the configuration that suits the job, or hire from our select rental fleet for a short study or a long program.",
-      "The range covers mobile and stationary samplers from ORI, the world's leading manufacturer of ATEX and IECEx certified sampling systems, and MicroLevel's portable, fixed and refrigerated composite samplers.",
+      "The range covers mobile and stationary samplers from ORI, recognised as the world's leading manufacturer of ATEX and IECEx certified sampling systems, and MicroLevel's portable, fixed and refrigerated composite samplers.",
     ],
     blocks: [
       {
@@ -1080,7 +1080,7 @@ export const services = [
     summary: "Monitoring data delivered into the SCADA, telemetry and building management systems you already run.",
     description: "Monitoring data delivered into the SCADA, telemetry and building systems you already run: ClearSCADA, Schneider CITECT and ELPRO, or by API and MQTT.",
     intro: [
-      "Telemetry is in EDS's roots. Before founding EDS, Graham Harper started Elpro, now one of the world's largest SCADA suppliers.",
+      "Telemetry is in EDS's roots. Before founding EDS, Graham Harper started ELPRO, now one of the world's largest SCADA suppliers.",
       "Our monitoring equipment works with leading SCADA architectures including ClearSCADA, Schneider CITECT and ELPRO. Data can also reach your systems from our platform by API, and real-time analytical sensors can be integrated into new or existing building management systems.",
     ],
     blocks: [
@@ -1974,7 +1974,7 @@ export const diagrams = {
     labels: { overflow: "Overflow", surcharge: "Surcharge", start: "Start", stop: "Stop", main: "Rising main", radar: ["LIDoTT R", "Radar and pressure"], inlet: "From the network", pumps: "Pump run signals", manager: "Pump Station Manager", data: "To SCADA and EDS FlowSense" },
   },
   tradewaste: {
-    alt: "Illustration of a trade waste discharge point. A drain runs from an industrial site to a sampling pit on its way to the sewer. In the pit a flow sensor sits on the invert and a quality probe hangs in the flow; beside it a sampler draws through a hose, and a logger with an aerial sends the readings on for reporting.",
+    alt: "Illustration of a trade waste discharge point. A drain runs from an industrial site to a sampling pit on its way to the sewer. In the pit a flow sensor sits on the invert and a quality probe hangs in the flow; beside it a sampler draws through a hose, and a logger with an antenna sends the readings on for reporting.",
     caption: "Illustration: flow, sampling and quality at one discharge point, with a logger sending the readings on for reporting.",
     labels: { site: "Your site", sewer: "To the sewer", data: "Data and reporting", sampling: "Sampling", quality: "Quality", flow: "Flow" },
   },
@@ -2646,7 +2646,7 @@ export const about = {
   ],
   timeline: [
     ["Early 1970s", "Elite Electronics", "Graham Harper began building businesses in electronics."],
-    ["Early 1980s", "Elpro", "Graham started Elpro, now one of the world's largest SCADA suppliers."],
+    ["Early 1980s", "ELPRO", "Graham started ELPRO, now one of the world's largest SCADA suppliers."],
     ["1991", "EDS is founded", "Graham and Cynthia Harper established EDS in Queensland, alongside the release of its flagship product, the Pump Station Manager (PSM)."],
     ["1990s", "Bureau of Meteorology loggers", "Graham developed the EDS data logger for the Bureau of Meteorology, still in use today, then moved into flow with the Marsh-McBirney range, now Hach."],
     ["2001–02", "Amberley Fire Training Facility", "EDS built the facility under Graham's leadership."],
@@ -2683,7 +2683,7 @@ export const about = {
     lede: "Sewers, chambers, cabinets and poles: the sites our crews instrument, visit and keep reporting.",
     photos: [
       { photo: "sewer-av-meter", alt: "An area velocity flow meter on a mounting band at the invert of a sewer, seen from the manhole above, with wastewater flowing over it", caption: "An area velocity flow meter in the channel of a sewer." },
-      { photo: "site-crew-manhole", alt: "A sewer manhole in a park with a safety barrier set up beside it and the EDS van parked nearby", caption: "A site visit." },
+      { photo: "site-crew-manhole", alt: "A manhole in a park, with an access hatch behind a safety rail and a white van parked beyond it", caption: "A site visit." },
       { photo: "telemetry-pole-solar", alt: "A solar panel and a telemetry enclosure mounted on a pole beside a monitoring site", caption: "A solar powered telemetry site.", pos: "50% 18%" },
       { photo: "sewer-sensors-chamber", alt: "A sewer chamber with a level float and an area velocity sensor installed in the flow", caption: "Level and velocity sensors in a chamber." },
       { photo: "telemetry-cabinet", alt: "An open site cabinet with a data logger, a modem and a power supply mounted inside", caption: "Inside a site cabinet.", pos: "50% 62%" },

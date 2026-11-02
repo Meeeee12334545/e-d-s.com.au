@@ -25,6 +25,8 @@
     img.classList.remove("swap");
     void img.offsetWidth; // restart the fade for the next product
     img.classList.add("swap");
+    // Some makers only publish a small shot: show it at most half again its own size rather than blown up to fill the frame.
+    img.onload = () => { const n = Math.max(img.naturalWidth, img.naturalHeight); img.style.maxWidth = img.style.maxHeight = n < 400 ? `${Math.round(n * 1.5)}px` : ""; };
     img.src = d.image;
     img.alt = d.name;
     $("brand").textContent = d.brand;
