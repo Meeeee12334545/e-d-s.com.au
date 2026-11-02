@@ -162,7 +162,7 @@ function scatter(t) {
   <path class="dg-axis" d="M64 24V262H444"/>
   ${label(64, 284, L.velocity, { cls: "dg-m" })}
   ${label(54, 24, L.depth, { a: "end", cls: "dg-m" })}
-  <path class="dg-fit" d="${smooth(sample(0.06, 0.94, 0.04, (v) => v).map((v) => [X(v), Y(0.06 + 0.82 * v ** 1.6)]))}"/>
+  <path class="dg-fit" d="${smooth(sample(0.06, 0.94, 0.04, (v) => v).map(([v]) => [X(v), Y(0.06 + 0.82 * v ** 1.6)]))}"/>
   ${usual.map(([x, y]) => `<circle class="dg-pt" cx="${f1(x)}" cy="${f1(y)}" r="3.4"/>`).join("")}
   ${shifted.map(([x, y]) => `<circle class="dg-pt shift" cx="${f1(x)}" cy="${f1(y)}" r="3.4"/>`).join("")}
   ${label(258, 238, L.usual, { cls: "dg-m" })}${leader("M292 225L302 166")}

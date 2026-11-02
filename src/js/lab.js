@@ -258,7 +258,6 @@
     paused = p;
     lab.classList.toggle("paused", p);
     pauseBtn.setAttribute("aria-pressed", String(p));
-    pauseBtn.setAttribute("aria-label", p ? "Resume the simulation" : "Pause the simulation");
     pauseBtn.querySelector(".when-running").hidden = p;
     pauseBtn.querySelector(".when-paused").hidden = !p;
     sync();
@@ -276,6 +275,7 @@
     const label = () => {
       const v = parseFloat(input.value);
       out.textContent = id === "lab-size" ? `${v} mm` : v < 0.5 ? "Tight" : v < 1.1 ? "Typical" : "Leaky";
+      input.setAttribute("aria-valuetext", out.textContent);
     };
     input.addEventListener("input", label); label();
   });

@@ -17,6 +17,7 @@
   /* ================= quick view ================= */
   function show(card) {
     const d = card.product;
+    dialog.scrollTop = 0; // each product opens at its top
     // Step through what the visitor can see: the finder may be filtering.
     list = cards.filter((c) => !c.hidden);
     at = list.indexOf(card);
@@ -24,6 +25,8 @@
     img.classList.remove("swap");
     void img.offsetWidth; // restart the fade for the next product
     img.classList.add("swap");
+    // Some makers only publish a small shot: show it at most half again its own size rather than blown up to fill the frame.
+    img.onload = () => { const n = Math.max(img.naturalWidth, img.naturalHeight); img.style.maxWidth = img.style.maxHeight = n < 400 ? `${Math.round(n * 1.5)}px` : ""; };
     img.src = d.image;
     img.alt = d.name;
     $("brand").textContent = d.brand;
@@ -32,25 +35,38 @@
     $("note").hidden = !d.note;
     $("type").textContent = d.type;
     $("range").textContent = d.range;
-    $("range").parentElement.hidden = !d.range;
+    // The family (the group on its brand page), unless it only repeats the type.
+    $("range").parentElement.hidden = !d.range || d.range === d.type;
     $("brandLink").textContent = d.brand;
     $("brandLink").href = d.brandHref;
     $("enquire").href = `${root}enquire.html?${new URLSearchParams({ topic: "Product pricing", product: label(d) })}`;
     $("quote").dataset.quote = JSON.stringify(d.quote);
     window.EDS?.quote?.refresh();
-    // The first specifications, where the site has them, before the documents.
+    // The first six specifications, where the site has them, before the
+    // documents, under their group names ("Velocity", "Depth") when there are
+    // several groups, so a figure says what it measures.
     const specs = d.specs.flatMap(([, rows]) => rows);
     $("specs").hidden = !specs.length;
-    $("specs").querySelector("tbody").innerHTML = specs.slice(0, 6).map(([k, v]) => `<tr><th>${esc(k)}</th><td>${esc(v)}</td></tr>`).join("");
+    const rows = [];
+    let n = 0;
+    for (const [group, kv] of d.specs) {
+      if (n >= 6) break;
+      if (d.specs.length > 1) rows.push(`<tr class="group"><th colspan="2" scope="colgroup">${esc(group)}</th></tr>`);
+      for (const [k, v] of kv.slice(0, 6 - n)) { rows.push(`<tr><th>${esc(k)}</th><td>${esc(v)}</td></tr>`); n++; }
+    }
+    $("specs").querySelector("tbody").innerHTML = rows.join("");
     $("specsAll").hidden = !(d.page && specs.length > 6);
-    if (d.page) $("specsAll").href = d.page;
-    $("page").hidden = !d.page;
+    if (d.page) $("specsAll").href = `${d.page}#specifications`;
+    // One link to the product's page: "All specifications" when it shows.
+    $("page").hidden = !d.page || !$("specsAll").hidden;
     if (d.page) $("page").href = d.page;
     $("docs").hidden = !d.docs.length;
     $("docs").querySelector("ul").innerHTML = d.docs.map((doc) => `<li><a href="${esc(doc.href)}" rel="noopener" download>${esc(doc.label)}${docIcon}</a></li>`).join("");
     $("count").textContent = `${at + 1} of ${list.length}`;
     dialog.querySelectorAll("[data-qv-step]").forEach((b) => (b.disabled = list.length < 2));
     history.replaceState(null, "", `#${card.id}`);
+    // Stepping keeps focus on Previous or Next, so say which product is showing.
+    if (dialog.open) $("say").textContent = `${d.name}, ${at + 1} of ${list.length}`;
   }
   function open(card) {
     show(card);
@@ -94,7 +110,10 @@
   copy.addEventListener("click", async () => {
     const lbl = copy.querySelector("span");
     lbl.textContent = (await window.EDS.copyText(location.href)) ? "Link copied" : "Copy the address bar";
-    setTimeout(() => (lbl.textContent = "Copy link"), 2000);
+    // On a phone the label is hidden until there is something to say.
+    copy.classList.add("done");
+    $("say").textContent = lbl.textContent;
+    setTimeout(() => { lbl.textContent = "Copy link"; copy.classList.remove("done"); }, 2000);
   });
 
   // Open the product named in the address, on arrival or from search.
@@ -113,7 +132,7 @@
   // Up to three instruments, kept for the visit (sessionStorage) so a pick on
   // a brand page is still there on the products page. The compare view lays
   // them in columns: what the site says about each, then every specification
-  // row any of them has, blank where a product's documents do not state it.
+  // row any of them has, group by group, blank where the site does not state it.
   const tray = document.querySelector(".cmp-tray");
   const cmp = document.querySelector("dialog.cmp");
   if (tray && cmp) {
@@ -134,7 +153,8 @@
         b.title = !on && full ? `Up to ${MAX} instruments at a time` : "";
       }
       tray.hidden = !picked.length;
-      tray.querySelector(".cmp-n").textContent = picked.length === 1 ? "Pick one more to compare" : `${picked.length} to compare`;
+      // At the limit the other Compare buttons are disabled; the tray says why.
+      tray.querySelector(".cmp-n").textContent = picked.length === 1 ? "Pick one more to compare" : full ? `${MAX} to compare, the most at once` : `${picked.length} to compare`;
       tray.querySelector(".cmp-sel").innerHTML = picked.map((id) => `<button type="button" data-unpick="${esc(id)}" aria-label="Remove ${esc(byId.get(id).product.name)} from the comparison">${esc(byId.get(id).product.name)}${xIcon}</button>`).join("");
       tray.querySelector("[data-cmp-open]").disabled = picked.length < 2;
     }
@@ -144,52 +164,86 @@
       render();
     };
     cards.forEach((c) => c.querySelector(".prod-cmp").addEventListener("click", () => toggle(c.product.id)));
+    // The tray is rebuilt as it changes, so keep focus with the visitor: on
+    // the next chip, or on a product's own Compare button once the tray closes
+    // (scrolled to only from the keyboard: a click has no need to move the page).
+    const focusCmp = (ids, e) => ids.map((id) => byId.get(id)).find((c) => !c.hidden)?.querySelector(".prod-cmp").focus({ preventScroll: e.detail > 0 });
     tray.addEventListener("click", (e) => {
       const un = e.target.closest("[data-unpick]");
-      if (un) toggle(un.dataset.unpick);
+      if (!un) return;
+      const id = un.dataset.unpick, i = picked.indexOf(id);
+      toggle(id);
+      const chips = tray.querySelectorAll("[data-unpick]");
+      if (chips.length) chips[Math.min(i, chips.length - 1)].focus();
+      else focusCmp([id], e);
     });
-    tray.querySelector("[data-cmp-clear]").addEventListener("click", () => { picked = []; save(); render(); });
+    tray.querySelector("[data-cmp-clear]").addEventListener("click", (e) => {
+      const was = picked;
+      picked = []; save(); render();
+      focusCmp(was, e);
+    });
 
     function openCompare() {
       const items = picked.map((id) => byId.get(id).product);
       const cell = (v) => (v ? `<td>${v}</td>` : `<td class="none" title="Not stated in the documents on this site">—</td>`);
       const row = (th, cells) => `<tr><th scope="row">${th}</th>${cells.map(cell).join("")}</tr>`;
       cmp.querySelector("thead").innerHTML = `<tr><th scope="row"><span class="sr-only">Instrument</span></th>${items.map((p) => `<th scope="col"><span class="cmp-shot"><img src="${esc(p.image)}" alt=""></span><span class="tag">${esc(p.brand)}</span>${esc(p.name)}</th>`).join("")}</tr>`;
+      // Equal columns; on a phone the table is as wide as the products need.
+      cmp.querySelector(".cmp-table").style.setProperty("--n", items.length);
       const rows = [
         row("What it is", items.map((p) => esc(p.note))),
         row("Type", items.map((p) => esc(p.type))),
-        row("Range", items.map((p) => esc(p.range))),
+        // The family (the group on its brand page), unless each only repeats the type.
+        ...(items.some((p) => p.range && p.range !== p.type) ? [row("Family", items.map((p) => esc(p.range)))] : []),
         row("Documents", items.map((p) => p.docs.map((d) => `<a href="${esc(d.href)}" rel="noopener" download>${esc(d.label)}</a>`).join("<br>"))),
       ];
-      // Every specification row any of them has, in the order first met.
-      const specs = new Map();
-      for (const p of items) for (const [group, kv] of p.specs) for (const [k, v] of kv) {
-        const key = `${group}\u0000${k}`;
-        if (!specs.has(key)) specs.set(key, { group, k, vals: new Map() });
-        specs.get(key).vals.set(p.id, v);
+      // Every specification group any of them has, in the order first met,
+      // each with its rows from all of them. Wiring, lights and order codes
+      // belong to one model, so they stay on its page.
+      const SKIP = new Set(["Ordering", "Sensor connector wiring", "Status lights"]);
+      const groups = new Map();
+      for (const p of items) for (const [group, kv] of p.specs) {
+        if (SKIP.has(group)) continue;
+        if (!groups.has(group)) groups.set(group, new Map());
+        const g = groups.get(group);
+        for (const [k, v] of kv) { if (!g.has(k)) g.set(k, new Map()); g.get(k).set(p.id, v); }
       }
-      let lastGroup = null;
-      for (const { group, k, vals } of specs.values()) {
-        if (group !== lastGroup) { rows.push(`<tr class="group"><th scope="row" colspan="${items.length + 1}">${esc(group)}</th></tr>`); lastGroup = group; }
-        rows.push(row(esc(k), items.map((p) => (vals.has(p.id) ? esc(vals.get(p.id)) : ""))));
+      for (const [group, keys] of groups) {
+        rows.push(`<tr class="group"><th scope="row" colspan="${items.length + 1}"><span>${esc(group)}</span></th></tr>`);
+        for (const [k, vals] of keys) rows.push(row(esc(k), items.map((p) => (vals.has(p.id) ? esc(vals.get(p.id)) : ""))));
       }
       cmp.querySelector("tbody").innerHTML = rows.join("");
       const without = items.filter((p) => !p.specs.length).map((p) => p.name);
-      cmp.querySelector("[data-cmp-note]").textContent = without.length
-        ? `${without.join(" and ")}: specifications are in the datasheet. The rows above show what the site states.`
-        : "Specifications as published on this site.";
+      cmp.querySelector("[data-cmp-note]").textContent = !without.length
+        ? "Specifications as published on this site."
+        : without.length === items.length
+          ? "This site doesn't list specifications for these instruments. Ask us for the details."
+          : `This site doesn't list specifications for the ${new Intl.ListFormat("en-AU", { type: "disjunction" }).format(without)}, so ${without.length === 1 ? "its rows are" : "their rows are"} blank. Ask us for the details.`;
       cmp.querySelector("[data-cmp-enquire]").href = `${root}enquire.html?${new URLSearchParams({ topic: "Product pricing", product: items.map(label).join(", ") })}`;
+      syncAddAll();
       document.querySelectorAll("dialog[open]").forEach((d) => d.close());
+      const scroller = cmp.querySelector(".table-scroll");
+      scroller.scrollTop = scroller.scrollLeft = 0;
       cmp.showModal();
       cmp.querySelector("[data-cmp-close]").focus();
     }
     tray.querySelector("[data-cmp-open]").addEventListener("click", openCompare);
     cmp.querySelector("[data-cmp-close]").addEventListener("click", () => cmp.close());
-    cmp.querySelector("[data-cmp-quote]").addEventListener("click", () => {
-      for (const id of picked) {
-        const b = byId.get(id).querySelector(".quote-add");
-        if (!b.classList.contains("added")) b.click();
-      }
+    // "Add all to quote" adds them in one go, with one toast, then says they
+    // are all in the list.
+    const addAll = cmp.querySelector("[data-cmp-quote]");
+    function syncAddAll() {
+      const done = picked.every((id) => byId.get(id).querySelector(".quote-add").classList.contains("added"));
+      addAll.disabled = done;
+      addAll.lastChild.textContent = done ? " All in your quote list" : " Add all to quote";
+    }
+    addAll.addEventListener("click", () => {
+      const buttons = picked.map((id) => byId.get(id).querySelector(".quote-add"));
+      if (window.EDS?.quote?.addMany) window.EDS.quote.addMany(buttons.map((b) => JSON.parse(b.dataset.quote)));
+      else buttons.forEach((b) => b.classList.contains("added") || b.click());
+      syncAddAll();
+      // a disabled button lets go of focus, so hand it to the next step
+      if (addAll.disabled) cmp.querySelector("[data-cmp-enquire]").focus();
     });
     closeOutside(cmp);
     render();
@@ -211,9 +265,17 @@
     (skip === "brand" || !state.brand || c.dataset.brand === state.brand) &&
     (skip === "docs" || !state.docs || c.dataset.docs === state.docs);
 
+  // A word matches the card's text, or the product's name with spaces and
+  // dashes ignored ("eflow" finds E-Flow 3, "nemo1" NEMO 1); a plural also
+  // tries its singular ("flow meters").
+  const compact = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, "");
+  const names = new Map(cards.map((c) => [c, compact(c.product.name)]));
+  const hit = (c, t) => c.dataset.search.includes(t) || (compact(t).length > 2 && names.get(c).includes(compact(t)));
+  const live = document.querySelector("[data-finder-live]");
+
   function apply() {
     const terms = input.value.toLowerCase().trim().split(/\s+/).filter(Boolean);
-    const byText = cards.filter((c) => terms.every((t) => c.dataset.search.includes(t)));
+    const byText = cards.filter((c) => terms.every((t) => hit(c, t) || (t.length > 3 && t.endsWith("s") && hit(c, t.slice(0, -1)))));
     let shown = 0;
     for (const c of cards) {
       c.hidden = !(byText.includes(c) && matches(c));
@@ -231,6 +293,14 @@
     }
     count.textContent = shown === cards.length ? `Showing all ${shown} instruments` : `Showing ${shown} of ${cards.length} instruments`;
     empty.hidden = shown > 0;
+    // The results start below the ranges, so say under the search box what
+    // a search found, and name the search beside the results.
+    const q = input.value.trim();
+    live.parentElement.hidden = !q;
+    live.textContent = shown ? `${shown} ${shown === 1 ? "instrument matches" : "instruments match"}.` : "No instruments match.";
+    live.nextElementSibling.hidden = !shown;
+    if (q) count.textContent += ` for “${q}”`;
+    empty.querySelector("h3").textContent = q ? `No instruments match “${q}”` : "No instruments match";
   }
   for (const group of groups) {
     const opts = [...group.querySelectorAll(".cat-opt")];
@@ -243,10 +313,18 @@
     );
   }
   input.addEventListener("input", apply);
+  // Enter goes to the results.
+  const toResults = () => document.getElementById("instruments").scrollIntoView();
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") { e.preventDefault(); toResults(); }
+  });
   finder.querySelector("[data-finder-reset]").addEventListener("click", () => {
     input.value = "";
     groups.forEach((g) => g.querySelector(".cat-opt").click());
-    input.focus();
+    // Stay with the results (the search box is up in the hero): focus moves
+    // to "All instruments", since the button that had it goes away.
+    groups[0].querySelector(".cat-opt").focus({ preventScroll: true });
+    toResults();
   });
 
   // Grid or table. The choice is kept on this device.
@@ -264,5 +342,6 @@
   if (q) {
     input.value = q;
     apply();
+    toResults();
   }
 })();

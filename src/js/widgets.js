@@ -44,7 +44,8 @@
         const mx = (x + hx) / 2, my = Math.min(y, hy) - Math.abs(x - hx) * 0.22 - 20;
         el("path", { class: "arc", d: `M${hx.toFixed(1)} ${hy.toFixed(1)}Q${mx.toFixed(1)} ${my.toFixed(1)} ${x.toFixed(1)} ${y.toFixed(1)}` }, map);
       }
-      const g = el("g", { class: "pin", tabindex: "0", role: "button", "aria-label": `${o.city}, ${o.state}` }, map);
+      // The map is one image to assistive technology; the office buttons beside it are the controls.
+      const g = el("g", { class: "pin" }, map);
       el("circle", { class: "ring", cx: x, cy: y, r: 8, style: `animation-delay:${i * 0.5}s` }, g);
       el("circle", { class: "core", cx: x, cy: y, r: 6 }, g);
       const left = o.lon > 152;
@@ -53,9 +54,9 @@
     });
     const pick = (i) => {
       pins.forEach((p, k) => p.classList.toggle("active", k === i));
-      buttons.forEach((b, k) => b.classList.toggle("active", k === i));
+      buttons.forEach((b, k) => { b.classList.toggle("active", k === i); b.setAttribute("aria-pressed", String(k === i)); });
     };
-    pins.forEach((p, i) => { p.addEventListener("pointerenter", () => pick(i)); p.addEventListener("focus", () => pick(i)); p.addEventListener("click", () => pick(i)); });
+    pins.forEach((p, i) => { p.addEventListener("pointerenter", () => pick(i)); p.addEventListener("click", () => pick(i)); });
     buttons.forEach((b, i) => { b.addEventListener("pointerenter", () => pick(i)); b.addEventListener("focus", () => pick(i)); b.addEventListener("click", () => pick(i)); });
     pick(0);
   }
@@ -81,6 +82,7 @@
     const set = (m) => {
       m = Math.max(0.2, Math.min(3.8, m));
       range.value = m;
+      range.setAttribute("aria-valuetext", `${m.toFixed(2)} metres`);
       const wy = y(m);
       water.setAttribute("y", wy); water.setAttribute("height", BOT - wy);
       beam.setAttribute("points", `180,${TOP + 26} ${180 - (wy - TOP - 26) * 0.09 - 3},${wy} ${180 + (wy - TOP - 26) * 0.09 + 3},${wy}`);

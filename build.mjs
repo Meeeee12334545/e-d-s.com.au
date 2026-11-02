@@ -100,9 +100,10 @@ function photo(name, alt, { sizes = "(max-width: 980px) calc(100vw - 40px), 740p
 // A captioned photograph: { photo, alt, caption }. Every photo is shown in
 // the same 3:2 frame with the same grade (site.css); `pos` says which part
 // to keep when the crop bites ("50% 20%" favours the top), and `plain: true`
-// is for a drawing, shown whole and in its own colours.
-const photoFigure = (f, { i, sizes } = {}) => `
-<figure class="photo${f.plain ? " photo-plain" : ""}" data-reveal${i != null ? ` style="--i:${i}"` : ""}>
+// is for a drawing, shown whole and in its own colours. A panorama under a
+// page's opening text (`cls: "pano"`, overviewHtml()) is shown whole too.
+const photoFigure = (f, { i, sizes, cls = "" } = {}) => `
+<figure class="photo${f.plain ? " photo-plain" : ""}${cls ? ` ${cls}` : ""}" data-reveal${i != null ? ` style="--i:${i}"` : ""}>
   <div class="photo-frame"${f.pos ? ` style="--pos:${esc(f.pos)}"` : ""}>${photo(f.photo, f.alt, { sizes })}</div>
   ${f.caption ? `<figcaption>${esc(f.caption)}</figcaption>` : ""}
 </figure>`;
@@ -141,20 +142,22 @@ const logoGrid = () => `<ul class="logo-grid" aria-label="Clients">${C.clients.m
 const proofRow = () => `<div class="proof-row">${C.proof.map((p, i) => `<div data-reveal style="--i:${i}"><b>${esc(p.lead)}</b><span>${esc(p.text)}</span></div>`).join("")}</div>`;
 // Two photographs side by side, across the page.
 const figureRow = (figs) => `<div class="photo-row">${figs.map((f, i) => photoFigure(f, { i, sizes: "(max-width: 700px) calc(100vw - 40px), (max-width: 980px) calc(50vw - 28px), 612px" })).join("")}</div>`;
-// A product shot or drawing in the sidebar: { src, alt, caption, w, h }.
-const asideFigure = (s) => (s.asideFigure ? `<figure class="aside-card aside-figure" data-reveal="right"><img src="${s.asideFigure.src}" alt="${esc(s.asideFigure.alt)}" width="${s.asideFigure.w}" height="${s.asideFigure.h}" loading="lazy"><figcaption>${esc(s.asideFigure.caption)}</figcaption></figure>` : "");
+// A product shot beside the opening text: { src, alt, caption, w, h }, on a
+// tonal plate with its caption under it, like the photographs.
+const asideFigure = (s) => (s.asideFigure ? `<figure class="aside-figure" data-reveal><div class="aside-plate"><img src="${s.asideFigure.src}" alt="${esc(s.asideFigure.alt)}" width="${s.asideFigure.w}" height="${s.asideFigure.h}" loading="lazy"></div><figcaption>${esc(s.asideFigure.caption)}</figcaption></figure>` : "");
 
 /* ------------------------------------------------------------------ */
 /* layout                                                              */
 /* ------------------------------------------------------------------ */
-function header(r, current, menuTab) {
+function header(r, current, menuTab, file) {
   // The Services menu holds the services and the solutions: a rail of tabs
   // down its left, one per service group and one for the solutions, and the
   // open tab's links beside it, so only one group is read at a time. It
   // opens on the tab of the page the visitor is on (`menuTab`: a service
-  // group's id or "solutions"), or the first. Products is a plain two
-  // column list. Each link carries a one-line description: the service's
-  // or solution's summary, the brand's summary, the product's lede.
+  // group's id or "solutions"), or the first. Products has two labelled
+  // columns, the ranges and the instruments with a page of their own. Each
+  // link carries a one-line description: the service's or solution's
+  // summary, the brand's or product's tag.
   const mLink = (i) => `<a href="${r}${i.href}">${icon(i.icon)}<span><b>${esc(i.label)}</b>${i.desc ? `<small>${esc(i.desc)}</small>` : ""}</span></a>`;
   // Services and Products are each a link to the page that lists them all,
   // with a chevron beside it that opens the menu (the menu also opens under
@@ -191,22 +194,26 @@ function header(r, current, menuTab) {
           <div class="mega-foot"><span>Not sure which service fits? Tell us about the site or the problem and we will point you to the right one.</span><a href="${r}enquire.html">Start an enquiry ${icon("arrow-right")}</a></div>
         </div>
       </div>`;
-  const pItems = [...C.brands.map((b) => ({ href: `products/${b.slug}.html`, icon: b.icon, label: b.name, desc: b.tag })), ...C.productPages.map((pg) => ({ href: `products/${pg.slug}.html`, icon: pg.icon, label: pg.name, desc: pg.tag })), { href: "products/lidott-alarm.html", icon: "bell", label: "LIDoTT Alarm", desc: C.lidott.lede }, { href: "products/alarm2.html", icon: "bell-ring", label: "Alarm2", desc: C.alarm2.lede }];
-  const mega = (label, key, items, all) => `
+  const pRanges = C.brands.map((b) => ({ href: `products/${b.slug}.html`, icon: b.icon, label: b.name, desc: b.tag }));
+  const pInstruments = [...C.productPages.map((pg) => ({ href: `products/${pg.slug}.html`, icon: pg.icon, label: pg.name, desc: pg.tag })), { href: "products/lidott-alarm.html", icon: "bell", label: "LIDoTT Alarm", desc: C.lidott.tag }, { href: "products/alarm2.html", icon: "bell-ring", label: "Alarm2", desc: C.alarm2.tag }];
+  const productsMenu = `
       <div class="nav-item has-mega">
-        ${navSplit(label, all.href, [key])}
-        <div class="mega cols-2" id="mega-${key}">
-          ${items.map(mLink).join("")}
-          <a class="mega-all" href="${r}${all.href}"><span>${all.label}</span>${icon("arrow-right")}</a>
+        ${navSplit("Products", "products/index.html", ["products"])}
+        <div class="mega cols-2" id="mega-products">
+          <div class="mega-col"><p class="mega-head">Ranges</p>${pRanges.map(mLink).join("")}</div>
+          <div class="mega-col"><p class="mega-head">Instruments</p>${pInstruments.map(mLink).join("")}</div>
+          <div class="mega-foot"><span>All ${products.length} instruments, filtered by type or searched by name.</span><a href="${r}products/index.html">All products ${icon("arrow-right")}</a></div>
         </div>
       </div>`;
   const link = (href, label, key) => `<div class="nav-item"><a class="nav-link" href="${r}${href}"${current === key ? ' aria-current="page"' : ""}>${label}</a></div>`;
   // The phone menu lists the same: each section has a heading, its links and,
-  // where it says so, a "View all" link after them.
-  const dLink = (i) => `<a href="${r}${i.href}">${icon(i.icon, false)}${esc(i.label)}</a>`;
+  // where it says so, a "View all" link after them. The group holding the
+  // page the visitor is on opens with that page marked.
+  const here = (href) => (href === file ? ' aria-current="page"' : "");
+  const dLink = (i) => `<a href="${r}${i.href}"${here(i.href)}>${icon(i.icon, false)}${esc(i.label)}</a>`;
   const dGroup = (label, sections) => `
-        <details><summary>${label}${icon("chevron-down", false)}</summary><div>
-          ${sections.map((g) => `${g.label ? `<p class="drawer-sub">${esc(g.label)}</p>` : ""}${g.items.map(dLink).join("")}${g.all ? `<a href="${r}${g.all.href}">${icon("arrow-right", false)}${g.all.label}</a>` : ""}`).join("")}
+        <details${sections.some((g) => g.items.some((i) => i.href === file) || g.all?.href === file) ? ' class="has-current"' : ""}><summary>${label}${icon("chevron-down", false)}</summary><div>
+          ${sections.map((g) => `${g.label ? `<p class="drawer-sub">${esc(g.label)}</p>` : ""}${g.items.map(dLink).join("")}${g.all ? `<a href="${r}${g.all.href}"${here(g.all.href)}>${icon("arrow-right", false)}${g.all.label}</a>` : ""}`).join("")}
         </div></details>`;
   const dSections = tabs.map((t, i) => ({ label: t.label, items: t.items, all: t.id === "solutions" ? t.all : i === C.serviceGroups.length - 1 ? { href: "services/index.html", label: "All services" } : null }));
   return `
@@ -214,10 +221,10 @@ function header(r, current, menuTab) {
   <div class="progress" aria-hidden="true"></div>
   <header class="header">
     <div class="wrap">
-      <a class="logo" href="${r}index.html" aria-label="EDS home"><img src="${site.logo}" alt="EDS, Environmental Data Services" width="189" height="48"></a>
+      <a class="logo" href="${r || "./"}" aria-label="EDS home"><img src="${site.logo}" alt="EDS, Environmental Data Services" width="189" height="48"></a>
       <nav class="nav" aria-label="Main">
         ${tabbed}
-        ${mega("Products", "products", pItems, { href: "products/index.html", label: "All products" })}
+        ${productsMenu}
         ${link("flowsense.html", "FlowSense", "flowsense")}
         ${link("about.html", "About", "about")}
         ${link("resources.html", "Resources", "resources")}
@@ -225,25 +232,25 @@ function header(r, current, menuTab) {
       <div class="header-cta">
         <button class="header-search" type="button" data-search-open aria-label="Search the site" aria-keyshortcuts="Control+K Meta+K /">${icon("search")}<kbd data-kbd>Ctrl K</kbd></button>
         <a class="header-phone" href="${site.phoneHref}" aria-label="Call EDS on ${site.phone}">${icon("phone")}<span>${site.phone}</span></a>
-        <a class="header-quote" href="${r}enquire.html" data-quote-link hidden>${icon("clipboard-list")}<span class="sr-only">Quote list, </span><b data-quote-count>0</b><span class="sr-only"> items</span></a>
+        <a class="header-quote" href="${r}enquire.html" data-quote-link hidden>${icon("clipboard-list")}<span class="sr-only">Products in your quote list: </span><b data-quote-count>0</b></a>
         <a class="btn btn-primary" href="${r}contact.html">Contact us</a>
       </div>
-      <button class="burger" aria-label="Open menu" aria-expanded="false" data-track-label="Menu">${icon("menu", false)}</button>
+      <button class="burger" aria-label="Open menu" aria-expanded="false" aria-controls="drawer-panel" data-track-label="Menu">${icon("menu", false)}</button>
     </div>
   </header>
-  <div class="drawer" aria-label="Menu">
+  <div class="drawer">
     <div class="drawer-scrim"></div>
-    <div class="drawer-panel">
+    <div class="drawer-panel" id="drawer-panel" role="dialog" aria-modal="true" aria-label="Menu">
       <div class="drawer-head">
-        <a class="logo" href="${r}index.html"><img src="${site.logo}" alt="EDS" width="189" height="48"></a>
-        <button class="burger drawer-close" style="display:inline-flex" aria-label="Close menu">${icon("x", false)}</button>
+        <a class="logo" href="${r || "./"}"><img src="${site.logo}" alt="EDS" width="189" height="48"></a>
+        <button class="burger drawer-close" aria-label="Close menu">${icon("x", false)}</button>
       </div>
       <button class="drawer-search" type="button" data-search-open>${icon("search", false)}<span>Search products, services, documents</span></button>
       ${dGroup("Services", dSections)}
-      ${dGroup("Products", [{ items: pItems, all: { href: "products/index.html", label: "All products" } }])}
-      <a class="drawer-link" href="${r}flowsense.html">FlowSense</a>
-      <a class="drawer-link" href="${r}about.html">About</a>
-      <a class="drawer-link" href="${r}resources.html">Resources</a>
+      ${dGroup("Products", [{ label: "Ranges", items: pRanges }, { label: "Instruments", items: pInstruments, all: { href: "products/index.html", label: "All products" } }])}
+      <a class="drawer-link" href="${r}flowsense.html"${here("flowsense.html")}>FlowSense</a>
+      <a class="drawer-link" href="${r}about.html"${here("about.html")}>About</a>
+      <a class="drawer-link" href="${r}resources.html"${here("resources.html")}>Resources</a>
       <a class="drawer-link" href="${r}enquire.html" data-quote-link hidden>Your quote list <b class="count" data-quote-count>0</b></a>
       <a class="btn btn-primary btn-lg" href="${r}contact.html">Contact us</a>
       <a class="btn btn-ghost btn-lg" href="${site.phoneHref}">${icon("phone", false)}${site.phone}</a>
@@ -257,7 +264,7 @@ function footer(r) {
     <div class="wrap">
       <div class="footer-grid">
         <div>
-          <a class="logo" href="${r}index.html"><img src="${site.logo}" alt="EDS, Environmental Data Services" width="110" height="28" loading="lazy"></a>
+          <a class="logo" href="${r || "./"}"><img src="${site.logo}" alt="EDS, Environmental Data Services" width="110" height="28" loading="lazy"></a>
           <p>${site.tagline}</p>
           <div class="footer-contact">
             <a href="${site.phoneHref}">${icon("phone")}${site.phone}</a>
@@ -271,7 +278,7 @@ function footer(r) {
         </div>
         <div>
           <h2>Products</h2>
-          <ul>${C.brands.map((b) => `<li><a href="${r}products/${b.slug}.html">${esc(b.name)}</a></li>`).join("")}</ul>
+          <ul>${C.brands.map((b) => `<li><a href="${r}products/${b.slug}.html">${esc(b.name)}</a></li>`).join("")}<li><a href="${r}products/index.html">All products</a></li></ul>
         </div>
         <div>
           <h2>Company</h2>
@@ -287,26 +294,26 @@ function footer(r) {
         <div>
           <h2>Head office</h2>
           <address>${site.address.join("<br>")}</address>
-          <p style="margin-top:10px">${site.hours}</p>
+          <p class="footer-hours">${site.hours}</p>
           ${openStatus()}
           <form class="signup" ${formSend} data-subject="Register for EDS updates" data-track="Updates sign-up">
             <label for="f-email">Register for updates on projects, equipment and servicing</label>
             <input id="f-email" name="Email" type="email" placeholder="Your email" autocomplete="email" required>
             ${botcheck}
-            <button class="btn btn-primary" type="submit" aria-label="Register for updates">${icon("arrow-right")}</button>
+            <button class="btn btn-primary" type="submit" aria-label="Register for updates">${icon("arrow-right")}<i class="spin" aria-hidden="true"></i></button>
             <p class="signup-done" role="status" data-done="sent" hidden>${icon("check", false)} Thanks, you are registered for EDS updates.</p>
             <p class="signup-done form-error" role="alert" data-done="error" hidden>${icon("circle-alert", false)} That did not go through. Please try again in a moment.</p>
           </form>
         </div>
       </div>
-      <div class="footer-creds" aria-label="Credentials">
+      <div class="footer-creds" role="group" aria-label="Credentials">
         <span class="mark"><img src="${C.img("ex-logo.gif")}" alt="Ex hazardous area mark" loading="lazy"><img src="${C.img("iecex.png")}" alt="IECEx" loading="lazy"></span>
         <span>Intrinsically safe equipment certified under ATEX and IECEx</span>
         <span>Australian owned since ${site.founded}</span>
         <span>Sydney Water panel provider</span>
       </div>
       <div class="footer-base">
-        <span>© ${year} ${site.legal}. All rights reserved. <a href="${r}privacy.html" style="text-decoration:underline">Privacy policy</a></span>
+        <span>© ${year} ${site.legal}. All rights reserved. <a href="${r}privacy.html">Privacy policy</a></span>
         <a class="to-top" href="#top">Back to top ${icon("arrow-up", "nudge-up")}</a>
       </div>
     </div>
@@ -332,6 +339,7 @@ const searchDialog = () => `
     <button class="search-close" type="button" data-search-close aria-label="Close search"><kbd>Esc</kbd>${icon("x", false)}</button>
   </div>
   <div class="search-results" id="search-results" role="listbox" aria-label="Search results"></div>
+  <p class="sr-only" role="status" data-search-status></p>
   <div class="search-foot" aria-hidden="true"><span><kbd>↑</kbd><kbd>↓</kbd> move</span><span><kbd>↵</kbd> open</span><span><kbd>Esc</kbd> close</span></div>
 </dialog>`;
 
@@ -340,7 +348,7 @@ const actionBar = (r, current) => `
 <nav class="actionbar" aria-label="Quick actions">
   <a href="${site.phoneHref}" data-open-dot>${icon("phone", false)}<span>Call</span></a>
   <button type="button" data-search-open>${icon("search", false)}<span>Search</span></button>
-  <a class="primary" href="${["contact", "enquire"].includes(current) ? "#enquiry" : `${r}enquire.html`}">${icon("message-square-text", false)}<span>Enquire</span><b class="count" data-quote-count hidden>0</b></a>
+  <a class="primary" href="${["contact", "enquire"].includes(current) ? "#enquiry" : `${r}enquire.html`}">${icon("message-square-text", false)}<span>Enquire</span><span class="sr-only" data-quote-link hidden>, products in your quote list:</span><b class="count" data-quote-count hidden>0</b></a>
 </nav>`;
 
 // Structured data for search engines. The organisation is described in full
@@ -474,10 +482,14 @@ function layout({ file, title, description, current, menuTab, body, scripts = []
   const url = pageUrl(file);
   const image = shareImage(file, html);
   // Preview copies stay out of search. The live pages let Google show a
-  // large image beside them in results and in Discover. The ownership
+  // large image beside them in results and in Discover; the not-found page,
+  // which the host also serves at /404.html, stays out. The ownership
   // tokens, when set, go on the home page only.
-  const robots = process.env.PREVIEW ? "noindex, nofollow" : "max-image-preview:large";
+  const robots = process.env.PREVIEW ? "noindex, nofollow" : file === "404.html" ? "noindex" : "max-image-preview:large";
   const verify = file === "index.html" && !process.env.PREVIEW ? [["google-site-verification", site.verify.google], ["msvalidate.01", site.verify.bing]].filter(([, v]) => v).map(([k, v]) => `\n<meta name="${k}" content="${esc(v)}">`).join("") : "";
+  // The "js" class hides the blocks that rise into view (site.css). If
+  // site.js fails to load, or stops before its reveal code has run (it sets
+  // EDS_READY), the class comes off and the page shows as it is.
   const out = `<!doctype html>
 <html lang="en-AU" data-root="${r}">
 <head>
@@ -501,19 +513,19 @@ function layout({ file, title, description, current, menuTab, body, scripts = []
 <link rel="icon" type="image/png" sizes="32x32" href="${r}assets/img/favicon-32.png">
 <link rel="apple-touch-icon" href="${r}assets/img/apple-touch-icon.png">
 <link rel="preload" href="${r}assets/fonts/saira-semiexpanded-latin.woff2" as="font" type="font/woff2" crossorigin>
-<script>document.documentElement.classList.add("js")</script>
+<script>document.documentElement.classList.add("js");setTimeout(function(){if(!window.EDS_READY)document.documentElement.classList.remove("js")},4000)</script>
 <link rel="stylesheet" href="${asset(r, "css/site.css")}">
 ${jsonLd(file, crumbs, { description, service, image })}
 </head>
 <body id="top">
-${header(r, current, menuTab)}
+${header(r, current, menuTab, file)}
 <main id="main">
 ${html}
 </main>
 ${footer(r)}
 ${actionBar(r, current)}
 ${searchDialog()}
-<script src="${asset(r, "js/site.js")}" defer></script>
+<script src="${asset(r, "js/site.js")}" defer onerror="document.documentElement.classList.remove('js')"></script>
 <script src="${asset(r, "js/search.js")}" defer></script>
 <script src="${asset(r, "js/quote.js")}" defer></script>
 ${scripts.map((s) => `<script src="${asset(r, `js/${s}`)}" defer></script>`).join("\n")}${tracker(r, file)}
@@ -527,12 +539,16 @@ ${scripts.map((s) => `<script src="${asset(r, `js/${s}`)}" defer></script>`).joi
     // don't) becomes ’ everywhere, copy and alt text alike. No page script
     // holds such a tick, so code is untouched.
     .replace(/(\p{L})'(\p{L})/gu, "$1’$2")
-    // A number and its unit never part at a line end (8.4 m, ±5 mm, Zone 0).
-    // Text between tags only, never inside a script or a stylesheet.
+    // A number and its unit never part at a line end (8.4 m, ±5 mm, 12 weeks,
+    // Zone 0), nor a standard's name from its number (AS/NZS 3500.3, No. 36),
+    // nor the groups of the phone number. Text between tags only, never
+    // inside a script or a stylesheet.
     .replace(/(<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>)|>([^<]+)(?=<)/g, (m, code, text) => (code ? m : `>${text
-      .replace(/(\d) (?=(?:mm|m|km|kPa|kL|L|°C|mA|V|MB|h)(?![\p{L}\d]))/gu, "$1\u00a0")
+      .replace(/(\d) (?=(?:mm|m|km|kPa|MPa|kL|L|°C|mA|µA|V|VDC|W|kV|Ah|Hz|kHz|MHz|GHz|Ω|MB|GB|ms|s|kg|ppm|%|h|weeks?|days?|months?|years?|hours?|minutes?)(?![\p{L}\d]))/gu, "$1\u00a0")
       .replace(/± (?=\d)/g, "±\u00a0")
-      .replace(/\bZone (?=\d)/g, "Zone\u00a0")}`));
+      .replace(/\bZone (?=\d)/g, "Zone\u00a0")
+      .replace(/\b(No\.|ISO|RFC|SWMM|WSA|AS\/NZS) (?=\d)/g, "$1\u00a0")
+      .replace(/\b1300 (\d{3}) (\d{3})\b/g, "1300\u00a0$1\u00a0$2")}`));
   // In-page links, product deep links and form labels all rely on ids being unique.
   const ids = [...out.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]);
   const dupes = ids.filter((id, i) => ids.indexOf(id) !== i);
@@ -548,7 +564,7 @@ ${scripts.map((s) => `<script src="${asset(r, `js/${s}`)}" defer></script>`).joi
 const pageHero = (r, { crumbs = [], iconName, eyebrow, title, lede, actions = "", after = "", visual = "", compact = false, cls = "" }) => {
   heroCrumbs = crumbs;
   const copy = `
-    <nav class="crumbs" aria-label="Breadcrumb"><a href="${r}index.html">Home</a>${crumbs.map(([label, href]) => `${icon("chevron-down", false)}${href ? `<a href="${r}${href}">${esc(label)}</a>` : `<span aria-current="page">${esc(label)}</span>`}`).join("")}</nav>
+    <nav class="crumbs" aria-label="Breadcrumb"><a href="${r || "./"}">Home</a>${crumbs.map(([label, href]) => `${icon("chevron-down", false)}${href ? `<a href="${r}${href}">${esc(label)}</a>` : `<span aria-current="page">${esc(label)}</span>`}`).join("")}</nav>
     ${iconName && !visual ? `<div class="hero-icon holder" data-reveal="scale">${icon(iconName)}</div>` : ""}
     ${eyebrow ? `<p class="eyebrow">${esc(eyebrow)}</p>` : ""}
     <h1 class="h-lg" data-reveal>${esc(title)}</h1>
@@ -556,7 +572,7 @@ const pageHero = (r, { crumbs = [], iconName, eyebrow, title, lede, actions = ""
     ${actions ? `<div class="hero-actions" data-reveal style="--i:2">${actions}</div>` : ""}
     ${after}`;
   return `
-<section class="page-hero${visual ? " has-visual" : ""}${compact ? " compact" : ""}${cls ? ` ${cls}` : ""}">
+<section class="page-hero${visual ? " has-visual" : ""}${visual.includes('class="hero-product"') ? " has-product" : ""}${compact ? " compact" : ""}${cls ? ` ${cls}` : ""}">
   <canvas data-flowfield aria-hidden="true"></canvas>
   <div class="wrap">${visual ? `<div class="hero-copy">${copy}</div>${visual}` : copy}</div>
 </section>`;
@@ -629,7 +645,7 @@ const labSection = ({ eyebrow = "", title = "See what a storm does to a sewer.",
         <div class="panel-head">
           <div class="panel-title">${icon("activity", false)} Sewer hydrograph</div>
           <div class="lab-status">
-            <span class="lab-chip" id="lab-raining" role="status">${icon("cloud-rain", false)}Raining <b id="lab-rain-out">0</b>&nbsp;mm/h</span>
+            <span class="lab-chip" id="lab-raining">${icon("cloud-rain", false)}Raining <b id="lab-rain-out">0</b>&nbsp;mm/h</span>
             <time class="lab-clock" id="lab-clock" aria-label="Simulated time">Day 1 · 06:00</time>
           </div>
         </div>
@@ -781,7 +797,7 @@ function fsScreen() {
     ${pipe("M40 60H230", "#3b82f6")}${pipe("M230 60H440", "#eab308")}${pipe("M90 60V150", "#3b82f6")}${pipe("M230 60V150", "#f97316", 6)}${pipe("M370 60V150", "#eab308")}
     ${pipe("M40 150H230", "#eab308")}${pipe("M230 150H440", "#ef4444", 7)}${pipe("M230 150V230", "#ef4444", 7)}${pipe("M90 230H230", "#f97316", 6)}${pipe("M230 230H420", "#3b82f6")}
     <g fill="#fff" stroke="#0c5f59" stroke-width="2"><circle cx="230" cy="60" r="5"/><circle cx="230" cy="150" r="5"/><circle cx="90" cy="150" r="5"/><circle cx="370" cy="150" r="5"/><circle cx="230" cy="230" r="5"/></g>
-    <g font-size="10" font-family="'EDS Text', 'Helvetica Neue', sans-serif" fill="#2e4543"><rect x="330" y="186" width="136" height="72" rx="8" fill="#fff" stroke="#dfe5ec"/><text x="342" y="204" font-weight="500">I/I severity</text>
+    <g class="fine" font-size="10" font-family="'EDS Text', 'Helvetica Neue', sans-serif" fill="#2e4543"><rect x="330" y="186" width="136" height="72" rx="8" fill="#fff" stroke="#dfe5ec"/><text x="342" y="204" font-weight="500">I/I severity</text>
     <rect x="342" y="212" width="14" height="6" rx="3" fill="#3b82f6"/><text x="362" y="218">Low</text><rect x="402" y="212" width="14" height="6" rx="3" fill="#eab308"/><text x="422" y="218">Moderate</text>
     <rect x="342" y="232" width="14" height="6" rx="3" fill="#f97316"/><text x="362" y="238">High</text><rect x="402" y="232" width="14" height="6" rx="3" fill="#ef4444"/><text x="422" y="238">Severe</text></g></svg>`;
   const blockage = `<svg viewBox="0 0 480 270" preserveAspectRatio="xMidYMid meet">
@@ -795,12 +811,12 @@ function fsScreen() {
     <rect class="fs-well" x="152" y="130" width="176" height="108" fill="#5cc2b6" opacity=".85"/>
     <g font-size="10" font-family="'EDS Text', 'Helvetica Neue', sans-serif" stroke-dasharray="5 4">
       <path d="M130 60H350" stroke="#dc2626"/><path d="M130 92H350" stroke="#d97706"/><path d="M130 130H350" stroke="#0d7c72"/><path d="M130 200H350" stroke="#4e6361"/></g>
-    <g font-size="10.5" font-family="'EDS Text', 'Helvetica Neue', sans-serif" fill="#2e4543"><text x="358" y="63">Overflow</text><text x="358" y="95">Surcharge</text><text x="358" y="133">Pump start</text><text x="358" y="203">Pump stop</text></g>
+    <g class="fine" font-size="10.5" font-family="'EDS Text', 'Helvetica Neue', sans-serif" fill="#2e4543"><text x="358" y="63">Overflow</text><text x="358" y="95">Surcharge</text><text x="358" y="133">Pump start</text><text x="358" y="203">Pump stop</text></g>
     <g transform="translate(46 118) scale(2.4)" fill="none" stroke="#0c5f59" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g class="fs-fan">${iconCache.get("fan") || ""}</g></g>
-    <text x="34" y="200" font-size="10.5" font-family="'EDS Text', 'Helvetica Neue', sans-serif" fill="#2e4543" font-weight="500">Pump 1 running</text></svg>`;
+    <text class="fine" x="34" y="200" font-size="10.5" font-family="'EDS Text', 'Helvetica Neue', sans-serif" fill="#2e4543" font-weight="500">Pump 1 running</text></svg>`;
   const alarms = `<svg viewBox="0 0 480 270" preserveAspectRatio="xMidYMid meet">
     ${[["#dc2626", "#fef2f2", "High-high level", "Site 07 · 2 min ago · SMS sent to duty officer", 26], ["#d97706", "#fffbeb", "Blockage Watch: depth drifting", "Site 14 · dry weather only · ranked 1 of 38", 104], ["#16a34a", "#f0fdf4", "Returned to normal", "Site 22 · acknowledged by the duty officer", 182]]
-      .map(([c, bg, t, s, y], i) => `<g class="fs-toast" style="--i:${i}"><rect x="30" y="${y}" width="420" height="62" rx="12" fill="${bg}" stroke="${c}" stroke-opacity=".35"/><circle cx="60" cy="${y + 31}" r="9" fill="${c}"/><text x="84" y="${y + 27}" font-size="13" font-weight="650" font-family="'EDS Text', 'Helvetica Neue', sans-serif" fill="#0f2b2a">${t}</text><text x="84" y="${y + 45}" font-size="10.5" font-family="'EDS Text', 'Helvetica Neue', sans-serif" fill="#4e6361">${s}</text></g>`).join("")}</svg>`;
+      .map(([c, bg, t, s, y], i) => `<g class="fs-toast" style="--i:${i}"><rect x="30" y="${y}" width="420" height="62" rx="12" fill="${bg}" stroke="${c}" stroke-opacity=".35"/><circle cx="60" cy="${y + 31}" r="9" fill="${c}"/><text x="84" y="${y + 27}" font-size="13" font-weight="650" font-family="'EDS Text', 'Helvetica Neue', sans-serif" fill="#0f2b2a">${t}</text><text class="fine" x="84" y="${y + 45}" font-size="10.5" font-family="'EDS Text', 'Helvetica Neue', sans-serif" fill="#4e6361">${s}</text></g>`).join("")}</svg>`;
   const views = [["I/I heat map", "Severity by pipe", heat], ["Blockage Watch", "Dry days only", blockage], ["Pump Station Manager", "Wet well, to scale", psm], ["Alarms", "Sent to people, not addresses", alarms]];
   return `
   <div class="fs-screen" data-reveal="right">
@@ -834,7 +850,10 @@ const liveCard = () => `
 // carries paths from the site root, since the list is shown on other pages.
 const plainPath = (src) => src.replace("@root/", "");
 const quoteItem = (p) => ({ id: `${p.brand.slug}-${p.id}`, name: p.name, brand: p.brand.name, image: plainPath(p.image), href: p.href || `products/${p.brand.slug}.html#${p.id}` });
-const quoteBtn = (item, cls = "") => `<button class="quote-add${cls ? ` ${cls}` : ""}" type="button" data-quote="${esc(JSON.stringify(item))}">${icon("list-plus", false)}${icon("check", false)}<span>Add to quote</span></button>`;
+// `by` names the element that says which product it is (a card's title), for
+// screen readers among many cards.
+const describedBy = (by) => (by ? ` aria-describedby="${by}"` : "");
+const quoteBtn = (item, cls = "", by = "") => `<button class="quote-add${cls ? ` ${cls}` : ""}" type="button" data-quote="${esc(JSON.stringify(item))}"${describedBy(by)}>${icon("list-plus", false)}${icon("check", false)}<span>Add to quote</span></button>`;
 
 // Buy, hire or Data as a Service: one card each, with the enquiry form
 // opened on the right topic and way of working.
@@ -849,7 +868,7 @@ const waysSection = (r, { cls = "" } = {}) => `
       <ul class="way-points">${w.points.map((pt) => `<li>${icon("check", false)}<span>${esc(pt)}</span></li>`).join("")}</ul>
       <div class="way-actions">
         <a class="btn ${w.mode === "managed" ? "btn-primary" : "btn-brand"}" href="${contactHref(r, { topic: w.topic, mode: w.mode })}">${esc(w.cta)} ${icon("arrow-right")}</a>
-        <a class="link-arrow" href="${r}${w.link[0]}">${esc(w.link[1])}</a>
+        <a class="link-arrow" href="${r}${w.link[0]}">${esc(w.link[1])} ${icon("arrow-right")}</a>
       </div>
     </article>`).join("")}
   </div>
@@ -880,7 +899,7 @@ const processSection = (tone = "alt") => `
 
 // "PDF", "ZIP": shown in the Documents panel so people know what they will get.
 const docType = (href) => href.split(".").pop().toUpperCase();
-const prodDocs = (p) => `<ul class="prod-docs">${p.docs.map((d) => `<li><a href="${d.href}" rel="noopener">${icon("download")}<span>${esc(d.label)}</span></a></li>`).join("")}</ul>`;
+const prodDocs = (p, by = "") => `<ul class="prod-docs">${p.docs.map((d) => `<li><a href="${d.href}" rel="noopener"${describedBy(by)}>${icon("download")}<span>${esc(d.label)}</span></a></li>`).join("")}</ul>`;
 
 // The structured specifications a product has on the site: the EDS product
 // pages, LIDoTT Alarm and Alarm2. Shown first in the quick view and in the
@@ -891,21 +910,23 @@ const specsOf = (p) => p.href === "products/lidott-alarm.html" ? [["Specificatio
 // details the quick view and the compare view show travel with the card as
 // JSON. The body is grouped so the table view on the products page can lay
 // the same card out as a row: shot, name and note, type, documents, actions.
+// The quick view button comes first, so a screen reader meets the product
+// before its actions, and each action names its product.
 const productCard = (r, p, { id = p.id, showBrand = false, n = 0 } = {}) => {
   const t = typeOf(p.type);
   // The product's own documents, then the ones that cover its whole brand.
-  const docs = [...(p.docs || []), ...(p.brand.docs || [])];
+  const docs = [...(p.docs || []), ...(p.brand.docs || []).filter((d) => !d.pageOnly)];
   const item = quoteItem(p);
   const data = { id: item.id, name: p.name, note: p.note || "", image: p.image, brand: p.brand.name, brandHref: `${r}products/${p.brand.slug}.html`, range: p.range, type: t.label, page: p.href ? `${r}${p.href}` : "", docs, specs: specsOf(p), quote: item };
   return `
-<article class="card prod" id="${id}" data-type="${p.type}" data-brand="${p.brand.slug}" data-docs="${docs.length ? 1 : 0}" data-search="${esc([p.name, p.note, p.brand.name, p.brand.title, p.brand.tag, p.group, t.label].join(" ").toLowerCase())}" data-product="${esc(JSON.stringify(data))}" data-reveal style="--i:${n % 5}">
+<article class="card prod" id="${id}" data-type="${p.type}" data-brand="${p.brand.slug}" data-docs="${docs.length ? 1 : 0}" data-search="${esc([p.name, p.note, p.brand.name, p.group, t.label].join(" ").toLowerCase())}" data-product="${esc(JSON.stringify(data))}" data-reveal style="--i:${n % 5}">
+  <button class="prod-open" type="button" aria-haspopup="dialog" aria-label="Quick view: ${esc(p.name)}${showBrand ? `, ${esc(p.brand.name)}` : ""}"><span>${icon("zoom-in", false)}Quick view</span></button>
   <div class="brand-shot"><img src="${p.image}" alt="${esc(p.name)}" loading="lazy"></div>
   <div class="prod-body">
-    <div class="prod-name">${showBrand ? `<span class="tag">${esc(p.brand.name)}</span>` : ""}<h3>${esc(p.name)}</h3>${p.note ? `<p>${esc(p.note)}</p>` : ""}</div>
+    <div class="prod-name">${showBrand ? `<span class="tag">${esc(p.brand.name)}</span>` : ""}<h3 id="${id}-name">${esc(p.name)}</h3>${p.note ? `<p>${esc(p.note)}</p>` : ""}</div>
     <span class="prod-type">${esc(t.label)}</span>
-    <div class="prod-foot">${p.docs ? prodDocs(p) : `<span class="prod-nodocs"><span class="sr-only">No documents online</span></span>`}<div class="prod-actions">${quoteBtn(item, "sm")}<button class="prod-cmp" type="button" aria-pressed="false" data-track-label="Compare" data-track-item="${esc(p.name)}">${icon("git-compare-arrows", false)}<span>Compare</span></button></div></div>
+    <div class="prod-foot">${p.docs ? prodDocs(p, `${id}-name`) : `<span class="prod-nodocs"><span class="sr-only">No documents online</span></span>`}${p.href ? `<a class="link-arrow prod-page" href="${r}${p.href}" aria-describedby="${id}-name">See how it works ${icon("arrow-right")}</a>` : ""}<div class="prod-actions">${quoteBtn(item, "sm", `${id}-name`)}<button class="prod-cmp" type="button" aria-pressed="false" aria-describedby="${id}-name" data-track-label="Compare" data-track-item="${esc(p.name)}">${icon("git-compare-arrows", false)}<span>Compare</span></button></div></div>
   </div>
-  <button class="prod-open" type="button" aria-haspopup="dialog" aria-label="Quick view: ${esc(p.name)}${showBrand ? `, ${esc(p.brand.name)}` : ""}"><span>${icon("zoom-in", false)}Quick view</span></button>
 </article>`;
 };
 
@@ -919,6 +940,7 @@ const quickView = () => `
     <button class="qv-copy" type="button" data-qv-copy>${icon("link", false)}<span>Copy link</span></button>
     <button class="qv-btn" type="button" data-qv-close aria-label="Close">${icon("x", false)}</button>
   </div>
+  <p class="sr-only" aria-live="polite" data-qv="say"></p>
   <div class="qv-shot"><img data-qv="image" alt=""></div>
   <div class="qv-body">
     <p class="tag" data-qv="brand"></p>
@@ -926,7 +948,7 @@ const quickView = () => `
     <p class="qv-note" data-qv="note"></p>
     <dl class="qv-facts">
       <div><dt>Type</dt><dd data-qv="type"></dd></div>
-      <div><dt>Range</dt><dd data-qv="range"></dd></div>
+      <div><dt>Family</dt><dd data-qv="range"></dd></div>
       <div><dt>Brand</dt><dd><a data-qv="brandLink"></a></dd></div>
     </dl>
     <div class="qv-actions">
@@ -1063,7 +1085,7 @@ add({
         <div class="city-model"><svg id="city" role="group" aria-label="${esc(C.cityUi.stageLabel)}"></svg></div>
         <div class="city-asset" id="city-asset" role="group" hidden>
           <svg class="city-asset-svg" aria-hidden="true" focusable="false"></svg>
-          <div class="city-asset-bar"><button type="button" class="btn btn-ghost city-btn" data-act="asset-back">${icon("arrow-left")}<span></span></button><button type="button" class="btn btn-ghost city-btn" data-act="asset-toggle" aria-pressed="true">${icon("unfold-vertical")}${icon("fold-vertical", false)}<span></span></button></div>
+          <div class="city-asset-bar"><button type="button" class="btn btn-ghost city-btn" data-act="asset-back">${icon("arrow-left")}<span></span></button><button type="button" class="btn btn-ghost city-btn" data-act="asset-toggle" data-pressed="true">${icon("unfold-vertical")}${icon("fold-vertical", false)}<span></span></button></div>
           <p class="city-asset-detail" aria-live="polite"></p>
         </div>
         <div class="city-notes" id="city-notes" role="group" hidden><svg class="city-leaders" aria-hidden="true" focusable="false"></svg><div class="city-notes-col" data-side="left"></div><div class="city-notes-col" data-side="right"></div></div>
@@ -1075,15 +1097,15 @@ add({
       <div class="city-bar">
         <div class="city-toolbar" role="toolbar" aria-label="${esc(C.cityUi.toolbarLabel)}">
           <button type="button" class="btn btn-primary city-btn" data-act="tour">${icon("route")}<span>${esc(C.cityUi.toolbar.tour)}</span></button>
-          <button type="button" class="btn btn-ghost city-btn" data-act="storm" aria-pressed="false" aria-describedby="city-note">${icon("cloud-rain")}<span>${esc(C.cityUi.toolbar.storm)}</span></button>
-          <button type="button" class="btn btn-ghost city-btn" data-act="explode" aria-pressed="false">${icon("unfold-vertical")}${icon("fold-vertical", false)}<span>${esc(C.cityUi.explode.take)}</span></button>
-          <button type="button" class="btn btn-ghost city-btn" data-act="under" aria-pressed="false">${icon("layers")}<span>${esc(C.cityUi.toolbar.under)}</span></button>
-          <button type="button" class="btn btn-ghost city-btn" data-act="expand" aria-pressed="false">${icon("maximize-2")}${icon("minimize-2", false)}<span>${esc(C.cityUi.toolbar.expand)}</span></button>
+          <button type="button" class="btn btn-ghost city-btn" data-act="storm" data-pressed="false" aria-describedby="city-note">${icon("cloud-rain")}<span>${esc(C.cityUi.toolbar.storm)}</span></button>
+          <button type="button" class="btn btn-ghost city-btn" data-act="explode" data-pressed="false">${icon("unfold-vertical")}${icon("fold-vertical", false)}<span>${esc(C.cityUi.explode.take)}</span></button>
+          <button type="button" class="btn btn-ghost city-btn" data-act="under" data-pressed="false">${icon("layers")}<span>${esc(C.cityUi.toolbar.under)}</span></button>
+          <button type="button" class="btn btn-ghost city-btn" data-act="expand" data-pressed="false">${icon("maximize-2")}${icon("minimize-2", false)}<span>${esc(C.cityUi.toolbar.expand)}</span></button>
         </div>
         <p class="city-caption" aria-live="off" data-rest="${esc(C.cityUi.captionRest)}">${esc(C.cityUi.captionRest)}</p>
         <div class="city-hud" aria-label="${esc(C.cityUi.hud.label)}">
           ${C.cityUi.hud.tiles.map((t) => `<div class="city-tile" data-tile="${t.key}"><span>${esc(t.label)}</span><b data-value>${esc(t.rest)}</b><small>${esc(t.unit)}</small>${t.key === "alarms" ? icon("bell", false) : ""}</div>`).join("")}
-          <div class="city-tile city-tile-spark" data-tile="spark"><span>${esc(C.cityUi.hud.sparkLabel)}</span><svg class="city-spark" viewBox="0 0 220 48" aria-hidden="true"></svg></div>
+          <div class="city-tile city-tile-spark" data-tile="spark"><span>${esc(C.cityUi.hud.sparkLabel)}</span><svg class="city-spark" viewBox="0 0 220 48" preserveAspectRatio="none" aria-hidden="true"></svg></div>
         </div>
         <p class="sr-only" id="city-live" aria-live="polite"></p>
         <p class="note city-note" id="city-note">${icon("info", false)}${esc(C.cityUi.note)}</p>
@@ -1119,7 +1141,7 @@ add({
     <div class="city-tour-stage" id="city-tour-stage"></div>
     <div class="city-tour-top">
       <div class="city-tour-where"><p class="eyebrow">${esc(C.cityUi.tour.title)}</p><p class="city-tour-title" id="city-tour-title"></p><p class="city-tour-sub" id="city-tour-sub"></p></div>
-      <button type="button" class="btn btn-ghost city-btn city-tour-leave" data-act="tour-leave">${icon("x", false)}<span>${esc(C.cityUi.tour.leave)}</span><kbd>Esc</kbd></button>
+      <button type="button" class="btn btn-ghost city-btn city-tour-leave" data-act="tour-leave" aria-label="${esc(C.cityUi.tour.leave)}" aria-keyshortcuts="Escape">${icon("x", false)}<span>${esc(C.cityUi.tour.leave)}</span><kbd aria-hidden="true">Esc</kbd></button>
     </div>
     <div class="city-tour-rail" id="city-tour-rail" role="group" aria-label="${esc(C.cityUi.tour.railLabel)}"></div>
     <div class="city-tour-card" id="city-tour-card"><p class="city-tour-num"></p><h3></h3><p class="city-tour-blurb"></p><div class="chips"></div><button type="button" class="city-tour-open" data-act="tour-open">${esc(C.cityUi.tour.open)}${icon("arrow-right", false)}</button></div>
@@ -1171,7 +1193,7 @@ ${waysSection(r)}
 <section class="section" id="about">
   <div class="wrap split">
     <div>
-      <h2 class="h-lg" data-reveal>Australian owned. Family founded. Still measuring.</h2>
+      <h2 class="h-lg" data-reveal>Australian owned. Family&nbsp;founded. Still&nbsp;measuring.</h2>
       <div class="timeline">
         <span class="timeline-fill"></span>
         ${C.about.timeline.filter(([, t]) => ["EDS is founded", "Defence facility contract", "Sydney Water panel provider", "Transurban service provider", "Australia's largest supplier"].includes(t)).map(([when, t, d]) => `<div class="tl" data-reveal><time>${when}</time><i></i><div><h3>${t}</h3><p>${d}</p></div></div>`).join("")}
@@ -1198,15 +1220,10 @@ ${waysSection(r)}
     </div>
     <div class="about-block" id="industries" data-reveal style="--i:1">
       <h3 class="h-md">Built for critical infrastructure.</h3>
-      <p>Government, utilities and industry rely on EDS for critical infrastructure and operational monitoring, and have for more than thirty years.</p>
+      <p>Government, utilities and industry have relied on EDS for operational monitoring for more than thirty years.</p>
       <ul class="mini-grid">
         ${C.industries.map(([ic, t, d]) => `<li><span class="card-icon">${icon(ic)}</span><span><b>${t}</b><span>${d}</span></span></li>`).join("")}
       </ul>
-      <div class="certs">
-        <img src="${C.img("ex-logo.gif")}" alt="Ex hazardous area mark" loading="lazy">
-        <img src="${C.img("iecex.png")}" alt="IECEx" loading="lazy">
-        <p><strong>Certified for hazardous areas.</strong> EDS supplies intrinsically safe equipment certified under ATEX and IECEx, including Zone 0 instruments for sewer environments.</p>
-      </div>
     </div>
   </div>
 </section>
@@ -1269,20 +1286,22 @@ const blockHtml = (b) => `
 
 // The sections of a service or solution page, for the section bar under the
 // hero: its blocks, plus any comparison table, results or demo below them.
+// Labels are short so the bar fits on a desktop: a block's `nav` is its name
+// in the bar ("" leaves it out), and the ids still come from the headings.
 function sectionsOf(s) {
-  const list = [...(s.blocks || []).map((b) => [slugify(b.heading), b.heading])];
-  if (s.compare) list.push([slugify(s.compare.heading), s.compare.heading]);
+  const list = [...(s.blocks || []).map((b) => [slugify(b.heading), b.nav ?? (b.faq ? "Questions" : b.heading)])];
+  if (s.compare) list.push([slugify(s.compare.heading), s.compare.nav ?? s.compare.heading]);
   // The evidence sits straight after the first feature band (bandsOf()), so
   // a visitor meets a result before the reference material.
   if (resultsFor(s.slug).length) {
     const after = (s.blocks || []).findIndex((b) => b.items);
-    list.splice(after < 0 ? list.length : after + 1, 0, ["results", "Results from the field"]);
+    list.splice(after < 0 ? list.length : after + 1, 0, ["results", "Results"]);
   }
-  if (s.process) list.push(["how-it-runs", "How a program runs"]);
-  if (s.widget === "lab") list.push(["flow-lab", "Try the flow lab"]);
-  if (s.widget === "lidott") list.push(["alarm-demo", "Try the alarm"]);
+  if (s.process) list.push(["how-it-runs", "How it runs"]);
+  if (s.widget === "lab") list.push(["flow-lab", "Flow lab"]);
+  if (s.widget === "lidott") list.push(["alarm-demo", "Alarm demo"]);
   if (s.widget === "eas") list.push(["asset-score", "Try the EDS Asset Score"]);
-  return list;
+  return list.filter(([, label]) => label);
 }
 
 // A slim bar of the page's sections. It sits under the hero, sticks under the
@@ -1314,7 +1333,10 @@ const glanceOf = (s) => {
 function overviewHtml(s) {
   const paras = (list) => list.map((p) => `<p>${esc(p)}</p>`).join("");
   const sizes = "(max-width: 980px) calc(100vw - 40px), 580px";
-  const visual = s.figure ? photoFigure(s.figure, { sizes })
+  // A panorama is shown whole, across the page under the text: cropped to
+  // 3:2 beside the text it lost most of the picture and was drawn soft.
+  const pano = s.figure && PHOTOS[s.figure.photo]?.[0].w / PHOTOS[s.figure.photo]?.[0].h > 2.4;
+  const visual = s.figure ? (pano ? "" : photoFigure(s.figure, { sizes }))
     : s.diagram ? diagram(s.diagram, C.diagrams[s.diagram])
     : s.screen ? screenFigure(s.screen, { tall: true, sizes })
     : asideFigure(s);
@@ -1325,6 +1347,7 @@ function overviewHtml(s) {
   return `
 <section class="section band" id="overview"><div class="wrap">
   <div class="intro">${text}${visual}</div>
+  ${pano ? photoFigure(s.figure, { sizes: "(max-width: 1320px) 94vw, 1240px", cls: "pano" }) : ""}
   ${s.figures ? figureRow(s.figures) : ""}
 </div></section>`;
 }
@@ -1337,8 +1360,9 @@ const paperLinks = (ids = []) => ids.map((id) => { const p = C.papers.find((x) =
 // Each section gets the whole width and a layout that suits it, so no two
 // neighbours look alike: the first feature list as cards, later feature
 // lists as a row of deliverables, checklists in two columns, tables across
-// the page, questions beside their heading, numbered steps in a row. Every
-// band heading is set at the same size.
+// the page, questions beside their heading, numbered steps in a row. A list
+// of two, or one that follows a list of the same kind, sits beside its
+// heading as ruled rows instead. Every band heading is set at the same size.
 const isSteps = (b) => Boolean(b.list && (b.steps || b.heading.includes("approach")));
 const bandHead = (b) => `<div class="band-head"><h2 class="h-lg" data-reveal>${esc(b.heading)}</h2>${b.lede ? `<p class="lede" data-reveal style="--i:1">${esc(b.lede)}</p>` : ""}</div>`;
 const flatItems = (items) => `<ul class="flat-list">${items.map(([t, d], n) => `<li data-reveal style="--i:${n % 4}"><span><b>${esc(t)}</b><span>${esc(d)}</span></span></li>`).join("")}</ul>`;
@@ -1364,6 +1388,11 @@ function bandsOf(s, r) {
     } else if (b.items && !cards) {
       cards = true;
       out.push({ id, cls: "band-cards", html: `${bandHead(b)}<div class="feature-grid n${b.items.length}">${b.items.map(([t, d], n) => `<div class="feature holder" data-reveal style="--i:${n % 4}"><div><b>${esc(t)}</b><span>${esc(d)}</span></div></div>`).join("")}</div>${bandShot(b)}` });
+    } else if (b.items && (b.items.length <= 2 || out.at(-1)?.cls === "band-deliv")) {
+      // two points, or a list straight after a row of deliverables: ruled
+      // rows beside the heading, so a short band is not mostly empty and
+      // two neighbours never share a layout
+      out.push({ id, cls: "band-split", html: `<div class="split-band">${bandHead(b)}${flatItems(b.items)}</div>${bandShot(b)}` });
     } else if (b.items) {
       // what a program includes: one column per item, across the page
       out.push({ id, cls: "band-deliv", html: `${bandHead(b)}<ul class="deliv n${b.items.length}">${b.items.map(([t, d], n) => `<li data-reveal style="--i:${n % 5}"><b>${esc(t)}</b><p>${esc(d)}</p></li>`).join("")}</ul>${bandShot(b)}` });
@@ -1373,6 +1402,9 @@ function bandsOf(s, r) {
       out.push({ id, cls: "band-split", html: `<div class="split-band">${bandHead(b)}<div data-reveal>${faqHtml(b.faq)}</div></div>` });
     } else if (isSteps(b)) {
       out.push({ id, cls: "band-steps", html: `${bandHead(b)}<ol class="step-grid n${b.list.length}">${b.list.map((l, n) => `<li data-reveal style="--i:${n % 4}"><span>${String(n + 1).padStart(2, "0")}</span><p>${esc(l)}</p></li>`).join("")}</ol>` });
+    } else if (out.at(-1)?.cls === "band-list") {
+      // a checklist straight after another sits beside its heading
+      out.push({ id, cls: "band-split", html: `<div class="split-band">${bandHead(b)}${checkList(b.list)}</div>` });
     } else {
       out.push({ id, cls: "band-list", html: `${bandHead(b)}<ul class="checks cols" data-reveal style="--rows:${Math.ceil(b.list.length / 2)}">${b.list.map((l) => `<li>${icon("check", false)}<span>${esc(l)}</span></li>`).join("")}</ul>` });
     }
@@ -1415,7 +1447,7 @@ ${overviewHtml(s)}
 ${bands}
 ${process}
 ${demo}
-${groups.length ? band(relatedTone, `${relatedHead}<div class="related-grid">${groups.map(([title, links], i) => `<div data-reveal style="--i:${i}"><h3>${title}</h3><ul class="aside-links">${links.map(([href, label, ic = "arrow-right", ext]) => `<li><a href="${href}"${ext ? ' rel="noopener"' : ""}>${esc(label)}${icon(ic)}</a></li>`).join("")}</ul></div>`).join("")}</div>`, { id: "related", cls: "band-related" }) : ""}`;
+${groups.length ? band(relatedTone, `${relatedHead}<div class="related-grid n${groups.length}">${groups.map(([title, links], i) => `<div data-reveal style="--i:${i}"><h3>${title}</h3><ul class="aside-links">${links.map(([href, label, ic = "arrow-right", ext]) => `<li><a href="${href}"${ext ? ' rel="noopener"' : ""}>${esc(label)}${icon(ic)}</a></li>`).join("")}</ul></div>`).join("")}</div>`, { id: "related", cls: "band-related" }) : ""}`;
 }
 
 for (const s of C.services) {
@@ -1431,7 +1463,7 @@ for (const s of C.services) {
 ${pageHero(r, { crumbs: [["Services", "services/index.html"], [s.short || s.title]], title: s.title, lede: s.summary, compact: true, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${contactHref(r, { topic: s.title })}">Start an enquiry ${icon("arrow-right")}</a>${s.widget === "lab" ? `<a class="btn btn-ghost btn-lg" href="#flow-lab">${icon("cloud-rain")} Try the flow lab</a>` : ""}${s.widget === "lidott" ? `<a class="btn btn-ghost btn-lg" href="#alarm-demo">${icon("bell")} Try the alarm</a>` : ""}`, visual: glanceOf(s) })}
 <div class="secbar-scope">${sectionBar(r, s)}
 ${detailBody(r, s, {
-  related: [["Related services", svcLinks(r, s.related)], ["Related solutions", solLinks(r, s.solutions)], ["Instruments we use", brandLinks(r, s.products)], ["White papers", paperLinks(s.papers)]],
+  related: [["Services", svcLinks(r, s.related)], ["Solutions", solLinks(r, s.solutions)], ["Instruments we use", brandLinks(r, s.products)], ["White papers", paperLinks(s.papers)], ["Downloads", (s.downloads || []).map(([href, label]) => (href.startsWith("@root/") ? [href, label, "download", true] : [`${r}${href}`, label]))]],
   demo: s.widget === "lab" ? labSection({ title: s.slug.startsWith("inflow") ? "Watch inflow and infiltration happen." : "What the flow meter sees in a storm." })
     : s.widget === "lidott" ? `<section class="section dark band" id="alarm-demo"><div class="wrap"><div class="section-head"><h2 class="h-lg" data-reveal>Raise the water. Watch the alarm.</h2></div>${lidottDemo({ link: `${r}products/lidott-alarm.html` })}</div></section>` : "",
 })}</div>
@@ -1470,8 +1502,8 @@ for (const s of C.solutions) {
 ${pageHero(r, { crumbs: [["Solutions", "solutions/index.html"], [s.title]], title: s.title, lede: s.summary, compact: true, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${contactHref(r, { topic: s.title })}">Start an enquiry ${icon("arrow-right")}</a>`, visual: glanceOf(s) })}
 <div class="secbar-scope">${sectionBar(r, s)}
 ${detailBody(r, s, {
-  related: [["Related solutions", solLinks(r, s.related)], ["Related services", svcLinks(r, C.services.filter((x) => x.solutions?.includes(s.slug)).map((x) => x.slug))], ["Instruments we use", brandLinks(r, s.productLinks)]],
-  demo: s.widget === "eas" ? `<section class="section dark band" id="asset-score"><div class="wrap"><div class="section-head"><p class="eyebrow">EDS Asset Score</p><h2 class="h-lg" data-reveal>One score, watched around the clock.</h2></div>${easDemo()}</div></section>` : "",
+  related: [["Solutions", solLinks(r, s.related)], ["Services", svcLinks(r, C.services.filter((x) => x.solutions?.includes(s.slug)).map((x) => x.slug))], ["Instruments we use", brandLinks(r, s.productLinks)]],
+  demo: s.widget === "eas" ? `<section class="section dark band" id="asset-score"><div class="wrap"><div class="section-head"><h2 class="h-lg" data-reveal>One score, watched around the clock.</h2></div>${easDemo()}</div></section>` : "",
 })}</div>
 ${ctaSection(r, { topic: s.title })}`,
   });
@@ -1491,25 +1523,27 @@ add({
     const opt = (value, label, n, ic = "") => `<li><button type="button" class="cat-opt" data-value="${esc(value)}" aria-pressed="${value === "" ? "true" : "false"}" data-track-label="${esc(label)}">${ic ? icon(ic, false) : ""}<span>${esc(label)}</span><span data-n>${n}</span></button></li>`;
     const rail = `
     <aside class="cat-rail" aria-label="Filter the instruments">
-      <div class="cat-group" data-cat-filter="type"><p class="cat-h">Type</p><ul>${opt("", "All instruments", products.length)}${C.productTypes.map((t) => opt(t.id, t.label, products.filter((p) => p.type === t.id).length, t.icon)).join("")}</ul></div>
-      <div class="cat-group" data-cat-filter="brand"><p class="cat-h">Range</p><ul>${opt("", "All ranges", products.length)}${C.brands.map((b) => opt(b.slug, b.name, products.filter((p) => p.brand === b).length)).join("")}</ul></div>
-      <div class="cat-group" data-cat-filter="docs"><p class="cat-h">Documents</p><ul>${opt("", "Any", products.length)}${opt("1", "With a datasheet or manual", products.filter((p) => (p.docs || []).length || (p.brand.docs || []).length).length)}</ul></div>
+      <div class="cat-group" role="group" aria-labelledby="cat-h-type" data-cat-filter="type"><p class="cat-h" id="cat-h-type">Type</p><ul>${opt("", "All instruments", products.length)}${C.productTypes.map((t) => opt(t.id, t.label, products.filter((p) => p.type === t.id).length, t.icon)).join("")}</ul></div>
+      <div class="cat-group" role="group" aria-labelledby="cat-h-brand" data-cat-filter="brand"><p class="cat-h" id="cat-h-brand">Range</p><ul>${opt("", "All ranges", products.length)}${C.brands.map((b) => opt(b.slug, b.name, products.filter((p) => p.brand === b).length)).join("")}</ul></div>
+      <div class="cat-group" role="group" aria-labelledby="cat-h-docs" data-cat-filter="docs"><p class="cat-h" id="cat-h-docs">Documents</p><ul>${opt("", "Any", products.length)}${opt("1", "Datasheet or manual", products.filter((p) => (p.docs || []).length || (p.brand.docs || []).length).length)}</ul></div>
     </aside>`;
     return `
 ${pageHero(r, { crumbs: [["Products"]], title: "Industry leading instruments, backed by people who use them.", compact: true, after: `
     <div class="finder-bar" id="finder" data-reveal style="--i:2">
-      <label class="finder-search">${icon("search", false)}<input type="search" placeholder="Search ${products.length} instruments by name, range or what they measure" aria-label="Search instruments" autocomplete="off" spellcheck="false"></label>
+      <label class="finder-search">${icon("search", false)}<input type="search" placeholder="Try “flow”, “Hach” or “level”" aria-label="Search ${products.length} instruments by name, range or what they measure" autocomplete="off" spellcheck="false"></label>
+      <p class="finder-live" hidden><span data-finder-live></span> <a class="link-arrow" href="#instruments">See them ${icon("arrow-right")}</a></p>
     </div>` })}
 <section class="section ranges-strip" id="ranges"><div class="wrap">
   <div class="ranges-head"><h2 class="h-md" data-reveal>Browse by range</h2><p data-reveal style="--i:1">EDS makes its own instruments and represents leading manufacturers, across water supply, wastewater, flow monitoring and process control. Every range here is one we install, service and calibrate ourselves.</p></div>
   <div class="range-tiles">
     ${C.brands.map((b, n) => {
       const count = products.filter((p) => p.brand === b).length;
-      return `<a class="range-tile" href="${r}products/${b.slug}.html" data-reveal style="--i:${n % 4}"><span class="card-icon">${icon(b.icon)}</span><b>${esc(b.title)}</b><small>${count} ${count === 1 ? "instrument" : "instruments"}</small></a>`;
+      return `<a class="range-tile" href="${r}products/${b.slug}.html" data-reveal style="--i:${n % 4}"><span class="card-icon">${icon(b.icon)}</span><b>${esc(b.title)}</b><small>${count} ${count === 1 ? "instrument" : "instruments"}</small><span class="go" aria-hidden="true">${icon("arrow-right")}</span></a>`;
     }).join("")}
   </div>
 </div></section>
 <section class="section alt finder-results" id="instruments"><div class="wrap">
+  <h2 class="sr-only">Instruments</h2>
   <div class="finder cat">
     ${rail}
     <div class="cat-main">
@@ -1525,16 +1559,16 @@ ${pageHero(r, { crumbs: [["Products"]], title: "Industry leading instruments, ba
         <span class="card-icon">${icon("search-x")}</span>
         <h3>No instruments match</h3>
         <p>Try another word or filter, or ask our team which instrument suits your application.</p>
-        <div class="hero-actions"><button class="btn btn-outline" type="button" data-finder-reset>Show all instruments</button><a class="btn btn-brand" href="${contactHref(r, { topic: "Product pricing" })}">Ask our team ${icon("arrow-right")}</a></div>
+        <div class="hero-actions"><button class="btn btn-outline" type="button" data-finder-reset>Show all instruments</button><a class="btn btn-brand" href="${contactHref(r, { topic: "Product pricing" })}">Start an enquiry ${icon("arrow-right")}</a></div>
       </div>
     </div>
   </div>
 </div></section>
 ${quickView()}
 <section class="section" id="featured"><div class="wrap split" style="align-items:center">
-  <div><p class="eyebrow">Featured</p><h2 class="h-lg" data-reveal>LIDoTT Alarm</h2><p class="lede" data-reveal style="--i:1;margin-top:16px">${C.lidott.lede} Radar level sensor, battery, modem and aerial in one compact, Zone 0 certified device.</p>
+  <div><p class="eyebrow">Featured</p><h2 class="h-lg" data-reveal>LIDoTT Alarm</h2><p class="lede" data-reveal style="--i:1;margin-top:16px">${C.lidott.lede} Radar level sensor, battery, modem and antenna in one compact unit, certified for Zone 0.</p>
   <div class="hero-actions"><a class="btn btn-brand btn-lg" href="${r}products/lidott-alarm.html">See how it works ${icon("arrow-right")}</a></div></div>
-  <div class="brand-shot" style="border:1px solid var(--border);border-radius:24px;aspect-ratio:1" data-reveal="right"><img src="${C.lidott.image}" alt="LIDoTT Alarm" loading="lazy"></div>
+  <div class="brand-shot" style="border:1px solid var(--border);border-radius:var(--radius);aspect-ratio:1" data-reveal="right"><img src="${C.lidott.image}" alt="LIDoTT Alarm" loading="lazy"></div>
 </div></section>
 ${waysSection(r, { cls: "alt" })}
 ${ctaSection(r, { title: "Need help choosing an instrument?", lede: "Our team has installed, serviced and calibrated all of them. Ask us which suits your application.", topic: "Product pricing" })}`;
@@ -1573,10 +1607,9 @@ ${pageHero(r, { crumbs: [["Products", "products/index.html"], [b.name]], iconNam
   </div>
   <aside class="aside">
     ${b.logo ? `<div class="aside-card logo-card" data-reveal="right" style="display:grid;place-items:center;padding:32px"><img src="${b.logo}" alt="${esc(b.name)} logo" style="max-height:70px;width:auto" loading="lazy"></div>` : ""}
-    <div class="aside-card brand" data-reveal="right"><h2>Request pricing</h2><p>Sales, hire and service from EDS, Australia wide.</p><a class="btn btn-primary" href="${contactHref(r, pricing)}">Start an enquiry ${icon("arrow-right")}</a></div>
     ${docs.length
       ? `<div class="aside-card" data-reveal="right"><h2>Documents</h2><ul class="aside-links docs">${docs.map((d) => `<li><a href="${d.href}" rel="noopener"><span>${esc(d.title)}<small>${esc(d.meta)}</small></span>${icon("download")}</a></li>`).join("")}</ul></div>`
-      : `<div class="aside-card" data-reveal="right"><h2>Datasheets and manuals</h2><p>Ask us for the datasheet, manual or software for any ${esc(b.name)} product.</p><a class="link-arrow" href="${contactHref(r, { product: `${b.name} datasheet or manual` })}">Request a datasheet ${icon("arrow-right")}</a></div>`}
+      : `<div class="aside-card" data-reveal="right"><h2>Datasheets and manuals</h2><p>Ask us for the datasheet, manual or software for any ${esc(b.name)} product.</p><a class="link-arrow" href="${contactHref(r, { topic: "General enquiry", product: `${b.name} datasheet or manual` })}">Request a datasheet ${icon("arrow-right")}</a></div>`}
   </aside>
 </div></section>
 <section class="section alt" id="range"><div class="wrap">
@@ -1595,11 +1628,11 @@ ${ctaSection(r, { title: `Ask us about ${b.name}.`, lede: "Pricing, availability
 add({
   file: "products/lidott-alarm.html",
   title: "LIDoTT Radar Level Alarm by Detectronic | EDS",
-  description: "Self contained radar water level measurement and alarm device. ATEX and IECEx Zone 0 certified, measures up to 8.4 m, battery life up to 7 years.",
+  description: "Self-contained radar water level measurement and alarm device. ATEX and IECEx Zone 0 certified, measures up to 8.4 m, battery life up to 7 years.",
   current: "products",
   scripts: ["widgets.js"],
   body: (r) => `
-${pageHero(r, { crumbs: [["Products", "products/index.html"], ["Detectronic", "products/detectronic.html"], ["LIDoTT Alarm"]], iconName: "bell", eyebrow: "Detectronic", title: "LIDoTT Alarm", lede: C.lidott.lede, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${contactHref(r, { topic: "Product pricing", product: "LIDoTT Alarm (Detectronic)" })}">Request pricing ${icon("arrow-right")}</a>${quoteBtn(quoteItem(products.find((p) => p.href === "products/lidott-alarm.html")), "btn-lg")}<a class="btn btn-ghost btn-lg" href="${C.lidott.datasheet}" rel="noopener">${icon("download")} Datasheet</a>`, visual: heroProduct(C.lidott.image, "LIDoTT Alarm") })}
+${pageHero(r, { crumbs: [["Products", "products/index.html"], ["Detectronic", "products/detectronic.html"], ["LIDoTT Alarm"]], iconName: "bell", eyebrow: "Radar level alarm", title: "LIDoTT Alarm", lede: C.lidott.lede, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${contactHref(r, { topic: "Product pricing", product: "LIDoTT Alarm (Detectronic)" })}">Request pricing ${icon("arrow-right")}</a>${quoteBtn(quoteItem(products.find((p) => p.href === "products/lidott-alarm.html")), "btn-lg")}<a class="btn btn-ghost btn-lg" href="${C.lidott.datasheet}" rel="noopener">${icon("download")} Datasheet</a>`, visual: heroProduct(C.lidott.image, "LIDoTT Alarm") })}
 <section class="section hl-band"><div class="wrap">
   <div class="hl-grid">${C.lidott.highlights.map(([ic, t, d], i) => `<div class="hl holder" data-reveal style="--i:${i % 3}">${icon(ic)}<b>${t}</b><span>${d}</span></div>`).join("")}</div>
 </div></section>
@@ -1614,11 +1647,12 @@ ${pageHero(r, { crumbs: [["Products", "products/index.html"], ["Detectronic", "p
     ${photoFigure(C.lidott.figure)}
   </div>
   <aside class="aside">
-    <figure class="aside-card aside-figure" data-reveal="right"><img src="${C.lidott.image2}" alt="Drawing of LIDoTT Alarm in section" loading="lazy"><figcaption>LIDoTT Alarm, in section</figcaption></figure>
-    <div class="aside-card" data-reveal="right"><h2>Specifications</h2><table class="specs"><tbody>${C.lidott.specs.map(([k, v]) => `<tr><th>${k}</th><td>${v}</td></tr>`).join("")}</tbody></table></div>
+    <figure class="aside-figure" data-reveal="right"><div class="aside-plate"><img src="${C.lidott.image2}" alt="Drawing of LIDoTT Alarm in section" loading="lazy"></div><figcaption>LIDoTT Alarm, in section</figcaption></figure>
+    <div class="aside-card" id="specifications" data-reveal="right"><h2>Specifications</h2><table class="specs"><tbody>${C.lidott.specs.map(([k, v]) => `<tr><th>${k}</th><td>${v}</td></tr>`).join("")}</tbody></table></div>
+    <div class="aside-card" data-reveal="right"><h2>Documents</h2><ul class="aside-links docs"><li><a href="${C.lidott.datasheet}" rel="noopener"><span>LIDoTT Alarm datasheet<small>${docType(C.lidott.datasheet)}</small></span>${icon("download")}</a></li></ul></div>
   </aside>
 </div></section>
-${ctaSection(r, { title: "Deploy LIDoTT Alarm across your network.", lede: "Simple to install and zero maintenance by design. Ask EDS for pricing and a deployment plan.", topic: "Product pricing", product: "LIDoTT Alarm (Detectronic)" })}`,
+${ctaSection(r, { title: "Deploy LIDoTT Alarm across your network.", lede: "Simple to install and zero maintenance by design. Ask us for pricing and a deployment plan.", topic: "Product pricing", product: "LIDoTT Alarm (Detectronic)" })}`,
 });
 
 add({
@@ -1627,7 +1661,7 @@ add({
   description: "All-in-one radar level monitor with alarms, up to 20 m range with ± 5 mm accuracy. LoRaWAN or 4G connectivity, battery over 5 years.",
   current: "products",
   body: (r) => `
-${pageHero(r, { crumbs: [["Products", "products/index.html"], ["Detectronic", "products/detectronic.html"], ["Alarm2"]], iconName: "bell-ring", eyebrow: "Detectronic", title: "Alarm2", lede: C.alarm2.lede, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${contactHref(r, { topic: "Product pricing", product: "Alarm2 (Detectronic)" })}">Request pricing ${icon("arrow-right")}</a>${quoteBtn(quoteItem(products.find((p) => p.href === "products/alarm2.html")), "btn-lg")}<a class="btn btn-ghost btn-lg" href="${C.alarm2.datasheet}" rel="noopener">${icon("download")} Datasheet</a><a class="btn btn-ghost btn-lg" href="${C.alarm2.manual}" rel="noopener">${icon("download")} Manual</a>`, visual: heroProduct(C.alarm2.image, "Alarm2") })}
+${pageHero(r, { crumbs: [["Products", "products/index.html"], ["Detectronic", "products/detectronic.html"], ["Alarm2"]], iconName: "bell-ring", eyebrow: "Radar level monitor", title: "Alarm2", lede: C.alarm2.lede, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${contactHref(r, { topic: "Product pricing", product: "Alarm2 (Detectronic)" })}">Request pricing ${icon("arrow-right")}</a>${quoteBtn(quoteItem(products.find((p) => p.href === "products/alarm2.html")), "btn-lg")}<a class="btn btn-ghost btn-lg" href="${C.alarm2.datasheet}" rel="noopener">${icon("download")} Datasheet</a>`, visual: heroProduct(C.alarm2.image, "Alarm2") })}
 <section class="section hl-band"><div class="wrap">
   <div class="hl-grid">${C.alarm2.highlights.map(([ic, t, d], i) => `<div class="hl holder" data-reveal style="--i:${i % 3}">${icon(ic)}<b>${t}</b><span>${d}</span></div>`).join("")}</div>
 </div></section>
@@ -1637,10 +1671,11 @@ ${pageHero(r, { crumbs: [["Products", "products/index.html"], ["Detectronic", "p
     <div class="feature-list" style="margin-top:40px">${C.alarm2.sections.map(([t, d]) => `<div class="feature holder" data-reveal><div><b>${esc(t)}</b><span>${esc(d)}</span></div></div>`).join("")}</div>
   </div>
   <aside class="aside">
-    <div class="aside-card" data-reveal="right"><h2>Specifications</h2><table class="specs"><tbody>${C.alarm2.specs.map(([k, v]) => `<tr><th>${k}</th><td>${v}</td></tr>`).join("")}</tbody></table></div>
+    <div class="aside-card" id="specifications" data-reveal="right"><h2>Specifications</h2><table class="specs"><tbody>${C.alarm2.specs.map(([k, v]) => `<tr><th>${k}</th><td>${v}</td></tr>`).join("")}</tbody></table></div>
+    <div class="aside-card" data-reveal="right"><h2>Documents</h2><ul class="aside-links docs">${[["Alarm2 datasheet", C.alarm2.datasheet], ["Alarm2 4G manual", C.alarm2.manual]].map(([t, href]) => `<li><a href="${href}" rel="noopener"><span>${t}<small>${docType(href)}</small></span>${icon("download")}</a></li>`).join("")}</ul></div>
   </aside>
 </div></section>
-${ctaSection(r, { title: "Deploy Alarm2 across your network.", lede: "Complete level measurement and alarm device, ready for remote deployment. Ask EDS for pricing and support.", topic: "Product pricing", product: "Alarm2 (Detectronic)" })}`,
+${ctaSection(r, { title: "Deploy Alarm2 across your network.", lede: "Tell us about your sites and how you want to be alerted. We'll come back with pricing and support.", topic: "Product pricing", product: "Alarm2 (Detectronic)" })}`,
 });
 
 /* ---- EDS instruments with a page of their own ---- */
@@ -1689,7 +1724,7 @@ ${pageHero(r, { crumbs: [["Products", "products/index.html"], [b.name, `products
     <div class="feature-list" style="margin-top:40px">${pg.features.map(([t, d]) => `<div class="feature holder" data-reveal><div><b>${esc(t)}</b><span>${esc(d)}</span></div></div>`).join("")}</div>
   </div>
   <aside class="aside">
-    <figure class="aside-card aside-figure" data-reveal="right"><img src="${pg.figure.src}" alt="${esc(pg.figure.alt)}" loading="lazy"><figcaption>${esc(pg.figure.caption)}</figcaption></figure>
+    <figure class="aside-figure" data-reveal="right"><div class="aside-plate"><img src="${pg.figure.src}" alt="${esc(pg.figure.alt)}" loading="lazy"></div><figcaption>${esc(pg.figure.caption)}</figcaption></figure>
     <div class="aside-card" data-reveal="right"><h2>Documents</h2><ul class="aside-links docs">${pg.docs.map((d) => `<li><a href="${d.href}" rel="noopener"><span>${esc(`${pg.name} ${d.label.toLowerCase()}`)}<small>${docType(d.href)} · ${esc(d.note)}</small></span>${icon("download")}</a></li>`).join("")}</ul></div>
     <div class="aside-card" data-reveal="right"><h2>Works with</h2><ul class="aside-links docs">${pg.worksWith.map(([href, t, d]) => `<li><a href="${r}${href}"><span>${esc(t)}<small>${esc(d)}</small></span>${icon("arrow-right")}</a></li>`).join("")}</ul></div>
   </aside>
@@ -1717,9 +1752,9 @@ const FS = C.flowsense;
 const FS_SIZES = {
   single: "(max-width: 980px) calc(100vw - 40px), 700px",
   stack: "(max-width: 980px) calc(100vw - 40px), 640px",
-  over: "(max-width: 980px) calc(60vw - 24px), 400px",
-  beside: "(max-width: 980px) calc(57vw - 24px), 400px",
-  besideB: "(max-width: 980px) calc(43vw - 24px), 300px",
+  over: "(max-width: 700px) calc(100vw - 40px), (max-width: 980px) calc(60vw - 24px), 400px",
+  beside: "(max-width: 700px) calc(100vw - 40px), (max-width: 980px) calc(57vw - 24px), 400px",
+  besideB: "(max-width: 700px) calc(100vw - 40px), (max-width: 980px) calc(43vw - 24px), 300px",
   column: "(max-width: 980px) calc(100vw - 40px), 700px",
   wide: "(max-width: 980px) calc(100vw - 40px), 1240px",
   tall: "(max-width: 980px) 70vw, 300px",
@@ -1764,7 +1799,7 @@ const fsTrace = (t) => `
       <text x="206" y="40" fill="#4e6361">${esc(t.fall)}</text>
       <text x="22" y="40" fill="#4e6361" font-size="10.5">Wet well level</text>
     </g>
-    <g fill="none" stroke="#4e6361" stroke-width="1"><path d="M96 203 L96 194 L90 182"/><path d="M212 44 L212 54 L188 100"/></g>
+    <g fill="none" stroke="#4e6361" stroke-width="1"><path d="M60 198V141"/><path d="M212 44 L212 54 L188 100"/></g>
   </svg>
   <figcaption><b>${esc(t.title)}</b> ${esc(t.text)}</figcaption>
 </figure>`;
@@ -1850,10 +1885,10 @@ ${second.map(fsStop).join("")}
     <p class="note">${esc(FS.standards.clientsNote)}</p>
   </div>
 </div></section>
-<section class="section band alt" id="questions"><div class="wrap split rev">
-  <div class="section-head" style="margin:0"><h2 class="h-lg" data-reveal>What councils and utilities ask us.</h2><p class="lede" data-reveal style="--i:1">If your question is not here, our team will answer it on ${site.phone}.</p></div>
+<section class="section band alt band-split" id="questions"><div class="wrap"><div class="split-band">
+  <div class="band-head"><h2 class="h-lg" data-reveal>What councils and utilities ask us.</h2><p class="lede" data-reveal style="--i:1">If your question is not here, our team will answer it on <a href="${site.phoneHref}">${site.phone}</a>.</p></div>
   <div data-reveal>${faqHtml(FS.faq)}</div>
-</div></section>
+</div></div></section>
 <section class="section band" id="documents"><div class="wrap">
   <div class="section-head"><h2 class="h-lg" data-reveal>Read more about FlowSense.</h2></div>
   <ul class="doc-list grid c2">
@@ -1889,20 +1924,20 @@ ${pageHero(r, { crumbs: [["About"]], title: "Australian owned and operated since
     ${C.about.approach.items.map(([ic, t, d], n) => `<div class="card hoverable holder" data-reveal style="--i:${n % 3}"><span class="card-icon">${icon(ic)}</span><h3>${esc(t)}</h3><p>${esc(d)}</p></div>`).join("")}
   </div>
 </div></section>
-<section class="section alt"><div class="wrap">
+<section class="section alt"><div class="wrap origins">
   <div class="section-head"><p class="eyebrow">EDS origins</p><h2 class="h-lg" data-reveal>Founded by Graham and Cynthia Harper.</h2>
-  <p class="lede" data-reveal style="--i:1">EDS began in Queensland in 1991, following Graham's success with Elpro, and alongside the release of the Pump Station Manager.</p></div>
+  <p class="lede" data-reveal style="--i:1">EDS began in Queensland in 1991, following Graham's success with ELPRO, and alongside the release of the Pump Station Manager.</p></div>
   <div class="timeline">
     <span class="timeline-fill"></span>
-    ${C.about.timeline.map(([when, t, d], i) => `<div class="tl"${i === C.about.timeline.findIndex(([w]) => w.startsWith("2022")) ? ' id="projects"' : ""} data-reveal><time>${when}</time><i></i><div><h3>${t}</h3><p>${d}</p></div></div>`).join("")}
+    ${C.about.timeline.map(([when, t, d], i) => `${i === C.about.timeline.findIndex(([w]) => w.startsWith("2022")) ? '<p class="tl-group" id="projects">Recent projects</p>' : ""}<div class="tl" data-reveal><time>${when}</time><i></i><div><h3>${t}</h3><p>${d}</p></div></div>`).join("")}
   </div>
   <figure class="quote" data-reveal style="margin:48px 0 0">${icon("quote", false)}<blockquote>${C.about.founder.text}</blockquote><cite><b>${C.about.founder.name}</b>, ${C.about.founder.role}</cite></figure>
 </div></section>
 <section class="section dark"><div class="wrap aus">
-  <svg id="ausmap" data-offices='${JSON.stringify(C.offices)}' role="group" aria-label="Map of Australia showing EDS offices" data-reveal="scale"></svg>
+  <svg id="ausmap" data-offices='${JSON.stringify(C.offices)}' role="img" aria-label="Map of Australia showing EDS offices" data-reveal="scale"></svg>
   <div><h2 class="h-lg" data-reveal>Four offices across Australia.</h2>
   <p class="lede" data-reveal style="--i:1">Crews and support across the country, on one number. Tell us about your network, site or project.</p>
-  <div class="office-list" style="margin-top:26px">${C.offices.map((o) => `<button class="office"><span class="card-icon">${icon("map-pin")}</span><span><b>${o.city}</b><span>${o.note}</span></span><em>${o.state}</em></button>`).join("")}</div>
+  <div class="office-list" style="margin-top:26px">${C.offices.map((o) => `<button class="office" type="button"><span class="card-icon">${icon("map-pin")}</span><span><b>${o.city}</b><span>${o.note}</span></span><em>${o.state}</em></button>`).join("")}</div>
   <div class="hero-actions" data-reveal style="--i:2"><a class="btn btn-primary btn-lg" data-magnetic href="${contactHref(r)}">Start an enquiry ${icon("arrow-right")}</a><a class="btn btn-ghost btn-lg" href="${site.phoneHref}">${icon("phone")} ${site.phone}</a></div></div>
 </div></section>`,
 });
@@ -1925,12 +1960,12 @@ const LIBRARY_ROWS = 12;
 
 add({
   file: "resources.html",
-  title: "Resources | EDS white papers, downloads and manuals",
-  description: "EDS white papers on inflow and infiltration, plus software, drivers, datasheets and selection guides.",
+  title: "White Papers, Downloads & Manuals | EDS",
+  description: "EDS white papers on inflow and infiltration, and on locating it with thermistor strings, plus software, drivers, datasheets and selection guides.",
   current: "resources",
   scripts: ["library.js"],
   body: (r) => `
-${pageHero(r, { crumbs: [["Resources"]], title: "White papers, downloads and support.", lede: "What we have learnt in the field, and the files you need to keep instruments running.", visual: heroToc([["papers", "White papers", C.papers.length], ["downloads", "Software, drivers and datasheets", library.length], ["support", "Passwords, RMA forms and data access"]]) })}
+${pageHero(r, { crumbs: [["Resources"]], title: "White papers, downloads and support.", lede: "What we have learnt in the field, and the files you need to keep instruments running.", visual: heroToc([["papers", "White papers", C.papers.length], ["downloads", "Datasheets, manuals and software", library.length], ["support", "Passwords, RMA forms and data access"]]) })}
 <section class="section" id="papers"><div class="wrap">
   <div class="section-head"><p class="eyebrow">White papers</p><h2 class="h-lg" data-reveal>EDS publications</h2></div>
   <div class="grid ${C.papers.length % 3 ? "c2" : "c3"}">
@@ -1942,9 +1977,9 @@ ${pageHero(r, { crumbs: [["Resources"]], title: "White papers, downloads and sup
   </div>
 </div></section>
 <section class="section alt library" id="downloads"><div class="wrap">
-  <div class="section-head"><h2 class="h-lg" data-reveal>Software, drivers and datasheets</h2><p class="lede" data-reveal style="--i:1">Every document EDS publishes, with its file type and size shown before you download.</p></div>
+  <div class="section-head"><h2 class="h-lg" data-reveal>Datasheets, manuals and software</h2><p class="lede" data-reveal style="--i:1">Every document EDS publishes, with its file type and size shown before you download.</p></div>
   <div class="lib-bar" data-reveal style="--i:2">
-    <label class="finder-search">${icon("search", false)}<input type="search" placeholder="Find a datasheet, manual, brochure or driver" aria-label="Search documents" autocomplete="off" spellcheck="false"></label>
+    <label class="finder-search">${icon("search", false)}<input type="search" placeholder="Search ${library.length} documents" aria-label="Search documents" autocomplete="off" spellcheck="false"></label>
     ${libraryChips("Range", [...new Set(library.map((d) => d.range))])}
     ${libraryChips("Type", [...new Set(library.map((d) => d.kind))])}
   </div>
@@ -1962,11 +1997,11 @@ ${pageHero(r, { crumbs: [["Resources"]], title: "White papers, downloads and sup
   <p class="lib-more"><button class="btn btn-outline" type="button" data-lib-more>Show all ${library.length} documents ${icon("chevron-down")}</button></p>
   <p class="note" style="margin-top:18px;font-size:.9rem;max-width:72ch">${C.downloads.find((g) => g.note).note}</p>
 </div></section>
-<section class="section" id="support"><div class="wrap"><div class="grid c2">
-  <a class="card" href="${r}contact.html" data-reveal><span class="card-icon">${icon("lock")}</span><h3>Software passwords and RMA forms</h3><p>Request a software password, an EDS or Hach Marsh RMA form, or EDS safety policies and procedures.</p><span class="go" aria-hidden="true">${icon("arrow-right")}</span></a>
+<section class="section" id="support"><div class="wrap"><div class="section-head"><h2 class="h-lg" data-reveal>Passwords, RMA forms and data access</h2></div><div class="grid c2">
+  <a class="card" href="${contactHref(r, { topic: "Equipment service or calibration" })}" data-reveal><span class="card-icon">${icon("lock")}</span><h3>Software passwords and RMA forms</h3><p>Request a software password, an EDS or Hach Marsh RMA form, or EDS safety policies and procedures.</p><span class="go" aria-hidden="true">${icon("arrow-right")}</span></a>
   <a class="card" href="${site.remoteDataUrl}" rel="noopener" data-reveal style="--i:1"><span class="card-icon">${icon("globe")}</span><h3>Remote data access</h3><p>Sign in to DetectData to view data from your Detectronic instruments.</p><span class="go" aria-hidden="true">${icon("arrow-up-right")}</span></a>
 </div></div></section>
-${ctaSection(r, { title: "Cannot find a manual or driver?", lede: "Our service department will send you what you need." })}`,
+${ctaSection(r, { title: "Can't find a manual or driver?", lede: "Our service department will send you what you need.", topic: "Equipment service or calibration" })}`,
 });
 
 /* ---- contact ---- */
@@ -2048,7 +2083,7 @@ const enquiryForm = (r, reveal) => `
           <label class="field"><span>Organisation <i>Optional</i></span><input name="Organisation" autocomplete="organization"></label>
         </div>
         <div class="field-row">
-          <label class="field">Email<input name="Email" type="email" autocomplete="email" required></label>
+          <label class="field">Email<input name="Email" type="email" autocomplete="email" required pattern="[^@\\s]+@[^@\\s]+\\.[^@\\s]+"></label>
           <label class="field" data-phone-field><span>Phone <i>Optional</i></span><input name="Phone" type="tel" autocomplete="tel"></label>
         </div>
         <fieldset class="field modes">
@@ -2064,7 +2099,7 @@ const enquiryForm = (r, reveal) => `
         <button class="btn btn-brand btn-lg" type="submit"><span>Submit enquiry</span>${icon("arrow-right")}<i class="spin" aria-hidden="true"></i></button>
         <p class="note">${icon("lock", false)}Your enquiry goes straight to our team. <a href="${r}privacy.html">Privacy policy</a></p>
       </div>
-      <p class="form-error" role="alert" data-done="error" hidden>${icon("circle-alert", false)} Your enquiry did not go through. Please try again in a moment, or call ${site.phone}.</p>
+      <p class="form-error" role="alert" data-done="error" hidden>${icon("circle-alert", false)}<span>Your enquiry didn't go through. Please try again in a moment, or call <a href="${site.phoneHref}">${site.phone}</a>.</span></p>
     </div>
     <div class="form-done" data-done="sent" hidden tabindex="-1" role="status">
       <svg class="done-mark" viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="24"/><path d="M15 27l7 7 15-16"/></svg>
@@ -2090,7 +2125,7 @@ add({
   current: "contact",
   scripts: ["widgets.js"],
   body: (r) => `
-${pageHero(r, { crumbs: [["Contact"]], title: "Give us a call or drop in. We'd love to hear about your project.", lede: `${site.hours}, with one number for every state.`, visual: heroPanel("Quickest ways to reach us", `
+${pageHero(r, { crumbs: [["Contact"]], title: "Give us a call or drop\u00a0in. We'd love to hear about your project.", lede: `${site.hours}, with one number for every state.`, visual: heroPanel("Quickest ways to reach us", `
   <a class="hero-call" href="${site.phoneHref}">${icon("phone")}<span><small>Call from anywhere in Australia</small><b>${site.phone}</b></span></a>
   <ul class="hero-links">
     <li><a href="#enquiry">${icon("message-square-text")}<span>Start an enquiry</span>${icon("arrow-down")}</a></li>
@@ -2107,9 +2142,9 @@ ${pageHero(r, { crumbs: [["Contact"]], title: "Give us a call or drop in. We'd l
   ${enquiryForm(r, "right")}
 </div></section>
 <section class="section dark" id="offices"><div class="wrap aus">
-  <svg id="ausmap" data-offices='${JSON.stringify(C.offices)}' role="group" aria-label="Map of Australia showing EDS offices" data-reveal="scale"></svg>
+  <svg id="ausmap" data-offices='${JSON.stringify(C.offices)}' role="img" aria-label="Map of Australia showing EDS offices" data-reveal="scale"></svg>
   <div><p class="eyebrow">Office locations</p><h2 class="h-lg" data-reveal>Find us in four states.</h2>
-  <div class="office-list" style="margin-top:26px">${C.offices.map((o) => `<button class="office"><span class="card-icon">${icon("map-pin")}</span><span><b>${o.city}</b><span>${o.note}</span></span><em>${o.state}</em></button>`).join("")}</div></div>
+  <div class="office-list" style="margin-top:26px">${C.offices.map((o) => `<button class="office" type="button"><span class="card-icon">${icon("map-pin")}</span><span><b>${o.city}</b><span>${o.note}</span></span><em>${o.state}</em></button>`).join("")}</div></div>
 </div></section>`,
 });
 
@@ -2154,9 +2189,16 @@ ${pageHero(r, { crumbs: [["Page not found"]], iconName: "waves", eyebrow: "Error
 /* ---- privacy ---- */
 // content/privacy.txt, one paragraph a line: the first line is the page title
 // and the second its lede. A line that starts "1. " (and so on) is a section
-// heading, a run of lines that start "- " is a list, and [words](url) is a link.
+// heading, a line that starts "### " a sub-heading, a run of lines that start
+// "- " is a list, and [words](url) is a link. Email addresses and 1300 numbers
+// become links, and the domain never breaks at its hyphens.
 const privacy = (await readFile(path.join(ROOT, "content/privacy.txt"), "utf8")).split("\n").map((l) => l.trim()).filter(Boolean);
-const legalLine = (l) => esc(l).replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (_, words, href) => `<a href="${href}" rel="noopener">${words}</a>`);
+const legalLine = (l) => esc(l)
+  .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (_, words, href) => `<a href="${href}" rel="noopener">${words}</a>`)
+  .replace(/\b[\w.+-]+@[\w-]+(?:\.[\w-]+)+\b/g, (m) => `<a class="nw" href="mailto:${m}">${m}</a>`)
+  .replace(/\b1[38]00 \d{3} \d{3}\b/g, (m) => `<a class="nw" href="tel:${m.replace(/ /g, "")}">${m}</a>`)
+  .replace(/(?<![@\w.\/-])((?:www\.)?e-d-s\.com\.au|DB-IP)(?![\w-])/g, '<span class="nw">$1</span>');
+const legalHeading = (l) => /^\d+\.\s/.test(l) && l.length < 90;
 const legalHtml = (lines) => {
   const out = [];
   let list = null;
@@ -2167,18 +2209,23 @@ const legalHtml = (lines) => {
       continue;
     }
     list = null;
-    out.push(/^\d+\.\s/.test(l) && l.length < 90 ? `<h2>${esc(l)}</h2>` : `<p>${legalLine(l)}</p>`);
+    if (l.startsWith("### ")) { out.push(`<h3>${esc(l.slice(4))}</h3>`); continue; }
+    out.push(legalHeading(l) ? `<h2 id="${slugify(l.replace(/^\d+\.\s/, ""))}">${esc(l)}</h2>` : `<p>${legalLine(l)}</p>`);
   }
   return out.map((x) => (Array.isArray(x) ? `<ul>\n${x.join("\n")}\n</ul>` : x)).join("\n");
 };
+// The numbered sections as a jump list that stays beside the text (from
+// 981 px), and the date the policy gives itself (in section 10) under the title.
+const privacySections = privacy.slice(2).filter(legalHeading).map((l) => { const t = l.replace(/^\d+\.\s/, ""); return [slugify(t), t]; });
+const privacyDate = privacy.join(" ").match(/dated (\d{1,2} \w+ \d{4})/)?.[1];
 add({
   file: "privacy.html",
   title: "Privacy policy | EDS",
   description: "What the EDS website collects when you visit or get in touch, why, who sees it, and how to ask us about it.",
   current: "",
   body: (r) => `
-${pageHero(r, { crumbs: [["Privacy policy"]], title: privacy[0], lede: privacy[1] })}
-<section class="section"><div class="wrap"><div class="legal">
+${pageHero(r, { crumbs: [["Privacy policy"]], title: privacy[0], lede: privacy[1], after: privacyDate ? `<p class="note legal-date" data-reveal style="--i:2">Last updated ${privacyDate}</p>` : "" })}
+<section class="section"><div class="wrap legal-wrap">${heroToc(privacySections)}<div class="legal">
   ${legalHtml(privacy.slice(2))}
 </div></div></section>`,
 });
@@ -2200,10 +2247,11 @@ function searchIndex() {
   for (const s of C.services) put("Services", s.title, s.summary, `services/${s.slug}.html`, { i: s.icon, b: text(s.short, C.serviceGroups.find((g) => g.id === s.group)?.title, s.intro, blockText(s.blocks), s.compare?.rows || []) });
   for (const s of C.solutions) put("Solutions", s.title, s.summary, `solutions/${s.slug}.html`, { i: s.icon, b: text(s.intro, blockText(s.blocks)) });
   put("Products", "LIDoTT Alarm", `Detectronic · ${C.lidott.lede}`, "products/lidott-alarm.html", { img: plain(C.lidott.image), b: text("level radar alarm", C.lidott.description, C.lidott.sections, C.lidott.specs) });
+  put("Products", "Alarm2", `Detectronic · ${C.alarm2.tag}`, "products/alarm2.html", { img: plain(C.alarm2.image), b: text("radar level alarm LoRaWAN 4G", C.alarm2.description, C.alarm2.sections, C.alarm2.highlights.map(([, t, d]) => [t, d]), C.alarm2.specs) });
   for (const pg of C.productPages) put("Products", pg.name, `EDS · ${pg.tag}`, `products/${pg.slug}.html`, { img: plain(pg.image), b: text(pg.lede, pg.intro, pg.features, pg.specs.map(([g, rows]) => [g, rows])) });
   for (const p of products) {
     if (p.href) continue; // has a page of its own, listed above
-    put("Products", p.name, `${p.brand.name} · ${p.note || p.range || typeOf(p.type).label}`, `products/${p.brand.slug}.html#${p.id}`, { img: plain(p.image), b: text(typeOf(p.type).label, p.brand.title, p.brand.tag, p.group) });
+    put("Products", p.name, `${p.brand.name} · ${p.note || p.range || typeOf(p.type).label}`, `products/${p.brand.slug}.html#${p.id}`, { img: plain(p.image), b: text(typeOf(p.type).label, p.group) });
   }
   for (const b of C.brands) put("Product ranges", b.title, b.tag, `products/${b.slug}.html`, { i: b.icon, b: text(b.name, b.summary, b.intro, blockText(b.blocks), b.groups.map((g) => g.name)) });
   put("Pages", "Instrument finder", `All ${products.length} instruments, filtered by type or searched by name.`, "products/index.html#finder", { i: "package-search", b: "products catalogue range brands" });
@@ -2215,8 +2263,8 @@ function searchIndex() {
   put("Pages", "All solutions", "Monitoring applied to the problem in front of you.", "solutions/index.html", { i: "layout-grid" });
   put("Pages", "Home", site.tagline, "index.html", { i: "house" });
   put("Pages", "Privacy policy", "How EDS handles personal information.", "privacy.html", { i: "lock" });
-  for (const p of C.papers) put("Documents", p.title, `${p.kind || "White paper"} · ${p.date}`, p.href, { i: "file-text", d: 1, b: p.text });
-  for (const g of C.downloads) for (const [label, href] of g.items) put("Documents", label, g.group, plain(href), { i: g.icon, d: 1, b: g.note });
+  for (const p of C.papers) put("Documents", p.title, [p.kind || "White paper", p.date].filter((x, i, a) => x && a.indexOf(x) === i).join(" · "), plain(p.href), { i: "file-text", d: 1, b: p.text });
+  for (const g of C.downloads) for (const [label, href] of g.items) if (!items.some((e) => e.h === plain(href))) put("Documents", label, g.group, plain(href), { i: g.icon, d: 1, b: g.note });
   for (const p of products) {
     for (const d of p.docs || []) {
       if (!items.some((e) => e.h === plain(d.href))) put("Documents", `${p.name}: ${d.label}`, `${p.brand.name} · ${docType(d.href)}`, plain(d.href), { i: "file-text", d: 1, b: text(p.brand.title, p.note) });
@@ -2242,7 +2290,10 @@ function searchIndex() {
 icon("fan"); // fsScreen() reuses the fan glyph, so make sure it is cached
 await rm(DIST, { recursive: true, force: true });
 await mkdir(path.join(DIST, "assets/fonts"), { recursive: true });
-await cp(path.join(ROOT, "src/css"), path.join(DIST, "assets/css"), { recursive: true });
+// The stylesheet ships without its comments (about a fifth of its weight);
+// they stay in src/css for whoever edits it. No string in it holds "/*".
+await mkdir(path.join(DIST, "assets/css"), { recursive: true });
+for (const f of readdirSync(path.join(ROOT, "src/css"))) await writeFile(path.join(DIST, "assets/css", f), (await readFile(path.join(ROOT, "src/css", f), "utf8")).replace(/\/\*[\s\S]*?\*\//g, "").replace(/\n\s*\n+/g, "\n"));
 await cp(path.join(ROOT, "src/js"), path.join(DIST, "assets/js"), { recursive: true });
 await cp(path.join(ROOT, "src/assets/img"), path.join(DIST, "assets/img"), { recursive: true });
 await cp(path.join(ROOT, "src/assets/docs"), path.join(DIST, "assets/docs"), { recursive: true });
@@ -2326,7 +2377,11 @@ for (const [from, to] of Object.entries(C.oldFiles)) {
     throw new Error(`oldFiles: "${from}" points at missing document ${to}`);
   });
 }
-await writeFile(path.join(DIST, "assets/js/search-index.js"), `// Generated by build.mjs from src/data/content.mjs. Do not edit.\nwindow.EDS_SEARCH = ${JSON.stringify(searchIndex())};\n`);
+const searchData = JSON.stringify(searchIndex());
+// The index is written straight to disk, not through layout(), so a path
+// left as "@root/" here would 404 from the search palette.
+if (searchData.includes("@root/")) throw new Error("search index has unresolved @root/ paths");
+await writeFile(path.join(DIST, "assets/js/search-index.js"), `// Generated by build.mjs from src/data/content.mjs. Do not edit.\nwindow.EDS_SEARCH = ${searchData};\n`);
 await writeFile(
   path.join(DIST, "sitemap.xml"),
   `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${pages

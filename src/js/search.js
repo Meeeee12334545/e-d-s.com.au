@@ -6,6 +6,9 @@
   if (!dialog) return;
   const input = dialog.querySelector("input");
   const list = dialog.querySelector(".search-results");
+  // A polite line read out once typing pauses: how many results, or none.
+  const status = dialog.querySelector("[data-search-status]");
+  let sayT;
   const root = document.documentElement.dataset.root || "";
   const mac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
   document.querySelectorAll("[data-kbd]").forEach((k) => (k.textContent = mac ? "⌘K" : "Ctrl K"));
@@ -103,14 +106,14 @@
       list.innerHTML = `<p class="sr-empty">Loading search…</p>`;
       return;
     }
-    let html = "";
+    let html = "", found = [];
     if (!raw) {
       const byH = (h) => data.items.find((e) => e.h === h);
       const recent = readRecent().map(byH).filter(Boolean);
       if (recent.length) html += group("Recent", recent.map((e) => row(e)).join(""));
       html += group("Suggested", data.suggested.map(byH).filter((e) => e && !recent.includes(e)).map((e) => row(e)).join(""));
     } else {
-      const found = search(raw);
+      found = search(raw);
       if (!found.length) {
         html = `<div class="sr-empty">${svg("search-x")}<p>No results for “${escHtml(raw)}”.</p><small>Try another word, or ask the people who know: call ${escHtml(data.items.find((e) => e.g === "Contact").t.replace(/^Call /, ""))} or send an enquiry.</small></div>`;
         html += group("Contact", data.items.filter((e) => e.g === "Contact").slice(0, 2).map((e) => row(e)).join(""));
@@ -123,7 +126,8 @@
         for (const [label, items] of groups) {
           let body = items.slice(0, PER_GROUP).map((e) => row(e, raw)).join("");
           if (label === "Products" && items.length > PER_GROUP) {
-            body += `<a class="sr sr-more" role="option" href="${root}products/index.html?q=${encodeURIComponent(raw)}#finder"><span class="sr-icon">${svg("package-search") || svg("arrow-right")}</span><span class="sr-text"><b>See all ${items.length} matching instruments</b><small>In the instrument finder</small></span>${svg("arrow-right")}</a>`;
+            // No count: the finder matches its own way, so its number can differ.
+            body += `<a class="sr sr-more" role="option" href="${root}products/index.html?q=${encodeURIComponent(raw)}#instruments"><span class="sr-icon">${svg("package-search") || svg("arrow-right")}</span><span class="sr-text"><b>See all matching instruments</b><small>In the instrument finder</small></span>${svg("arrow-right")}</a>`;
           }
           html += group(label, body);
         }
@@ -133,6 +137,10 @@
     rows = [...list.querySelectorAll(".sr")];
     rows.forEach((r, i) => (r.id = `sr-${i}`));
     setActive(rows.length ? 0 : -1, false);
+    clearTimeout(sayT);
+    sayT = setTimeout(() => {
+      if (status) status.textContent = !raw ? "" : found.length ? `${found.length} ${found.length === 1 ? "result" : "results"}` : `No results for ${raw}`;
+    }, 450);
   }
 
   function setActive(i, scroll = true) {
