@@ -1655,8 +1655,10 @@ main:has(> .alt:last-child) + .footer { background: var(--bg); }
 .specs th, .specs td { text-align: left; padding: 13px 0; border-bottom: 1px solid var(--border); vertical-align: top; }
 .specs th { width: 40%; padding-right: 14px; font-weight: 550; color: var(--muted); }
 .specs td { color: var(--ink); font-weight: 550; }
-/* specification tables grouped into cards, on the EDS product pages */
-.spec-groups { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr)); gap: 16px; align-items: start; }
+/* specification tables grouped into cards, on the EDS product pages, in
+   balanced columns so a short card leaves no hole beside a long one */
+.spec-groups { columns: 3 340px; column-gap: 16px; margin-bottom: -16px; }
+.spec-groups > .aside-card { break-inside: avoid; margin-bottom: 16px; }
 .spec-groups .specs th, .spec-groups .specs td { padding: 11px 0; font-size: .93rem; }
 .spec-groups .specs th { padding-right: 14px; }
 .spec-groups .specs tr:last-child > * { border-bottom: 0; }
@@ -1712,6 +1714,8 @@ main:has(> .alt:last-child) + .footer { background: var(--bg); }
 /* A product's highlights run on from its hero, on white, before the page
    proper starts. */
 .hl-band { padding-top: 0; }
+/* the overview after it is white too, so one band's padding is gap enough */
+.hl-band + .section:not(.dark) { padding-top: 0; }
 .hl { padding: 18px 0 0; border-top: 2px solid var(--eds); border-radius: 0; }
 .hl .icon { font-size: 22px; color: var(--eds); margin-bottom: 10px; }
 .hl b { display: block; color: var(--ink); font-family: var(--font-display); font-weight: 620; }
@@ -2486,6 +2490,19 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: 6
   .glance small { font-size: .8rem; }
   /* one column of words across the whole width: an even veil keeps the currents behind them */
   .page-hero::after { background: linear-gradient(90deg, rgba(246, 251, 250, .88) 0%, rgba(246, 251, 250, .62) 100%), linear-gradient(0deg, #fff 0%, rgba(255, 255, 255, 0) 34%); }
+}
+/* A brand or product page keeps its product shot: a smaller plate beside the
+   words, uncaptioned, and on a phone a short plate under the buttons. */
+@media (max-width: 980px) {
+  .page-hero.has-product .wrap { grid-template-columns: minmax(0, 1fr) clamp(170px, 27vw, 250px); align-items: center; }
+  .page-hero.has-product .hero-product { display: block; }
+  .page-hero.has-product .hero-product figcaption { display: none; }
+  .page-hero.has-product .hero-product-shot { padding: 20px; border-radius: 20px; }
+}
+@media (max-width: 560px) {
+  .page-hero.has-product .wrap { grid-template-columns: minmax(0, 1fr); }
+  .page-hero.has-product .hero-product { justify-self: center; width: min(100%, 300px); margin-top: 4px; }
+  .page-hero.has-product .hero-product-shot { aspect-ratio: 3 / 2; padding: 16px; }
 }
 /* Services: the group chips take their own row, and the jump list replaces
    them where there is room for it. */

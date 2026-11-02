@@ -1,10 +1,15 @@
 // All site copy lives here. It is carried over from www.e-d-s.com.au (tidied,
 // de-duplicated and set in Australian English), so nothing on the new site
 // claims more than the old one did.
+import { existsSync } from "node:fs";
 
 // Images live in src/assets/img and are copied to dist/assets/img by the build.
 // "@root/" is swapped for each page's path back to the site root in layout().
-export const img = (file) => `@root/assets/img/${file}`;
+// A product shot's WebP twin (tools/products.py) is served when there is one.
+export const img = (file) => {
+  const webp = file.replace(/\.(png|jpe?g)$/i, ".webp");
+  return `@root/assets/img/${webp !== file && existsSync(new URL(`../assets/img/${webp}`, import.meta.url)) ? webp : file}`;
+};
 // Documents (datasheets, white papers, software) live in src/assets/docs.
 export const localDoc = (file) => `@root/assets/docs/${file}`;
 // Photographs live in src/assets/img/photos, prepared by tools/photos.py, and
@@ -1278,7 +1283,7 @@ export const services = [
         heading: "In the hire fleet",
         lede: "Flow meters, loggers and samplers, with analytical instruments for water quality programs, all built for the harshest applications.",
         products: [
-          { name: "MSFM flow meters", maker: "Detectronic", href: "products/detectronic.html#msfm", image: img("detectronic-msfm-s2-lidott.png"), fit: 100,
+          { name: "MSFM flow meters", maker: "Detectronic", href: "products/detectronic.html#msfm-s2-5t", image: img("detectronic-msfm-s2-lidott.png"), fit: 100,
             text: "Area velocity flow meters for temporary flow surveys. The fleet runs on the latest MSFM, intrinsically safe and certified under ATEX and IECEx." },
           { name: "Hawk 4G loggers", maker: "EDS", href: "products/hawk.html", image: img("hawk.png"), fit: 88,
             text: "4G loggers for temporary flow surveys, including the battery powered Hawk, made by EDS." },
@@ -1630,7 +1635,7 @@ export const brands = [
     cover: img("e-flow-3.png"),
     intro: [
       "EDS designs and builds its own instruments, and represents leading manufacturers, across water supply, wastewater, flow monitoring and process control. When you buy an EDS instrument, the people who designed it are the people who support it.",
-      "We make the popular EMS \"D\" Series data loggers, the Pump Station Manager that launched the company in 1991, the 4G Hawk and Metalog loggers and the E-Flow 3 sewer flowmeter, and we manufacture and supply data loggers to the Australian Bureau of Meteorology under contract.",
+      "We make the popular EMS “D” Series data loggers, the Pump Station Manager that launched the company in 1991, the 4G Hawk and Metalog loggers and the E-Flow 3 sewer flowmeter, and we manufacture and supply data loggers to the Australian Bureau of Meteorology under contract.",
     ],
     groups: [
       {
@@ -1669,10 +1674,10 @@ export const brands = [
     description: "Detectronic ultrasonic flow, level and water quality instruments for sewer networks, including the MSFM and LIDoTT, supplied and installed by EDS.",
     logo: img("detectronic-logocolour.png"),
     cover: img("detectronic-msfm-s2-lidott.png"),
-    coverName: "MSFM S2 flow monitor and LIDoTT level sensor",
+    coverName: "MSFM flow meter and LIDoTT level sensor",
     intro: [
       "Detectronic is a specialist in sewer and wastewater network monitoring and management, focused on measuring, recording, reporting and reacting to wastewater depths and flow rates.",
-      "Detectronic designs and manufactures a comprehensive range of advanced ultrasonic flow, level and water quality monitoring instruments, engineered for the accurate monitoring of sewerage networks, wastewater systems and trade effluent.",
+      "Detectronic designs and makes ultrasonic flow, level and water quality monitoring instruments for sewer networks, wastewater systems and trade effluent.",
       "Its flow meters support early flood detection, inflow and infiltration assessment, combined sewer overflow (CSO) monitoring and the development of intelligent sewer networks, across both short-term investigations and long-term continuous monitoring programs.",
       "EDS supplies and installs Detectronic instruments across Australia and runs them in our own monitoring fleet, so the advice you get comes from people who install them.",
     ],
@@ -1686,7 +1691,7 @@ export const brands = [
           ["LIDoTT R", "Radar level to 7 m, accurate to ± 5 mm, with pressure to 10 m: up to 17 m in total with zero deadband."],
           ["LIDoTT Smart logger", "Logs every 2 to 15 minutes and reports every 5 minutes to 24 hours over 4G LTE-M1 or NB-IoT, with a battery life of up to seven years."],
           ["Alarm2", "Radar level from 0 to 20 m with no deadband, with high and low, rate of change and profile alarms, and a typical battery life of five years or more."],
-          ["LIDoTT Alarm", "Sensor, battery, modem and aerial in one device, measuring to 8.4 m with three alarm states."],
+          ["LIDoTT Alarm", "Sensor, battery, modem and antenna in one device, measuring to 8.4 m with three alarm states."],
         ],
       },
     ],
@@ -1694,12 +1699,12 @@ export const brands = [
       {
         name: "Flow, level and logging",
         items: [
-          { name: "MSFM", type: "flow", note: "Rugged 4G area velocity flow meter", image: img("s2.5-04-small-766x1024.png"), docs: [{ label: "S2.5T datasheet", href: localDoc("detectronic-msfm-s2-5t-datasheet.pdf") }, { label: "S2.5T manual", href: localDoc("detectronic-msfm-s2-5t-manual.pdf") }] },
-          { name: "LIDoTT Smart", type: "level", note: "Long life, rugged 4G patented level monitor", image: img("dete01-01.24-600x452.png"), docs: [{ label: "LIDoTT Sensor datasheet", href: localDoc("detectronic-lidott-sensor-datasheet.pdf") }] },
-          { name: "LIDoTT Alarm", type: "level", note: "Self contained level measurement and alarm device", image: img("lidott-alarm-3.png"), href: "products/lidott-alarm.html", docs: [{ label: "Datasheet", href: localDoc("detectronic-lidott-alarm-datasheet.pdf") }] },
+          { name: "MSFM S2.5T", type: "flow", note: "Rugged 4G area velocity flow meter", image: img("s2.5-04-small-766x1024.png"), docs: [{ label: "Datasheet", href: localDoc("detectronic-msfm-s2-5t-datasheet.pdf") }, { label: "Manual", href: localDoc("detectronic-msfm-s2-5t-manual.pdf") }] },
+          { name: "LIDoTT Smart", type: "level", note: "LIDoTT Sensor and Smart logger: a long life, rugged, patented 4G level monitor", image: img("dete01-01.24-600x452.png"), docs: [{ label: "LIDoTT Sensor datasheet", href: localDoc("detectronic-lidott-sensor-datasheet.pdf") }] },
+          { name: "LIDoTT Alarm", type: "level", note: "Self-contained level measurement and alarm device", image: img("lidott-alarm-3.png"), href: "products/lidott-alarm.html", docs: [{ label: "Datasheet", href: localDoc("detectronic-lidott-alarm-datasheet.pdf") }] },
           { name: "Alarm2", type: "level", note: "All-in-one radar level monitor with alarms, up to 20 m, LoRaWAN or 4G", image: img("detectronic-alarm2.png"), href: "products/alarm2.html", docs: [{ label: "Datasheet", href: localDoc("detectronic-alarm2-datasheet.pdf") }, { label: "4G manual", href: localDoc("detectronic-alarm2-4g-manual.pdf") }] },
           { name: "LIDoTT R", type: "level", note: "High-precision radar and pressure sensor for continuous monitoring", image: img("lidott-sensor-r-1.png"), docs: [{ label: "Datasheet", href: localDoc("detectronic-lidott-r-datasheet.pdf") }] },
-          { name: "Multi Channel Data Loggers", type: "logger", note: "GPRS 2 channel logger for pulse output water meters, with optional pressure to 200 m and alarms on each channel", image: img("new-2-channel-logger-1001x1024.jpg"), docs: [{ label: "2 channel logger datasheet", href: localDoc("detectronic-msfm-gprs-2-channel-data-logger-datasheet.pdf") }] },
+          { name: "2 Channel Data Logger", type: "logger", note: "GPRS logger for pulse output water meters, with optional pressure to 200 m and alarms on each channel", image: img("new-2-channel-logger-1001x1024.jpg"), docs: [{ label: "Datasheet", href: localDoc("detectronic-msfm-gprs-2-channel-data-logger-datasheet.pdf") }] },
         ],
       },
     ],
@@ -1711,13 +1716,13 @@ export const brands = [
     pageTitle: "ORI ATEX & IECEx Certified Samplers in Australia | EDS",
     icon: "flask-conical",
     tag: "ATEX and IECEx certified sampling",
-    summary: "Rugged mobile and stationary samplers from the world's leading maker of certified sampling systems.",
-    description: "ORI mobile and stationary samplers from the world's leading maker of ATEX and IECEx certified sampling systems, brought to Australia by EDS.",
+    summary: "Rugged mobile and stationary samplers from the maker recognised as the world leader in certified sampling systems.",
+    description: "ORI mobile and stationary samplers from the maker recognised as the world leader in ATEX and IECEx certified sampling, brought to Australia by EDS.",
     logo: img("ori-logo.png"),
     intro: [
       "EDS is proud to bring the ORI range to Australia. It's a long partnership, and together we put some of the most rugged, reliable and high performance sampling equipment available into the field.",
       "ORI has been a global leader in sampling, measuring and laboratory equipment for over 60 years. Still 100% family owned, it is recognised as the world's leading manufacturer of ATEX and IECEx certified sampling systems.",
-      "ORI samplers come with one of two controls: BASIC, for simple programs, or NeMo, which adds logging, telemetry and control.",
+      "ORI samplers come with one of two controls: BASIC, for simple programs, or NEMO, which adds logging, telemetry and control.",
     ],
     blocks: [
       {
@@ -1734,12 +1739,12 @@ export const brands = [
       {
         name: "Mobile samplers",
         items: [
-          { name: "Aqua Mini", type: "sampling", note: "Portable sampler, up to 144 samples per charge", image: img("aquasamp-mini-teaser.png"), docs: [{ label: "Brochure", href: localDoc("ori-aquasamp-mini-brochure.pdf") }, { label: "PumpModul datasheet", href: localDoc("ori-pumpmodul-datasheet.pdf") }] },
+          { name: "AquaSamp Mini", type: "sampling", note: "Portable sampler, up to 144 samples per charge", image: img("aquasamp-mini-teaser.png"), docs: [{ label: "Brochure", href: localDoc("ori-aquasamp-mini-brochure.pdf") }] },
           // One datasheet covers all three NEMO 1 M versions.
           { name: "NEMO 1 MH", type: "sampling", note: "ATEX Zone 1 mobile sampler, hybrid pump", image: img("nemo-1-mh.png"), docs: [{ label: "Datasheet", href: localDoc("ori-nemo-1-m-datasheet.pdf") }] },
           { name: "NEMO 1 M PP", type: "sampling", note: "ATEX Zone 1 mobile sampler, peristaltic pump", image: img("csm-nemo1-m-pp-6a7052503d.png"), docs: [{ label: "Datasheet", href: localDoc("ori-nemo-1-m-datasheet.pdf") }] },
           { name: "NEMO 1 M V", type: "sampling", note: "ATEX Zone 1 mobile sampler, vacuum pump", image: img("csm-nemo1-m-vac-6a5f2d98ac.png"), docs: [{ label: "Datasheet", href: localDoc("ori-nemo-1-m-datasheet.pdf") }] },
-          { name: "Basic Mobil", type: "sampling", note: "Battery powered sampler for hazardous zones", image: img("basic-mobil.png") },
+          { name: "BASIC mobil", type: "sampling", note: "Battery powered sampler for hazardous zones", image: img("basic-mobil.png") },
         ],
       },
       {
@@ -1753,7 +1758,7 @@ export const brands = [
         ],
       },
     ],
-    docs: [{ label: "ORI water analytics catalogue", href: localDoc("ori-water-analytics-catalogue.pdf") }],
+    docs: [{ label: "ORI water analytics catalogue", href: localDoc("ori-water-analytics-catalogue.pdf") }, { label: "PumpModul datasheet", href: localDoc("ori-pumpmodul-datasheet.pdf") }],
   },
   {
     slug: "hach-flow",
@@ -1767,7 +1772,7 @@ export const brands = [
     intro: [
       "Hach Flow, with its legacy brands Sigma and Marsh-McBirney, has a long record of innovation and accuracy in open channel flow measurement. EDS has supplied the range since the Marsh-McBirney days in the 1990s.",
       "True, timely flow data lets you manage wastewater flow before it becomes a problem, and make the critical decisions with confidence rather than reacting afterwards.",
-      "Hach meters are the link between collecting superior flow data and conveying it to you conveniently and reliably, with options for stationary, portable, permanent or temporary use. The sensor range runs from non-contact sensors that stay above the flow to limit fouling, to rugged submerged AV sensors.",
+      "Hach meters collect the flow data and get it to you reliably, with options for stationary, portable, permanent or temporary use. The sensor range runs from non-contact sensors that stay above the flow to limit fouling, to rugged submerged AV sensors.",
     ],
     blocks: [
       {
@@ -1788,7 +1793,7 @@ export const brands = [
         name: "Loggers",
         items: [
           { name: "FL1500 Logger", type: "flow", image: img("landing-fl1500-2.jpg"), docs: [{ label: "FSDATA Desktop 32-bit", href: localDoc("hach-flow-fsdata-desktop-32bit.zip") }, { label: "FSDATA Desktop 64-bit", href: localDoc("hach-flow-fsdata-desktop-64bit.zip") }] },
-          { name: "FH950 Velocity Meter", type: "flow", note: "Handheld meter for spot checks and stream gauging", image: img("landing-fh950.jpg") },
+          { name: "FH950 Velocity Meter", type: "flow", note: "Handheld meter for spot checks and stream gauging", image: img("hach-fh950.jpg") },
           { name: "FL900 Portable", type: "flow", note: "Flow logger at the core of most Hach systems", image: img("landing-fl900-2.jpg") },
           { name: "SC200 Controller", type: "flow", note: "Controller for ultrasonic level and process control", image: img("landing-sc200.jpg") },
           { name: "Flo-Station", type: "flow", note: "Mains powered flow monitor for Flo-Dar", image: img("landing-flo-station.jpg") },
@@ -1839,10 +1844,10 @@ export const brands = [
         items: [
           { name: "D605", type: "temperature", note: "Satellite logger for temperature cables", image: img("front-view-of-beadedstream-d605-temperature-data-logger-without-antenna.png"), docs: [{ label: "Datasheet", href: localDoc("beadedstream-d605-datasheet.pdf") }] },
           { name: "Spot Logger", type: "temperature", note: "Battery powered temperature logger", image: img("spot-logger-side-view-with-raymo-connector.png"), docs: [{ label: "Battery install and replacement guide", href: localDoc("beadedstream-spot-logger-battery-guide.pdf") }] },
-          { name: "Thermistor String", type: "temperature", note: "Up to 125 sensors on one cable", image: img("standard-dtc-bar-code-144-1.jpg"), docs: [{ label: "Digital Temperature Cable spec sheet", href: localDoc("beadedstream-digital-temperature-cable-spec-sheet.pdf") }, { label: "EDS white paper", href: localDoc("eds-white-paper-thermistor-strings.pdf") }] },
-          { name: "Mlink", type: "software", note: "Temperature cables to Modbus or JSON", image: img("beadedstream-mlink-temperature-data-logger-connector.png"), docs: [{ label: "Spec sheet", href: localDoc("beadedstream-mlink-spec-sheet.pdf") }] },
-          { name: "Capture Mobile App", type: "software", note: "Connectivity", image: img("beadedstream-capture-ios-app-1.png") },
-          { name: "Beadedcloud Data", type: "software", note: "Connectivity", image: img("beadedcloud-dashboard-in-all-devices-1.png") },
+          { name: "Digital Temperature Cable", type: "temperature", note: "Thermistor string with up to 125 sensors on one cable", image: img("standard-dtc-bar-code-144-1.jpg"), docs: [{ label: "Spec sheet", href: localDoc("beadedstream-digital-temperature-cable-spec-sheet.pdf") }, { label: "EDS white paper", href: localDoc("eds-white-paper-thermistor-strings.pdf") }] },
+          { name: "MLink", type: "software", note: "Temperature cables to Modbus or JSON", image: img("beadedstream-mlink-temperature-data-logger-connector.png"), docs: [{ label: "Spec sheet", href: localDoc("beadedstream-mlink-spec-sheet.pdf") }] },
+          { name: "Capture Mobile App", type: "software", note: "Mobile app for Beadedstream loggers", image: img("beadedstream-capture-ios-app-1.png") },
+          { name: "Beadedcloud Data", type: "software", note: "Cloud data for Beadedstream loggers", image: img("beadedcloud-dashboard-in-all-devices-1.png") },
         ],
       },
     ],
@@ -1881,6 +1886,7 @@ export const brands = [
     tag: "Nitrate and nitrite analyser",
     summary: "Real-time nitrate and nitrite measurement with laboratory accuracy in the field.",
     description: "Aquamonitrix measures nitrate and nitrite in the field in real time, with laboratory accuracy, and handles wastewater without sample pre-treatment.",
+    logo: img("aquamonitrix-logo.png"),
     intro: [
       "Aquamonitrix brings laboratory accuracy for nitrate and nitrite out into the field. It measures raw, process and effluent water in real time, and sends the results straight to your SCADA or telemetry system and to its own Datamonitrix data platform.",
       "It holds lab quality accuracy and precision over a broad range, with calibration that stays stable over long deployments and little need for intervention. It can be up and running within a couple of hours, and it's easy to operate and service, which keeps operating and lifetime costs low.",
@@ -1890,8 +1896,8 @@ export const brands = [
       {
         heading: "Performance",
         items: [
-          ["Nitrate", "Up to 500 ppm as NO3, with a detection limit of 1.5 ppm as NO3 (0.34 ppm as N)."],
-          ["Nitrite", "Up to 100 ppm as NO2, with a detection limit of 0.25 ppm as NO2 (0.08 ppm as N)."],
+          ["Nitrate", "Up to 500 ppm as NO₃, with a detection limit of 1.5 ppm as NO₃ (0.34 ppm as N)."],
+          ["Nitrite", "Up to 100 ppm as NO₂, with a detection limit of 0.25 ppm as NO₂ (0.08 ppm as N)."],
           ["Method", "Ion chromatography with optical detection, with a measurement as often as every 15 minutes."],
           ["Service interval", "More than 600 sampling runs between services: over three months at six samples a day."],
           ["Integration", "Modbus over RS232 or RS485 to SCADA and telemetry, in an IP65 enclosure weighing 12 kg."],
@@ -1902,7 +1908,7 @@ export const brands = [
       {
         name: "The analyser",
         items: [
-          { name: "Aquamonitrix", type: "quality", note: "Nitrate and nitrite, rugged and portable", image: img("picture-1.png"), docs: [{ label: "Performance datasheet", href: localDoc("aquamonitrix-performance-datasheet.pdf") }] },
+          { name: "Aquamonitrix", type: "quality", note: "Nitrate and nitrite, rugged and portable", image: img("aquamonitrix-analyser.jpg"), docs: [{ label: "Performance datasheet", href: localDoc("aquamonitrix-performance-datasheet.pdf") }] },
         ],
       },
     ],
@@ -1930,7 +1936,7 @@ export const brands = [
           { name: "Insertion Flow Meter", type: "flow", image: img("hot-tapped.png") },
           { name: "3 in 1", type: "flow", image: img("p-3in1-bulk1.jpg") },
           { name: "UltraD Small", type: "flow", image: img("ultrad-small-1.png") },
-          { name: "Flow Meter", type: "flow", note: "Clamp-on", image: img("i-doppler-clamp.jpg") },
+          { name: "Clamp-on Flow Meter", type: "flow", note: "Ultrasonic, for full pipe flow", image: img("i-doppler-clamp.jpg") },
         ],
       },
     ],
@@ -1993,7 +1999,7 @@ export const diagrams = {
 export const lidott = {
   title: "LIDoTT Alarm",
   maker: "Detectronic",
-  lede: "Self contained water level measurement and alarm device.",
+  lede: "Self-contained water level measurement and alarm device.",
   image: img("lidott-alarm-3.png"),
   image2: img("lidott-alarm-interior-drawing-web.jpg"),
   datasheet: localDoc("detectronic-lidott-alarm-datasheet.pdf"),
@@ -2002,7 +2008,7 @@ export const lidott = {
   highlights: [
     ["radar", "Radar sensor", "5° beam angle"],
     ["ruler", "Range", "Measures up to 8.4 m"],
-    ["package", "All in one", "Sensor, battery, modem and aerial"],
+    ["package", "All in one", "Sensor, battery, modem and antenna"],
     ["shield-check", "Zone 0", "ATEX and IECEx certified"],
     ["bell", "3 alarm states", "Configured on site"],
     ["battery-full", "Long life", "Battery up to 7 years"],
@@ -2011,19 +2017,19 @@ export const lidott = {
     "LIDoTT Alarm is a level measurement and alarm device which integrates the level sensor, battery, modem and Detectronic's unique Neptune antenna into one compact device. It alerts users to changes in wastewater depth, enabling utilities to react quickly to blockages and to surcharges caused by sewer collapses.",
   ],
   sections: [
-    ["Continuous measurement and alarm delivery", "Alarm threshold set-points are configured on site during installation, and a \"return to normal\" message is sent when levels fall back below the threshold. Level sampling can be set to 5 or 15 minutes, and a daily heartbeat message verifies the sensor is operational. Logging at 15 minute intervals is available as an option."],
+    ["Continuous measurement and alarm delivery", "Alarm threshold set-points are configured on site during installation, and a “return to normal” message is sent when levels fall back below the threshold. Level sampling can be set to 5 or 15 minutes, and a daily heartbeat message verifies the sensor is operational. Logging at 15 minute intervals is available as an option."],
     ["Designed for convenience", "LIDoTT Alarm is simple to install and zero maintenance by design. The enclosure is moulded from a resilient, naturally self-cleaning polymer and is submersible."],
     ["Widespread deployment", "Ideal for deployment throughout sewer networks and in domestic or lateral sewers, and suitable for other water courses. It offers up to three configurable level states, for example normal, high and high-high (green, amber, red), and keeps reporting status as levels return to normal."],
-    ["Easy to mount", "The LIDoTT laser pointer is clipped onto the fixing pole during installation to identify the measurement target. Once marked, the LIDoTT ALARM replaces the pointer and locks into place. The assembly is easily removed and replaced in exactly the same position."],
+    ["Easy to mount", "The LIDoTT laser pointer is clipped onto the fixing pole during installation to identify the measurement target. Once marked, the LIDoTT Alarm replaces the pointer and locks into place. The assembly is easily removed and replaced in exactly the same position."],
     ["Data communications", "Communicates using NB-IoT / Cat M1 with 2G fallback. Each breached threshold triggers an alarm message with the current level, both going high and returning to normal. Alarms are delivered via Detectronic Cloud by SMS, email and website, with GIS options and optional weather-managed alarm filtering."],
   ],
   specs: [
     ["Sensor type", "Pulsed coherent microwave radar (PCR)"],
     ["Range", "Up to 8.4 m"],
     ["Accuracy", "± 5 mm"],
-    ["Operating temperature", "-20°C to +70°C"],
+    ["Operating temperature", "−20 to 70 °C"],
     ["Protection", "IP68 / NEMA 6P"],
-    ["Dimensions", "92 mm (w) × 196 mm (h) × 122 mm (d)"],
+    ["Dimensions", "92 × 196 × 122 mm (W × H × D)"],
     ["Communications", "Internal hi-gain NB-IoT / Cat M / 2G antenna"],
     ["Approvals", "ATEX Zone 0, IECEx Zone 0"],
   ],
@@ -2039,29 +2045,32 @@ export const alarm2 = {
   highlights: [
     ["radar", "Radar sensor", "No deadband"],
     ["ruler", "Range", "Measures up to 20 m"],
-    ["package", "All in one", "Sensor, battery, modem and antenna"],
+    ["package", "All in one", "Sensor, battery and modem, with an external antenna"],
     ["bell-ring", "Multiple alarms", "High, low, and rate of change"],
     ["wifi", "Connectivity", "LoRaWAN or 4G mobile"],
     ["battery-full", "Long life", "Battery over 5 years"],
   ],
   description: [
-    "Alarm2 is a complete level measurement and alarm device for remote deployment. The integrated radar sensor, battery, modem and antenna fit into one compact enclosure, measuring levels up to 20 m with no deadband and ± 5 mm accuracy at range. Alarms are triggered immediately when thresholds are breached, with hourly status updates to confirm operation.",
+    "Alarm2 is a complete level measurement and alarm device for remote deployment. The radar sensor, battery and modem share one compact enclosure, with an external antenna, and it measures levels up to 20 m with no deadband and ± 5 mm accuracy at range. An alarm goes out the moment a threshold is crossed and hourly while it lasts, and a daily heartbeat confirms the unit is working.",
   ],
   sections: [
-    ["Precise measurement across range", "Radar measurement from 0 to 20 m with no blind spot ensures consistent accuracy across changing conditions. Accuracy of ± 5 mm at 20 m guarantees reliable threshold detection and alarm delivery."],
+    ["Precise measurement across range", "Radar measures from 0 to 20 m with no deadband, and stays accurate to ± 5 mm even at 20 m."],
     ["Flexible alarm configuration", "High and low set-points, rate of change detection, and profile alarms are all configurable during installation. Alarms are sent immediately on threshold breach and hourly while the alarm condition persists."],
-    ["Robust deployment", "Fully integrated into a durable enclosure rated for outdoor and underground environments. LoRaWAN and 4G mobile connectivity options suit different network availability, with fallback to alternative modes."],
-    ["Real-time monitoring", "Status messages and data are sent immediately on detection, with hourly heartbeat messages to confirm operational status. Integration with Detectronic Cloud enables email, SMS and web-based alerting."],
+    ["Robust deployment", "Sealed to IP68 and built for manholes and chambers. Choose the LoRaWAN or 4G version to suit the network at each site."],
+    ["Real-time monitoring", "Data goes to your monitoring platform at each send interval, and straight away when a level changes state. A daily heartbeat confirms the unit is working, and a JSON API links it to cloud platforms and SCADA."],
     ["Low maintenance", "Self-contained design requires no external sensors or wiring. Battery life over five years minimises site visits for maintenance."],
   ],
   specs: [
-    ["Sensor type", "Radar (4G LTE Cat-1)"],
+    ["Sensor type", "Contactless radar"],
     ["Range", "0 to 20 m"],
     ["Accuracy", "± 5 mm at 20 m"],
     ["Deadband", "None"],
-    ["Operating temperature", "-20°C to +70°C"],
-    ["Protection", "IP65 / NEMA 4X"],
+    ["Operating temperature", "−20 to 60 °C"],
+    ["Protection", "IP68"],
+    ["Dimensions", "160 × 80 × 80 mm (L × W × D), indicative"],
+    ["Weight", "500 g"],
     ["Communications", "LoRaWAN or 4G LTE Cat-1"],
+    ["Approvals", "ATEX Zone 0, IECEx Zone 0"],
     ["Battery", "Over 5 years typical"],
   ],
 };
@@ -2081,8 +2090,8 @@ export const productPages = [
     name: "E-Flow 3",
     icon: "radar",
     tag: "Dual mode sewer flowmeter",
-    title: "E-Flow 3 dual mode sewer flowmeter | EDS",
-    lede: "Contactless radar measures velocity and depth in normal flow. When the sewer surcharges, ultrasonic and sealed pressure sensors take over, with no gap in the record.",
+    title: "E-Flow 3 Dual Mode Sewer Flowmeter | EDS",
+    lede: "Contactless radar measures velocity and depth. In surcharge, ultrasonic and pressure sensors take over, with no gap in the record.",
     description: "EDS E-Flow 3: a four sensor area velocity flowmeter for sewer manholes. Dual radar in normal flow, ultrasonic and sealed pressure in surcharge.",
     image: img("e-flow-3.png"),
     figure: { src: img("e-flow-3-installation.jpg"), alt: "Cutaway of a sewer with E-Flow 3 mounted at the pipe obvert and cabled to a data logger near the top of the manhole", caption: "E-Flow 3 at the pipe obvert, cabled to a logger in the shaft" },
@@ -2093,20 +2102,20 @@ export const productPages = [
     highlights: [
       ["radar", "Dual radar", "24 GHz velocity and 120 GHz depth, from above the flow"],
       ["waves", "Surcharge ready", "Dual 1 MHz ultrasonic and sealed 316 stainless pressure"],
-      ["arrow-left-right", "Seamless changeover", "No blind zone and no gap in the record"],
+      ["arrow-left-right", "Automatic changeover", "No blind zone and no gap in the record"],
       ["gauge", "0.05 to 20 m/s", "Velocity range, with depth from 0 to 10 m"],
       ["shield-check", "Fully potted", "Corrosion, impact and water resistant housing"],
       ["cable", "RS485 Modbus RTU", "8 to 15 VDC, 150 mA at 12 VDC"],
     ],
     intro: [
       "E-Flow 3 is an area velocity flowmeter built for harsh, demanding sewer environments. Four sensors share one body at the pipe obvert. In normal flow a pair of contactless radars measures velocity and depth from above the water, so there is nothing in the flow for grease, rag and silt to foul.",
-      "When the sewer surcharges and the free surface is lost, a dual 1 MHz ultrasonic Doppler velocity sensor and a sealed 316 stainless steel pressure transducer take over seamlessly. One sensor body, one record, from dry weather flow through to full surcharge.",
+      "When the sewer surcharges and the free surface is lost, a dual 1 MHz ultrasonic Doppler velocity sensor and a sealed 316 stainless steel pressure transducer take over automatically. One sensor body, one record, from dry weather flow through to full surcharge.",
       "Peak wet weather flow, overflow volumes and surcharge duration drive inflow and infiltration programs, capacity assessments and regulatory reporting. They are also exactly when a conventional wetted sensor is most likely to be fouled. E-Flow 3 keeps measuring through the whole event.",
     ],
     features: [
       ["Normal flow: dual radar", "A 24 GHz Doppler radar reads surface velocity, corrected to mean channel velocity, and a 120 GHz FMCW radar reads depth. Neither touches the flow."],
       ["Surcharge: ultrasonic and pressure", "Dual 1 MHz ultrasonic Doppler transducers measure velocity through the water column, and the sealed pressure transducer reads depth to 10 m, compensated for dynamic pressure."],
-      ["Seamless changeover", "The sensor checks all four elements every cycle and picks the right pair as the pipe fills and drains. The other pair stays available and cross checked, so there is no blind zone."],
+      ["Automatic changeover", "The sensor checks all four elements every cycle and picks the right pair as the pipe fills and drains. The other pair stays available and cross checked, so there is no blind zone."],
       ["Obvert mounting sheds debris", "Fixed to the pipe crown on an EDS bracket, out of the flow path, so material cannot build up on the sensor face. Site visits become verification, not cleaning."],
       ["No confined space entry", "Installed and retrieved from the manhole opening, then commissioned and verified from the surface with EMS-Flow through the EDS logger."],
       ["Diagnostics you can trust", "Composite velocity, depth and flow come with each sensor's own value and status over Modbus, so you can see which pair is active, and why, from the office."],
@@ -2165,8 +2174,8 @@ export const productPages = [
     name: "Hawk",
     icon: "radio-tower",
     tag: "Battery powered 4G logger",
-    title: "Hawk battery powered 4G sewer logger | EDS",
-    lede: "The 4G logger built for Australian sewer networks. It lives inside the manhole, with no cabinet to build and no power to bring to site.",
+    title: "Hawk Battery Powered 4G Sewer Logger | EDS",
+    lede: "A 4G logger that lives inside the manhole, with no cabinet to build and no power to bring to site.",
     description: "EDS Hawk: a battery powered 4G LTE data logger for sewer manholes. IP68 submersible, with three RS485 sensor ports and logging from every second.",
     image: img("hawk.png"),
     figure: { src: img("hawk-bracket.png"), alt: "The Hawk logger hanging from its stainless steel wall bracket", caption: "Hawk on its stainless wall bracket" },
@@ -2250,15 +2259,15 @@ export const productPages = [
       ["products/e-flow-3.html", "E-Flow 3 flowmeter", "Dual mode sewer flowmeter, radar with surcharge backup."],
       ["flowsense.html", "EDS FlowSense", "Hosted data, hydrographs, alarms, quality auditing and export."],
     ],
-    cta: { title: "Put a Hawk in the manhole.", lede: "Tell us the network, the sites and the data you need. EDS will size the battery, supply the bracket and sensors, install and commission from the surface, and deliver the data through FlowSense. Also available in EDS rental fleets for temporary flow surveys." },
+    cta: { title: "Put a Hawk in the manhole.", lede: "Tell us the sites and the data you need. We'll size the battery, install and commission from the surface, and deliver the data through FlowSense. Hawk is in our rental fleet for temporary surveys too." },
   },
   {
     slug: "metalog-4g",
     name: "Metalog 4G",
     icon: "antenna",
     tag: "Remote 4G data logger",
-    title: "Metalog 4G data logger for 4 to 20 mA and Modbus | EDS",
-    lede: "Telemetry for any 4 to 20 mA or Modbus instrument: four analogue inputs, an RS485 port and a 4G modem in one compact logger.",
+    title: "Metalog 4G Data Logger for 4 to 20 mA & Modbus | EDS",
+    lede: "Telemetry for any 4 to 20 mA or Modbus instrument, in one compact 4G logger.",
     description: "EDS Metalog 4G: a compact remote data logger with four 4 to 20 mA inputs and an RS485 Modbus RTU port, returning the data over the 4G network.",
     image: img("metalog-4g.png"),
     figure: { src: img("metalog-4g-dimensions.png"), alt: "Dimensioned drawing of the Metalog 4G: a front view 88 mm wide and 60 mm high with 10 mm keyhole flanges on each side, and the terminal end view, 25 mm deep", caption: "Front and terminal end views, in mm" },
