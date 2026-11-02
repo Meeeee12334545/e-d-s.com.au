@@ -62,9 +62,9 @@ export const site = {
 
 export const offices = [
   { city: "Brisbane", state: "QLD", note: "Head office, Meadowbrook", lon: 153.1, lat: -27.66, head: true },
-  { city: "Richmond", state: "NSW", note: "New South Wales and ACT", lon: 150.75, lat: -33.6 },
-  { city: "Boronia", state: "VIC", note: "Victoria", lon: 145.28, lat: -37.86 },
-  { city: "Adelaide", state: "SA", note: "South Australia", lon: 138.6, lat: -34.93 },
+  { city: "Richmond", state: "NSW", note: "Serving New South Wales and the ACT", lon: 150.75, lat: -33.6 },
+  { city: "Boronia", state: "VIC", note: "Serving Victoria", lon: 145.28, lat: -37.86 },
+  { city: "Adelaide", state: "SA", note: "Serving South Australia", lon: 138.6, lat: -34.93 },
 ];
 
 // The home hero's paragraph: 20 words at most, so the hero fits one screen.
@@ -74,8 +74,8 @@ export const homeLede = "Australia's largest supplier of water and wastewater mo
 // one weight. Each is a claim made elsewhere on the site (the About timeline,
 // the footer credentials, the DaaS page), brought up to the first screen.
 export const proof = [
-  { lead: "Australian owned and operated since 1991", text: "Founded in Queensland. Four offices across the country, and crews who travel Australia wide." },
-  { lead: "Australia's largest supplier of water and wastewater monitoring equipment", text: "Our own loggers and flowmeters, and ranges from Detectronic, Hach, ORI, Beadedstream and more, supplied, installed and serviced by EDS." },
+  { lead: "Looking after Defence and Transurban sites", text: "An Australian Defence facility serviced and monitored since 2003, and key Transurban tunnel infrastructure under a contract awarded in 2026." },
+  { lead: "Supplied, installed and serviced by EDS", text: "Our own loggers and flow meters, and ranges from Detectronic, Hach, ORI, Beadedstream and more, fitted and looked after by our own crews." },
   { lead: "Sydney Water panel provider", text: "Sewer flow and level instrumentation on a five year panel, and EDS loggers in Bureau of Meteorology service since the 1990s." },
   { lead: "Certified for the sewer", text: "Intrinsically safe instruments under ATEX and IECEx, Zone 0, with 99.95% data availability under EDS DaaS." },
 ];
@@ -86,9 +86,9 @@ export const proof = [
 // a believable relative size. Product shots on transparent backgrounds only.
 export const shelf = {
   heading: "The instruments our crews put their name to.",
-  lede: "EDS designs and builds its own loggers and flowmeters, and represents manufacturers including Detectronic, Hach, ORI and Beadedstream. Every instrument here is one we install, service and calibrate ourselves.",
+  lede: "EDS designs and builds its own loggers and flow meters, and represents manufacturers including Detectronic, Hach, ORI and Beadedstream. Every instrument here is one we install, service and calibrate ourselves.",
   items: [
-    { name: "MSFM S2 flow monitor with LIDoTT", maker: "Detectronic", href: "products/detectronic.html", image: img("detectronic-msfm-s2-lidott.png"), fit: 100,
+    { name: "MSFM S2 with LIDoTT", maker: "Detectronic", href: "products/detectronic.html", image: img("detectronic-msfm-s2-lidott.png"), fit: 100,
       text: "The area velocity meter our sewer fleet runs on, with the level sensor that keeps measuring as the chamber surcharges.", specs: ["ATEX and IECEx Zone 0", "LIDoTT level to ± 2 mm"] },
     { name: "LIDoTT Alarm", maker: "Detectronic", href: "products/lidott-alarm.html", image: img("lidott-alarm-cut.png"), fit: 90,
       text: "Radar level sensor, battery, modem and aerial in one device, for early warning of blockages and overflows.", specs: ["Radar level to ± 5 mm", "Up to seven years on battery"] },
@@ -2689,23 +2689,23 @@ export const about = {
 // pages. `topic` and `mode` pre-fill the enquiry form (see contactHref()).
 export const ways = {
   heading: "Buy it, hire it, or let EDS run it.",
-  lede: "However your program is funded, the same instruments, our own crews from four offices and FlowSense sit behind it. Pick the way that suits your budget and your timeline.",
+  lede: "However you fund your program, you get the same instruments, our own crews from four offices and FlowSense. Pick the way that suits your budget and timeline.",
   items: [
     {
       mode: "buy", icon: "package", title: "Buy", line: "Own the instruments",
-      text: "Choose from one of Australia's largest portfolios of monitoring instruments, built by EDS or by the manufacturers we represent, including Detectronic, Hach, ORI and Beadedstream.",
+      text: "Choose from one of Australia's largest portfolios of monitoring instruments, built by EDS or by the manufacturers we represent.",
       points: ["Supply, installation and commissioning", "In situ audits and calibration", "Training for your staff"],
       link: ["products/index.html", "Browse products"], topic: "Product pricing", cta: "Request pricing",
     },
     {
       mode: "hire", icon: "calendar-clock", title: "Hire", line: "For a study or a season",
-      text: "Short and long term hire from the EDS fleet, built for the harshest and most demanding applications.",
+      text: "Short and long term hire from the EDS fleet, installed by you or by trained EDS crews.",
       points: ["Flow meters, samplers and loggers", "Bespoke packages for difficult sites", "Expert advice on the right setup"],
       link: ["services/equipment-rental.html", "Equipment rental"], topic: "Equipment Rental", cta: "Start an enquiry",
     },
     {
       mode: "managed", icon: "database-zap", title: "Data as a Service", line: "No capital outlay",
-      text: "EDS selects the sites, installs and maintains the equipment, validates the data continuously and delivers insights you can act on.",
+      text: "EDS selects the sites, installs and maintains the equipment and validates the data continuously. You pay for data you can rely on, with nothing to own.",
       points: ["99.95% data availability", "Continuous QA/QC and calibration", "Real-time alerts in FlowSense"],
       link: ["services/data-as-a-service.html", "How DaaS works"], topic: "Sewer Flow Data as a Service", cta: "Start an enquiry",
     },
@@ -3151,7 +3151,7 @@ export const cityUi = {
   tabsLabel: "City districts",
   toolbarLabel: "City controls",
   toolbar: { tour: "Take the tour", storm: "Send a storm", stormBusy: "Stop the storm", stormCancelled: "Storm stopped.", under: "Show the sewer", underOn: "Show the surface", expand: "Expand the city", collapse: "Back to the page", close: "Close" },
-  captionRest: "Pick a district, send a storm, or show the sewer beneath the streets.",
+  captionRest: "Send a storm, take a district apart, or show the sewer beneath the streets.",
   sensorsHeading: "Sensors on the map",
   tipLabel: "Sensor readings",
   readingsNote: "Illustrative readings, not live data.",

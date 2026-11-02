@@ -103,7 +103,7 @@
       sc.zoneFxLayer.appendChild(sc.zoneFx[id]);
       if (focused && (focused === sc.zones[prev] || focused === sc.zones[id])) focused.focus({ preventScroll: true });
       reparenting = false;
-      requestAnimationFrame(apply);
+      requestAnimationFrame(() => { apply(); layoutPills(); });
       handOff(id);
       hideTip();
       // an open asset closes; if the visitor came from a district taken
@@ -147,8 +147,8 @@
     }
     cards.forEach((c) => c.classList.toggle("active", c.dataset.zone === id));
     tabs.forEach((t) => { const on = t.dataset.zone === id; t.setAttribute("aria-selected", String(on)); t.setAttribute("tabindex", on ? "0" : "-1"); });
-    if (btn.under) { btn.under.setAttribute("aria-pressed", String(state.under)); $("span", btn.under).textContent = state.under ? ui.toolbar.underOn : ui.toolbar.under; btn.under.setAttribute("aria-disabled", String(state.view !== "city")); }
-    if (btn.explode) { const on = state.view !== "city"; btn.explode.setAttribute("aria-pressed", String(on)); $("span", btn.explode).textContent = on ? ui.explode.put : ui.explode.take; }
+    if (btn.under) { btn.under.setAttribute("data-pressed", String(state.under)); $("span", btn.under).textContent = state.under ? ui.toolbar.underOn : ui.toolbar.under; btn.under.setAttribute("aria-disabled", String(state.view !== "city")); }
+    if (btn.explode) { const on = state.view !== "city"; btn.explode.setAttribute("data-pressed", String(on)); $("span", btn.explode).textContent = on ? ui.explode.put : ui.explode.take; }
     drawSpark();
   }
   // A visitor's own pick. Mid-storm, the storm stops moving the selection
@@ -224,9 +224,10 @@
     }
     layoutPills();
   }
-  // In the expanded view the picked district's pills can collide, so each
-  // one that would sit on another is lifted above it, its leader line
-  // lengthened to match. Everything goes back to its own spot otherwise.
+  // The picked district's pills can collide with each other and with its
+  // name label, so each one that would sit on another is lifted above it,
+  // its leader line lengthened to match. Everything goes back to its own
+  // spot otherwise.
   function layoutPills() {
     const placed = [];
     const pills = state.active ? $$(".zone-fx.active .callout", sc.fx) : [];
@@ -239,7 +240,7 @@
     // obstacle too. It sits outside the lifted group, which is scaled 1.07
     // about its origin and raised 14 px, so the label is mapped into the
     // group's own coordinates first.
-    const lr = state.expanded && state.active ? $("rect", sc.labels[state.active]) : null;
+    const lr = state.active ? $("rect", sc.labels[state.active]) : null;
     if (lr) {
       const [ox, oy] = (sc.zoneFx[state.active].style.transformOrigin || "0px 0px").split(" ").map(parseFloat);
       const x = +lr.getAttribute("x"), y = +lr.getAttribute("y") - 20, w = +lr.getAttribute("width");
@@ -252,7 +253,7 @@
       const x0 = +r.getAttribute("x"), w = +r.getAttribute("width");
       // lift it until it clears every pill already placed (a lift can land
       // it on another, so look again until nothing moves)
-      for (let guard = 0, moved = state.expanded; moved && guard < 12; guard++) {
+      for (let guard = 0, moved = true; moved && guard < 12; guard++) {
         moved = false;
         for (const p of placed) {
           const overlapX = x0 < p.x + p.w + 6 && p.x < x0 + w + 6;
@@ -530,7 +531,7 @@
     if (state.view !== "city") resetViews();
     state.storm = { elapsed: 0, t0: performance.now(), running: false, timers: [], done: new Set(), prevActive: state.active, userTookOver: false };
     cls("is-storm", true);
-    btn.storm?.setAttribute("aria-pressed", "true"); $("span", btn.storm).textContent = ui.toolbar.stormBusy;
+    btn.storm?.setAttribute("data-pressed", "true"); $("span", btn.storm).textContent = ui.toolbar.stormBusy;
     announce(ui.live.stormStart);
     scheduleStorm();
     weather?.start();
@@ -551,7 +552,7 @@
     clearStormClasses();
     weather?.end(cancelled);
     hudTarget(hudRest);
-    btn.storm?.setAttribute("aria-pressed", "false"); $("span", btn.storm).textContent = ui.toolbar.storm;
+    btn.storm?.setAttribute("data-pressed", "false"); $("span", btn.storm).textContent = ui.toolbar.storm;
     if (cancelled) { setCaption(ui.toolbar.stormCancelled); announce(ui.live.stormCancelled); }
     else announce(ui.live.stormEnd);
     // the caption goes back to the instruction once the storm has settled
@@ -588,7 +589,7 @@
     if (closeBtn) closeBtn.hidden = !on;
     if (on) { grid.setAttribute("role", "dialog"); grid.setAttribute("aria-modal", "true"); grid.setAttribute("aria-label", ui.expandedLabel); }
     else { grid.removeAttribute("role"); grid.removeAttribute("aria-modal"); grid.removeAttribute("aria-label"); }
-    btn.expand?.setAttribute("aria-pressed", String(on));
+    btn.expand?.setAttribute("data-pressed", String(on));
     if (btn.expand) $("span", btn.expand).textContent = on ? ui.toolbar.collapse : ui.toolbar.expand;
     apply();
     fillPills();
@@ -919,7 +920,7 @@
   function setAssetApart(on) {
     if (!A) return;
     A.apart = on;
-    assetBtn.toggle.setAttribute("aria-pressed", String(on));
+    assetBtn.toggle.setAttribute("data-pressed", String(on));
     $("span", assetBtn.toggle).textContent = on ? X.put : X.take;
     const n = A.k.length, from = A.k.slice(), st = reduced ? 0 : 55, dur = T(on ? 640 : 460), a = A;
     // parts leave from the top down and come back from the bottom up

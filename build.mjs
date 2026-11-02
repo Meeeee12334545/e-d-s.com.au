@@ -797,7 +797,7 @@ function fsScreen() {
     ${pipe("M40 60H230", "#3b82f6")}${pipe("M230 60H440", "#eab308")}${pipe("M90 60V150", "#3b82f6")}${pipe("M230 60V150", "#f97316", 6)}${pipe("M370 60V150", "#eab308")}
     ${pipe("M40 150H230", "#eab308")}${pipe("M230 150H440", "#ef4444", 7)}${pipe("M230 150V230", "#ef4444", 7)}${pipe("M90 230H230", "#f97316", 6)}${pipe("M230 230H420", "#3b82f6")}
     <g fill="#fff" stroke="#0c5f59" stroke-width="2"><circle cx="230" cy="60" r="5"/><circle cx="230" cy="150" r="5"/><circle cx="90" cy="150" r="5"/><circle cx="370" cy="150" r="5"/><circle cx="230" cy="230" r="5"/></g>
-    <g font-size="10" font-family="'EDS Text', 'Helvetica Neue', sans-serif" fill="#2e4543"><rect x="330" y="186" width="136" height="72" rx="8" fill="#fff" stroke="#dfe5ec"/><text x="342" y="204" font-weight="500">I/I severity</text>
+    <g class="fine" font-size="10" font-family="'EDS Text', 'Helvetica Neue', sans-serif" fill="#2e4543"><rect x="330" y="186" width="136" height="72" rx="8" fill="#fff" stroke="#dfe5ec"/><text x="342" y="204" font-weight="500">I/I severity</text>
     <rect x="342" y="212" width="14" height="6" rx="3" fill="#3b82f6"/><text x="362" y="218">Low</text><rect x="402" y="212" width="14" height="6" rx="3" fill="#eab308"/><text x="422" y="218">Moderate</text>
     <rect x="342" y="232" width="14" height="6" rx="3" fill="#f97316"/><text x="362" y="238">High</text><rect x="402" y="232" width="14" height="6" rx="3" fill="#ef4444"/><text x="422" y="238">Severe</text></g></svg>`;
   const blockage = `<svg viewBox="0 0 480 270" preserveAspectRatio="xMidYMid meet">
@@ -811,12 +811,12 @@ function fsScreen() {
     <rect class="fs-well" x="152" y="130" width="176" height="108" fill="#5cc2b6" opacity=".85"/>
     <g font-size="10" font-family="'EDS Text', 'Helvetica Neue', sans-serif" stroke-dasharray="5 4">
       <path d="M130 60H350" stroke="#dc2626"/><path d="M130 92H350" stroke="#d97706"/><path d="M130 130H350" stroke="#0d7c72"/><path d="M130 200H350" stroke="#4e6361"/></g>
-    <g font-size="10.5" font-family="'EDS Text', 'Helvetica Neue', sans-serif" fill="#2e4543"><text x="358" y="63">Overflow</text><text x="358" y="95">Surcharge</text><text x="358" y="133">Pump start</text><text x="358" y="203">Pump stop</text></g>
+    <g class="fine" font-size="10.5" font-family="'EDS Text', 'Helvetica Neue', sans-serif" fill="#2e4543"><text x="358" y="63">Overflow</text><text x="358" y="95">Surcharge</text><text x="358" y="133">Pump start</text><text x="358" y="203">Pump stop</text></g>
     <g transform="translate(46 118) scale(2.4)" fill="none" stroke="#0c5f59" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g class="fs-fan">${iconCache.get("fan") || ""}</g></g>
-    <text x="34" y="200" font-size="10.5" font-family="'EDS Text', 'Helvetica Neue', sans-serif" fill="#2e4543" font-weight="500">Pump 1 running</text></svg>`;
+    <text class="fine" x="34" y="200" font-size="10.5" font-family="'EDS Text', 'Helvetica Neue', sans-serif" fill="#2e4543" font-weight="500">Pump 1 running</text></svg>`;
   const alarms = `<svg viewBox="0 0 480 270" preserveAspectRatio="xMidYMid meet">
     ${[["#dc2626", "#fef2f2", "High-high level", "Site 07 · 2 min ago · SMS sent to duty officer", 26], ["#d97706", "#fffbeb", "Blockage Watch: depth drifting", "Site 14 · dry weather only · ranked 1 of 38", 104], ["#16a34a", "#f0fdf4", "Returned to normal", "Site 22 · acknowledged by the duty officer", 182]]
-      .map(([c, bg, t, s, y], i) => `<g class="fs-toast" style="--i:${i}"><rect x="30" y="${y}" width="420" height="62" rx="12" fill="${bg}" stroke="${c}" stroke-opacity=".35"/><circle cx="60" cy="${y + 31}" r="9" fill="${c}"/><text x="84" y="${y + 27}" font-size="13" font-weight="650" font-family="'EDS Text', 'Helvetica Neue', sans-serif" fill="#0f2b2a">${t}</text><text x="84" y="${y + 45}" font-size="10.5" font-family="'EDS Text', 'Helvetica Neue', sans-serif" fill="#4e6361">${s}</text></g>`).join("")}</svg>`;
+      .map(([c, bg, t, s, y], i) => `<g class="fs-toast" style="--i:${i}"><rect x="30" y="${y}" width="420" height="62" rx="12" fill="${bg}" stroke="${c}" stroke-opacity=".35"/><circle cx="60" cy="${y + 31}" r="9" fill="${c}"/><text x="84" y="${y + 27}" font-size="13" font-weight="650" font-family="'EDS Text', 'Helvetica Neue', sans-serif" fill="#0f2b2a">${t}</text><text class="fine" x="84" y="${y + 45}" font-size="10.5" font-family="'EDS Text', 'Helvetica Neue', sans-serif" fill="#4e6361">${s}</text></g>`).join("")}</svg>`;
   const views = [["I/I heat map", "Severity by pipe", heat], ["Blockage Watch", "Dry days only", blockage], ["Pump Station Manager", "Wet well, to scale", psm], ["Alarms", "Sent to people, not addresses", alarms]];
   return `
   <div class="fs-screen" data-reveal="right">
@@ -865,7 +865,7 @@ const waysSection = (r, { cls = "" } = {}) => `
       <ul class="way-points">${w.points.map((pt) => `<li>${icon("check", false)}<span>${esc(pt)}</span></li>`).join("")}</ul>
       <div class="way-actions">
         <a class="btn ${w.mode === "managed" ? "btn-primary" : "btn-brand"}" href="${contactHref(r, { topic: w.topic, mode: w.mode })}">${esc(w.cta)} ${icon("arrow-right")}</a>
-        <a class="link-arrow" href="${r}${w.link[0]}">${esc(w.link[1])}</a>
+        <a class="link-arrow" href="${r}${w.link[0]}">${esc(w.link[1])} ${icon("arrow-right")}</a>
       </div>
     </article>`).join("")}
   </div>
@@ -1079,7 +1079,7 @@ add({
         <div class="city-model"><svg id="city" role="group" aria-label="${esc(C.cityUi.stageLabel)}"></svg></div>
         <div class="city-asset" id="city-asset" role="group" hidden>
           <svg class="city-asset-svg" aria-hidden="true" focusable="false"></svg>
-          <div class="city-asset-bar"><button type="button" class="btn btn-ghost city-btn" data-act="asset-back">${icon("arrow-left")}<span></span></button><button type="button" class="btn btn-ghost city-btn" data-act="asset-toggle" aria-pressed="true">${icon("unfold-vertical")}${icon("fold-vertical", false)}<span></span></button></div>
+          <div class="city-asset-bar"><button type="button" class="btn btn-ghost city-btn" data-act="asset-back">${icon("arrow-left")}<span></span></button><button type="button" class="btn btn-ghost city-btn" data-act="asset-toggle" data-pressed="true">${icon("unfold-vertical")}${icon("fold-vertical", false)}<span></span></button></div>
           <p class="city-asset-detail" aria-live="polite"></p>
         </div>
         <div class="city-notes" id="city-notes" role="group" hidden><svg class="city-leaders" aria-hidden="true" focusable="false"></svg><div class="city-notes-col" data-side="left"></div><div class="city-notes-col" data-side="right"></div></div>
@@ -1091,15 +1091,15 @@ add({
       <div class="city-bar">
         <div class="city-toolbar" role="toolbar" aria-label="${esc(C.cityUi.toolbarLabel)}">
           <button type="button" class="btn btn-primary city-btn" data-act="tour">${icon("route")}<span>${esc(C.cityUi.toolbar.tour)}</span></button>
-          <button type="button" class="btn btn-ghost city-btn" data-act="storm" aria-pressed="false" aria-describedby="city-note">${icon("cloud-rain")}<span>${esc(C.cityUi.toolbar.storm)}</span></button>
-          <button type="button" class="btn btn-ghost city-btn" data-act="explode" aria-pressed="false">${icon("unfold-vertical")}${icon("fold-vertical", false)}<span>${esc(C.cityUi.explode.take)}</span></button>
-          <button type="button" class="btn btn-ghost city-btn" data-act="under" aria-pressed="false">${icon("layers")}<span>${esc(C.cityUi.toolbar.under)}</span></button>
-          <button type="button" class="btn btn-ghost city-btn" data-act="expand" aria-pressed="false">${icon("maximize-2")}${icon("minimize-2", false)}<span>${esc(C.cityUi.toolbar.expand)}</span></button>
+          <button type="button" class="btn btn-ghost city-btn" data-act="storm" data-pressed="false" aria-describedby="city-note">${icon("cloud-rain")}<span>${esc(C.cityUi.toolbar.storm)}</span></button>
+          <button type="button" class="btn btn-ghost city-btn" data-act="explode" data-pressed="false">${icon("unfold-vertical")}${icon("fold-vertical", false)}<span>${esc(C.cityUi.explode.take)}</span></button>
+          <button type="button" class="btn btn-ghost city-btn" data-act="under" data-pressed="false">${icon("layers")}<span>${esc(C.cityUi.toolbar.under)}</span></button>
+          <button type="button" class="btn btn-ghost city-btn" data-act="expand" data-pressed="false">${icon("maximize-2")}${icon("minimize-2", false)}<span>${esc(C.cityUi.toolbar.expand)}</span></button>
         </div>
         <p class="city-caption" aria-live="off" data-rest="${esc(C.cityUi.captionRest)}">${esc(C.cityUi.captionRest)}</p>
         <div class="city-hud" aria-label="${esc(C.cityUi.hud.label)}">
           ${C.cityUi.hud.tiles.map((t) => `<div class="city-tile" data-tile="${t.key}"><span>${esc(t.label)}</span><b data-value>${esc(t.rest)}</b><small>${esc(t.unit)}</small>${t.key === "alarms" ? icon("bell", false) : ""}</div>`).join("")}
-          <div class="city-tile city-tile-spark" data-tile="spark"><span>${esc(C.cityUi.hud.sparkLabel)}</span><svg class="city-spark" viewBox="0 0 220 48" aria-hidden="true"></svg></div>
+          <div class="city-tile city-tile-spark" data-tile="spark"><span>${esc(C.cityUi.hud.sparkLabel)}</span><svg class="city-spark" viewBox="0 0 220 48" preserveAspectRatio="none" aria-hidden="true"></svg></div>
         </div>
         <p class="sr-only" id="city-live" aria-live="polite"></p>
         <p class="note city-note" id="city-note">${icon("info", false)}${esc(C.cityUi.note)}</p>
@@ -1187,7 +1187,7 @@ ${waysSection(r)}
 <section class="section" id="about">
   <div class="wrap split">
     <div>
-      <h2 class="h-lg" data-reveal>Australian owned. Family founded. Still measuring.</h2>
+      <h2 class="h-lg" data-reveal>Australian owned. Family&nbsp;founded. Still&nbsp;measuring.</h2>
       <div class="timeline">
         <span class="timeline-fill"></span>
         ${C.about.timeline.filter(([, t]) => ["EDS is founded", "Defence facility contract", "Sydney Water panel provider", "Transurban service provider", "Australia's largest supplier"].includes(t)).map(([when, t, d]) => `<div class="tl" data-reveal><time>${when}</time><i></i><div><h3>${t}</h3><p>${d}</p></div></div>`).join("")}
@@ -1214,15 +1214,10 @@ ${waysSection(r)}
     </div>
     <div class="about-block" id="industries" data-reveal style="--i:1">
       <h3 class="h-md">Built for critical infrastructure.</h3>
-      <p>Government, utilities and industry rely on EDS for critical infrastructure and operational monitoring, and have for more than thirty years.</p>
+      <p>Government, utilities and industry have relied on EDS for operational monitoring for more than thirty years.</p>
       <ul class="mini-grid">
         ${C.industries.map(([ic, t, d]) => `<li><span class="card-icon">${icon(ic)}</span><span><b>${t}</b><span>${d}</span></span></li>`).join("")}
       </ul>
-      <div class="certs">
-        <img src="${C.img("ex-logo.gif")}" alt="Ex hazardous area mark" loading="lazy">
-        <img src="${C.img("iecex.png")}" alt="IECEx" loading="lazy">
-        <p><strong>Certified for hazardous areas.</strong> EDS supplies intrinsically safe equipment certified under ATEX and IECEx, including Zone 0 instruments for sewer environments.</p>
-      </div>
     </div>
   </div>
 </section>
