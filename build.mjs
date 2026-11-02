@@ -343,30 +343,92 @@ const actionBar = (r, current) => `
   <a class="primary" href="${["contact", "enquire"].includes(current) ? "#enquiry" : `${r}enquire.html`}">${icon("message-square-text", false)}<span>Enquire</span><b class="count" data-quote-count hidden>0</b></a>
 </nav>`;
 
-// Structured data for search engines: the organisation on the home and
-// contact pages, and a breadcrumb trail on every page that has one.
-function jsonLd(file, crumbs) {
+// Structured data for search engines. The organisation is described in full
+// on the home, about and contact pages, with the website itself on the home
+// page (its name is the site name Google shows) and the head office as a
+// local business on the contact page. Service and solution pages describe
+// their service, provided by that organisation, and every page with a
+// breadcrumb trail gives it.
+const ORG_ID = `${SITE_URL}/#organization`;
+const AUSTRALIA = { "@type": "Country", name: "Australia" };
+const absolute = (src) => src.replace("@root/", `${SITE_URL}/`);
+const headOffice = () => {
+  const [street, locality] = site.address;
+  const [, suburb, state, postcode] = locality.match(/^(.*) ([A-Z]{2,3}) (\d{4})$/) || [];
+  return { "@type": "PostalAddress", streetAddress: street, addressLocality: suburb, addressRegion: state, postalCode: postcode, addressCountry: "AU" };
+};
+function jsonLd(file, crumbs, { description, service, image }) {
   const blocks = [];
-  if (file === "index.html" || file === "contact.html") {
-    const [street, locality] = site.address;
-    const [, suburb, state, postcode] = locality.match(/^(.*) ([A-Z]{2,3}) (\d{4})$/) || [];
+  const { w, h } = pngSize(site.logo.replace("@root/", ""));
+  const logo = { "@type": "ImageObject", url: absolute(site.logo), width: w, height: h };
+  if (["index.html", "about.html", "contact.html"].includes(file)) {
     blocks.push({
       "@context": "https://schema.org",
       "@type": "Organization",
+      "@id": ORG_ID,
       name: site.name,
       alternateName: site.short,
       legalName: site.legal,
+      description: C.homeLede,
       url: `${SITE_URL}/`,
-      logo: `${SITE_URL}/assets/img/apple-touch-icon.png`,
+      logo,
+      image: `${SITE_URL}/assets/img/og-card.jpg`,
       email: site.email,
       telephone: site.phone,
       foundingDate: String(site.founded),
-      address: { "@type": "PostalAddress", streetAddress: street, addressLocality: suburb, addressRegion: state, postalCode: postcode, addressCountry: "AU" },
+      address: headOffice(),
+      areaServed: AUSTRALIA,
+      location: C.offices.map((o) => ({ "@type": "Place", name: `${site.short} ${o.city}${o.head ? " (head office)" : ""}`, address: { "@type": "PostalAddress", addressLocality: o.city, addressRegion: o.state, addressCountry: "AU" } })),
+      knowsAbout: C.services.map((s) => s.title),
       contactPoint: [
         { "@type": "ContactPoint", contactType: "customer service", telephone: site.phone, email: site.email, areaServed: "AU", availableLanguage: "en" },
         { "@type": "ContactPoint", contactType: "sales", email: site.sales, areaServed: "AU" },
         { "@type": "ContactPoint", contactType: "technical support", email: site.service, areaServed: "AU" },
       ],
+      ...(site.profiles.length ? { sameAs: site.profiles } : {}),
+    });
+  }
+  if (file === "index.html") {
+    blocks.push({
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "@id": `${SITE_URL}/#website`,
+      name: site.name,
+      alternateName: [site.short, `${site.short}, ${site.name}`],
+      url: `${SITE_URL}/`,
+      inLanguage: "en-AU",
+      publisher: { "@id": ORG_ID },
+    });
+  }
+  if (file === "contact.html") {
+    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    blocks.push({
+      "@context": "https://schema.org",
+      "@type": "LocalBusiness",
+      "@id": `${SITE_URL}/#head-office`,
+      name: site.name,
+      parentOrganization: { "@id": ORG_ID },
+      url: `${SITE_URL}/`,
+      logo,
+      image: `${SITE_URL}/assets/img/og-card.jpg`,
+      telephone: site.phone,
+      email: site.email,
+      address: headOffice(),
+      areaServed: AUSTRALIA,
+      openingHoursSpecification: [{ "@type": "OpeningHoursSpecification", dayOfWeek: site.openingHours.days.map((d) => days[d]), opens: site.openingHours.opens, closes: site.openingHours.closes }],
+    });
+  }
+  if (service) {
+    blocks.push({
+      "@context": "https://schema.org",
+      "@type": "Service",
+      name: service,
+      serviceType: service,
+      description,
+      url: pageUrl(file),
+      image: image.url,
+      provider: { "@type": "Organization", "@id": ORG_ID, name: site.name, url: `${SITE_URL}/` },
+      areaServed: AUSTRALIA,
     });
   }
   if (crumbs?.length) {
@@ -391,7 +453,18 @@ const ENDPOINT = process.env.ANALYTICS_ENDPOINT || "";
 const tracker = (r, file) =>
   (process.env.STATIC_HOST || process.env.PREVIEW) && !ENDPOINT ? "" : `\n<script src="${asset(r, "js/track.js")}" defer${ENDPOINT ? ` data-endpoint="${esc(ENDPOINT)}"` : ""}${file === "404.html" ? ' data-status="404"' : ""}></script>`;
 
-function layout({ file, title, description, current, menuTab, body, scripts = [] }) {
+// The picture shown when a page is shared on LinkedIn, Facebook, Teams or
+// in a message: the page's first photograph or FlowSense screen, where its
+// shape survives the 1.91 : 1 crop those apps give it, or else the EDS card
+// (og-card.jpg, always on the home page). `alt` is already escaped.
+const OG_CARD = { url: `${SITE_URL}/assets/img/og-card.jpg`, w: 1200, h: 630, alt: "EDS. Every drop, measured. Water, wastewater and environmental monitoring since 1991." };
+function shareImage(file, html) {
+  const m = file !== "index.html" && html.match(/<img src="@root\/(assets\/img\/(?:photos|flowsense)\/[^"]+-(\d+)x(\d+)\.jpg)"[^>]*?\salt="([^"]*)"/);
+  if (m && m[2] / m[3] >= 1.2 && m[2] / m[3] <= 2) return { url: `${SITE_URL}/${m[1]}`, w: +m[2], h: +m[3], alt: m[4] };
+  return { ...OG_CARD, alt: esc(OG_CARD.alt) };
+}
+
+function layout({ file, title, description, current, menuTab, body, scripts = [], service }) {
   const depth = file.split("/").length - 1;
   // The not-found page can be served at any depth, so it links from the root.
   const r = file === "404.html" ? "/" : "../".repeat(depth);
@@ -399,6 +472,12 @@ function layout({ file, title, description, current, menuTab, body, scripts = []
   const html = typeof body === "function" ? body(r) : body;
   const crumbs = heroCrumbs;
   const url = pageUrl(file);
+  const image = shareImage(file, html);
+  // Preview copies stay out of search. The live pages let Google show a
+  // large image beside them in results and in Discover. The ownership
+  // tokens, when set, go on the home page only.
+  const robots = process.env.PREVIEW ? "noindex, nofollow" : "max-image-preview:large";
+  const verify = file === "index.html" && !process.env.PREVIEW ? [["google-site-verification", site.verify.google], ["msvalidate.01", site.verify.bing]].filter(([, v]) => v).map(([k, v]) => `\n<meta name="${k}" content="${esc(v)}">`).join("") : "";
   const out = `<!doctype html>
 <html lang="en-AU" data-root="${r}">
 <head>
@@ -406,24 +485,25 @@ function layout({ file, title, description, current, menuTab, body, scripts = []
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(description)}">
-<meta name="theme-color" content="#ffffff">${process.env.PREVIEW ? '\n<meta name="robots" content="noindex, nofollow">' : ""}${file === "404.html" ? "" : `\n<link rel="canonical" href="${url}">`}
+<meta name="theme-color" content="#ffffff">
+<meta name="robots" content="${robots}">${file === "404.html" ? "" : `\n<link rel="canonical" href="${url}">`}${verify}
 <meta property="og:site_name" content="EDS, Environmental Data Services">
 <meta property="og:locale" content="en_AU">
 <meta property="og:type" content="website">
 <meta property="og:title" content="${esc(title)}">
 <meta property="og:description" content="${esc(description)}">
 <meta property="og:url" content="${url}">
-<meta property="og:image" content="${SITE_URL}/assets/img/og-card.jpg">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="EDS. Every drop, measured. Water, wastewater and environmental monitoring since 1991.">
+<meta property="og:image" content="${image.url}">
+<meta property="og:image:width" content="${image.w}">
+<meta property="og:image:height" content="${image.h}">
+<meta property="og:image:alt" content="${image.alt}">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" type="image/png" sizes="32x32" href="${r}assets/img/favicon-32.png">
 <link rel="apple-touch-icon" href="${r}assets/img/apple-touch-icon.png">
 <link rel="preload" href="${r}assets/fonts/saira-semiexpanded-latin.woff2" as="font" type="font/woff2" crossorigin>
 <script>document.documentElement.classList.add("js")</script>
 <link rel="stylesheet" href="${asset(r, "css/site.css")}">
-${jsonLd(file, crumbs)}
+${jsonLd(file, crumbs, { description, service, image })}
 </head>
 <body id="top">
 ${header(r, current, menuTab)}
@@ -1342,7 +1422,8 @@ for (const s of C.services) {
   add({
     file: `services/${s.slug}.html`,
     title: s.pageTitle || `${s.title} | EDS`,
-    description: s.summary,
+    description: s.description || s.summary,
+    service: s.title,
     current: "services",
     menuTab: s.group,
     scripts: { lab: ["lab.js"], lidott: ["widgets.js"] }[s.widget] || [],
@@ -1380,7 +1461,8 @@ for (const s of C.solutions) {
   add({
     file: `solutions/${s.slug}.html`,
     title: s.pageTitle || `${s.title} | EDS`,
-    description: s.summary,
+    description: s.description || s.summary,
+    service: s.title,
     current: "solutions",
     menuTab: "solutions",
     scripts: s.widget === "eas" ? ["widgets.js"] : [],
@@ -1479,7 +1561,7 @@ for (const b of C.brands) {
   add({
     file: `products/${b.slug}.html`,
     title: b.pageTitle || `${b.title} | EDS Products`,
-    description: b.summary,
+    description: b.description || b.summary,
     current: "products",
     scripts: ["products.js"],
     body: (r) => `
@@ -2184,8 +2266,8 @@ for (const [i, p] of pages.entries()) {
   }
 }
 // The sitemap dates each page by when its content last changed: its title,
-// description and everything in <main> (so a change to the menus or footer
-// does not count). PAGE_DATES names the dates file from the last publish,
+// description, structured data and everything in <main> (so a change to the
+// menus or footer does not count). PAGE_DATES names the dates file from the last publish,
 // which the publish workflow takes from the gh-pages branch. A page that
 // matches its fingerprint there keeps its date; any other page is dated
 // today. The new dates go out as assets/page-dates.json for the next build.
@@ -2205,7 +2287,8 @@ for (const p of pages) {
   await mkdir(path.dirname(out), { recursive: true });
   const html = layout(p);
   await writeFile(out, html);
-  const hash = createHash("sha1").update(`${p.title}\n${p.description}\n${html.match(/<main id="main">[\s\S]*<\/main>/)[0]}`).digest("hex").slice(0, 12);
+  const ld = [...html.matchAll(/<script type="application\/ld\+json">[\s\S]*?<\/script>/g)].join("\n");
+  const hash = createHash("sha1").update(`${p.title}\n${p.description}\n${ld}\n${html.match(/<main id="main">[\s\S]*<\/main>/)[0]}`).digest("hex").slice(0, 12);
   pageDates[p.file] = { hash, date: lastDates[p.file]?.hash === hash ? lastDates[p.file].date : today };
 }
 await writeFile(path.join(DIST, "assets/page-dates.json"), `${JSON.stringify(pageDates, null, 1)}\n`);
@@ -2252,4 +2335,38 @@ await writeFile(
     .join("\n")}\n</urlset>\n`
 );
 await writeFile(path.join(DIST, "robots.txt"), process.env.PREVIEW ? "User-agent: *\nDisallow: /\n" : `User-agent: *\nAllow: /\n\nSitemap: ${SITE_URL}/sitemap.xml\n`);
+// llms.txt (https://llmstxt.org): the site in brief, for the AI assistants
+// and answer engines that read it, with every page and its description.
+const pageOf = (file) => pages.find((p) => p.file === file);
+const llmsLink = (file, name) => `- [${name}](${pageUrl(file)}): ${pageOf(file).description}`;
+await writeFile(
+  path.join(DIST, "llms.txt"),
+  `# ${site.name} (${site.short})
+
+> ${C.homeLede}
+
+${site.tagline} Offices: ${C.offices.map((o) => `${o.city} ${o.state}${o.head ? " (head office)" : ""}`).join(", ")}. Phone ${site.phone}, email ${site.email}. Enquiries: ${pageUrl("enquire.html")}
+
+## Services
+
+${C.services.map((s) => llmsLink(`services/${s.slug}.html`, s.title)).join("\n")}
+
+## Solutions
+
+${C.solutions.map((s) => llmsLink(`solutions/${s.slug}.html`, s.title)).join("\n")}
+
+## Products
+
+${llmsLink("products/index.html", "All instruments")}
+${C.brands.map((b) => llmsLink(`products/${b.slug}.html`, b.title)).join("\n")}
+${C.productPages.map((pg) => llmsLink(`products/${pg.slug}.html`, pg.name)).join("\n")}
+
+## About EDS
+
+${[["flowsense.html", "EDS FlowSense"], ["about.html", "About EDS"], ["resources.html", "Resources: white papers, downloads and manuals"], ["contact.html", "Contact EDS"]].map(([f, n]) => llmsLink(f, n)).join("\n")}
+`
+);
+// The IndexNow key, which shows the search engines that the pings from the
+// publish workflow (tools/indexnow.mjs) come from the site's owner.
+if (!process.env.PREVIEW) await writeFile(path.join(DIST, `${site.indexNowKey}.txt`), site.indexNowKey);
 console.log(`Built ${pages.length} pages into dist/`);
