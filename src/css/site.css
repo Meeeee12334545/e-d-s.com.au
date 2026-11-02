@@ -1693,6 +1693,8 @@ main:has(> .alt:last-child) + .footer { background: var(--bg); }
 .prod-body { padding: 16px 18px 18px; }
 .prod h3 { font-size: 1.05rem; }
 .prod p { font-size: .86rem; margin-top: 4px; }
+/* a long note stops at three lines on a card; the quick view has it all */
+.prod-grid:not([data-view="table"]) .prod-name p { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .prod-body { flex: 1; display: flex; flex-direction: column; }
 .prod-docs { margin-top: auto; padding-top: 14px; }
 .prod-docs li:first-child { padding-top: 8px; border-top: 1px solid var(--border); }
@@ -1940,7 +1942,8 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: 6
 .prod-open { position: absolute; inset: 0; z-index: 2; display: flex; align-items: flex-start; justify-content: flex-end; padding: 12px; border-radius: inherit; }
 .prod-open span { display: inline-flex; align-items: center; gap: 6px; padding: 6px 11px; border-radius: 999px; border: 1px solid var(--border); background: rgba(255, 255, 255, .94); box-shadow: var(--shadow); font-size: .76rem; font-weight: 650; color: var(--brand-dark); opacity: 0; translate: 0 -4px; transition: opacity .2s var(--ease), translate .25s var(--ease-out); }
 .prod:hover .prod-open span, .prod-open:focus-visible span { opacity: 1; translate: 0 0; }
-.prod-open:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; }
+/* inside the card's edge: the card clips anything drawn outside it */
+.prod-open:focus-visible { outline: 2px solid var(--brand); outline-offset: -3px; }
 .prod .prod-docs { position: relative; z-index: 3; }
 .prod.flash { animation: prod-flash 2.4s var(--ease); }
 @keyframes prod-flash { 0%, 55% { box-shadow: 0 0 0 3px var(--brand), var(--shadow-lg); } }
@@ -1959,11 +1962,12 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: 6
 .qv-count { min-width: 70px; text-align: center; font-size: .85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
 .qv-copy { margin-left: auto; display: inline-flex; align-items: center; gap: 8px; padding: 9px 14px; border-radius: 999px; font-size: .85rem; font-weight: 500; color: var(--brand-dark); transition: background-color .2s var(--ease); }
 .qv-copy:hover { background: var(--bg-alt); }
-.qv-shot { display: grid; place-items: center; min-height: 380px; padding: clamp(24px, 4vw, 52px); border-right: 1px solid var(--border); }
+/* the photo stays in view (under the bar) while the details scroll */
+.qv-shot { position: sticky; top: 61px; align-self: start; display: grid; place-items: center; min-height: 380px; padding: clamp(24px, 4vw, 52px); }
 .qv-shot img { width: 100%; max-height: 460px; aspect-ratio: 1; object-fit: contain; mix-blend-mode: multiply; }
 .qv-shot img.swap { animation: qv-swap .45s var(--ease-out); }
 @keyframes qv-swap { from { opacity: 0; scale: .95; } }
-.qv-body { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; padding: clamp(24px, 3.4vw, 44px); }
+.qv-body { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; padding: clamp(24px, 3.4vw, 44px); border-left: 1px solid var(--border); }
 .qv-body h2 { font-size: clamp(1.7rem, 3vw, 2.4rem); letter-spacing: -.012em; }
 .qv-note { font-size: 1.05rem; color: var(--muted); }
 .qv-facts { width: 100%; margin: 6px 0 4px; display: flex; flex-wrap: wrap; gap: 1px; border: 1px solid var(--border); border-radius: 14px; background: var(--border); overflow: hidden; }
@@ -2006,7 +2010,10 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: 6
    and a compare tray. In the table view each card lays out as one row:
    shot, name and note, type, documents, actions. */
 .cat { display: grid; grid-template-columns: 232px minmax(0, 1fr); gap: clamp(24px, 3vw, 40px); align-items: start; }
-.cat-rail { position: sticky; top: calc(68px + 20px); display: grid; gap: 22px; }
+/* sticky, and scrolls on its own when it is taller than the screen, so the
+   lower groups are never out of reach; the focus ring is drawn inside */
+.cat-rail { position: sticky; top: calc(68px + 20px); max-height: calc(100dvh - 108px); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; display: grid; gap: 22px; align-content: start; }
+.cat-rail .cat-opt:focus-visible { outline-offset: -2px; }
 .cat-h { margin: 0 0 6px; font-size: .72rem; font-weight: 650; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
 .cat-rail ul { display: grid; gap: 2px; }
 .cat-opt { display: flex; align-items: center; gap: 9px; width: 100%; padding: 7px 10px; border-radius: 8px; font-size: .92rem; font-weight: 550; color: var(--ink-2); text-align: left; transition: background-color .15s var(--ease), color .15s var(--ease), opacity .2s var(--ease); }
@@ -2015,7 +2022,9 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: 6
 .cat-opt:hover { background: rgba(13, 124, 114, .06); }
 .cat-opt[aria-pressed="true"] { background: rgba(13, 124, 114, .1); color: var(--brand-dark); }
 .cat-opt[aria-pressed="true"] [data-n] { color: var(--brand-dark); }
-.cat-opt.zero:not([aria-pressed="true"]) { opacity: .45; }
+/* an option that would show nothing: lighter, but still readable */
+.cat-opt.zero:not([aria-pressed="true"]) { color: var(--muted); font-weight: 400; }
+.cat-opt.zero:not([aria-pressed="true"]) .icon { opacity: .45; }
 .cat-bar { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 14px; }
 .cat-bar .finder-count { margin: 0; }
 .view-toggle { display: inline-flex; padding: 3px; border-radius: 999px; border: 1px solid var(--border-strong); background: #fff; }
@@ -2030,7 +2039,7 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: 6
 .prod-cmp[aria-pressed="true"] { background: rgba(13, 124, 114, .1); border-color: rgba(13, 124, 114, .3); color: var(--brand-dark); }
 .prod-cmp:disabled { opacity: .4; cursor: default; }
 /* table view: one row per instrument */
-.prod-grid[data-view="table"] { --cat-cols: 56px minmax(0, 1.5fr) minmax(0, .7fr) minmax(0, 1.1fr) auto; display: block; background: #fff; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.prod-grid[data-view="table"] { --cat-cols: 72px minmax(0, 1.5fr) minmax(0, .7fr) minmax(0, 1.1fr) auto; display: block; background: #fff; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
 .prod-grid[data-view="table"] .prod-head { display: grid; grid-template-columns: var(--cat-cols); gap: 16px; padding: 12px 16px; background: var(--bg-alt); border-bottom: 1px solid var(--border); font-size: .72rem; font-weight: 650; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
 .prod-grid[data-view="table"] .prod { display: grid; grid-template-columns: var(--cat-cols); gap: 16px; align-items: center; padding: 10px 16px; border: 0; border-bottom: 1px solid var(--border); border-radius: 0; box-shadow: none; translate: none; }
 .prod-grid[data-view="table"] .prod:last-child { border-bottom: 0; }
@@ -2047,7 +2056,17 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: 6
 .prod-grid[data-view="table"] .prod-docs a { padding: 2px 0; }
 .prod-grid[data-view="table"] .prod-nodocs::before { content: "—"; font-size: .85rem; color: var(--muted); }
 .prod-grid[data-view="table"] .prod-actions { position: relative; z-index: 3; flex-wrap: nowrap; justify-content: flex-end; }
-.prod-grid[data-view="table"] .prod-open { justify-content: flex-start; align-items: center; padding-left: 88px; }
+/* the whole row opens the quick view: no chip over the name, the name
+   underlines instead (keyboard focus rings the row) */
+.prod-grid[data-view="table"] .prod-open span { display: none; }
+.prod-grid[data-view="table"] .prod:hover h3 { color: var(--brand-dark); text-decoration: underline; text-underline-offset: 3px; }
+/* The heading and every row share one set of columns (subgrid), so the
+   labels sit over their columns. The first track holds the row's 16 px
+   padding as well as the 56 px photo. */
+@media (min-width: 701px) {
+  .prod-grid[data-view="table"] { display: grid; grid-template-columns: var(--cat-cols); gap: 0 16px; }
+  .prod-grid[data-view="table"] > .prod-head, .prod-grid[data-view="table"] > .prod { grid-column: 1 / -1; grid-template-columns: subgrid; }
+}
 /* the compare tray and view */
 .cmp-tray { position: fixed; z-index: 95; left: 50%; bottom: 20px; translate: -50% 0; display: flex; align-items: center; gap: 12px; max-width: calc(100% - 24px); padding: 10px 10px 10px 18px; border-radius: 999px; background: rgba(var(--deep-2-rgb), .94); color: #fff; border: 1px solid var(--line-dark-strong); box-shadow: 0 16px 40px rgba(6, 48, 44, .35); backdrop-filter: blur(14px) saturate(1.4); -webkit-backdrop-filter: blur(14px) saturate(1.4); font-size: .9rem; animation: tray-in .35s var(--ease-out); }
 @keyframes tray-in { from { opacity: 0; translate: -50% 16px; } }
@@ -2079,11 +2098,19 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: 6
 .cmp-table td a { color: var(--brand-dark); text-decoration: underline; text-underline-offset: 3px; }
 .cmp-foot { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 16px 20px 20px; }
 .cmp-foot .note { flex-basis: 100%; }
+.cmp-foot .btn:disabled { background: rgba(13, 124, 114, .08); border-color: rgba(13, 124, 114, .4); color: var(--brand-dark); cursor: default; }
+/* the table scrolls between the bar and the buttons, so the product names
+   stay over their columns and the buttons stay in view; equal columns */
+.cmp[open] { display: flex; flex-direction: column; overflow: hidden; }
+.cmp .table-scroll { flex: 1 1 auto; min-height: 0; overflow: auto; border-radius: 0; }
+.cmp-table { table-layout: fixed; }
+.cmp-table thead th { position: sticky; top: 0; z-index: 2; background: #fff; box-shadow: inset 0 -1px var(--border); }
 .qv-specs { width: 100%; }
 .qv-specs h3 { margin-bottom: 2px; font-size: .95rem; }
 .qv-specs .specs th, .qv-specs .specs td { padding: 8px 0; font-size: .88rem; }
 .qv-specs .specs th { padding-right: 14px; }
 .qv-specs .link-arrow { margin-top: 10px; font-size: .88rem; }
+.qv-specs tr.group th { width: auto; padding: 12px 0 4px; border-bottom: 0; font-size: .72rem; font-weight: 650; letter-spacing: .1em; text-transform: uppercase; color: var(--ink); }
 
 /* ---------- instrument finder ---------- */
 .finder-bar { display: grid; gap: 14px; margin-bottom: 18px; }
@@ -2609,44 +2636,41 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: 6
   .qv { width: 100%; height: 100dvh; max-height: 100dvh; margin: 0; border-radius: 0; }
   /* one column: a plain block, so the photo keeps its height (as a grid row it shrank to its padding and the photo spilled over the name) */
   .qv[open] { display: block; }
-  .qv-shot { min-height: 0; padding: 20px 28px; border-right: 0; border-bottom: 1px solid var(--border); }
+  .qv-shot { position: static; min-height: 0; padding: 20px 28px; border-bottom: 1px solid var(--border); }
+  .qv-body { border-left: 0; }
   .qv-shot img { max-height: 34vh; }
-  .qv-copy span { display: none; }
+  /* the icon alone, its label kept for screen readers; "Link copied" shows */
+  .qv-copy span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .qv-copy.done span { position: static; width: auto; height: auto; overflow: visible; clip-path: none; }
   .qv-actions, .qv-actions .btn { width: 100%; }
   .prod-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
   .prod .brand-shot { padding: 14px; }
   .prod-body { padding: 12px 12px 14px; }
   .prod h3 { font-size: .95rem; }
   .prod p { font-size: .8rem; }
-  /* the filter rail becomes rows of chips, and the table view a list:
-     shot, name and type, and the compare toggle. The rows scroll sideways,
-     so every track above them is minmax(0, 1fr): a plain 1fr track's
-     automatic minimum let the chip rows widen the whole page (31 October 2026). */
-  .cat { grid-template-columns: minmax(0, 1fr); gap: 10px; }
-  .cat-rail { position: static; grid-template-columns: minmax(0, 1fr); gap: 6px; min-width: 0; }
-  .cat-group { min-width: 0; }
-  .cat-h { margin: 0 0 4px; }
-  .cat-rail ul { display: flex; gap: 6px; overflow-x: auto; margin-inline: calc(var(--gutter) * -1); padding: 2px var(--gutter) 6px; scrollbar-width: none; }
-  .cat-rail ul::-webkit-scrollbar { display: none; }
-  .cat-rail li { flex: none; }
-  .cat-opt { flex: none; width: auto; padding: 7px 12px; border: 1px solid var(--border-strong); border-radius: 999px; background: #fff; font-size: .84rem; }
-  .cat-opt [data-n] { padding-left: 6px; }
-  .cat-opt[aria-pressed="true"] { background: var(--chrome); border-color: var(--chrome); color: #fff; }
-  .cat-opt[aria-pressed="true"] .icon, .cat-opt[aria-pressed="true"] [data-n] { color: #fff; }
-  .cat-bar { flex-wrap: wrap; margin-top: 8px; }
+  /* the table view becomes a list: shot, name and type, and the compare
+     toggle, whose label stays for screen readers (the filter rail's chips
+     are in the 980px block below the products page rules) */
   .prod-grid[data-view="table"] { --cat-cols: 48px minmax(0, 1fr) auto; }
   .prod-grid[data-view="table"] .prod { gap: 12px; padding: 10px 12px; }
-  .prod-grid[data-view="table"] .prod-head, .prod-grid[data-view="table"] .prod-docs, .prod-grid[data-view="table"] .prod-nodocs, .prod-grid[data-view="table"] .prod-actions .quote-add, .prod-grid[data-view="table"] .prod-cmp span { display: none; }
+  .prod-grid[data-view="table"] .prod-head, .prod-grid[data-view="table"] .prod-docs, .prod-grid[data-view="table"] .prod-nodocs, .prod-grid[data-view="table"] .prod-actions .quote-add { display: none; }
+  .prod-grid[data-view="table"] .prod-cmp span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   .prod-grid[data-view="table"] .prod-type { grid-column: 2; margin-top: 4px; }
   .prod-grid[data-view="table"] .prod-name { grid-column: 2; }
   .prod-grid[data-view="table"] .prod { grid-template-columns: 48px minmax(0, 1fr) auto; grid-template-rows: auto auto; }
   .prod-grid[data-view="table"] .prod .brand-shot { grid-row: 1 / span 2; width: 48px; height: 48px; }
   .prod-grid[data-view="table"] .prod-actions { grid-row: 1 / span 2; grid-column: 3; }
   .prod-grid[data-view="table"] .prod-cmp { width: 40px; height: 40px; padding: 0; justify-content: center; border-color: var(--border-strong); }
-  .prod-grid[data-view="table"] .prod-open { padding-left: 70px; }
   .cmp-tray { left: 12px; right: 12px; bottom: calc(76px + env(safe-area-inset-bottom)); translate: none; max-width: none; border-radius: 18px; flex-wrap: wrap; padding: 12px 14px; }
   @keyframes tray-in { from { opacity: 0; translate: 0 16px; } }
   .cmp { width: 100%; height: 100dvh; max-height: 100dvh; margin: 0; border-radius: 0; }
+  /* the labels stay put while the products scroll sideways under them */
+  .cmp-table { min-width: 0; width: max(100%, calc(112px + var(--n, 3) * 168px)); }
+  .cmp-table thead th:first-child, .cmp-table tbody th { width: 112px; position: sticky; left: 0; z-index: 1; background: #fff; }
+  .cmp-table thead th:first-child { z-index: 3; }
+  .cmp-table tr.group th span { position: sticky; left: 12px; display: inline-block; }
+  .cmp-table th, .cmp-table td { padding: 10px 12px; }
+  .cmp-shot { width: 72px; height: 72px; }
   /* the document table becomes a list: the name, then the file's type and size, then the download */
   .lib-table, .lib-table tbody { display: block; }
   .lib-table thead { display: none; }
@@ -2998,23 +3022,53 @@ html:has(.secbar) .band[id] { scroll-margin-top: calc(16px - var(--band-pad)); }
 .page-hero .finder-search input::placeholder { color: var(--muted); }
 .page-hero .finder-search input:focus { outline-color: var(--brand); }
 .page-hero .finder-search .icon { color: var(--brand); }
+.finder-live { margin: 0; font-size: .92rem; color: var(--muted); }
 .ranges-strip { padding-block: clamp(40px, 5vw, 64px); }
 .ranges-head { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px 40px; align-items: baseline; margin-bottom: 24px; }
 .ranges-head p { max-width: 72ch; font-size: .98rem; color: var(--muted); }
 .range-tiles { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 12px; }
-.range-tile { display: grid; gap: 8px; align-content: start; padding: 18px 16px; border-radius: 14px; border: 1px solid var(--border); background: #fff; transition: border-color .25s var(--ease), translate .3s var(--ease-out), box-shadow .3s var(--ease); }
+.range-tile { position: relative; display: grid; grid-template-rows: auto 1fr auto; gap: 8px; padding: 18px 16px; border: 1px solid var(--border); background: #fff; transition: border-color .25s var(--ease), translate .3s var(--ease-out), box-shadow .3s var(--ease); }
 .range-tile:hover { border-color: rgba(13, 124, 114, .45); translate: 0 -3px; box-shadow: var(--shadow-md); }
 .range-tile .card-icon { height: 28px; font-size: 26px; }
 .range-tile b { font-family: var(--font-display); font-size: .98rem; font-weight: 620; line-height: 1.25; color: var(--ink); }
-.range-tile small { font-size: .8rem; color: var(--muted); }
+/* the counts line up along a row, whether the name takes one line or two */
+.range-tile small { align-self: end; font-size: .8rem; color: var(--muted); }
+.range-tile .go { position: absolute; top: 18px; right: 12px; width: 28px; height: 28px; display: grid; place-items: center; color: var(--brand); font-size: 19px; transition: color .25s var(--ease); }
+.range-tile .go .icon { transition: translate .3s var(--ease-out); }
+.range-tile:hover .go { color: var(--brand-dark); }
+.range-tile:hover .go .icon { translate: 4px 0; }
 .finder-results { padding-top: clamp(40px, 5vw, 64px); }
 
-@media (max-width: 1180px) and (min-width: 701px) {
+@media (max-width: 1180px) and (min-width: 981px) {
   .cat { grid-template-columns: 200px minmax(0, 1fr); }
-  /* narrower: the type column goes, the documents keep their room */
-  .prod-grid[data-view="table"] { --cat-cols: 56px minmax(0, 1.4fr) minmax(0, 1fr) auto; }
+}
+@media (max-width: 1180px) and (min-width: 701px) {
+  /* narrower: the type column goes, the documents keep their room, and the
+     two buttons stack in a column no wider than they need */
+  .prod-grid[data-view="table"] { --cat-cols: 72px minmax(0, 1.4fr) minmax(0, 1fr) fit-content(160px); }
   .prod-grid[data-view="table"] .prod-type, .prod-grid[data-view="table"] .prod-head > :nth-child(3) { display: none; }
   .prod-grid[data-view="table"] .prod-actions { flex-wrap: wrap; justify-content: flex-end; }
+}
+@media (max-width: 980px) {
+  /* the filter rail becomes rows of chips above the results, which keep the
+     full width. The rows scroll sideways, so every track above them is
+     minmax(0, 1fr): a plain 1fr track's automatic minimum let the chip rows
+     widen the whole page (31 October 2026). */
+  .cat { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .cat-rail { position: static; max-height: none; overflow: visible; grid-template-columns: minmax(0, 1fr); gap: 6px; min-width: 0; }
+  .cat-group { min-width: 0; }
+  .cat-h { margin: 0 0 4px; }
+  .cat-rail ul { display: flex; gap: 6px; overflow-x: auto; margin-inline: calc(var(--gutter) * -1); padding: 2px var(--gutter) 6px; scrollbar-width: none; }
+  .cat-rail ul::-webkit-scrollbar { display: none; }
+  .cat-rail li { flex: none; }
+  .cat-opt { flex: none; width: auto; padding: 7px 12px; border: 1px solid var(--border-strong); border-radius: 999px; background: #fff; font-size: .84rem; }
+  .cat-opt [data-n] { padding-left: 6px; }
+  .cat-opt[aria-pressed="true"] { background: var(--chrome); border-color: var(--chrome); color: #fff; }
+  .cat-opt[aria-pressed="true"] .icon, .cat-opt[aria-pressed="true"] [data-n] { color: #fff; }
+  .cat-rail .cat-opt:focus-visible { outline-offset: -3px; }
+  /* the count wraps in its own column, so the toggle never drops a line */
+  .cat-bar { flex-wrap: nowrap; margin-top: 8px; }
+  .cat-bar .view-toggle { flex: none; }
 }
 @media (max-width: 1180px) {
   .hero-main { grid-template-columns: minmax(0, 1fr) 300px; gap: 40px; }
