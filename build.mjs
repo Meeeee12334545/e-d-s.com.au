@@ -1717,9 +1717,9 @@ const FS = C.flowsense;
 const FS_SIZES = {
   single: "(max-width: 980px) calc(100vw - 40px), 700px",
   stack: "(max-width: 980px) calc(100vw - 40px), 640px",
-  over: "(max-width: 980px) calc(60vw - 24px), 400px",
-  beside: "(max-width: 980px) calc(57vw - 24px), 400px",
-  besideB: "(max-width: 980px) calc(43vw - 24px), 300px",
+  over: "(max-width: 700px) calc(100vw - 40px), (max-width: 980px) calc(60vw - 24px), 400px",
+  beside: "(max-width: 700px) calc(100vw - 40px), (max-width: 980px) calc(57vw - 24px), 400px",
+  besideB: "(max-width: 700px) calc(100vw - 40px), (max-width: 980px) calc(43vw - 24px), 300px",
   column: "(max-width: 980px) calc(100vw - 40px), 700px",
   wide: "(max-width: 980px) calc(100vw - 40px), 1240px",
   tall: "(max-width: 980px) 70vw, 300px",
@@ -1764,7 +1764,7 @@ const fsTrace = (t) => `
       <text x="206" y="40" fill="#4e6361">${esc(t.fall)}</text>
       <text x="22" y="40" fill="#4e6361" font-size="10.5">Wet well level</text>
     </g>
-    <g fill="none" stroke="#4e6361" stroke-width="1"><path d="M96 203 L96 194 L90 182"/><path d="M212 44 L212 54 L188 100"/></g>
+    <g fill="none" stroke="#4e6361" stroke-width="1"><path d="M60 198V141"/><path d="M212 44 L212 54 L188 100"/></g>
   </svg>
   <figcaption><b>${esc(t.title)}</b> ${esc(t.text)}</figcaption>
 </figure>`;
@@ -1850,10 +1850,10 @@ ${second.map(fsStop).join("")}
     <p class="note">${esc(FS.standards.clientsNote)}</p>
   </div>
 </div></section>
-<section class="section band alt" id="questions"><div class="wrap split rev">
-  <div class="section-head" style="margin:0"><h2 class="h-lg" data-reveal>What councils and utilities ask us.</h2><p class="lede" data-reveal style="--i:1">If your question is not here, our team will answer it on ${site.phone}.</p></div>
+<section class="section band alt band-split" id="questions"><div class="wrap"><div class="split-band">
+  <div class="band-head"><h2 class="h-lg" data-reveal>What councils and utilities ask us.</h2><p class="lede" data-reveal style="--i:1">If your question is not here, our team will answer it on <a href="${site.phoneHref}">${site.phone}</a>.</p></div>
   <div data-reveal>${faqHtml(FS.faq)}</div>
-</div></section>
+</div></div></section>
 <section class="section band" id="documents"><div class="wrap">
   <div class="section-head"><h2 class="h-lg" data-reveal>Read more about FlowSense.</h2></div>
   <ul class="doc-list grid c2">
