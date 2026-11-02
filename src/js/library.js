@@ -10,6 +10,7 @@
   const count = lib.querySelector(".finder-count");
   const more = lib.querySelector("[data-lib-more]");
   const empty = lib.querySelector(".finder-empty");
+  const table = lib.querySelector(".table-scroll");
   const LIMIT = rows.filter((r) => !r.hidden).length || 12;
   const state = { range: "", type: "", expanded: false };
 
@@ -24,9 +25,19 @@
       row.hidden = !show;
       if (show) shown++;
     }
-    count.textContent = filtering ? `${matched} of ${rows.length} documents` : shown < rows.length ? `Showing ${shown} of ${rows.length} documents` : `All ${rows.length} documents`;
+    count.textContent = shown === rows.length ? `Showing all ${rows.length} documents` : `Showing ${shown} of ${rows.length} documents`;
     more.parentElement.hidden = filtering || state.expanded || rows.length <= LIMIT;
     empty.hidden = matched > 0;
+    table.hidden = matched === 0;
+    // Dim the chips that would leave nothing, as the product finder does.
+    for (const g of groups) {
+      const key = g.dataset.libFilter, other = key === "range" ? "type" : "range";
+      g.querySelectorAll(".fchip").forEach((chip) => {
+        const v = chip.dataset.value;
+        const n = rows.filter((row) => terms.every((t) => row.dataset.search.includes(t)) && (!v || row.dataset[key] === v) && (!state[other] || row.dataset[other] === state[other])).length;
+        chip.classList.toggle("zero", n === 0);
+      });
+    }
   }
   for (const group of groups) {
     const chips = [...group.querySelectorAll(".fchip")];

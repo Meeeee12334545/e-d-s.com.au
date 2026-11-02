@@ -1889,20 +1889,20 @@ ${pageHero(r, { crumbs: [["About"]], title: "Australian owned and operated since
     ${C.about.approach.items.map(([ic, t, d], n) => `<div class="card hoverable holder" data-reveal style="--i:${n % 3}"><span class="card-icon">${icon(ic)}</span><h3>${esc(t)}</h3><p>${esc(d)}</p></div>`).join("")}
   </div>
 </div></section>
-<section class="section alt"><div class="wrap">
+<section class="section alt"><div class="wrap origins">
   <div class="section-head"><p class="eyebrow">EDS origins</p><h2 class="h-lg" data-reveal>Founded by Graham and Cynthia Harper.</h2>
   <p class="lede" data-reveal style="--i:1">EDS began in Queensland in 1991, following Graham's success with Elpro, and alongside the release of the Pump Station Manager.</p></div>
   <div class="timeline">
     <span class="timeline-fill"></span>
-    ${C.about.timeline.map(([when, t, d], i) => `<div class="tl"${i === C.about.timeline.findIndex(([w]) => w.startsWith("2022")) ? ' id="projects"' : ""} data-reveal><time>${when}</time><i></i><div><h3>${t}</h3><p>${d}</p></div></div>`).join("")}
+    ${C.about.timeline.map(([when, t, d], i) => `${i === C.about.timeline.findIndex(([w]) => w.startsWith("2022")) ? '<p class="tl-group" id="projects">Recent projects</p>' : ""}<div class="tl" data-reveal><time>${when}</time><i></i><div><h3>${t}</h3><p>${d}</p></div></div>`).join("")}
   </div>
   <figure class="quote" data-reveal style="margin:48px 0 0">${icon("quote", false)}<blockquote>${C.about.founder.text}</blockquote><cite><b>${C.about.founder.name}</b>, ${C.about.founder.role}</cite></figure>
 </div></section>
 <section class="section dark"><div class="wrap aus">
-  <svg id="ausmap" data-offices='${JSON.stringify(C.offices)}' role="group" aria-label="Map of Australia showing EDS offices" data-reveal="scale"></svg>
+  <svg id="ausmap" data-offices='${JSON.stringify(C.offices)}' role="img" aria-label="Map of Australia showing EDS offices" data-reveal="scale"></svg>
   <div><h2 class="h-lg" data-reveal>Four offices across Australia.</h2>
   <p class="lede" data-reveal style="--i:1">Crews and support across the country, on one number. Tell us about your network, site or project.</p>
-  <div class="office-list" style="margin-top:26px">${C.offices.map((o) => `<button class="office"><span class="card-icon">${icon("map-pin")}</span><span><b>${o.city}</b><span>${o.note}</span></span><em>${o.state}</em></button>`).join("")}</div>
+  <div class="office-list" style="margin-top:26px">${C.offices.map((o) => `<button class="office" type="button"><span class="card-icon">${icon("map-pin")}</span><span><b>${o.city}</b><span>${o.note}</span></span><em>${o.state}</em></button>`).join("")}</div>
   <div class="hero-actions" data-reveal style="--i:2"><a class="btn btn-primary btn-lg" data-magnetic href="${contactHref(r)}">Start an enquiry ${icon("arrow-right")}</a><a class="btn btn-ghost btn-lg" href="${site.phoneHref}">${icon("phone")} ${site.phone}</a></div></div>
 </div></section>`,
 });
@@ -1930,7 +1930,7 @@ add({
   current: "resources",
   scripts: ["library.js"],
   body: (r) => `
-${pageHero(r, { crumbs: [["Resources"]], title: "White papers, downloads and support.", lede: "What we have learnt in the field, and the files you need to keep instruments running.", visual: heroToc([["papers", "White papers", C.papers.length], ["downloads", "Software, drivers and datasheets", library.length], ["support", "Passwords, RMA forms and data access"]]) })}
+${pageHero(r, { crumbs: [["Resources"]], title: "White papers, downloads and support.", lede: "What we have learnt in the field, and the files you need to keep instruments running.", visual: heroToc([["papers", "White papers", C.papers.length], ["downloads", "Datasheets, manuals and software", library.length], ["support", "Passwords, RMA forms and data access"]]) })}
 <section class="section" id="papers"><div class="wrap">
   <div class="section-head"><p class="eyebrow">White papers</p><h2 class="h-lg" data-reveal>EDS publications</h2></div>
   <div class="grid ${C.papers.length % 3 ? "c2" : "c3"}">
@@ -1942,9 +1942,9 @@ ${pageHero(r, { crumbs: [["Resources"]], title: "White papers, downloads and sup
   </div>
 </div></section>
 <section class="section alt library" id="downloads"><div class="wrap">
-  <div class="section-head"><h2 class="h-lg" data-reveal>Software, drivers and datasheets</h2><p class="lede" data-reveal style="--i:1">Every document EDS publishes, with its file type and size shown before you download.</p></div>
+  <div class="section-head"><h2 class="h-lg" data-reveal>Datasheets, manuals and software</h2><p class="lede" data-reveal style="--i:1">Every document EDS publishes, with its file type and size shown before you download.</p></div>
   <div class="lib-bar" data-reveal style="--i:2">
-    <label class="finder-search">${icon("search", false)}<input type="search" placeholder="Find a datasheet, manual, brochure or driver" aria-label="Search documents" autocomplete="off" spellcheck="false"></label>
+    <label class="finder-search">${icon("search", false)}<input type="search" placeholder="Search ${library.length} documents" aria-label="Search documents" autocomplete="off" spellcheck="false"></label>
     ${libraryChips("Range", [...new Set(library.map((d) => d.range))])}
     ${libraryChips("Type", [...new Set(library.map((d) => d.kind))])}
   </div>
@@ -1962,11 +1962,11 @@ ${pageHero(r, { crumbs: [["Resources"]], title: "White papers, downloads and sup
   <p class="lib-more"><button class="btn btn-outline" type="button" data-lib-more>Show all ${library.length} documents ${icon("chevron-down")}</button></p>
   <p class="note" style="margin-top:18px;font-size:.9rem;max-width:72ch">${C.downloads.find((g) => g.note).note}</p>
 </div></section>
-<section class="section" id="support"><div class="wrap"><div class="grid c2">
-  <a class="card" href="${r}contact.html" data-reveal><span class="card-icon">${icon("lock")}</span><h3>Software passwords and RMA forms</h3><p>Request a software password, an EDS or Hach Marsh RMA form, or EDS safety policies and procedures.</p><span class="go" aria-hidden="true">${icon("arrow-right")}</span></a>
+<section class="section" id="support"><div class="wrap"><div class="section-head"><h2 class="h-lg" data-reveal>Passwords, RMA forms and data access</h2></div><div class="grid c2">
+  <a class="card" href="${contactHref(r, { topic: "Equipment service or calibration" })}" data-reveal><span class="card-icon">${icon("lock")}</span><h3>Software passwords and RMA forms</h3><p>Request a software password, an EDS or Hach Marsh RMA form, or EDS safety policies and procedures.</p><span class="go" aria-hidden="true">${icon("arrow-right")}</span></a>
   <a class="card" href="${site.remoteDataUrl}" rel="noopener" data-reveal style="--i:1"><span class="card-icon">${icon("globe")}</span><h3>Remote data access</h3><p>Sign in to DetectData to view data from your Detectronic instruments.</p><span class="go" aria-hidden="true">${icon("arrow-up-right")}</span></a>
 </div></div></section>
-${ctaSection(r, { title: "Cannot find a manual or driver?", lede: "Our service department will send you what you need." })}`,
+${ctaSection(r, { title: "Can't find a manual or driver?", lede: "Our service department will send you what you need.", topic: "Equipment service or calibration" })}`,
 });
 
 /* ---- contact ---- */
@@ -2048,7 +2048,7 @@ const enquiryForm = (r, reveal) => `
           <label class="field"><span>Organisation <i>Optional</i></span><input name="Organisation" autocomplete="organization"></label>
         </div>
         <div class="field-row">
-          <label class="field">Email<input name="Email" type="email" autocomplete="email" required></label>
+          <label class="field">Email<input name="Email" type="email" autocomplete="email" required pattern="[^@\\s]+@[^@\\s]+\\.[^@\\s]+"></label>
           <label class="field" data-phone-field><span>Phone <i>Optional</i></span><input name="Phone" type="tel" autocomplete="tel"></label>
         </div>
         <fieldset class="field modes">
@@ -2064,7 +2064,7 @@ const enquiryForm = (r, reveal) => `
         <button class="btn btn-brand btn-lg" type="submit"><span>Submit enquiry</span>${icon("arrow-right")}<i class="spin" aria-hidden="true"></i></button>
         <p class="note">${icon("lock", false)}Your enquiry goes straight to our team. <a href="${r}privacy.html">Privacy policy</a></p>
       </div>
-      <p class="form-error" role="alert" data-done="error" hidden>${icon("circle-alert", false)} Your enquiry did not go through. Please try again in a moment, or call ${site.phone}.</p>
+      <p class="form-error" role="alert" data-done="error" hidden>${icon("circle-alert", false)}<span>Your enquiry didn't go through. Please try again in a moment, or call <a href="${site.phoneHref}">${site.phone}</a>.</span></p>
     </div>
     <div class="form-done" data-done="sent" hidden tabindex="-1" role="status">
       <svg class="done-mark" viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="24"/><path d="M15 27l7 7 15-16"/></svg>
@@ -2090,7 +2090,7 @@ add({
   current: "contact",
   scripts: ["widgets.js"],
   body: (r) => `
-${pageHero(r, { crumbs: [["Contact"]], title: "Give us a call or drop in. We'd love to hear about your project.", lede: `${site.hours}, with one number for every state.`, visual: heroPanel("Quickest ways to reach us", `
+${pageHero(r, { crumbs: [["Contact"]], title: "Give us a call or drop\u00a0in. We'd love to hear about your project.", lede: `${site.hours}, with one number for every state.`, visual: heroPanel("Quickest ways to reach us", `
   <a class="hero-call" href="${site.phoneHref}">${icon("phone")}<span><small>Call from anywhere in Australia</small><b>${site.phone}</b></span></a>
   <ul class="hero-links">
     <li><a href="#enquiry">${icon("message-square-text")}<span>Start an enquiry</span>${icon("arrow-down")}</a></li>
@@ -2107,9 +2107,9 @@ ${pageHero(r, { crumbs: [["Contact"]], title: "Give us a call or drop in. We'd l
   ${enquiryForm(r, "right")}
 </div></section>
 <section class="section dark" id="offices"><div class="wrap aus">
-  <svg id="ausmap" data-offices='${JSON.stringify(C.offices)}' role="group" aria-label="Map of Australia showing EDS offices" data-reveal="scale"></svg>
+  <svg id="ausmap" data-offices='${JSON.stringify(C.offices)}' role="img" aria-label="Map of Australia showing EDS offices" data-reveal="scale"></svg>
   <div><p class="eyebrow">Office locations</p><h2 class="h-lg" data-reveal>Find us in four states.</h2>
-  <div class="office-list" style="margin-top:26px">${C.offices.map((o) => `<button class="office"><span class="card-icon">${icon("map-pin")}</span><span><b>${o.city}</b><span>${o.note}</span></span><em>${o.state}</em></button>`).join("")}</div></div>
+  <div class="office-list" style="margin-top:26px">${C.offices.map((o) => `<button class="office" type="button"><span class="card-icon">${icon("map-pin")}</span><span><b>${o.city}</b><span>${o.note}</span></span><em>${o.state}</em></button>`).join("")}</div></div>
 </div></section>`,
 });
 
@@ -2154,9 +2154,16 @@ ${pageHero(r, { crumbs: [["Page not found"]], iconName: "waves", eyebrow: "Error
 /* ---- privacy ---- */
 // content/privacy.txt, one paragraph a line: the first line is the page title
 // and the second its lede. A line that starts "1. " (and so on) is a section
-// heading, a run of lines that start "- " is a list, and [words](url) is a link.
+// heading, a line that starts "### " a sub-heading, a run of lines that start
+// "- " is a list, and [words](url) is a link. Email addresses and 1300 numbers
+// become links, and the domain never breaks at its hyphens.
 const privacy = (await readFile(path.join(ROOT, "content/privacy.txt"), "utf8")).split("\n").map((l) => l.trim()).filter(Boolean);
-const legalLine = (l) => esc(l).replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (_, words, href) => `<a href="${href}" rel="noopener">${words}</a>`);
+const legalLine = (l) => esc(l)
+  .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (_, words, href) => `<a href="${href}" rel="noopener">${words}</a>`)
+  .replace(/\b[\w.+-]+@[\w-]+(?:\.[\w-]+)+\b/g, (m) => `<a class="nw" href="mailto:${m}">${m}</a>`)
+  .replace(/\b1[38]00 \d{3} \d{3}\b/g, (m) => `<a class="nw" href="tel:${m.replace(/ /g, "")}">${m}</a>`)
+  .replace(/(?<![@\w.\/-])((?:www\.)?e-d-s\.com\.au|DB-IP)(?![\w-])/g, '<span class="nw">$1</span>');
+const legalHeading = (l) => /^\d+\.\s/.test(l) && l.length < 90;
 const legalHtml = (lines) => {
   const out = [];
   let list = null;
@@ -2167,20 +2174,25 @@ const legalHtml = (lines) => {
       continue;
     }
     list = null;
-    out.push(/^\d+\.\s/.test(l) && l.length < 90 ? `<h2>${esc(l)}</h2>` : `<p>${legalLine(l)}</p>`);
+    if (l.startsWith("### ")) { out.push(`<h3>${esc(l.slice(4))}</h3>`); continue; }
+    out.push(legalHeading(l) ? `<h2 id="${slugify(l.replace(/^\d+\.\s/, ""))}">${esc(l)}</h2>` : `<p>${legalLine(l)}</p>`);
   }
   return out.map((x) => (Array.isArray(x) ? `<ul>\n${x.join("\n")}\n</ul>` : x)).join("\n");
 };
+// The numbered sections as a jump list that stays beside the text (from
+// 981 px), and the date the policy gives itself (in section 10) under the title.
+const privacySections = privacy.slice(2).filter(legalHeading).map((l) => { const t = l.replace(/^\d+\.\s/, ""); return [slugify(t), t]; });
+const privacyDate = privacy.join(" ").match(/dated (\d{1,2} \w+ \d{4})/)?.[1];
 add({
   file: "privacy.html",
   title: "Privacy policy | EDS",
   description: "What the EDS website collects when you visit or get in touch, why, who sees it, and how to ask us about it.",
   current: "",
   body: (r) => `
-${pageHero(r, { crumbs: [["Privacy policy"]], title: privacy[0], lede: privacy[1] })}
-<section class="section"><div class="wrap"><div class="legal">
+${pageHero(r, { crumbs: [["Privacy policy"]], title: privacy[0], lede: privacy[1], after: privacyDate ? `<p class="note legal-date" data-reveal style="--i:2">Last updated ${privacyDate}</p>` : "" })}
+<section class="section"><div class="wrap legal-wrap"><div class="legal">
   ${legalHtml(privacy.slice(2))}
-</div></div></section>`,
+</div>${heroToc(privacySections)}</div></section>`,
 });
 
 /* ------------------------------------------------------------------ */

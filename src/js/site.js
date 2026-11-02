@@ -363,11 +363,12 @@
     if (!msg) {
       msg = document.createElement("small");
       msg.className = "field-error";
+      msg.setAttribute("aria-hidden", "true"); // read as the description, not as part of the label
       msg.id = `err-${field.name}`;
       field.after(msg);
       field.setAttribute("aria-describedby", msg.id);
     }
-    msg.textContent = field.validity.typeMismatch ? "That email address does not look quite right." : ERRORS[field.name] || "Please fill this in.";
+    msg.textContent = field.validity.typeMismatch || field.validity.patternMismatch ? "That email address doesn't look quite right." : ERRORS[field.name] || "Please fill this in.";
     return false;
   }
 
@@ -460,7 +461,7 @@
       const btn = $("button[type=submit]", form), label = $("span", btn), was = label?.textContent;
       $$("[data-done]", form).forEach((d) => (d.hidden = true));
       form.setAttribute("aria-busy", "true");
-      btn.disabled = true;
+      btn.setAttribute("aria-disabled", "true");
       if (label) label.textContent = "Submitting…";
       const summary = isEnquiry && summarise();
       const subject = form.elements.subject?.value;
@@ -468,7 +469,7 @@
       // For the analytics dashboard (track.js): whether it actually went.
       form.dispatchEvent(new CustomEvent("eds:form", { bubbles: true, detail: { sent, subject } }));
       form.removeAttribute("aria-busy");
-      btn.disabled = false;
+      btn.removeAttribute("aria-disabled");
       if (label) label.textContent = was;
       if (sent) {
         // Clear everything that was sent (topic, product, way of working, quote
@@ -482,6 +483,7 @@
           window.EDS?.quote?.clear();
           showSummary(summary);
           syncEnquiry();
+          enquiry.style.setProperty("--done", 1);
         }
       }
       const done = $(`[data-done=${sent ? "sent" : "error"}]`, form);
@@ -501,6 +503,7 @@
     $("[data-form-edit]", enquiry).addEventListener("click", () => {
       $$("[data-done]", enquiry).forEach((d) => (d.hidden = true));
       $(".form-fields", enquiry).hidden = false;
+      syncEnquiry();
       topics[0].focus();
     });
 

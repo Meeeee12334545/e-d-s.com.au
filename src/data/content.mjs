@@ -2623,8 +2623,8 @@ export const flowsense = {
 /* ------------------------------------------------------------------ */
 export const about = {
   intro: [
-    "Environmental Data Services (EDS) is an Australian owned and operated company, founded in Queensland in 1991 by Graham and Cynthia Harper. We've been a market leader in equipment and services for the water and wastewater industry ever since.",
-    "We supply instruments and specialised services to the water and wastewater industry, and to mining, manufacturing, power and processing. Our team is scientists, engineers and technicians who are good at every part of environmental monitoring, from the manhole to the final report.",
+    "Graham and Cynthia Harper founded Environmental Data Services (EDS) in Queensland in 1991. Today we're a market leader in equipment and services for the water and wastewater industry.",
+    "We supply instruments and specialised services to the water and wastewater industry, and to mining, manufacturing, power and processing. Our team covers every part of environmental monitoring, from the manhole to the final report.",
     "Our purpose is simple: to give you the data and the confidence to take control of your assets and projects. We like finding things out, and we build the technology and the services that make it possible.",
   ],
   mission: [
@@ -2632,13 +2632,13 @@ export const about = {
     "We give businesses and organisations the tools and the insight to make informed environmental decisions, and a more sustainable future comes with them.",
   ],
   timeline: [
-    ["Early 1970s", "Elite Electronics", "Graham Harper begins building businesses in electronics."],
-    ["Early 1980s", "Elpro", "Graham starts Elpro, now one of the world's largest SCADA suppliers."],
-    ["1991", "EDS is founded", "Graham and Cynthia Harper establish EDS in Queensland, alongside the release of its flagship product, the Pump Station Manager (PSM)."],
-    ["1990s", "Bureau of Meteorology loggers", "Graham develops the EDS data logger for the Bureau of Meteorology, still in use today, then moves into flow with the Marsh-McBirney range, now Hach."],
-    ["2001–02", "Amberley Fire Training Facility", "EDS builds the facility under Graham's leadership."],
-    ["2003", "Defence facility contract", "EDS begins servicing and monitoring the Australian Defence facility, under a contract still in place."],
-    ["2005", "A founder's legacy", "Graham sadly passes. Under Cynthia's stewardship, EDS continues to thrive and grow."],
+    ["Early 1970s", "Elite Electronics", "Graham Harper began building businesses in electronics."],
+    ["Early 1980s", "Elpro", "Graham started Elpro, now one of the world's largest SCADA suppliers."],
+    ["1991", "EDS is founded", "Graham and Cynthia Harper established EDS in Queensland, alongside the release of its flagship product, the Pump Station Manager (PSM)."],
+    ["1990s", "Bureau of Meteorology loggers", "Graham developed the EDS data logger for the Bureau of Meteorology, still in use today, then moved into flow with the Marsh-McBirney range, now Hach."],
+    ["2001–02", "Amberley Fire Training Facility", "EDS built the facility under Graham's leadership."],
+    ["2003", "Defence facility contract", "EDS began servicing and monitoring the Australian Defence facility, under a contract still in place."],
+    ["2005", "A founder's legacy", "Graham sadly passed away. Under Cynthia's stewardship, EDS has continued to thrive and grow."],
     ["2022–23", "Goulburn Valley Water, Kilmore", "EDS provided sewer flow monitoring at 10 sites in Kilmore, supporting Goulburn Valley Water's infrastructure management and planning."],
     ["2023", "Sydney Water panel provider", "EDS was awarded a five year panel provider contract to supply sewer flow and level instrumentation to Sydney Water."],
     ["2023", "North East Water", "EDS ran sewer and rainfall monitoring across 15 sites over eight weeks, giving North East Water high resolution data for infrastructure planning and management."],
@@ -2654,7 +2654,7 @@ export const about = {
     lede: "EDS makes instruments, represents leading manufacturers, installs and maintains them with our own crews, and delivers the data. One team answers for the whole chain, so there's never anyone else to call.",
     items: [
       ["cpu", "Manufacturer and representative", "EDS designs and builds its own loggers and sensors, and represents leading manufacturers including Detectronic, ORI, Hach and Beadedstream."],
-      ["hard-hat", "Our own field crews", "Installation engineers trained in installation, maintenance and calibration, working from four offices and travelling Australia wide."],
+      ["hard-hat", "Our own field crews", "Engineers and technicians trained in installation, maintenance and calibration, working from four offices and travelling Australia wide."],
       ["shield-check", "Certified for hazardous areas", "Intrinsically safe equipment certified under ATEX and IECEx, including Zone 0 instruments for sewer environments."],
       ["badge-check", "Data you can defend", "ISO compliant data validation, with continuous QA/QC and calibration checks throughout every program."],
       ["waves", "One platform", "Readings arrive in EDS FlowSense, built and supported in Australia, or go straight to your own SCADA and systems."],
@@ -2809,7 +2809,7 @@ export const papers = [
   {
     id: "thermistor-strings",
     title: "Thermistor Strings with Open Channel Sewer Flow Meters to Locate Infiltration",
-    date: "White paper",
+    date: "July 2024",
     text: "How combining thermistor strings with open channel sewer flow meters gives precise detection of infiltration, with continuous real-time monitoring, non-intrusive installation and significant cost savings.",
     href: localDoc("eds-white-paper-thermistor-strings.pdf"),
   },

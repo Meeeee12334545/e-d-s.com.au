@@ -1486,6 +1486,19 @@ input[type="range"]:active::-moz-range-thumb { cursor: grabbing; box-shadow: 0 0
 .tl.in i { border-color: var(--brand); scale: 1.2; }
 .tl h3 { font-size: 1.15rem; margin-bottom: 4px; }
 .tl p { font-size: .96rem; color: var(--muted); max-width: 60ch; }
+/* where the history turns into recent projects (about.html#projects) */
+.tl-group { position: relative; z-index: 1; margin: 22px 0 0 154px; font-family: var(--font-display); font-weight: 620; font-size: .95rem; color: var(--brand-dark); }
+@media (max-width: 700px) {
+  .tl-group { margin-left: 32px; }
+}
+/* About: the heading stays beside the timeline as it scrolls past, so the
+   history fills the band rather than one column of it. */
+@media (min-width: 1100px) {
+  .origins { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); column-gap: clamp(40px, 5vw, 88px); align-items: start; }
+  .origins > .section-head { position: sticky; top: calc(var(--header-h) + 32px); margin-bottom: 0; }
+  .origins > .timeline { margin-top: 0; }
+  .origins > .quote { grid-column: 2; }
+}
 
 /* A client's words: a pull quote on the page, behind a rule in the brand,
    at a reading size. The brand gradient is kept for the FlowSense band and
@@ -1507,6 +1520,15 @@ input[type="range"]:active::-moz-range-thumb { cursor: grabbing; box-shadow: 0 0
 #ausmap .pin text { fill: #fff; font: 500 13px var(--font-body); opacity: .8; transition: opacity .2s; paint-order: stroke; stroke: var(--deep); stroke-width: 5px; stroke-linejoin: round; }
 #ausmap .pin.active text { opacity: 1; }
 #ausmap .pin.active circle.core { r: 9; fill: #fff; }
+/* Stacked, the map is capped so the heading is not a screen away, and the
+   labels grow as the map shrinks so they stay readable on a phone. */
+@media (max-width: 980px) {
+  #ausmap { max-width: 520px; justify-self: center; }
+  #ausmap .pin text { font-size: 16px; }
+}
+@media (max-width: 700px) {
+  #ausmap .pin text { font-size: 18px; }
+}
 .office-list { display: grid; gap: 8px; }
 .aus .hero-actions { margin-top: 28px; }
 .aus .lede { margin-top: 16px; }
@@ -1522,6 +1544,9 @@ input[type="range"]:active::-moz-range-thumb { cursor: grabbing; box-shadow: 0 0
 .paper-top { padding: 26px 70px 0 28px; display: flex; justify-content: flex-start; gap: 14px; align-items: center; }
 .paper-body { padding: 14px 28px 28px; display: flex; flex-direction: column; gap: 12px; flex: 1; }
 .paper h3 { font-size: 1.25rem; }
+/* a link card, so its icon is drawn plain, level with the download arrow */
+.paper-top .card-icon { width: auto; height: 32px; border-radius: 0; background: none; font-size: 30px; justify-content: start; }
+.paper .go { top: 28px; right: 28px; }
 
 /* ---------- CTA + footer ---------- */
 /* The close is the brand: the FlowSense teal, lit from the top right, with
@@ -1572,6 +1597,7 @@ main:has(> .alt:last-child) + .footer { background: var(--bg); }
 .hero-icon { width: 64px; height: 64px; border-radius: 20px; display: grid; place-items: center; font-size: 32px; background: #fff; color: var(--eds); box-shadow: var(--shadow-md); margin-bottom: 24px; }
 .split { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(280px, 1fr); gap: clamp(32px, 5vw, 80px); align-items: start; }
 .split.rev { grid-template-columns: minmax(280px, 1fr) minmax(0, 1.5fr); }
+.split > .prose { max-width: 35em; }
 .prose { display: grid; gap: 1.1em; font-size: 1.08rem; line-height: 1.7; }
 .prose > p:first-child { font-size: 1.28rem; line-height: 1.5; color: var(--ink); font-weight: 400; }
 /* a service or solution page's opening text: two columns, the text beside
@@ -1745,6 +1771,11 @@ main:has(> .alt:last-child) + .footer { background: var(--bg); }
 @media (min-width: 981px) {
   .contact-cards { position: sticky; top: calc(var(--header-h) + 20px); }
 }
+/* above the form on a tablet: two to a row, the phone number across the top */
+@media (min-width: 701px) and (max-width: 980px) {
+  .contact-cards { grid-template-columns: 1fr 1fr; }
+  .contact-cards > :first-child { grid-column: 1 / -1; }
+}
 /* enquire.html: the form, with a call card and head office beside it */
 .enquire-section { padding-top: clamp(32px, 5vw, 64px); }
 .enquire-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 340px); gap: clamp(24px, 3.5vw, 48px); align-items: start; }
@@ -1761,14 +1792,25 @@ main:has(> .alt:last-child) + .footer { background: var(--bg); }
 }
 .contact-card { display: grid; grid-template-columns: 48px 1fr; gap: 16px; padding: 20px; border-radius: var(--radius); border: 1px solid var(--border); background: #fff; align-items: center; transition: border-color .2s var(--ease), translate .3s var(--ease-out), box-shadow .3s; }
 a.contact-card:hover { border-color: var(--brand); translate: 0 -3px; box-shadow: var(--shadow-md); }
+div.contact-card { border-color: transparent; }
 .contact-card b { display: block; font-family: var(--font-display); color: var(--ink); font-size: 1.2rem; font-weight: 640; }
-.contact-card span { font-size: .88rem; color: var(--muted); }
+.contact-card span { font-size: .88rem; color: var(--muted); text-wrap: pretty; }
 .contact-card .card-icon { font-size: 22px; color: var(--brand); }
 a.contact-card:hover .card-icon { background: var(--brand); color: #fff; }
-.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-.legal { max-width: 78ch; }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+.legal { max-width: 35em; }
 .legal p { margin-bottom: 1em; }
 .legal h2 { font-size: 1.35rem; margin: 1.6em 0 .6em; }
+.legal h3 { font-size: 1.1rem; margin: 1.4em 0 .5em; }
+.legal .nw { white-space: nowrap; }
+.legal-date { margin-top: 16px; font-size: .88rem; }
+/* privacy.html: the contents stay beside the text as it scrolls, as a tone
+   on the band rather than the hero's floating card */
+.legal-wrap { display: grid; grid-template-columns: minmax(0, 35em) minmax(260px, 340px); justify-content: space-between; align-items: start; gap: clamp(32px, 5vw, 80px); }
+.legal-wrap > .hero-toc { position: sticky; top: calc(var(--header-h) + 24px); border-color: transparent; background: var(--bg-alt); box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
+@media (max-width: 980px) {
+  .legal-wrap { display: block; }
+}
 .legal ul { margin: 0 0 1em; padding-left: 1.3em; list-style: disc; }
 .legal li { margin-bottom: .45em; padding-left: .2em; }
 .legal li::marker { color: var(--brand-mid); }
@@ -1936,7 +1978,7 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: 6
 .lib-table tbody tr:hover td { background: rgba(13, 124, 114, .04); }
 .doc-name { display: flex; align-items: center; gap: 12px; font-weight: 500; color: var(--ink); }
 .doc-name a:hover { color: var(--brand-dark); text-decoration: underline; text-underline-offset: 3px; }
-.lib-table .card-icon { width: 34px; height: 34px; font-size: 17px; border-radius: 10px; }
+.lib-table .card-icon { flex: none; width: 34px; height: 34px; font-size: 17px; border-radius: 10px; }
 .lib-table td.r { color: var(--muted); white-space: nowrap; }
 .lib-table td.t span { display: inline-block; padding: 3px 9px; border-radius: 999px; background: var(--bg-alt); font-size: .8rem; font-weight: 500; color: var(--ink-2); white-space: nowrap; }
 .lib-table td.f { font-family: var(--font-mono); font-size: .8rem; color: var(--muted); white-space: nowrap; }
@@ -2036,6 +2078,9 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: 6
 .finder-search .icon { position: absolute; left: 17px; font-size: 18px; color: var(--brand); pointer-events: none; }
 .finder-search input { width: 100%; padding: 14px 16px 14px 48px; border-radius: 14px; border: 1px solid var(--border-field); background: #fff; box-shadow: var(--shadow); color: var(--ink); font: inherit; font-size: 1rem; }
 .finder-search input:focus { outline: 2px solid var(--brand); outline-offset: 1px; }
+/* the clear button Chromium draws in a search box, as a Lucide x in the palette */
+.finder-search input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; width: 16px; height: 16px; margin-left: 8px; cursor: pointer; background: var(--muted); -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M18 6 6 18'/%3E%3Cpath d='m6 6 12 12'/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M18 6 6 18'/%3E%3Cpath d='m6 6 12 12'/%3E%3C/svg%3E") center / contain no-repeat; }
+.finder-search input::-webkit-search-cancel-button:hover { background: var(--brand-dark); }
 .finder-chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .fchip { display: inline-flex; align-items: center; gap: 7px; padding: 8px 10px 8px 13px; border-radius: 999px; border: 1px solid var(--border-strong); background: #fff; font-size: .86rem; font-weight: 500; color: var(--ink-2); transition: background-color .2s var(--ease), border-color .2s var(--ease), color .2s var(--ease), opacity .2s var(--ease); }
 .fchip .icon { font-size: 15px; color: var(--brand); }
@@ -2095,7 +2140,7 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: 6
 .topic-tile input { position: absolute; opacity: 0; pointer-events: none; }
 .topic-tile .card-icon { width: 40px; height: 40px; margin-bottom: 9px; border-radius: 12px; font-size: 20px; }
 .topic-tile b { color: var(--ink); font-size: .94rem; font-weight: 650; line-height: 1.25; }
-.topic-tile small { color: var(--muted); font-size: .79rem; line-height: 1.4; }
+.topic-tile small { color: var(--muted); font-size: .79rem; line-height: 1.4; text-wrap: balance; }
 .topic-tile:hover { border-color: rgba(13, 124, 114, .5); translate: 0 -2px; box-shadow: var(--shadow-md); }
 .topic-tile:has(:checked) { border-color: var(--brand); background: rgba(13, 124, 114, .05); box-shadow: inset 0 0 0 1px var(--brand); }
 .topic-tile:has(:checked) .card-icon { background: var(--brand); color: #fff; }
@@ -2145,9 +2190,9 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: 6
 .form-submit { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 22px; padding-top: 4px; }
 .form-submit .btn { min-width: 200px; transition: background-color .2s var(--ease), box-shadow .4s var(--ease), scale .15s var(--ease); }
 .form.ready .form-submit .btn { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .16), 0 0 0 5px rgba(13, 124, 114, .14), 0 10px 24px -6px rgba(13, 124, 114, .5); }
-.form-submit .note { display: flex; align-items: center; gap: 8px; font-size: .84rem; color: var(--muted); }
-.form-submit .note .icon { color: var(--brand); }
-.form-submit .note a { color: var(--brand-dark); font-weight: 500; text-decoration: underline; text-decoration-color: rgba(13, 124, 114, .35); text-underline-offset: 3px; }
+.form-submit .note { display: block; font-size: .84rem; color: var(--muted); }
+.form-submit .note .icon { display: inline-block; vertical-align: -2px; margin-right: 6px; color: var(--brand); }
+.form-submit .note a { color: var(--brand-dark); font-weight: 500; text-decoration: underline; text-decoration-color: rgba(13, 124, 114, .35); text-underline-offset: 3px; white-space: nowrap; }
 .btn .spin { display: none; width: 1em; height: 1em; border-radius: 50%; border: 2px solid currentColor; border-right-color: transparent; animation: form-spin .7s linear infinite; }
 .form[aria-busy] .btn .spin { display: block; }
 .form[aria-busy] .btn .icon { display: none; }
@@ -2183,6 +2228,7 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: 6
 .signup-done .icon { margin-top: 3px; color: var(--brand); }
 .form-error { display: flex; gap: 8px; align-items: flex-start; font-size: .9rem; font-weight: 550; color: #b91c1c; }
 .form-error .icon, .signup-done.form-error .icon { margin-top: 3px; color: inherit; }
+.form-error a { color: inherit; font-weight: 650; text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; }
 .signup-done.form-error { color: #b91c1c; }
 .dark .form-error { color: #fca5a5; }
 
@@ -2650,6 +2696,10 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: 6
 .mode-chip:hover span { border-color: var(--brand); color: var(--brand-dark); }
 .mode-chip input:checked + span { background: var(--brand); border-color: var(--brand); color: #fff; font-weight: 500; }
 .mode-chip input:focus-visible + span { outline: 2px solid var(--brand); outline-offset: 2px; }
+/* on a phone the three ways of working fit one row, "Not sure yet" the next */
+@container (max-width: 420px) {
+  .mode-chip span { padding: 8px 12px; font-size: .84rem; }
+}
 
 /* ---------- ways to work, results, how a program runs ---------- */
 .ways { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
