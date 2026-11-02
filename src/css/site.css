@@ -1577,7 +1577,7 @@ main:has(> .alt:last-child) + .footer { background: var(--bg); }
 /* a service or solution page's opening text: two columns, the text beside
    its photo or product shot, or the first paragraph beside the rest */
 .intro { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(32px, 5vw, 80px); align-items: start; }
-.intro > .photo, .intro > .aside-figure { margin: 0; position: sticky; top: calc(68px + 58px + 28px); }
+.intro > .photo, .intro > .aside-figure, .intro > .diagram, .intro > .screen { margin: 0; position: sticky; top: calc(68px + 58px + 28px); }
 .prose-rest > p:first-child { font-size: inherit; line-height: inherit; color: inherit; font-weight: inherit; }
 .prose h2 { font-size: 1.6rem; margin-top: .8em; }
 .prose h3 { font-size: 1.2rem; margin-top: .6em; }
@@ -2253,6 +2253,93 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: 6
   .mosaic { grid-template-columns: 1fr; grid-auto-rows: 240px; }
   .mosaic .photo:first-child { grid-column: auto; grid-row: auto; }
 }
+/* ---------- illustrations and FlowSense screens ----------
+   Where a page has no photograph of its method, an illustration shows how
+   it works (diagrams.mjs): a white plate, the site's own lines and type, the
+   logo teal for what EDS installs, water blue for water, amber for alarm
+   levels. Labels are in the drawing's units, so they step up when the plate
+   is narrow and the drawing shrinks (the container query). The caption
+   matches a photograph's. A FlowSense screen sits in the platform's frame. */
+.diagram { margin: 0; container-type: inline-size; }
+.dg-plate { padding: clamp(10px, 3cqi, 22px); border-radius: var(--radius); background: #fff; border: 1px solid var(--border); box-shadow: var(--shadow-md); }
+.diagram svg { display: block; width: 100%; height: auto; overflow: visible; }
+.diagram figcaption, .screen figcaption { display: flex; gap: 10px; align-items: baseline; margin-top: 12px; font-size: .86rem; line-height: 1.5; color: var(--muted); max-width: 62ch; }
+.diagram figcaption::before, .screen figcaption::before { content: ""; flex: none; width: 18px; height: 2px; border-radius: 2px; background: var(--brand); translate: 0 -4px; }
+.diagram text { font-family: "EDS Text", "Helvetica Neue", Arial, sans-serif; font-size: 12.5px; font-weight: 400; fill: var(--ink-2); }
+.diagram .dg-b { font-weight: 600; fill: var(--ink); }
+.diagram .dg-m { fill: var(--muted); }
+@container (max-width: 440px) { .diagram text { font-size: 15.5px; } }
+.dg-surface { stroke: #9fb3b0; stroke-width: 2; fill: none; }
+.dg-ground-water { fill: var(--water); fill-opacity: .07; }
+.dg-table { stroke: #2b9bd0; stroke-width: 1.2; stroke-dasharray: 6 5; fill: none; }
+.dg-table-mark { fill: #2b9bd0; }
+.dg-shaft rect, .dg-pipe-in, .dg-pit { fill: #fbfdfc; }
+.dg-shaft rect, .dg-pit { stroke: #b6c6c3; stroke-width: 3; }
+.dg-pipe { stroke: #a9bbb8; stroke-width: 5; fill: none; stroke-linecap: square; }
+.dg-concrete { fill: #e3eae8; stroke: #b6c6c3; stroke-width: 1.5; }
+.dg-joint path { stroke: #a9bbb8; stroke-width: 2; }
+.dg-sewage { fill: var(--aqua); fill-opacity: .32; }
+.dg-sewage-top { stroke: var(--eds); stroke-width: 1.4; fill: none; }
+.dg-flow, .dg-main-flow { fill: none; stroke: var(--brand-dark); stroke-width: 1.6; stroke-linecap: round; stroke-dasharray: 2 12; animation: dg-flow 1.4s linear infinite; }
+.dg-fall { fill: none; stroke: var(--eds); stroke-width: 2; stroke-linecap: round; stroke-dasharray: 3 6; animation: dg-flow 1s linear infinite; }
+@keyframes dg-flow { to { stroke-dashoffset: -14; } }
+.dg-crack { fill: none; stroke: #6b7f7c; stroke-width: 1.6; stroke-linejoin: round; }
+.dg-seep path { fill: none; stroke: #2b9bd0; stroke-width: 1.6; stroke-linecap: round; stroke-dasharray: 3 5; animation: dg-flow 1.2s linear infinite; }
+.dg-drips ellipse { fill: #2b9bd0; fill-opacity: 0; animation: dg-drip 1.8s var(--d, 0s) ease-in infinite; }
+@keyframes dg-drip { 0% { translate: 0 0; fill-opacity: 0; } 15% { fill-opacity: 1; } 80% { fill-opacity: 1; } 100% { translate: 0 13px; fill-opacity: 0; } }
+.dg-cable { fill: none; stroke: #3f5654; stroke-width: 1.4; stroke-linejoin: round; }
+.dg-bead { fill: var(--brand-dark); stroke: #fff; stroke-width: 1.2; }
+.dg-bead.hot { fill: #2b9bd0; }
+.dg-box, .dg-cabinet, .dg-sampler { fill: #eef6f4; stroke: var(--brand-dark); stroke-width: 1.6; }
+.dg-cabinet-line { fill: none; stroke: var(--brand-dark); stroke-width: 1.2; }
+.dg-sensor, .dg-probe { fill: var(--brand-dark); }
+.dg-bottle { fill: #fff; stroke: var(--eds); stroke-width: 1.4; }
+.dg-antenna { fill: var(--brand-dark); }
+.dg-ping { fill: none; stroke: var(--eds); stroke-width: 1.4; stroke-opacity: 0; animation: dg-ping 2.6s ease-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes dg-ping { 0% { scale: .4; stroke-opacity: .9; } 100% { scale: 1.6; stroke-opacity: 0; } }
+.dg-link { fill: none; stroke: var(--eds); stroke-width: 1.4; stroke-dasharray: 4 5; animation: dg-flow 1.6s linear infinite reverse; }
+.dg-leader { fill: none; stroke: #8a9c9a; stroke-width: 1; }
+.dg-guide path { fill: none; stroke: #2b9bd0; stroke-width: 1; stroke-dasharray: 2 3; stroke-opacity: .7; }
+.dg-axis, .dg-grid { fill: none; stroke: #d5dfdd; stroke-width: 1.2; }
+.dg-grid { stroke: #eef2f1; stroke-width: 1; }
+.dg-trace { fill: none; stroke: var(--brand-dark); stroke-width: 2; stroke-linejoin: round; }
+/* the wet well: the level rises from stop to start, then the pumps run */
+.dg-level path { fill: none; stroke: var(--brand); stroke-width: 1.2; stroke-dasharray: 5 4; }
+.dg-level.alarm path { stroke: #c27803; }
+.dg-water { animation: dg-cycle 14s ease-in-out infinite; }
+@keyframes dg-cycle { 0% { translate: 0 74px; } 74% { translate: 0 0; } 100% { translate: 0 74px; } }
+.dg-main { fill: none; stroke: #8fa5a2; stroke-width: 6; stroke-linejoin: round; }
+.dg-main-flow { stroke: #fff; stroke-width: 1.8; animation: dg-flow .9s linear infinite, dg-pumping 14s step-end infinite; }
+.dg-pump rect { fill: #c9d5d3; stroke: #6f8481; stroke-width: 1.4; }
+.dg-run { fill: var(--green); fill-opacity: .18; animation: dg-run 14s step-end infinite; }
+@keyframes dg-pumping { 0% { stroke-opacity: 0; } 74% { stroke-opacity: 1; } 100% { stroke-opacity: 0; } }
+@keyframes dg-run { 0% { fill-opacity: .18; } 74% { fill-opacity: 1; } 100% { fill-opacity: .18; } }
+.dg-beam { fill: #f08c2b; fill-opacity: .08; stroke: #f08c2b; stroke-opacity: .35; stroke-width: 1; stroke-dasharray: 3 4; }
+.dg-radar { fill: #f08c2b; stroke: #a6550e; stroke-width: 1.2; }
+.dg-building { fill: #eef3f2; stroke: #9fb3b0; stroke-width: 1.6; stroke-linejoin: round; }
+.dg-window rect { fill: #dfe9e7; }
+.dg-hose { fill: none; stroke: #6f8481; stroke-width: 3; stroke-linecap: round; }
+.dg-hose-flow { fill: none; stroke: #fff; stroke-width: 1.2; stroke-dasharray: 2 9; animation: dg-flow 1.6s linear infinite; }
+.dg-fit { fill: none; stroke: var(--eds); stroke-width: 1.6; stroke-dasharray: 5 4; }
+.dg-pt { fill: var(--brand-dark); fill-opacity: .55; }
+.dg-pt.shift { fill: #c27803; fill-opacity: .85; }
+/* two panels side by side, one above the other on a phone, with a key */
+.dg-panels { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px 20px; }
+.dg-panel-h { display: grid; gap: 2px; margin: 0 0 6px; font-size: .86rem; line-height: 1.35; color: var(--muted); }
+.dg-panel-h b { font-family: "EDS Display", sans-serif; font-weight: 600; font-size: .95rem; color: var(--ink); }
+.dg-legend { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 14px 0 0; padding: 12px 0 0; border-top: 1px solid var(--border); list-style: none; font-size: .8rem; color: var(--muted); }
+.dg-legend li { display: flex; align-items: center; gap: 7px; }
+.dg-legend svg { width: 16px; height: 10px; overflow: visible; }
+.dg-rain rect, .dg-rain-key { fill: var(--water); fill-opacity: .6; }
+.dg-band { fill: var(--water); fill-opacity: .16; }
+.dg-dwf { fill: none; stroke: #7b8f8d; stroke-width: 1.4; stroke-dasharray: 4 3; }
+.dg-meas { fill: none; stroke: var(--brand-dark); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.dg-area { fill: var(--aqua); fill-opacity: .14; }
+.dg-sample { fill: var(--eds); }
+.screen { margin: 0; }
+.screen.tall .fs-frame { aspect-ratio: 1; }
+.screen.tall .fs-frame img { height: 100%; object-fit: cover; object-position: top; -webkit-mask-image: linear-gradient(180deg, #000 72%, transparent); mask-image: linear-gradient(180deg, #000 72%, transparent); }
+.band .screen:not(.tall) { margin-top: clamp(28px, 4vw, 44px); }
 .actionbar { display: none; }
 
 /* ---------- icon choreography ----------
@@ -2825,7 +2912,9 @@ html:has(.secbar) .band[id] { scroll-margin-top: calc(16px - var(--band-pad)); }
 @media (max-width: 980px) {
   .about-more, .split-band, .intro { grid-template-columns: 1fr; }
   .deliv, .deliv.n3, .deliv.n4, .deliv.n6, .deliv.n7, .deliv.n8 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .split-band > .band-head, .intro > .photo, .intro > .aside-figure { position: static; }
+  .split-band > .band-head, .intro > .photo, .intro > .aside-figure, .intro > .diagram, .intro > .screen { position: static; }
+  /* a drawing's labels scale with it, so it stops short of the full width */
+  .intro > .diagram, .intro > .screen.tall { max-width: 620px; }
   .intro { gap: 24px; }
   .feature-grid > *, .feature-grid.n4 > * { grid-column: span 6; }
   .feature-grid.n3 > :last-child, .feature-grid.n5 > :last-child { grid-column: 1 / -1; }

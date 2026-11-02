@@ -8,6 +8,7 @@ import { createHash } from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import * as C from "./src/data/content.mjs";
+import { diagram } from "./diagrams.mjs";
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const DIST = path.join(ROOT, "dist");
@@ -122,6 +123,14 @@ function shot(name, alt, { sizes = "(max-width: 980px) calc(100vw - 40px), 700px
   const [big] = v;
   return `<picture><source type="image/webp" srcset="${set("webp")}" sizes="${sizes}"><img src="@root/assets/img/flowsense/${name}-${big.w}x${big.h}.jpg" srcset="${set("jpg")}" sizes="${sizes}" width="${big.w}" height="${big.h}" alt="${esc(alt)}"${eager ? ' fetchpriority="high"' : ' loading="lazy"'} decoding="async"></picture>`;
 }
+// A FlowSense screen on a service page, captioned like a photograph:
+// { name, alt, caption }. `tall` keeps the top of a long screen (a report)
+// in a portrait frame and fades it out at the foot.
+const screenFigure = (f, { tall = false, sizes } = {}) => `
+<figure class="screen${tall ? " tall" : ""}" data-reveal>
+  <div class="fs-frame">${shot(f.name, f.alt, { sizes })}</div>
+  ${f.caption ? `<figcaption>${esc(f.caption)}</figcaption>` : ""}
+</figure>`;
 // Client marks at one optical weight. Each PNG's own proportions give its
 // height (equal ink area: a square mark taller, a wide wordmark shorter), so
 // a roundel and a wordmark carry the same weight in the grid (--h, site.css).
@@ -1217,13 +1226,18 @@ const glanceOf = (s) => {
 };
 
 // A service or solution page's opening text, across the page: beside its
-// photograph (`figure`) or product shot (`asideFigure`) when it has one,
+// photograph (`figure`), illustration (`diagram`), FlowSense screen
+// (`screen`) or product shot (`asideFigure`) when it has one,
 // otherwise the first paragraph beside the rest. A pair of photographs
 // (`figures`) sits under the text. Enquiries are left to the hero, the
 // section bar and the closing band, so there is no contact card here.
 function overviewHtml(s) {
   const paras = (list) => list.map((p) => `<p>${esc(p)}</p>`).join("");
-  const visual = s.figure ? photoFigure(s.figure, { sizes: "(max-width: 980px) calc(100vw - 40px), 580px" }) : asideFigure(s);
+  const sizes = "(max-width: 980px) calc(100vw - 40px), 580px";
+  const visual = s.figure ? photoFigure(s.figure, { sizes })
+    : s.diagram ? diagram(s.diagram, C.diagrams[s.diagram])
+    : s.screen ? screenFigure(s.screen, { tall: true, sizes })
+    : asideFigure(s);
   const [lead, ...rest] = s.intro;
   const text = visual || !rest.length
     ? `<div class="prose" data-reveal>${paras(s.intro)}</div>`
@@ -1250,6 +1264,8 @@ const bandHead = (b) => `<div class="band-head"><h2 class="h-lg" data-reveal>${e
 const flatItems = (items) => `<ul class="flat-list">${items.map(([t, d], n) => `<li data-reveal style="--i:${n % 4}"><span><b>${esc(t)}</b><span>${esc(d)}</span></span></li>`).join("")}</ul>`;
 const checkList = (list) => `<ul class="checks" data-reveal>${list.map((l) => `<li>${icon("check", false)}<span>${esc(l)}</span></li>`).join("")}</ul>`;
 const blockBody = (b) => (b.items ? flatItems(b.items) : b.list ? checkList(b.list) : "");
+// A block's FlowSense screen (`shot`), across the page under its items.
+const bandShot = (b) => (b.shot ? screenFigure(b.shot, { sizes: "(max-width: 1240px) calc(100vw - 40px), 1200px" }) : "");
 const band = (tone, inner, { id, cls = "" } = {}) => `
 <section class="section band${tone === "alt" ? " alt" : ""}${cls ? ` ${cls}` : ""}"${id ? ` id="${id}"` : ""}><div class="wrap">${inner}</div></section>`;
 
@@ -1267,10 +1283,10 @@ function bandsOf(s, r) {
       </a>`).join("")}</div>` });
     } else if (b.items && !cards) {
       cards = true;
-      out.push({ id, cls: "band-cards", html: `${bandHead(b)}<div class="feature-grid n${b.items.length}">${b.items.map(([t, d], n) => `<div class="feature holder" data-reveal style="--i:${n % 4}"><div><b>${esc(t)}</b><span>${esc(d)}</span></div></div>`).join("")}</div>` });
+      out.push({ id, cls: "band-cards", html: `${bandHead(b)}<div class="feature-grid n${b.items.length}">${b.items.map(([t, d], n) => `<div class="feature holder" data-reveal style="--i:${n % 4}"><div><b>${esc(t)}</b><span>${esc(d)}</span></div></div>`).join("")}</div>${bandShot(b)}` });
     } else if (b.items) {
       // what a program includes: one column per item, across the page
-      out.push({ id, cls: "band-deliv", html: `${bandHead(b)}<ul class="deliv n${b.items.length}">${b.items.map(([t, d], n) => `<li data-reveal style="--i:${n % 5}"><b>${esc(t)}</b><p>${esc(d)}</p></li>`).join("")}</ul>` });
+      out.push({ id, cls: "band-deliv", html: `${bandHead(b)}<ul class="deliv n${b.items.length}">${b.items.map(([t, d], n) => `<li data-reveal style="--i:${n % 5}"><b>${esc(t)}</b><p>${esc(d)}</p></li>`).join("")}</ul>${bandShot(b)}` });
     } else if (b.table) {
       out.push({ id, cls: "band-table", html: `${bandHead(b)}<div data-reveal>${tableHtml(b.table)}</div>` });
     } else if (b.faq) {
