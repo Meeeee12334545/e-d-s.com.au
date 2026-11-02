@@ -572,7 +572,7 @@ const pageHero = (r, { crumbs = [], iconName, eyebrow, title, lede, actions = ""
     ${actions ? `<div class="hero-actions" data-reveal style="--i:2">${actions}</div>` : ""}
     ${after}`;
   return `
-<section class="page-hero${visual ? " has-visual" : ""}${compact ? " compact" : ""}${cls ? ` ${cls}` : ""}">
+<section class="page-hero${visual ? " has-visual" : ""}${visual.includes('class="hero-product"') ? " has-product" : ""}${compact ? " compact" : ""}${cls ? ` ${cls}` : ""}">
   <canvas data-flowfield aria-hidden="true"></canvas>
   <div class="wrap">${visual ? `<div class="hero-copy">${copy}</div>${visual}` : copy}</div>
 </section>`;
@@ -1607,10 +1607,9 @@ ${pageHero(r, { crumbs: [["Products", "products/index.html"], [b.name]], iconNam
   </div>
   <aside class="aside">
     ${b.logo ? `<div class="aside-card logo-card" data-reveal="right" style="display:grid;place-items:center;padding:32px"><img src="${b.logo}" alt="${esc(b.name)} logo" style="max-height:70px;width:auto" loading="lazy"></div>` : ""}
-    <div class="aside-card brand" data-reveal="right"><h2>Request pricing</h2><p>Sales, hire and service from EDS, Australia wide.</p><a class="btn btn-primary" href="${contactHref(r, pricing)}">Start an enquiry ${icon("arrow-right")}</a></div>
     ${docs.length
       ? `<div class="aside-card" data-reveal="right"><h2>Documents</h2><ul class="aside-links docs">${docs.map((d) => `<li><a href="${d.href}" rel="noopener"><span>${esc(d.title)}<small>${esc(d.meta)}</small></span>${icon("download")}</a></li>`).join("")}</ul></div>`
-      : `<div class="aside-card" data-reveal="right"><h2>Datasheets and manuals</h2><p>Ask us for the datasheet, manual or software for any ${esc(b.name)} product.</p><a class="link-arrow" href="${contactHref(r, { product: `${b.name} datasheet or manual` })}">Request a datasheet ${icon("arrow-right")}</a></div>`}
+      : `<div class="aside-card" data-reveal="right"><h2>Datasheets and manuals</h2><p>Ask us for the datasheet, manual or software for any ${esc(b.name)} product.</p><a class="link-arrow" href="${contactHref(r, { topic: "General enquiry", product: `${b.name} datasheet or manual` })}">Request a datasheet ${icon("arrow-right")}</a></div>`}
   </aside>
 </div></section>
 <section class="section alt" id="range"><div class="wrap">
@@ -1629,11 +1628,11 @@ ${ctaSection(r, { title: `Ask us about ${b.name}.`, lede: "Pricing, availability
 add({
   file: "products/lidott-alarm.html",
   title: "LIDoTT Radar Level Alarm by Detectronic | EDS",
-  description: "Self contained radar water level measurement and alarm device. ATEX and IECEx Zone 0 certified, measures up to 8.4 m, battery life up to 7 years.",
+  description: "Self-contained radar water level measurement and alarm device. ATEX and IECEx Zone 0 certified, measures up to 8.4 m, battery life up to 7 years.",
   current: "products",
   scripts: ["widgets.js"],
   body: (r) => `
-${pageHero(r, { crumbs: [["Products", "products/index.html"], ["Detectronic", "products/detectronic.html"], ["LIDoTT Alarm"]], iconName: "bell", eyebrow: "Detectronic", title: "LIDoTT Alarm", lede: C.lidott.lede, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${contactHref(r, { topic: "Product pricing", product: "LIDoTT Alarm (Detectronic)" })}">Request pricing ${icon("arrow-right")}</a>${quoteBtn(quoteItem(products.find((p) => p.href === "products/lidott-alarm.html")), "btn-lg")}<a class="btn btn-ghost btn-lg" href="${C.lidott.datasheet}" rel="noopener">${icon("download")} Datasheet</a>`, visual: heroProduct(C.lidott.image, "LIDoTT Alarm") })}
+${pageHero(r, { crumbs: [["Products", "products/index.html"], ["Detectronic", "products/detectronic.html"], ["LIDoTT Alarm"]], iconName: "bell", eyebrow: "Radar level alarm", title: "LIDoTT Alarm", lede: C.lidott.lede, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${contactHref(r, { topic: "Product pricing", product: "LIDoTT Alarm (Detectronic)" })}">Request pricing ${icon("arrow-right")}</a>${quoteBtn(quoteItem(products.find((p) => p.href === "products/lidott-alarm.html")), "btn-lg")}<a class="btn btn-ghost btn-lg" href="${C.lidott.datasheet}" rel="noopener">${icon("download")} Datasheet</a>`, visual: heroProduct(C.lidott.image, "LIDoTT Alarm") })}
 <section class="section hl-band"><div class="wrap">
   <div class="hl-grid">${C.lidott.highlights.map(([ic, t, d], i) => `<div class="hl holder" data-reveal style="--i:${i % 3}">${icon(ic)}<b>${t}</b><span>${d}</span></div>`).join("")}</div>
 </div></section>
@@ -1650,9 +1649,10 @@ ${pageHero(r, { crumbs: [["Products", "products/index.html"], ["Detectronic", "p
   <aside class="aside">
     <figure class="aside-card aside-figure" data-reveal="right"><img src="${C.lidott.image2}" alt="Drawing of LIDoTT Alarm in section" loading="lazy"><figcaption>LIDoTT Alarm, in section</figcaption></figure>
     <div class="aside-card" data-reveal="right"><h2>Specifications</h2><table class="specs"><tbody>${C.lidott.specs.map(([k, v]) => `<tr><th>${k}</th><td>${v}</td></tr>`).join("")}</tbody></table></div>
+    <div class="aside-card" data-reveal="right"><h2>Documents</h2><ul class="aside-links docs"><li><a href="${C.lidott.datasheet}" rel="noopener"><span>LIDoTT Alarm datasheet<small>${docType(C.lidott.datasheet)}</small></span>${icon("download")}</a></li></ul></div>
   </aside>
 </div></section>
-${ctaSection(r, { title: "Deploy LIDoTT Alarm across your network.", lede: "Simple to install and zero maintenance by design. Ask EDS for pricing and a deployment plan.", topic: "Product pricing", product: "LIDoTT Alarm (Detectronic)" })}`,
+${ctaSection(r, { title: "Deploy LIDoTT Alarm across your network.", lede: "Simple to install and zero maintenance by design. Ask us for pricing and a deployment plan.", topic: "Product pricing", product: "LIDoTT Alarm (Detectronic)" })}`,
 });
 
 add({
@@ -1661,7 +1661,7 @@ add({
   description: "All-in-one radar level monitor with alarms, up to 20 m range with ± 5 mm accuracy. LoRaWAN or 4G connectivity, battery over 5 years.",
   current: "products",
   body: (r) => `
-${pageHero(r, { crumbs: [["Products", "products/index.html"], ["Detectronic", "products/detectronic.html"], ["Alarm2"]], iconName: "bell-ring", eyebrow: "Detectronic", title: "Alarm2", lede: C.alarm2.lede, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${contactHref(r, { topic: "Product pricing", product: "Alarm2 (Detectronic)" })}">Request pricing ${icon("arrow-right")}</a>${quoteBtn(quoteItem(products.find((p) => p.href === "products/alarm2.html")), "btn-lg")}<a class="btn btn-ghost btn-lg" href="${C.alarm2.datasheet}" rel="noopener">${icon("download")} Datasheet</a><a class="btn btn-ghost btn-lg" href="${C.alarm2.manual}" rel="noopener">${icon("download")} Manual</a>`, visual: heroProduct(C.alarm2.image, "Alarm2") })}
+${pageHero(r, { crumbs: [["Products", "products/index.html"], ["Detectronic", "products/detectronic.html"], ["Alarm2"]], iconName: "bell-ring", eyebrow: "Radar level monitor", title: "Alarm2", lede: C.alarm2.lede, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${contactHref(r, { topic: "Product pricing", product: "Alarm2 (Detectronic)" })}">Request pricing ${icon("arrow-right")}</a>${quoteBtn(quoteItem(products.find((p) => p.href === "products/alarm2.html")), "btn-lg")}<a class="btn btn-ghost btn-lg" href="${C.alarm2.datasheet}" rel="noopener">${icon("download")} Datasheet</a>`, visual: heroProduct(C.alarm2.image, "Alarm2") })}
 <section class="section hl-band"><div class="wrap">
   <div class="hl-grid">${C.alarm2.highlights.map(([ic, t, d], i) => `<div class="hl holder" data-reveal style="--i:${i % 3}">${icon(ic)}<b>${t}</b><span>${d}</span></div>`).join("")}</div>
 </div></section>
@@ -1672,9 +1672,10 @@ ${pageHero(r, { crumbs: [["Products", "products/index.html"], ["Detectronic", "p
   </div>
   <aside class="aside">
     <div class="aside-card" data-reveal="right"><h2>Specifications</h2><table class="specs"><tbody>${C.alarm2.specs.map(([k, v]) => `<tr><th>${k}</th><td>${v}</td></tr>`).join("")}</tbody></table></div>
+    <div class="aside-card" data-reveal="right"><h2>Documents</h2><ul class="aside-links docs">${[["Alarm2 datasheet", C.alarm2.datasheet], ["Alarm2 4G manual", C.alarm2.manual]].map(([t, href]) => `<li><a href="${href}" rel="noopener"><span>${t}<small>${docType(href)}</small></span>${icon("download")}</a></li>`).join("")}</ul></div>
   </aside>
 </div></section>
-${ctaSection(r, { title: "Deploy Alarm2 across your network.", lede: "Complete level measurement and alarm device, ready for remote deployment. Ask EDS for pricing and support.", topic: "Product pricing", product: "Alarm2 (Detectronic)" })}`,
+${ctaSection(r, { title: "Deploy Alarm2 across your network.", lede: "Tell us about your sites and how you want to be alerted. We'll come back with pricing and support.", topic: "Product pricing", product: "Alarm2 (Detectronic)" })}`,
 });
 
 /* ---- EDS instruments with a page of their own ---- */
