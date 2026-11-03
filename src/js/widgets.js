@@ -142,7 +142,7 @@
     const pf = { base: $("ef-pf-base"), env: $("ef-pf-env"), arrows: $("ef-pf"), top: $("ef-pf-top"), mean: $("ef-pf-mean") };
     const bv = $("ef-bv"), bd = $("ef-bd"), hExt = $("ef-head-ext"), hDim = $("ef-head-dim"), hText = $("ef-head-t"), hVal = $("ef-head-v");
     const trR = $("ef-tr-r"), trU = $("ef-tr-u");
-    const spec = { box: $("ef-spec-box"), label: $("ef-spec-l"), noise: $("ef-spec-n"), peak: $("ef-spec-p"), span: $("ef-spec-d"), t: $("ef-spec-t") };
+    const spec = { box: $("ef-spec-box"), label: $("ef-spec-l"), noise: $("ef-spec-n"), peak: $("ef-spec-p"), span: $("ef-spec-d") };
     const out = { level: $("ef-level"), d: $("ef-d"), v: $("ef-v"), q: $("ef-q") };
     const rows = Object.fromEntries([...document.querySelectorAll(".ef-sensors li")].map((li) => [li.dataset.s, li]));
     // where the elements sit (the sensor is drawn at the crown from x 310,
@@ -216,16 +216,15 @@
       const mean = profile(py + 1, INV - 1, 46 * v, py <= CROWN);
       vtag.setAttribute("x", n1(mean + 6)); vtag.setAttribute("y", n1(INV - 8));
       vtag.textContent = `v\u0304 ${v.toFixed(2)} m/s`;
-      // the Doppler return: a peak shifted from f0 in proportion to velocity,
+      // the velocity signal: a peak that moves right as the water speeds up,
       // over a noise floor, from whichever pair is measuring
       const px = 16 + v * 150, n = [];
       for (let x = 4; x <= 276; x += 4) n.push(`${x === 4 ? "M" : "L"}${x} ${n1(55 - Math.random() * 2.6)}`);
       let pk = ""; for (let x = px - 24; x <= px + 24; x += 3) pk += `${pk ? "L" : "M"}${n1(x)} ${n1(56 - 40 * Math.exp(-(((x - px) / 8) ** 2)) - Math.random() * 1.2)}`;
       spec.noise.setAttribute("d", n.join(""));
       spec.peak.setAttribute("d", `${pk}Z`);
-      spec.span.setAttribute("d", `M20 22H${n1(px - 4)}m-4-3 4 3-4 3`);
-      spec.t.setAttribute("x", n1((16 + px) / 2)); spec.t.setAttribute("text-anchor", "middle");
-      if (spec.box.dataset.pair !== pair) { spec.box.dataset.pair = pair; spec.label.textContent = pair === "radar" ? "24 GHz radar" : "1 MHz ultrasonic"; }
+      spec.span.setAttribute("d", `M${n1(px)} 6V12`);
+      if (spec.box.dataset.pair !== pair) { spec.box.dataset.pair = pair; spec.label.textContent = pair === "radar" ? "Radar" : "Ultrasonic"; }
       const set = (k, s) => { if (rows[k].dataset.state !== s) { rows[k].dataset.state = s; rows[k].querySelector("em").textContent = { primary: "Primary", check: "Cross-checking", standby: "Standing by" }[s]; } };
       set("vel", pair === "radar" ? "primary" : "standby");
       set("dep", pair === "radar" ? "primary" : "standby");

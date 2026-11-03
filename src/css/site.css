@@ -1823,25 +1823,25 @@ main:has(> .alt:last-child) + .footer { background: var(--bg); }
 .ef-demo { grid-template-columns: minmax(0, 1.55fr) minmax(280px, 1fr); }
 #ef-svg { display: block; width: 100%; height: auto; touch-action: none; cursor: ns-resize; user-select: none; border-radius: 12px; }
 #ef-svg text, #ef-trace text { font: 400 11px var(--font-body); fill: rgba(255, 255, 255, .66); }
-#ef-svg .ef-tag { font: 500 11px var(--font-mono); fill: #9fe7da; paint-order: stroke; stroke: #04201d; stroke-width: 3px; }
+#ef-svg .ef-tag { font: 500 11px var(--font-mono); fill: #9fe7da; paint-order: stroke; stroke: rgba(4, 32, 29, .5); stroke-width: 2.2px; stroke-linejoin: round; }
 #ef-svg .ef-head text { fill: #7dd3fc; font-weight: 500; }
-#ef-svg .ef-road { fill: #1d4c47; }
-#ef-svg .ef-edge { stroke: #2f6b64; }
-#ef-svg .ef-frame { fill: #2e4543; } #ef-svg .ef-lid { fill: #46605d; }
-#ef-svg .ef-step, #ef-svg .ef-strap { stroke: #3f6f69; }
-#ef-svg .ef-logger { fill: #dfeeeb; stroke: #5fb4a6; }
-#ef-svg .ef-cable { stroke: #8fa9a5; stroke-width: 1.4; }
-#ef-svg .ef-body { stroke: #9fc7c0; stroke-width: .9; }
-#ef-svg .ef-surf { stroke: #b4efe4; stroke-width: 1.5; }
-#ef-svg .ef-w0 { stop-color: #7fd1c4; stop-opacity: .9; } #ef-svg .ef-w1 { stop-color: #3fa596; stop-opacity: .85; } #ef-svg .ef-w2 { stop-color: #0d6b62; stop-opacity: .95; }
-#ef-svg .ef-g0.r { stop-color: #f6a04d; stop-opacity: .55; } #ef-svg .ef-g1.r { stop-color: #f6a04d; stop-opacity: .05; }
-#ef-svg .ef-g0.u { stop-color: #38bdf8; stop-opacity: .8; } #ef-svg .ef-g1.u { stop-color: #38bdf8; stop-opacity: .15; }
-#ef-svg .ef-beam.r { stroke: #f6a04d; } #ef-svg .ef-wave.r, #ef-svg .ef-foot.r { stroke: #ffb56b; }
-#ef-svg .ef-beam.u { stroke: #38bdf8; } #ef-svg .ef-wave.u { stroke: #8fdcff; }
-#ef-svg .ef-prof-base, #ef-svg .ef-prof, #ef-svg .ef-prof-env { stroke: #e6fffa; }
-#ef-svg .ef-prof-env { stroke-opacity: .6; }
-#ef-svg .ef-prof-top { stroke: #ffb56b; }
-#ef-svg .ef-prof-mean { stroke: #9fe7da; }
+.ef-dark .ef-road { fill: #1d4c47; }
+.ef-dark .ef-edge { stroke: #2f6b64; }
+.ef-dark .ef-frame { fill: #2e4543; } .ef-dark .ef-lid { fill: #46605d; }
+.ef-dark .ef-step, .ef-dark .ef-strap { stroke: #3f6f69; }
+.ef-dark .ef-logger { fill: #dfeeeb; stroke: #5fb4a6; }
+.ef-dark .ef-cable { stroke: #8fa9a5; stroke-width: 1.4; }
+.ef-dark .ef-body { stroke: #9fc7c0; stroke-width: .9; }
+.ef-dark .ef-surf { stroke: #b4efe4; stroke-width: 1.5; }
+.ef-dark .ef-w0 { stop-color: #7fd1c4; stop-opacity: .9; } .ef-dark .ef-w1 { stop-color: #3fa596; stop-opacity: .85; } .ef-dark .ef-w2 { stop-color: #0d6b62; stop-opacity: .95; }
+.ef-dark .ef-g0.r { stop-color: #f6a04d; stop-opacity: .55; } .ef-dark .ef-g1.r { stop-color: #f6a04d; stop-opacity: .05; }
+.ef-dark .ef-g0.u { stop-color: #38bdf8; stop-opacity: .8; } .ef-dark .ef-g1.u { stop-color: #38bdf8; stop-opacity: .15; }
+.ef-dark .ef-beam.r { stroke: #f6a04d; } .ef-dark .ef-wave.r, .ef-dark .ef-foot.r { stroke: #ffb56b; }
+.ef-dark .ef-beam.u { stroke: #38bdf8; } .ef-dark .ef-wave.u { stroke: #8fdcff; }
+.ef-dark .ef-prof-base, .ef-dark .ef-prof, .ef-dark .ef-prof-env { stroke: #e6fffa; }
+.ef-dark .ef-prof-env { stroke-opacity: .6; }
+.ef-dark .ef-prof-top { stroke: #ffb56b; }
+.ef-dark .ef-prof-mean { stroke: #9fe7da; }
 .ef-gridline { fill: none; stroke: rgba(127, 209, 196, .07); stroke-width: 1; }
 .ef-hud { fill: none; stroke: rgba(127, 209, 196, .55); stroke-width: 1.5; }
 .ef-bits circle { fill: #e6fffa; fill-opacity: .7; animation: dg-pass 7s var(--d, 0s) linear infinite; }
@@ -1852,8 +1852,8 @@ main:has(> .alt:last-child) + .footer { background: var(--bg); }
 #ef-svg[data-pair="us"] .ef-uswrap { opacity: 1; }
 .ef-head { opacity: 0; }
 #ef-svg[data-pair="us"] .ef-head { opacity: 1; }
-#ef-svg .ef-ext { stroke: #38bdf8; stroke-opacity: .6; }
-#ef-svg .ef-dim { stroke: #7dd3fc; }
+.ef-dark .ef-ext { stroke: #38bdf8; stroke-opacity: .6; }
+.ef-dark .ef-dim { stroke: #7dd3fc; }
 .ef-trace { margin-top: 10px; padding: 10px 12px 6px; border-radius: 14px; background: rgba(var(--abyss-rgb), .45); border: 1px solid var(--line-dark); }
 .ef-trace-h { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 14px; font-size: .78rem; color: var(--on-dark-faint); }
 .ef-trace-h b { color: #fff; font-weight: 600; }
@@ -1887,13 +1887,11 @@ main:has(> .alt:last-child) + .footer { background: var(--bg); }
 #ef-spec { display: block; width: 100%; height: auto; margin-top: 4px; }
 #ef-spec text { font: 500 11px var(--font-mono); fill: rgba(255, 255, 255, .62); }
 .ef-spec-axis { fill: none; stroke: rgba(255, 255, 255, .25); }
-.ef-spec-f0 { fill: none; stroke: rgba(255, 255, 255, .4); stroke-dasharray: 3 3; }
 .ef-spec-n { fill: none; stroke: rgba(255, 255, 255, .35); stroke-width: 1; }
 .ef-spec-p { stroke-width: 1.6; stroke-linejoin: round; transition: fill .4s var(--ease), stroke .4s var(--ease); }
 .ef-spec[data-pair="radar"] .ef-spec-p { fill: rgba(246, 160, 77, .25); stroke: #f6a04d; }
 .ef-spec[data-pair="us"] .ef-spec-p { fill: rgba(56, 189, 248, .25); stroke: #38bdf8; }
 .ef-spec-d { fill: none; stroke: rgba(255, 255, 255, .55); stroke-width: 1; stroke-linecap: round; stroke-linejoin: round; }
-#ef-spec-l { font-family: var(--font-mono); font-size: .72rem; }
 #ef-svg .ef-tag.r { fill: #ffc58a; } #ef-svg .ef-tag.u { fill: #b8e8ff; }
 .ef-readouts { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 14px; }
 .ef-readouts .readout b { font-family: var(--font-mono); font-size: 1.22rem; font-weight: 500; letter-spacing: -.02em; }
@@ -2631,41 +2629,50 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: 6
 .ef-key.u { fill: #2b9bd0; stroke: #1d78a8; }
 .ef-key.p { stroke: #0b5f57; }
 .ef-key.m { stroke: var(--brand); stroke-width: 1.8; stroke-dasharray: 3 2; }
-/* specification tags and the drawn physics: set like instrument labels */
-.diagram .dg-tag { font: 500 10.5px var(--font-mono); letter-spacing: -.01em; fill: var(--ink-2); paint-order: stroke; stroke: rgba(255, 255, 255, .9); stroke-width: 3px; stroke-linejoin: round; }
-.diagram .dg-tag.r { fill: #a85409; }
-.diagram .dg-tag.u { fill: #16668f; }
-.diagram .dg-tag.t { fill: var(--brand-dark); }
-.diagram .dg-tag.w { fill: #fff; stroke: rgba(9, 76, 70, .6); }
-.diagram .dg-tag.r.w { fill: #ffe2c2; }
-.diagram .dg-tag.s { font-size: 9.5px; fill: var(--muted); }
-.diagram .dg-tag.w.s { fill: #fff; }
-.diagram .dg-tag.i { font: italic 600 14px Georgia, "Times New Roman", serif; }
-.diagram .dg-eqn { font: italic 500 13.5px Georgia, "Times New Roman", serif; fill: var(--brand-dark); }
-.diagram .dg-eqn.s { font-size: 11.5px; fill: var(--ink-2); }
-.diagram .dg-eqn.r { fill: #a85409; }
-.diagram .dg-eqn.w { fill: #fff; font-size: 15px; font-weight: 600; }
-@container (max-width: 440px) { .diagram .dg-tag { font-size: 13px; } .diagram .dg-tag.s { font-size: 12px; } .diagram .dg-eqn { font-size: 16px; } }
-.ef-arc { fill: none; stroke: #a85409; stroke-width: 1; stroke-dasharray: 2 2; }
-.ef-aperture { stroke: #f08c2b; stroke-width: 2.4; stroke-linecap: round; }
-.ef-tx { fill: none; stroke: #e07b1a; stroke-width: 1.5; stroke-linejoin: round; }
-.ef-rx { fill: none; stroke: var(--brand); stroke-width: 1.5; stroke-linejoin: round; }
-.dg-inset { fill: #f7faf9; stroke: var(--border); }
-.dg-noise { fill: none; stroke: #b6c4c2; stroke-width: .9; }
-.dg-f0 { fill: none; stroke: #8a9c9a; stroke-width: 1.2; stroke-dasharray: 3 2; }
-.dg-peak { fill: #f08c2b; fill-opacity: .22; stroke: #e07b1a; stroke-width: 1.6; }
-.dg-span { fill: none; stroke: var(--ink-2); stroke-width: 1.1; stroke-linecap: round; stroke-linejoin: round; }
-.dg-drop { fill: none; stroke: #c9d3d1; stroke-width: 1; stroke-dasharray: 2 3; }
-.ef-chirp { fill: none; stroke-width: 2.2; stroke-linecap: round; }
-.ef-chirp.tx { stroke: #e07b1a; }
-.ef-chirp.rx { stroke: var(--brand); stroke-dasharray: 5 3; }
-.dg-sv { fill: none; stroke: #2f887d; stroke-opacity: .55; stroke-width: 1.2; stroke-linecap: round; stroke-linejoin: round; }
-.dg-sv.r { stroke: #c76a12; stroke-opacity: 1; stroke-width: 1.5; }
-.ef-fp { fill: #f08c2b; fill-opacity: .14; stroke: #e07b1a; stroke-width: 1.2; stroke-dasharray: 4 3; }
-.ef-aim { fill: none; stroke: #e07b1a; stroke-width: 1; stroke-dasharray: 2 3; }
-.ef-sub { margin: clamp(36px, 4.5vw, 56px) 0 16px; font-size: 1.15rem; }
-.dg-eflowPrinciples .dg-panels { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px 26px; }
-@media (max-width: 980px) { .dg-eflowPrinciples .dg-panels { grid-template-columns: minmax(0, 1fr); } .dg-eflowPrinciples .dg-panel svg { max-width: 460px; } }
+/* E-Flow 3 figures as instrument screens: the kit's dark variant on a deep
+   teal plate with a faint grid, frame marks and glowing beams, one family
+   with the changeover demo, while the bands around them stay light. */
+.dg-screen .dg-plate { position: relative; border-color: rgba(127, 209, 196, .2); color: var(--on-dark-soft); box-shadow: 0 26px 60px -20px rgba(4, 33, 31, .6), inset 0 1px 0 rgba(255, 255, 255, .06);
+  background: linear-gradient(rgba(127, 209, 196, .05) 1px, transparent 1px) 0 0 / 22px 22px, linear-gradient(90deg, rgba(127, 209, 196, .05) 1px, transparent 1px) 0 0 / 22px 22px, radial-gradient(120% 90% at 82% 0%, #105049 0%, #08312e 55%, #052523 100%); }
+.dg-screen .dg-plate::before { content: ""; position: absolute; inset: 8px; pointer-events: none; --c: rgba(127, 209, 196, .6);
+  background: linear-gradient(var(--c), var(--c)) top left / 16px 1.5px no-repeat, linear-gradient(var(--c), var(--c)) top left / 1.5px 16px no-repeat, linear-gradient(var(--c), var(--c)) top right / 16px 1.5px no-repeat, linear-gradient(var(--c), var(--c)) top right / 1.5px 16px no-repeat, linear-gradient(var(--c), var(--c)) bottom left / 16px 1.5px no-repeat, linear-gradient(var(--c), var(--c)) bottom left / 1.5px 16px no-repeat, linear-gradient(var(--c), var(--c)) bottom right / 16px 1.5px no-repeat, linear-gradient(var(--c), var(--c)) bottom right / 1.5px 16px no-repeat; }
+.dg-screen svg { box-shadow: 0 0 0 1px rgba(127, 209, 196, .14); }
+.dg-screen .dg-panel-h b { color: #fff; }
+.dg-screen .dg-panel-h span, .dg-screen .dg-legend { color: var(--on-dark-faint); }
+.dg-screen .dg-legend { border-top-color: var(--line-dark); }
+.dg-screen .dg-facts { color: var(--on-dark-soft); }
+.diagram.dg-screen text { fill: rgba(255, 255, 255, .8); }
+.diagram.dg-screen .dg-b { fill: #fff; }
+.diagram.dg-screen .dg-m { fill: rgba(255, 255, 255, .62); }
+.diagram.dg-screen .dg-h { stroke: rgba(4, 33, 31, .85); }
+.dg-screen .dg-leader { stroke: rgba(255, 255, 255, .42); }
+.dg-screen .dg-arrow { stroke: #e6fffa; }
+.dg-screen .ef-dim.d { stroke: #9fe7da; }
+.dg-screen .dg-ping-u path { stroke: #7dd3fc; }
+.ef-dark .ef-beam, .ef-dark .ef-foot { filter: drop-shadow(0 0 5px rgba(246, 160, 77, .45)); }
+.ef-dark .ef-beam.u { filter: drop-shadow(0 0 5px rgba(56, 189, 248, .55)); }
+.ef-dark .ef-surf { filter: drop-shadow(0 0 3px rgba(159, 231, 218, .8)); }
+.dg-screen .ef-key.p { stroke: #e6fffa; } .dg-screen .ef-key.m { stroke: #9fe7da; }
+.dg-screen .dg-sum > div { background: rgba(255, 255, 255, .05); box-shadow: inset 0 0 0 1px var(--line-dark); }
+.dg-screen .dg-sum i { color: var(--aqua-text); }
+.dg-screen .dg-sum b { color: #fff; }
+.dg-screen .dg-sum span, .dg-screen .dg-op { color: var(--on-dark-faint); }
+.dg-screen .dg-sum > div:last-child { background: linear-gradient(135deg, #12998c, #0b5f57); box-shadow: 0 0 30px -6px rgba(95, 180, 166, .55); }
+.dg-screen .dg-sum > div:last-child i { color: #fff; }
+.dg-screen .dg-row { border-top-color: var(--line-dark); }
+.dg-screen .dg-row-h b { color: #fff; }
+.dg-screen .dg-row-h span { color: var(--on-dark-faint); }
+.dg-screen .dg-row.eflow { background: rgba(127, 209, 196, .08); box-shadow: inset 0 0 0 1px rgba(127, 209, 196, .22); }
+.dg-screen .dg-row.eflow .dg-row-h span { color: var(--aqua-text); }
+.dg-screen .dg-axis { stroke: rgba(255, 255, 255, .16); }
+.dg-screen .dg-truth { stroke: rgba(255, 255, 255, .45); }
+.dg-screen .dg-sband { fill: #38bdf8; fill-opacity: .12; }
+.dg-screen .dg-rec.r { stroke: #f6a04d; filter: drop-shadow(0 0 4px rgba(246, 160, 77, .55)); }
+.dg-screen .dg-rec.u { stroke: #38bdf8; filter: drop-shadow(0 0 4px rgba(56, 189, 248, .6)); }
+.dg-screen .dg-rec.w { stroke: #b9a98f; }
+.dg-screen .dg-gap { fill: rgba(4, 33, 31, .55); stroke: #f87171; }
+.diagram.dg-screen .dg-gap-t { fill: #fca5a5; }
+.dg-screen .dg-isovel ellipse { stroke: rgba(255, 255, 255, .22); }
 .dg-pin circle { stroke: #fff; stroke-width: 1.5; }
 .dg-pin.radar circle { fill: #c76a12; }
 .dg-pin.us circle { fill: #1d78a8; }

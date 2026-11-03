@@ -1712,9 +1712,8 @@ const anatomyFigure = (a, src) => `
   <div class="anat-key">${a.pairs.map(([pair, label, items]) => `<div class="anat-pair ${pair}"><p>${esc(label)}</p><ol>${items.map(([n, t, d]) => `<li><span class="anat-n" aria-hidden="true">${n}</span><span><b>${esc(t)}</b><small>${esc(d)}</small></span></li>`).join("")}</ol></div>`).join("")}</div>
   <figcaption>${esc(a.caption)}</figcaption>
 </figure>`;
-// An illustration across the page under its heading (`modes`), and an
-// optional second one under a subheading (`heading2`, `diagram2`).
-const diagramBand = (b) => `${bandHead(b)}${diagram(b.diagram, C.diagrams[b.diagram])}${b.diagram2 ? `<h3 class="ef-sub" data-reveal>${esc(b.heading2)}</h3>${diagram(b.diagram2, C.diagrams[b.diagram2])}` : ""}`;
+// An illustration across the page under its heading (`modes`).
+const diagramBand = (b) => `${bandHead(b)}${diagram(b.diagram, C.diagrams[b.diagram])}`;
 // Why it beats the alternatives (`why`): the storm drawn three ways, then
 // what each kind of meter can and cannot do.
 const MARK = { yes: ["check", "Yes"], no: ["x", "No"] };
@@ -1755,8 +1754,8 @@ function eflowDemo() {
     <rect width="${DEMO.w}" height="${DEMO.h}" fill="url(#${p}-grid)"/>
     <g clip-path="url(#ef-clip)" class="ef-bits">${[[30, 282, 0], [120, 290, -2], [210, 250, -4.5], [70, 236, -6], [160, 214, -1], [250, 288, -3.4], [20, 204, -5.2], [90, 262, -3]].map(([x, y, d]) => `<circle cx="${x}" cy="${y}" r="2" style="--d:${d}s"/>`).join("")}</g>
     <g class="ef-prof-g"><path id="ef-pf-base" class="ef-prof-base"/><path id="ef-pf-env" class="ef-prof-env"/><path id="ef-pf" class="ef-prof"/><path id="ef-pf-top" class="ef-prof-top"/><path id="ef-pf-mean" class="ef-prof-mean"/><text id="ef-vtag" class="ef-tag" x="0" y="0"></text></g>
-    <g class="ef-radar"><path id="ef-bv" class="ef-beam r" fill="url(#${p}-bv)"/><path id="ef-bd" class="ef-beam r" fill="url(#${p}-bd)"/><g class="ef-waves" id="ef-wv">${'<path class="ef-wave r"/>'.repeat(4)}</g><g class="ef-waves" id="ef-wd">${'<path class="ef-wave r"/>'.repeat(3)}</g><path id="ef-foot" class="ef-foot r"/><text class="ef-tag r" x="12" y="196">24 + 120 GHz radar</text></g>
-    <g class="ef-uswrap">${bu.draw}${bu2.draw}<text class="ef-tag u" x="12" y="196">2 × 1 MHz ultrasonic</text></g>
+    <g class="ef-radar"><path id="ef-bv" class="ef-beam r" fill="url(#${p}-bv)"/><path id="ef-bd" class="ef-beam r" fill="url(#${p}-bd)"/><g class="ef-waves" id="ef-wv">${'<path class="ef-wave r"/>'.repeat(4)}</g><g class="ef-waves" id="ef-wd">${'<path class="ef-wave r"/>'.repeat(3)}</g><path id="ef-foot" class="ef-foot r"/><text class="ef-tag r" x="12" y="196">Radar measuring</text></g>
+    <g class="ef-uswrap">${bu.draw}${bu2.draw}<text class="ef-tag u" x="12" y="196">Ultrasonic measuring</text></g>
     ${ef.draw}
     <g id="ef-head" class="ef-head"><path id="ef-head-ext" class="ef-ext"/><path id="ef-head-dim" class="ef-dim"/><text id="ef-head-t" x="484" y="120"><tspan id="ef-head-v">0.00 m</tspan><tspan x="484" dy="1.2em">head</tspan></text></g>
     <g class="ef-txt"><text x="12" y="26">Ground</text><text x="472" y="72">Logger</text><text class="fine" x="12" y="166">Upstream</text><text x="300" y="166" text-anchor="end">E-Flow 3 at the obvert</text></g>
@@ -1765,7 +1764,7 @@ function eflowDemo() {
 <div class="demo ef-demo" data-reveal>
   <div class="panel">
     <div class="panel-head"><div class="panel-title">${icon("waves", false)} Drag the water level</div><button class="btn btn-ghost btn-sm" type="button" id="ef-play">${icon("cloud-rain", false)} Play a storm</button></div>
-    <svg id="ef-svg" viewBox="0 0 ${DEMO.w} ${DEMO.h}" data-pair="radar" role="img" aria-label="A sewer pipe and manhole in section, with E-Flow 3 at the top of the pipe and a logger near the top of the manhole. Arrows in the water show the velocity through the depth. The water level can be raised from low flow to a full surcharge up the manhole."><defs>${defs}</defs>${efSection(p, water, inner, DEMO)}</svg>
+    <svg id="ef-svg" class="ef-dark" viewBox="0 0 ${DEMO.w} ${DEMO.h}" data-pair="radar" role="img" aria-label="A sewer pipe and manhole in section, with E-Flow 3 at the top of the pipe and a logger near the top of the manhole. Arrows in the water show the velocity through the depth. The water level can be raised from low flow to a full surcharge up the manhole."><defs>${defs}</defs>${efSection(p, water, inner, DEMO)}</svg>
     <div class="ef-trace">
       <p class="ef-trace-h"><b>The record</b><span><i class="r"></i>Radar <i class="u"></i>Ultrasonic and pressure</span></p>
       <svg id="ef-trace" viewBox="0 0 560 84" aria-hidden="true"><path class="ef-obv" d="M0 40H560"/><text x="556" y="35" text-anchor="end">Pipe obvert</text><path id="ef-tr-r" class="ef-tr r"/><path id="ef-tr-u" class="ef-tr u"/></svg>
@@ -1778,8 +1777,8 @@ function eflowDemo() {
     <p class="sr-only" id="ef-live" aria-live="polite"></p>
     <ol class="ef-sensors">${[["vel", 1, "r", "Velocity radar", "24 GHz"], ["dep", 2, "r", "Depth radar", "120 GHz"], ["us", 3, "u", "Doppler ultrasonic", "Dual 1 MHz"], ["pr", 4, "u", "Pressure", "316 stainless"]].map(([k, n, pair, t, d]) => `<li data-s="${k}" data-pair="${pair}" data-state="standby"><span class="ef-n ${pair}" aria-hidden="true">${n}</span><span>${t}<small>${d}</small></span><em>Standing by</em></li>`).join("")}</ol>
     <div class="ef-spec" id="ef-spec-box" data-pair="radar">
-      <p class="ef-trace-h"><b>Doppler return</b><span id="ef-spec-l">24 GHz radar</span></p>
-      <svg id="ef-spec" viewBox="0 0 280 64" aria-hidden="true"><path class="ef-spec-axis" d="M4 56H276"/><path class="ef-spec-f0" d="M16 8V56"/><text x="20" y="14">f₀</text><path id="ef-spec-n" class="ef-spec-n"/><path id="ef-spec-p" class="ef-spec-p"/><path id="ef-spec-d" class="ef-spec-d"/><text id="ef-spec-t" x="0" y="14">Δf</text></svg>
+      <p class="ef-trace-h"><b>Velocity signal</b><span id="ef-spec-l">Radar</span></p>
+      <svg id="ef-spec" viewBox="0 0 280 64" aria-hidden="true"><path class="ef-spec-axis" d="M4 56H276"/><path id="ef-spec-n" class="ef-spec-n"/><path id="ef-spec-p" class="ef-spec-p"/><path id="ef-spec-d" class="ef-spec-d"/></svg>
     </div>
     <div class="readouts ef-readouts">
       <div class="readout"><b><span id="ef-d">0.200</span><small>m</small></b><span>Depth</span></div>
