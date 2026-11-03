@@ -1712,8 +1712,9 @@ const anatomyFigure = (a, src) => `
   <div class="anat-key">${a.pairs.map(([pair, label, items]) => `<div class="anat-pair ${pair}"><p>${esc(label)}</p><ol>${items.map(([n, t, d]) => `<li><span class="anat-n" aria-hidden="true">${n}</span><span><b>${esc(t)}</b><small>${esc(d)}</small></span></li>`).join("")}</ol></div>`).join("")}</div>
   <figcaption>${esc(a.caption)}</figcaption>
 </figure>`;
-// An illustration across the page under its heading (`modes`).
-const diagramBand = (b) => `${bandHead(b)}${diagram(b.diagram, C.diagrams[b.diagram])}`;
+// An illustration across the page under its heading (`modes`), and an
+// optional second one under a subheading (`heading2`, `diagram2`).
+const diagramBand = (b) => `${bandHead(b)}${diagram(b.diagram, C.diagrams[b.diagram])}${b.diagram2 ? `<h3 class="ef-sub" data-reveal>${esc(b.heading2)}</h3>${diagram(b.diagram2, C.diagrams[b.diagram2])}` : ""}`;
 // Why it beats the alternatives (`why`): the storm drawn three ways, then
 // what each kind of meter can and cannot do.
 const MARK = { yes: ["check", "Yes"], no: ["x", "No"] };
@@ -1741,9 +1742,10 @@ const DEMO = { w: 560, h: 312, ground: 40, crown: 176, inv: 296, wall: 10, shaft
 function eflowDemo() {
   const p = "efd";
   const ef = efSensor(p, 310, DEMO.crown, 1, { cable: "C404 185 412.5 182 412.5 168V74" });
-  const bu = efBeam(p, "bu", ef.us, 3.4, { len: 104, kind: "u", waves: 5 });
+  const [ux, uy, udx, udy] = ef.us;
+  const bu = efBeam(p, "bu", [ux - 0.8, uy - 2, udx, udy], 2.5, { len: 106, kind: "u", waves: 5 }), bu2 = efBeam(p, "bu2", [ux + 0.7, uy + 2.4, udx, udy], 2.5, { len: 98, kind: "u", waves: 5 });
   const rad = (id, [x, y], r) => `<radialGradient id="${p}-${id}" gradientUnits="userSpaceOnUse" cx="${x}" cy="${y}" r="${r}"><stop offset="0" class="ef-g0 r"/><stop offset="1" class="ef-g1 r"/></radialGradient>`;
-  const defs = `${efDefs(p, { dark: true })}${rad("bv", ef.vel, 112)}${rad("bd", ef.depth, 90)}${bu.defs}
+  const defs = `${efDefs(p, { dark: true })}${rad("bv", ef.vel, 112)}${rad("bd", ef.depth, 90)}${bu.defs}${bu2.defs}
     <linearGradient id="${p}-wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="ef-w0"/><stop offset=".18" class="ef-w1"/><stop offset="1" class="ef-w2"/></linearGradient>
     <pattern id="${p}-grid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0H0V20" class="ef-gridline"/></pattern>
     <clipPath id="ef-clip"><path id="ef-clip-r" d="M0 266H560V296H0Z"/></clipPath>`;
@@ -1753,8 +1755,8 @@ function eflowDemo() {
     <rect width="${DEMO.w}" height="${DEMO.h}" fill="url(#${p}-grid)"/>
     <g clip-path="url(#ef-clip)" class="ef-bits">${[[30, 282, 0], [120, 290, -2], [210, 250, -4.5], [70, 236, -6], [160, 214, -1], [250, 288, -3.4], [20, 204, -5.2], [90, 262, -3]].map(([x, y, d]) => `<circle cx="${x}" cy="${y}" r="2" style="--d:${d}s"/>`).join("")}</g>
     <g class="ef-prof-g"><path id="ef-pf-base" class="ef-prof-base"/><path id="ef-pf-env" class="ef-prof-env"/><path id="ef-pf" class="ef-prof"/><path id="ef-pf-top" class="ef-prof-top"/><path id="ef-pf-mean" class="ef-prof-mean"/><text id="ef-vtag" class="ef-tag" x="0" y="0"></text></g>
-    <g class="ef-radar"><path id="ef-bv" class="ef-beam r" fill="url(#${p}-bv)"/><path id="ef-bd" class="ef-beam r" fill="url(#${p}-bd)"/><g class="ef-waves" id="ef-wv">${'<path class="ef-wave r"/>'.repeat(4)}</g><g class="ef-waves" id="ef-wd">${'<path class="ef-wave r"/>'.repeat(3)}</g><path id="ef-foot" class="ef-foot r"/></g>
-    <g class="ef-uswrap">${bu.draw}</g>
+    <g class="ef-radar"><path id="ef-bv" class="ef-beam r" fill="url(#${p}-bv)"/><path id="ef-bd" class="ef-beam r" fill="url(#${p}-bd)"/><g class="ef-waves" id="ef-wv">${'<path class="ef-wave r"/>'.repeat(4)}</g><g class="ef-waves" id="ef-wd">${'<path class="ef-wave r"/>'.repeat(3)}</g><path id="ef-foot" class="ef-foot r"/><text class="ef-tag r" x="12" y="196">24 + 120 GHz radar</text></g>
+    <g class="ef-uswrap">${bu.draw}${bu2.draw}<text class="ef-tag u" x="12" y="196">2 × 1 MHz ultrasonic</text></g>
     ${ef.draw}
     <g id="ef-head" class="ef-head"><path id="ef-head-ext" class="ef-ext"/><path id="ef-head-dim" class="ef-dim"/><text id="ef-head-t" x="484" y="120"><tspan id="ef-head-v">0.00 m</tspan><tspan x="484" dy="1.2em">head</tspan></text></g>
     <g class="ef-txt"><text x="12" y="26">Ground</text><text x="472" y="72">Logger</text><text class="fine" x="12" y="166">Upstream</text><text x="300" y="166" text-anchor="end">E-Flow 3 at the obvert</text></g>
@@ -1775,6 +1777,10 @@ function eflowDemo() {
     <div class="state ef-state" id="ef-state" data-pair="radar"><i></i><div><b>Dual radar, non-contact</b><small>Free surface below the sensor.</small></div></div>
     <p class="sr-only" id="ef-live" aria-live="polite"></p>
     <ol class="ef-sensors">${[["vel", 1, "r", "Velocity radar", "24 GHz"], ["dep", 2, "r", "Depth radar", "120 GHz"], ["us", 3, "u", "Doppler ultrasonic", "Dual 1 MHz"], ["pr", 4, "u", "Pressure", "316 stainless"]].map(([k, n, pair, t, d]) => `<li data-s="${k}" data-pair="${pair}" data-state="standby"><span class="ef-n ${pair}" aria-hidden="true">${n}</span><span>${t}<small>${d}</small></span><em>Standing by</em></li>`).join("")}</ol>
+    <div class="ef-spec" id="ef-spec-box" data-pair="radar">
+      <p class="ef-trace-h"><b>Doppler return</b><span id="ef-spec-l">24 GHz radar</span></p>
+      <svg id="ef-spec" viewBox="0 0 280 64" aria-hidden="true"><path class="ef-spec-axis" d="M4 56H276"/><path class="ef-spec-f0" d="M16 8V56"/><text x="20" y="14">f₀</text><path id="ef-spec-n" class="ef-spec-n"/><path id="ef-spec-p" class="ef-spec-p"/><path id="ef-spec-d" class="ef-spec-d"/><text id="ef-spec-t" x="0" y="14">Δf</text></svg>
+    </div>
     <div class="readouts ef-readouts">
       <div class="readout"><b><span id="ef-d">0.200</span><small>m</small></b><span>Depth</span></div>
       <div class="readout"><b><span id="ef-v">0.80</span><small>m/s</small></b><span>Velocity</span></div>

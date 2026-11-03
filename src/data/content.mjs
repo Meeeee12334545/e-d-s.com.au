@@ -2003,7 +2003,7 @@ export const diagrams = {
       ["Surcharge: Doppler ultrasonic and pressure", "Measuring through the full water column", [[3, "us", "Dual 1 MHz Doppler ultrasonic reads velocity from particles carried in the flow"], [4, "us", "Sealed 316 stainless pressure transducer reads depth, to 10 m of surcharge"]]],
     ],
     legend: [["radar", "Radar beam"], ["us", "Ultrasonic beam"], ["profile", "Velocity through the depth"], ["mean", "Mean velocity"]],
-    labels: { surface: "Surface velocity", profile: "Velocity profile", mean: "Mean", flow: "Flow", above: "Free surface present", full: "Pipe full, water up the manhole", head: ["Pressure", "head"], standby: ["No free surface:", "radar stands by"] },
+    labels: { surface: "Surface velocity", profile: "Velocity profile", mean: "Mean", flow: "Flow", above: "Free surface present", full: "Pipe full, water up the manhole", head: ["Pressure", "head"], standby: ["No free surface:", "radar stands by"], vtag: ["24 GHz CW Doppler", "24° × 12° beam"], dtag: ["120 GHz FMCW", "14° × 10° beam"], utag: ["2 × 1 MHz Doppler", "5° beams"], ptag: ["316 SS", "0 to 10 m"] },
   },
   eflowObvert: {
     alt: "Illustration of two sewer pipes in section. In the first, a conventional flow sensor sits on the invert, and rag, grease and silt carried by the flow have built up around it. In the second, E-Flow 3 sits at the obvert above the water, reading the surface by radar, while the same solids pass beneath it.",
@@ -2024,7 +2024,21 @@ export const diagrams = {
     ],
     sum: [["v̄", "Mean velocity", "Radar 2 % of reading, ultrasonic 1 %"], ["A", "Wetted area", "From depth, 0.2 % of full scale ± 1 mm"], ["Q", "Flow", "Computed in the sensor"]],
     legend: [["radar", "Radar beam"], ["profile", "Velocity through the depth"], ["mean", "Mean velocity"]],
-    labels: { surface: ["Surface velocity, read across", "the 24 GHz radar footprint"], mean: ["Corrected through the depth", "to mean velocity"], depth: ["Depth by", "120 GHz radar"], flow: "Flow", area: "Wetted area A", key: "Lighter is faster" },
+    labels: { surface: ["Surface velocity, read across", "the 24 GHz radar footprint"], mean: ["Corrected through the depth", "to mean velocity"], depth: ["Depth by", "120 GHz radar"], flow: "Flow", area: "Wetted area A", key: "v / v max", angle: "24° × 12°", vs: "v surface", vmax: "v max", vmean: "v̄", iso: ["0.4", "0.6", "0.75", "0.9", "0.97"] },
+  },
+  eflowPrinciples: {
+    alt: "Three technical illustrations. First, the Doppler principle: E-Flow 3's 24 GHz radar sends a wave at the moving water surface and the wave that returns is shifted in frequency, shown as a peak on a spectrum offset from the transmitted frequency by the Doppler shift, which rises with velocity. Second, the 120 GHz FMCW principle: the radar sweeps its frequency, and the echo from the surface returns delayed, so the gap between sent and received sweeps, the beat frequency, gives the distance to the surface. Third, a plan view of the pipe: the velocity radar's 24 by 12 degree footprint sits upstream on the approaching surface, over arrows showing surface velocity across the width, and the depth radar's 14 by 10 degree footprint is directly beneath the sensor.",
+    caption: "Illustration: the physics behind each radar reading. Not to scale.",
+    panels: [
+      ["Velocity: the Doppler shift", "The moving surface returns the radar at a shifted frequency", [[0, "radar", "The shift rises in proportion to surface velocity, which E-Flow 3 corrects to mean velocity through the depth."]]],
+      ["Depth: a 120 GHz FMCW sweep", "The echo from the surface returns a little later", [[0, "radar", "The beat between the sent and returned sweeps gives the distance to the surface, so depth with 1 mm resolution."]]],
+      ["What the radar sees", "Both footprints on the water, from above", [[0, "radar", "The velocity footprint sits upstream on the approaching surface; the depth footprint is straight below the sensor."]]],
+    ],
+    labels: {
+      doppler: { radar: "24 GHz CW", tx: "sent", rx: "returned", eqn: "Δf = 2 f_0 v cos θ / c", spectrum: "Doppler spectrum" },
+      fmcw: { time: "time", tx: "sent sweep", rx: "echo", eqn1: "R = c · f_b / 2S", eqn2: "depth = mount height − R" },
+      foot: { vfoot: "Velocity footprint 24° × 12°", dfoot: "Depth 14° × 10°", up: "Upstream", flow: "Flow" },
+    },
   },
   eflowCompare: {
     alt: "Illustration of one storm recorded by three kinds of flowmeter. Each row shows the flow that actually passed as a dashed line, with the time the pipe ran full shaded. A non-contact radar alone records the flow until the pipe surcharges, then has a gap until the surface returns. A wetted sensor on the invert records through the surcharge, but its reading drifts low as rag and grease build up. E-Flow 3 records the whole storm, by radar before and after the surcharge and by ultrasonic and pressure through it, with no gap.",
@@ -2179,9 +2193,11 @@ export const productPages = [
     },
     modes: {
       nav: "How it measures",
-      heading: "Two ways to measure, one continuous record.",
-      lede: "Each pair does the job it's best at. Radar reads the flow from above whenever there's a free surface. When the pipe runs full, Doppler ultrasonic and pressure measure through the water instead.",
+      heading: "Above the surface by radar. Below it by ultrasonic and pressure.",
+      lede: "Each pair does the job it's best at. Radar reads the flow from above whenever there's a free surface. When the pipe runs full, Doppler ultrasonic and pressure measure through the water column instead, so E-Flow 3 keeps one continuous record.",
       diagram: "eflowModes",
+      heading2: "The physics behind each radar reading",
+      diagram2: "eflowPrinciples",
     },
     demo: {
       nav: "Changeover",

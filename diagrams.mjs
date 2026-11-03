@@ -248,14 +248,18 @@ export function efBeam(p, id, el, half, { toY, len, kind = "r", waves = 4 } = {}
 // Velocity through the depth at one station: arrows sized by a power law
 // from the bed (a free surface) or from both walls (the pipe full), the
 // curve through their tips and the mean as a dashed line.
-export function efProfile(x0, top, bottom, len, { full = false, step = 7, surface = false } = {}) {
-  const v = (y) => (full ? Math.pow(Math.max(0, 1 - Math.abs((2 * y - top - bottom) / (bottom - top))), 1 / 7) : Math.pow(Math.max(0, (bottom - y) / (bottom - top)), 1 / 6));
+// `dip` puts the fastest water a little below a free surface, as it runs
+// in a pipe or narrow channel.
+export function efProfile(x0, top, bottom, len, { full = false, step = 7, surface = false, dip = false } = {}) {
+  const open = (z) => Math.pow(z, 1 / 6) - (dip ? 2.5 * Math.max(0, z - 0.8) ** 2 : 0);
+  const v = (y) => (full ? Math.pow(Math.max(0, 1 - Math.abs((2 * y - top - bottom) / (bottom - top))), 1 / 7) : open(Math.max(0, (bottom - y) / (bottom - top))));
   const ys = []; for (let y = top + step * 0.6; y < bottom - 2; y += step) ys.push(y);
   const arrow = (y) => { const l = len * v(y); return l < 7 ? "" : `M${x0} ${f1(y)}H${f1(x0 + l)}m-4.4-2.8 4.4 2.8-4.4 2.8`; };
   const env = sample(top, bottom, (bottom - top) / 24, (y) => y).map(([y]) => [x0 + len * v(y), y]);
-  const mean = x0 + len * (full ? 0.82 : 0.857);
+  const mean = x0 + len * (full ? 0.82 : dip ? 0.85 : 0.857);
+  const ymax = full ? (top + bottom) / 2 : dip ? bottom - 0.84 * (bottom - top) : top;
   return {
-    mean,
+    mean, vs: [x0 + len * v(ys[0]), ys[0]], vmax: [x0 + len * v(ymax), ymax],
     draw: `<path class="ef-prof-base" d="M${x0} ${top}V${bottom}"/><path class="ef-prof-env" d="${smooth(env)}"/>
   <path class="ef-prof" d="${(surface ? ys.slice(1) : ys).map(arrow).join("")}"/>${surface ? `<path class="ef-prof-top" d="${arrow(ys[0])}"/>` : ""}
   <path class="ef-prof-mean" d="M${f1(mean)} ${top + 3}V${bottom - 3}"/>`,
@@ -265,6 +269,11 @@ export function efProfile(x0, top, bottom, len, { full = false, step = 7, surfac
 const LUMPS = ["M0 0q3-6 9-4q6-3 8 3q3 5-3 7q-6 2-10-1q-6-1-4-5z", "M0 0q2-5 7-4q5 0 6 4q1 5-5 5q-7 1-8-5z", "M0 0q4-4 10-2q4 2 2 6q-3 3-8 1q-5-1-4-5z"];
 const lumps = (list) => list.map(([x, y, k, d, cls = ""]) => `<path class="dg-solid${cls ? ` ${cls}` : ""}" d="M${x} ${y}${LUMPS[k % 3].slice(4)}" style="--d:${d}s"/>`).join("");
 const efPin = (x, y, n, pair) => `<g class="dg-pin ${pair}"><circle cx="${f1(x)}" cy="${f1(y)}" r="9"/><text x="${f1(x)}" y="${f1(y + 4.2)}" text-anchor="middle">${n}</text></g>`;
+// An equation or symbol set in italic serif, with "_x" written as a subscript.
+const sub = (s) => esc(s).replace(/_([0-9a-z]+)/g, '<tspan baseline-shift="sub" font-size="72%">$1</tspan>');
+const eqn = (x, y, s, { a = "start", cls = "dg-eqn" } = {}) => `<text class="${cls}" x="${x}" y="${y}"${a !== "start" ? ` text-anchor="${a}"` : ""}>${sub(s)}</text>`;
+// A specification tag: frequency, beam and range, set like an instrument label.
+const tag = (x, y, lines, { a = "start", cls = "" } = {}) => label(x, y, lines, { a, cls: `dg-tag${cls ? ` ${cls}` : ""}` });
 const flowMark = (x, y, label) => `<text x="${x}" y="${y}" class="dg-w">${esc(label)}</text><path class="dg-arrow w" d="M${x + 34} ${y - 4}h26m-6-4 6 4-6 4"/>`;
 
 // A sewer in long section with a manhole beside the sensor: road and soil,
@@ -303,15 +312,18 @@ function eflowNormal(t) {
   const L = t.labels, p = "efn", level = 170;
   const ef = efSensor(p, 226, LS.crown, 1, { cable: LOGGER_CABLE });
   const bv = efBeam(p, "bv", ef.vel, 12, { toY: level }), bd = efBeam(p, "bd", ef.depth, 7, { toY: level, waves: 3 });
-  const pr = efProfile(118, level + 1, LS.inv - 1, 70, { surface: true });
+  const pr = efProfile(118, level + 1, LS.inv - 1, 70, { surface: true, dip: true });
   const w = efWater(p, level, false);
   const [f0, f1x] = bv.foot;
+  const [vx, vy] = ef.vel, [dx] = ef.depth;
   return svg(LS.w, LS.h, efSection(p, w.body, `
   ${pr.draw}
   ${bv.draw}${bd.draw}
   <path class="ef-foot r" d="M${f1(f0)} ${level}H${f1(f1x)}"/>
   ${ef.draw}
   ${efPin(f0 + 2, level - 30, 1, "radar")}${efPin(ef.depth[0] + 14, level - 16, 2, "radar")}
+  ${tag(16, 124, L.vtag, { cls: "r" })}${leader(`M${f1(vx - 112)} 127L${f1(vx - 18)} ${f1(vy + 13)}`)}
+  ${tag(316, 149, L.dtag, { cls: "r" })}${leader(`M312 156L${f1(dx + 6)} 156`)}
   ${label(f1(f0 - 8), level - 8, L.surface, { a: "end", cls: "dg-h" })}
   ${label(16, level + 24, L.profile, { cls: "dg-w" })}
   ${label(f1(pr.mean + 6), LS.inv - 8, L.mean, { cls: "dg-w dg-b" })}
@@ -321,7 +333,9 @@ function eflowNormal(t) {
 function eflowSurcharge(t) {
   const L = t.labels, p = "efs", level = 56;
   const ef = efSensor(p, 226, LS.crown, 1, { cable: LOGGER_CABLE });
-  const bu = efBeam(p, "bu", ef.us, 3.4, { len: 130, kind: "u", waves: 5 });
+  // the dual transducers, one above the other on the nose face, 5° beams
+  const [ux, uy, udx, udy] = ef.us;
+  const bu = efBeam(p, "bu", [ux - 0.8, uy - 2, udx, udy], 2.5, { len: 132, kind: "u", waves: 5 }), bu2 = efBeam(p, "bu2", [ux + 0.7, uy + 2.4, udx, udy], 2.5, { len: 122, kind: "u", waves: 5 });
   const pr = efProfile(118, LS.crown + 1, LS.inv - 1, 72, { full: true });
   const w = efWater(p, level, true);
   const [px, py] = ef.press, dim = 394;
@@ -332,14 +346,16 @@ function eflowSurcharge(t) {
   const bits = `<g class="dg-bits">${[[20, 168, 0], [60, 192, -2.4], [8, 212, -4.6], [40, 182, -6.8], [14, 150, -8.4], [70, 130, -3.6]].map(([x, y, d]) => `<circle cx="${x}" cy="${y}" r="2.2" style="--d:${d}s"/>`).join("")}</g>`;
   return svg(LS.w, LS.h, efSection(p, w.body, `
   ${bits}${pr.draw}
-  ${bu.draw}
+  ${bu.draw}${bu2.draw}
   <g class="dg-ping-u">${[0, 1, 2].map((n) => `<path d="M${f1(px - 7)} ${f1(py + 6)}q7 5 14 0" style="--d:${n * 0.5}s"/>`).join("")}</g>
   ${ef.draw}${head}
-  ${efPin(ef.us[0] - 52, ef.us[1] + 30, 3, "us")}${efPin(px + 12, py + 22, 4, "us")}
+  ${efPin(ef.us[0] - 52, ef.us[1] + 30, 3, "us")}${efPin(px + 18, py + 13, 4, "us")}
   ${label(16, 124, L.standby, { cls: "dg-w" })}
   ${label(16, 206, L.profile, { cls: "dg-w" })}
+  ${tag(300, 188, L.utag, { cls: "u w" })}${leader(`M296 185L${f1(ux - 56)} ${f1(uy + 42)}`, "w")}
+  ${tag(dim + 9, 136, L.ptag, { cls: "u" })}
   ${flowMark(386, LS.inv - 10, L.flow)}
-  ${label(16, 50, L.full, { cls: "dg-b dg-h" })}`), `${efDefs(p)}${w.grad}${bu.defs}`);
+  ${label(16, 50, L.full, { cls: "dg-b dg-h" })}`), `${efDefs(p)}${w.grad}${bu.defs}${bu2.defs}`);
 }
 
 /* ---- eflowObvert: a sensor on the invert, against E-Flow 3 at the obvert ---- */
@@ -394,7 +410,9 @@ function profileLong(t) {
   const L = t.labels, p = "epl", g = { ...LS, w: 560, h: 330, ground: 0, crown: 40, inv: 300, wall: 10 }, level = 152;
   const ef = efSensor(p, 376, g.crown, 1.55, { cable: "H560" });
   const bv = efBeam(p, "bv", ef.vel, 12, { toY: level }), bd = efBeam(p, "bd", ef.depth, 7, { toY: level, waves: 3 });
-  const pr = efProfile(238, level + 1, g.inv - 1, 124, { surface: true, step: 9 });
+  const pr = efProfile(238, level + 1, g.inv - 1, 124, { surface: true, step: 9, dip: true });
+  const [vx, vy] = ef.vel, ang = (a) => { const r = (a * Math.PI) / 180, c = Math.cos(r), sn = Math.sin(r); return [vx + 46 * (-0.77 * c - 0.64 * sn), vy + 46 * (-0.77 * sn + 0.64 * c)]; };
+  const [a0, a1] = [ang(-12), ang(12)];
   const w = efWater(p, level, false, g);
   const [f0, f1x] = bv.foot, dim = 536;
   const body = `
@@ -410,6 +428,11 @@ function profileLong(t) {
   <path class="ef-dim d" d="M${dim} ${level + 2}V${g.inv - 2}m-4-6 4 6 4-6M${dim - 4} ${level + 8}l4-6 4 6"/>
   ${label(dim - 8, 236, L.depth, { a: "end", cls: "dg-w dg-b" })}
   ${efPin(f0 - 6, level - 26, 1, "radar")}
+  <path class="ef-arc" d="M${f1(a0[0])} ${f1(a0[1])}A46 46 0 0 1 ${f1(a1[0])} ${f1(a1[1])}"/>
+  ${tag(f1(a1[0] - 6), f1(a1[1] - 6), L.angle, { a: "end", cls: "r" })}
+  ${tag(f1(pr.vs[0] + 7), f1(pr.vs[1] + 4), L.vs, { cls: "r w" })}
+  ${tag(f1(pr.vmax[0] + 7), f1(pr.vmax[1] + 4), L.vmax, { cls: "w" })}
+  ${tag(f1(pr.mean + 6), g.inv - 10, L.vmean, { cls: "w" })}
   ${label(24, 76, L.surface, { cls: "dg-h" })}${leader(`M${f1(f0 - 14)} ${level - 28}L${f1(f0 - 40)} 92`)}
   ${label(24, 232, L.mean, { cls: "dg-w dg-b" })}${leader(`M180 248L${f1(pr.mean - 2)} 262`, "w")}
   ${flowMark(24, g.inv - 12, L.flow)}`;
@@ -438,10 +461,92 @@ function profileCross(t) {
   <path class="ef-ext" d="M${f1(xr - 6)} ${surf}H352M${cx + 30} ${cy + R}H352"/>
   <path class="ef-dim d" d="M346 ${surf + 2}V${cy + R - 2}m-4-6 4 6 4-6M342 ${surf + 8}l4-6 4 6"/>
   ${label(338, 250, "h", { a: "end", cls: "dg-b dg-h dg-i" })}
-  ${label(cx, 238, L.area, { a: "middle", cls: "dg-w dg-b" })}
-  ${label(16, 318, L.key, { cls: "dg-m dg-h" })}`;
-  const defs = `${efDefs(p)}<linearGradient id="${p}-xb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="ef-g0 r"/><stop offset="1" class="ef-g1 r"/></linearGradient>`;
+  ${bands.slice(1).map(([, k], i) => tag(cx, f1(surf + 18 + 150 * k * 0.86 - 3), L.iso[i], { a: "middle", cls: "w s" })).join("")}
+  ${label(cx - 70, 214, L.area, { a: "middle", cls: "dg-w dg-b" })}
+  <rect x="16" y="306" width="120" height="8" rx="2" fill="url(#${p}-key)"/>
+  ${tag(16, 300, L.key)}${tag(16, 326, "0", { cls: "s" })}${tag(136, 326, "1", { a: "end", cls: "s" })}`;
+  const defs = `${efDefs(p)}<linearGradient id="${p}-xb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="ef-g0 r"/><stop offset="1" class="ef-g1 r"/></linearGradient>
+  <linearGradient id="${p}-key" x1="0" y1="0" x2="1" y2="0">${bands.map(([c], i) => `<stop offset="${(i / (bands.length - 1)).toFixed(2)}" stop-color="${c}"/>`).join("")}</linearGradient>`;
   return svg(380, 330, body, defs);
+}
+
+/* ---- eflowPrinciples: the physics behind each radar reading ---- */
+// Three small technical drawings: the Doppler shift that gives surface
+// velocity (brochure, "How Doppler velocity works"), the 120 GHz FMCW sweep
+// that gives the distance to the surface and so depth, and the two radar
+// footprints on the water seen from above (datasheet, radar geometry).
+// A wave along a straight run, as a sine offset from the line.
+const waveAlong = ([ax, ay], [bx, by], { off = 0, len = 14, amp = 3.6 } = {}) => {
+  const L = Math.hypot(bx - ax, by - ay), ux = (bx - ax) / L, uy = (by - ay) / L, nx = -uy, ny = ux, pts = [];
+  for (let d = 0; d <= L; d += 1.4) { const o = off + amp * Math.sin((2 * Math.PI * d) / len); pts.push([ax + ux * d + nx * o, ay + uy * d + ny * o]); }
+  return `M${pts.map(([x, y]) => `${f1(x)} ${f1(y)}`).join("L")}`;
+};
+function principleDoppler(t) {
+  const L = t.labels.doppler, p = "epd", A = [58, 42], H = [196, 126];
+  const peak = (c, w, hgt) => smooth(sample(c - 3.2 * w, c + 3.2 * w, w / 3, (x) => 214 - hgt * Math.exp(-(((x - c) / w) ** 2))));
+  let seed = 5; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  const floor = sample(20, 300, 6, () => 0).map(([x]) => `${x === 20 ? "M" : "L"}${x} ${f1(213 - rnd() * 2.4)}`).join("");
+  const body = `
+  <rect x="96" y="${H[1]}" width="224" height="34" fill="url(#${p}-w)"/>
+  <path class="ef-surf" d="M96 ${H[1]}q8-2.4 16 0t16 0t16 0t16 0t16 0t16 0t16 0t16 0t16 0t16 0t16 0t16 0t16 0t16 0"/>
+  <path class="dg-arrow w" d="M226 146h56m-6-4 6 4-6 4"/>${eqn(214, 151, "v", { a: "end", cls: "dg-eqn w" })}
+  <rect x="18" y="26" width="42" height="16" rx="4" fill="url(#${p}-body)"/><path class="ef-aperture" d="M44 42h14"/>
+  ${tag(18, 18, L.radar, { cls: "r" })}
+  <path class="ef-tx" d="${waveAlong(A, H, { off: -9, len: 14, amp: 3 })}"/>
+  <path class="ef-rx" d="${waveAlong(H, A, { off: -9, len: 10, amp: 3 })}"/>
+  <path class="ef-tx" d="M${f1(H[0] - 22)} ${f1(H[1] - 26)}l7.6 1.4-2.6 7.2"/>
+  <path class="ef-rx" d="M${f1(A[0] + 12)} ${f1(A[1] + 22)}l-7.6-1.4 2.6-7.2"/>
+  <path class="ef-arc" d="M${H[0] - 26} ${H[1]}A26 26 0 0 1 ${f1(H[0] - 26 * 0.853)} ${f1(H[1] - 26 * 0.521)}"/>${eqn(H[0] - 36, H[1] - 3, "θ", { a: "end" })}
+  ${tag(146, 62, L.tx, { cls: "r" })}${tag(112, 116, L.rx, { a: "end", cls: "t" })}
+  ${eqn(304, 26, L.eqn, { a: "end" })}
+  <rect class="dg-inset" x="12" y="170" width="296" height="54" rx="6"/>
+  <path class="dg-axis" d="M20 214H300"/><path class="dg-noise" d="${floor}"/>
+  <path class="dg-f0" d="M96 178V214"/>${eqn(96, 225, "f_0", { a: "middle", cls: "dg-eqn s" })}
+  <path class="dg-peak" d="${peak(194, 9, 30)}"/>${eqn(194, 225, "f_0 + Δf", { a: "middle", cls: "dg-eqn s r" })}
+  <path class="dg-span" d="M100 184H188m-5-3.6 5 3.6-5 3.6M105 180.4 100 184l5 3.6"/>${tag(144, 180, "Δf", { a: "middle", cls: "r" })}
+  ${tag(300, 194, L.spectrum, { a: "end", cls: "s" })}`;
+  return svg(320, 232, body, `${efDefs(p)}<linearGradient id="${p}-w" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="ef-w0"/><stop offset="1" class="ef-w2"/></linearGradient>`);
+}
+function principleFmcw(t) {
+  const L = t.labels.fmcw, Y0 = 150, Y1 = 46, ramp = (x0, x1) => `M${x0} ${Y0}L${x1} ${Y1}`;
+  const tx = `${ramp(44, 164)}${ramp(164, 284)}`, rx = `${ramp(68, 188)}M188 ${Y0}L304 ${f1(Y0 - ((304 - 188) / 120) * (Y0 - Y1))}`;
+  const yAt = (x, x0) => Y0 - ((x - x0) / 120) * (Y0 - Y1), bx = 128;
+  return svg(320, 232, `
+  <path class="dg-grid" d="${[70, 98, 126].map((y) => `M36 ${y}H304`).join("")}"/>
+  <path class="dg-axis" d="M36 30V${Y0}H306"/>
+  ${eqn(30, 36, "f", { a: "end" })}${tag(304, Y0 + 14, L.time, { a: "end", cls: "s" })}
+  <path class="dg-drop" d="M164 ${Y1}V${Y0}M284 ${Y1}V${Y0}"/>
+  <path class="ef-chirp tx" d="${tx}"/><path class="ef-chirp rx" d="${rx}"/>
+  <path class="dg-span" d="M${bx} ${f1(yAt(bx, 44) + 2)}V${f1(yAt(bx, 68) - 2)}m-3.6-5 3.6 5 3.6-5M${bx - 3.6} ${f1(yAt(bx, 44) + 7)}l3.6-5 3.6 5"/>${eqn(bx - 7, f1((yAt(bx, 44) + yAt(bx, 68)) / 2 + 5), "f_b", { a: "end" })}
+  <path class="dg-span" d="M166 ${Y1 - 8}H186m-5-3.6 5 3.6-5 3.6M171 ${Y1 - 11.6}l-5 3.6 5 3.6"/>${eqn(176, Y1 - 14, "τ", { a: "middle" })}
+  ${tag(44, 62, L.tx, { cls: "r" })}${tag(104, 142, L.rx, { cls: "t" })}
+  ${eqn(36, 190, L.eqn1)}${eqn(36, 214, L.eqn2)}`);
+}
+function principleFootprint(t) {
+  const L = t.labels.foot, p = "epf", top = 34, bot = 196, mid = (top + bot) / 2;
+  const inV = (x, y) => ((x - 118) / 54) ** 2 + ((y - mid) / 28) ** 2 <= 1;
+  const arrows = [];
+  for (let y = top + 12; y < bot - 6; y += 16) for (let x = 18; x < 300; x += 38) {
+    const l = 24 * Math.pow(Math.max(0, 1 - ((y - mid) / ((bot - top) / 2)) ** 2), 0.35);
+    if (l > 5) arrows.push([inV(x + l / 2, y), `M${x} ${y}h${f1(l)}m-3.6-2.4 3.6 2.4-3.6 2.4`]);
+  }
+  return svg(320, 232, `
+  <rect x="0" y="${top}" width="320" height="${bot - top}" fill="url(#${p}-s)"/>
+  <path fill="url(#${p}-cut)" d="M0 ${top - 10}H320V${top}H0ZM0 ${bot}H320V${bot + 10}H0Z"/>
+  <path class="ef-edge" d="M0 ${top}H320M0 ${bot}H320M0 ${top - 10}H320M0 ${bot + 10}H320"/>
+  <path class="dg-sv" d="${arrows.filter(([k]) => !k).map(([, d]) => d).join("")}"/>
+  <ellipse class="ef-fp" cx="118" cy="${mid}" rx="54" ry="28"/>
+  <path class="dg-sv r" d="${arrows.filter(([k]) => k).map(([, d]) => d).join("")}"/>
+  <ellipse class="ef-fp" cx="214" cy="${mid}" rx="14" ry="10"/>
+  <path class="ef-aim" d="M206 ${mid}H174"/>
+  <path class="ef-cable" d="M252 ${mid}H320"/>
+  <rect x="204" y="${mid - 10}" width="48" height="20" rx="7" fill="url(#${p}-body)"/>
+  <rect class="ef-label" x="228" y="${mid - 5}" width="16" height="10" rx="1.5"/><circle cx="214" cy="${mid}" r="4.6" fill="url(#${p}-dome)"/>
+  ${tag(118, top + 22, L.vfoot, { a: "middle", cls: "r" })}
+  ${tag(214, bot - 30, L.dfoot, { a: "middle", cls: "r" })}
+  ${tag(4, bot + 26, L.up, { cls: "s" })}
+  <path class="dg-arrow" d="M262 ${bot + 22}h40m-6-4 6 4-6 4"/>${tag(256, bot + 26, L.flow, { a: "end", cls: "s" })}`,
+  `${efDefs(p)}<linearGradient id="${p}-s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a9dcd1"/><stop offset=".5" stop-color="#c9ece4"/><stop offset="1" stop-color="#a9dcd1"/></linearGradient>`);
 }
 
 /* ---- eflowCompare: one storm, three kinds of flowmeter ---- */
@@ -485,7 +590,7 @@ const KEY_EF = {
 const efLegend = (t) => (t.legend ? `<ul class="dg-legend">${t.legend.map(([k, l]) => `<li>${KEY_EF[k].replace("<svg ", '<svg aria-hidden="true" ')}${esc(l)}</li>`).join("")}</ul>` : "");
 const efPanels = (t, drawings) => `<div class="dg-panels">${drawings.map((d, i) => {
   const [title, note, facts] = t.panels[i];
-  return `<div class="dg-panel"><p class="dg-panel-h"><b>${esc(title)}</b>${note ? `<span>${esc(note)}</span>` : ""}</p>${d}${facts ? `<ul class="dg-facts">${facts.map(([n, pair, f]) => `<li>${n ? `<span class="dg-n ${pair}" aria-hidden="true">${n}</span>` : ""}<span>${esc(f)}</span></li>`).join("")}</ul>` : ""}</div>`;
+  return `<div class="dg-panel"><p class="dg-panel-h"><b>${esc(title)}</b>${note ? `<span>${esc(note)}</span>` : ""}</p>${d}${facts ? `<ul class="dg-facts">${facts.map(([n, pair, f]) => `<li${n ? "" : ' class="plain"'}>${n ? `<span class="dg-n ${pair}" aria-hidden="true">${n}</span>` : ""}<span>${esc(f)}</span></li>`).join("")}</ul>` : ""}</div>`;
 }).join("")}</div>`;
 // The profile figure ends in the sum it shows: mean velocity times area is flow.
 const efSum = (t) => `<div class="dg-sum">${t.sum.map(([sym, name, note], i) => `${i ? `<span class="dg-op" aria-hidden="true">${i === t.sum.length - 1 ? "=" : "×"}</span>` : ""}<div><i>${esc(sym)}</i><b>${esc(name)}</b><span>${esc(note)}</span></div>`).join("")}</div>`;
@@ -544,7 +649,7 @@ const panels = (t, list) => `<div class="dg-panels">${list.map(([title, note, dr
 
 // Drawings in two panels carry their titles and key as page text; the
 // others are one picture with an alt text.
-const PANELS = new Set(["beforeafter", "sampling", "eflowModes", "eflowObvert", "eflowProfile", "eflowCompare"]);
+const PANELS = new Set(["beforeafter", "sampling", "eflowModes", "eflowObvert", "eflowProfile", "eflowCompare", "eflowPrinciples"]);
 const DRAW = {
   thermal: (t) => thermal(t),
   wetwell: (t) => wetwell(t),
@@ -556,6 +661,7 @@ const DRAW = {
   eflowObvert: (t) => efPanels(t, [invertPanel(t), obvertPanel(t)]) + efLegend(t),
   eflowProfile: (t) => efPanels(t, [profileLong(t), profileCross(t)]) + efSum(t) + efLegend(t),
   eflowCompare: (t) => efRows(t) + efLegend(t),
+  eflowPrinciples: (t) => efPanels(t, [principleDoppler(t), principleFmcw(t), principleFootprint(t)]),
 };
 
 // The figure: the drawing on a white plate, described for screen readers by
