@@ -142,6 +142,7 @@
     const pf = { base: $("ef-pf-base"), env: $("ef-pf-env"), arrows: $("ef-pf"), top: $("ef-pf-top"), mean: $("ef-pf-mean") };
     const bv = $("ef-bv"), bd = $("ef-bd"), hExt = $("ef-head-ext"), hDim = $("ef-head-dim"), hText = $("ef-head-t"), hVal = $("ef-head-v");
     const trR = $("ef-tr-r"), trU = $("ef-tr-u");
+    const spec = { box: $("ef-spec-box"), label: $("ef-spec-l"), noise: $("ef-spec-n"), peak: $("ef-spec-p"), span: $("ef-spec-d"), t: $("ef-spec-t") };
     const out = { level: $("ef-level"), d: $("ef-d"), v: $("ef-v"), q: $("ef-q") };
     const rows = Object.fromEntries([...document.querySelectorAll(".ef-sensors li")].map((li) => [li.dataset.s, li]));
     // where the elements sit (the sensor is drawn at the crown from x 310,
@@ -164,11 +165,12 @@
     // velocity through the depth: a power law from the bed under a free
     // surface, or from both walls with the pipe full; the mean dashed
     const profile = (top, bottom, len, full) => {
-      const v = (y) => (full ? Math.pow(Math.max(0, 1 - Math.abs((2 * y - top - bottom) / (bottom - top))), 1 / 7) : Math.pow(Math.max(0, (bottom - y) / (bottom - top)), 1 / 6));
+      const open = (z) => Math.pow(z, 1 / 6) - 2.5 * Math.max(0, z - 0.8) ** 2; // fastest a little below the surface
+      const v = (y) => (full ? Math.pow(Math.max(0, 1 - Math.abs((2 * y - top - bottom) / (bottom - top))), 1 / 7) : open(Math.max(0, (bottom - y) / (bottom - top))));
       const arrow = (y) => { const l = len * v(y); return l < 7 ? "" : `M${X0} ${n1(y)}H${n1(X0 + l)}m-4.4-2.8 4.4 2.8-4.4 2.8`; };
       const ys = []; for (let y = top + 4.2; y < bottom - 2; y += 7) ys.push(y);
       let env = ""; for (let k = 0; k <= 20; k++) { const y = top + ((bottom - top) * k) / 20; env += `${k ? "L" : "M"}${n1(X0 + len * v(y))} ${n1(y)}`; }
-      const mean = X0 + len * (full ? 0.82 : 0.857);
+      const mean = X0 + len * (full ? 0.82 : 0.85);
       pf.base.setAttribute("d", `M${X0} ${n1(top)}V${n1(bottom)}`);
       pf.env.setAttribute("d", env);
       pf.arrows.setAttribute("d", (full ? ys : ys.slice(1)).map(arrow).join(""));
@@ -214,6 +216,16 @@
       const mean = profile(py + 1, INV - 1, 46 * v, py <= CROWN);
       vtag.setAttribute("x", n1(mean + 6)); vtag.setAttribute("y", n1(INV - 8));
       vtag.textContent = `v\u0304 ${v.toFixed(2)} m/s`;
+      // the Doppler return: a peak shifted from f0 in proportion to velocity,
+      // over a noise floor, from whichever pair is measuring
+      const px = 16 + v * 150, n = [];
+      for (let x = 4; x <= 276; x += 4) n.push(`${x === 4 ? "M" : "L"}${x} ${n1(55 - Math.random() * 2.6)}`);
+      let pk = ""; for (let x = px - 24; x <= px + 24; x += 3) pk += `${pk ? "L" : "M"}${n1(x)} ${n1(56 - 40 * Math.exp(-(((x - px) / 8) ** 2)) - Math.random() * 1.2)}`;
+      spec.noise.setAttribute("d", n.join(""));
+      spec.peak.setAttribute("d", `${pk}Z`);
+      spec.span.setAttribute("d", `M20 22H${n1(px - 4)}m-4-3 4 3-4 3`);
+      spec.t.setAttribute("x", n1((16 + px) / 2)); spec.t.setAttribute("text-anchor", "middle");
+      if (spec.box.dataset.pair !== pair) { spec.box.dataset.pair = pair; spec.label.textContent = pair === "radar" ? "24 GHz radar" : "1 MHz ultrasonic"; }
       const set = (k, s) => { if (rows[k].dataset.state !== s) { rows[k].dataset.state = s; rows[k].querySelector("em").textContent = { primary: "Primary", check: "Cross-checking", standby: "Standing by" }[s]; } };
       set("vel", pair === "radar" ? "primary" : "standby");
       set("dep", pair === "radar" ? "primary" : "standby");

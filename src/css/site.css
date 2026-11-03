@@ -1883,6 +1883,18 @@ main:has(> .alt:last-child) + .footer { background: var(--bg); }
 .ef-sensors li[data-state="primary"] em { border-color: transparent; color: var(--on-aqua); }
 .ef-sensors li[data-state="primary"][data-pair="r"] em { background: #f6a04d; }
 .ef-sensors li[data-state="primary"][data-pair="u"] em { background: #38bdf8; }
+.ef-spec { margin-top: 14px; padding: 10px 12px 6px; border-radius: 14px; background: rgba(var(--abyss-rgb), .45); border: 1px solid var(--line-dark); }
+#ef-spec { display: block; width: 100%; height: auto; margin-top: 4px; }
+#ef-spec text { font: 500 11px var(--font-mono); fill: rgba(255, 255, 255, .62); }
+.ef-spec-axis { fill: none; stroke: rgba(255, 255, 255, .25); }
+.ef-spec-f0 { fill: none; stroke: rgba(255, 255, 255, .4); stroke-dasharray: 3 3; }
+.ef-spec-n { fill: none; stroke: rgba(255, 255, 255, .35); stroke-width: 1; }
+.ef-spec-p { stroke-width: 1.6; stroke-linejoin: round; transition: fill .4s var(--ease), stroke .4s var(--ease); }
+.ef-spec[data-pair="radar"] .ef-spec-p { fill: rgba(246, 160, 77, .25); stroke: #f6a04d; }
+.ef-spec[data-pair="us"] .ef-spec-p { fill: rgba(56, 189, 248, .25); stroke: #38bdf8; }
+.ef-spec-d { fill: none; stroke: rgba(255, 255, 255, .55); stroke-width: 1; stroke-linecap: round; stroke-linejoin: round; }
+#ef-spec-l { font-family: var(--font-mono); font-size: .72rem; }
+#ef-svg .ef-tag.r { fill: #ffc58a; } #ef-svg .ef-tag.u { fill: #b8e8ff; }
 .ef-readouts { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 14px; }
 .ef-readouts .readout b { font-family: var(--font-mono); font-size: 1.22rem; font-weight: 500; letter-spacing: -.02em; }
 .ef-readouts .readout b small { font-family: var(--font-body); font-size: .76rem; }
@@ -2619,6 +2631,41 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: 6
 .ef-key.u { fill: #2b9bd0; stroke: #1d78a8; }
 .ef-key.p { stroke: #0b5f57; }
 .ef-key.m { stroke: var(--brand); stroke-width: 1.8; stroke-dasharray: 3 2; }
+/* specification tags and the drawn physics: set like instrument labels */
+.diagram .dg-tag { font: 500 10.5px var(--font-mono); letter-spacing: -.01em; fill: var(--ink-2); paint-order: stroke; stroke: rgba(255, 255, 255, .9); stroke-width: 3px; stroke-linejoin: round; }
+.diagram .dg-tag.r { fill: #a85409; }
+.diagram .dg-tag.u { fill: #16668f; }
+.diagram .dg-tag.t { fill: var(--brand-dark); }
+.diagram .dg-tag.w { fill: #fff; stroke: rgba(9, 76, 70, .6); }
+.diagram .dg-tag.r.w { fill: #ffe2c2; }
+.diagram .dg-tag.s { font-size: 9.5px; fill: var(--muted); }
+.diagram .dg-tag.w.s { fill: #fff; }
+.diagram .dg-tag.i { font: italic 600 14px Georgia, "Times New Roman", serif; }
+.diagram .dg-eqn { font: italic 500 13.5px Georgia, "Times New Roman", serif; fill: var(--brand-dark); }
+.diagram .dg-eqn.s { font-size: 11.5px; fill: var(--ink-2); }
+.diagram .dg-eqn.r { fill: #a85409; }
+.diagram .dg-eqn.w { fill: #fff; font-size: 15px; font-weight: 600; }
+@container (max-width: 440px) { .diagram .dg-tag { font-size: 13px; } .diagram .dg-tag.s { font-size: 12px; } .diagram .dg-eqn { font-size: 16px; } }
+.ef-arc { fill: none; stroke: #a85409; stroke-width: 1; stroke-dasharray: 2 2; }
+.ef-aperture { stroke: #f08c2b; stroke-width: 2.4; stroke-linecap: round; }
+.ef-tx { fill: none; stroke: #e07b1a; stroke-width: 1.5; stroke-linejoin: round; }
+.ef-rx { fill: none; stroke: var(--brand); stroke-width: 1.5; stroke-linejoin: round; }
+.dg-inset { fill: #f7faf9; stroke: var(--border); }
+.dg-noise { fill: none; stroke: #b6c4c2; stroke-width: .9; }
+.dg-f0 { fill: none; stroke: #8a9c9a; stroke-width: 1.2; stroke-dasharray: 3 2; }
+.dg-peak { fill: #f08c2b; fill-opacity: .22; stroke: #e07b1a; stroke-width: 1.6; }
+.dg-span { fill: none; stroke: var(--ink-2); stroke-width: 1.1; stroke-linecap: round; stroke-linejoin: round; }
+.dg-drop { fill: none; stroke: #c9d3d1; stroke-width: 1; stroke-dasharray: 2 3; }
+.ef-chirp { fill: none; stroke-width: 2.2; stroke-linecap: round; }
+.ef-chirp.tx { stroke: #e07b1a; }
+.ef-chirp.rx { stroke: var(--brand); stroke-dasharray: 5 3; }
+.dg-sv { fill: none; stroke: #2f887d; stroke-opacity: .55; stroke-width: 1.2; stroke-linecap: round; stroke-linejoin: round; }
+.dg-sv.r { stroke: #c76a12; stroke-opacity: 1; stroke-width: 1.5; }
+.ef-fp { fill: #f08c2b; fill-opacity: .14; stroke: #e07b1a; stroke-width: 1.2; stroke-dasharray: 4 3; }
+.ef-aim { fill: none; stroke: #e07b1a; stroke-width: 1; stroke-dasharray: 2 3; }
+.ef-sub { margin: clamp(36px, 4.5vw, 56px) 0 16px; font-size: 1.15rem; }
+.dg-eflowPrinciples .dg-panels { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px 26px; }
+@media (max-width: 980px) { .dg-eflowPrinciples .dg-panels { grid-template-columns: minmax(0, 1fr); } .dg-eflowPrinciples .dg-panel svg { max-width: 460px; } }
 .dg-pin circle { stroke: #fff; stroke-width: 1.5; }
 .dg-pin.radar circle { fill: #c76a12; }
 .dg-pin.us circle { fill: #1d78a8; }
@@ -2639,6 +2686,7 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: 6
 .dg-isovel ellipse { fill: none; stroke: rgba(255, 255, 255, .45); stroke-width: .8; }
 .dg-facts { display: grid; gap: 8px; margin: 14px 0 0; padding: 0; list-style: none; font-size: .93rem; line-height: 1.45; color: var(--ink-2); }
 .dg-facts li { display: grid; grid-template-columns: 22px 1fr; gap: 10px; align-items: start; }
+.dg-facts li.plain { grid-template-columns: 1fr; }
 .dg-n, .anat-n, .ef-n { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; font: 700 .75rem/1 var(--font-body); color: #fff; font-variant-numeric: tabular-nums; }
 .dg-n.radar, .anat-pair.radar .anat-n, .anat-pin.radar { background: #c76a12; }
 .dg-n.us, .anat-pair.us .anat-n, .anat-pin.us { background: #1d78a8; }
