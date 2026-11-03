@@ -532,9 +532,10 @@ ${scripts.map((s) => `<script src="${asset(r, `js/${s}`)}" defer></script>`).joi
 </body>
 </html>
 `.replaceAll("@root/", r)
-    // Every link to a document (a datasheet, manual, brochure, white paper or
-    // download in assets/docs) saves the file rather than opening it in the tab.
-    .replace(/<a\s[^>]*href="[^"]*assets\/docs\/[^"]*"[^>]*>/g, (a) => (/\sdownload(?=[\s>=])/.test(a) ? a : a.replace(/>$/, " download>")))
+    // Every link to a document in assets/docs: a PDF (a datasheet, manual,
+    // brochure or white paper) opens in a new tab, and anything else (the
+    // software zips) saves the file rather than leaving the page.
+    .replace(/<a\s[^>]*href="[^"]*assets\/docs\/[^"]*"[^>]*>/g, (a) => (/href="[^"]*\.pdf"/i.test(a) ? (/\starget=/.test(a) ? a : a.replace(/>$/, ' target="_blank">')) : /\sdownload(?=[\s>=])/.test(a) ? a : a.replace(/>$/, " download>")))
     // Typographer's apostrophes: a straight tick between two letters (EDS's,
     // don't) becomes ’ everywhere, copy and alt text alike. No page script
     // holds such a tick, so code is untouched.
@@ -2334,7 +2335,8 @@ ${pageHero(r, { crumbs: [["Privacy policy"]], title: privacy[0], lede: privacy[1
 // Everything the search palette (search.js) can find, grouped by `g`. Links
 // are relative to the site root, and search.js adds each page's way back to
 // it. `b` is extra text to match on that is never shown; `x` marks links that
-// leave the site and `d` the documents, which download rather than open.
+// leave the site and `d` the documents: a PDF opens in a new tab, anything
+// else downloads.
 function searchIndex() {
   const items = [];
   const text = (...parts) => parts.flat(Infinity).filter(Boolean).join(" ");
