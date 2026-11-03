@@ -1996,14 +1996,14 @@ export const diagrams = {
     legend: [["meas", "Flow"], ["sample", "A sample taken"]],
   },
   eflowModes: {
-    alt: "Illustration of E-Flow 3 at the top of a sewer pipe beside a manhole, in two conditions. In normal flow the pipe is partly full and two radar beams reach down to the water surface from above, one aimed upstream for velocity and one straight down for depth, while nothing touches the water. In surcharge the pipe is full and the water has risen up the manhole; an ultrasonic beam reaches into the water for velocity, and the pressure transducer reads the head of water above it for depth, while the radar stands by.",
+    alt: "Illustration of E-Flow 3 at the top of a sewer pipe beside a manhole, in two conditions. In normal flow the pipe is partly full: one radar beam reaches the water surface upstream for velocity and another reaches straight down for depth, while arrows beneath show the velocity through the depth and its mean. In surcharge the pipe is full and the water has risen up the manhole: an ultrasonic beam reaches into the water for velocity, the pressure transducer reads the head of water above it for depth, and the radar stands by.",
     caption: "Illustration: E-Flow 3 at the pipe obvert. Radar reads the free surface from above; when the pipe runs full, ultrasonic and pressure measure through the water. Not to scale.",
     panels: [
-      ["Normal flow: non-contact radar", "Nothing touches the water", [[1, "radar", "24 GHz Doppler radar reads surface velocity, corrected to mean velocity"], [2, "radar", "120 GHz radar reads depth from above the flow"]]],
-      ["Surcharge: Doppler ultrasonic and pressure", "Measuring through the full water column", [[3, "us", "Dual 1 MHz Doppler ultrasonic reads velocity from particles in the flow"], [4, "us", "Sealed 316 stainless pressure transducer reads depth, to 10 m of surcharge"]]],
+      ["Normal flow: non-contact radar", "Nothing touches the water", [[1, "radar", "24 GHz Doppler radar reads surface velocity, corrected to mean velocity through the depth"], [2, "radar", "120 GHz radar reads depth from above the flow"]]],
+      ["Surcharge: Doppler ultrasonic and pressure", "Measuring through the full water column", [[3, "us", "Dual 1 MHz Doppler ultrasonic reads velocity from particles carried in the flow"], [4, "us", "Sealed 316 stainless pressure transducer reads depth, to 10 m of surcharge"]]],
     ],
-    legend: [["radar", "Radar beam"], ["us", "Ultrasonic beam"]],
-    labels: { surface: "Free surface", flow: "Flow", above: "Free surface present", full: "Pipe full, water up the manhole", head: ["Pressure", "head"], standby: ["No free surface:", "radar stands by"] },
+    legend: [["radar", "Radar beam"], ["us", "Ultrasonic beam"], ["profile", "Velocity through the depth"], ["mean", "Mean velocity"]],
+    labels: { surface: "Surface velocity", profile: "Velocity profile", mean: "Mean", flow: "Flow", above: "Free surface present", full: "Pipe full, water up the manhole", head: ["Pressure", "head"], standby: ["No free surface:", "radar stands by"] },
   },
   eflowObvert: {
     alt: "Illustration of two sewer pipes in section. In the first, a conventional flow sensor sits on the invert, and rag, grease and silt carried by the flow have built up around it. In the second, E-Flow 3 sits at the obvert above the water, reading the surface by radar, while the same solids pass beneath it.",
@@ -2013,7 +2013,29 @@ export const diagrams = {
       ["E-Flow 3 at the obvert", "Above the flow, and in the water only when the pipe runs full"],
     ],
     legend: [["solid", "Rag, grease and silt"], ["radar", "Radar beam"]],
-    labels: { invert: "Sensor on the invert", fouled: ["Rag and grease build up,", "and the reading drifts"], obvert: "E-Flow 3 at the obvert", clear: ["Solids pass beneath,", "with nothing to foul"] },
+    labels: { invert: "Sensor on the invert", fouled: ["Rag and grease build up,", "and the reading drifts"], obvert: "E-Flow 3 at the obvert", clear: ["Solids pass beneath,", "with nothing to foul"], flow: "Flow" },
+  },
+  eflowProfile: {
+    alt: "Illustration in two parts. Along the pipe, E-Flow 3's velocity radar reads the water surface across its footprint, and arrows beneath show the velocity through the depth, fastest near the surface and slowing to nothing at the bed, with the mean marked as a dashed line; the depth radar measures the depth. Across the pipe, the wetted area below the surface is shaded by velocity, lighter where the water moves faster, with the depth marked.",
+    caption: "Illustration: mean velocity times wetted area is flow, worked out in the sensor itself.",
+    panels: [
+      ["Velocity: from the surface through the depth", "What the radar reads, and the mean it gives"],
+      ["Area: from depth and the pipe profile", "The wetted cross-section, shaded by velocity"],
+    ],
+    sum: [["v̄", "Mean velocity", "Radar 2 % of reading, ultrasonic 1 %"], ["A", "Wetted area", "From depth, 0.2 % of full scale ± 1 mm"], ["Q", "Flow", "Computed in the sensor"]],
+    legend: [["radar", "Radar beam"], ["profile", "Velocity through the depth"], ["mean", "Mean velocity"]],
+    labels: { surface: ["Surface velocity, read across", "the 24 GHz radar footprint"], mean: ["Corrected through the depth", "to mean velocity"], depth: ["Depth by", "120 GHz radar"], flow: "Flow", area: "Wetted area A", key: "Lighter is faster" },
+  },
+  eflowCompare: {
+    alt: "Illustration of one storm recorded by three kinds of flowmeter. Each row shows the flow that actually passed as a dashed line, with the time the pipe ran full shaded. A non-contact radar alone records the flow until the pipe surcharges, then has a gap until the surface returns. A wetted sensor on the invert records through the surcharge, but its reading drifts low as rag and grease build up. E-Flow 3 records the whole storm, by radar before and after the surcharge and by ultrasonic and pressure through it, with no gap.",
+    caption: "Illustration: the same storm, recorded three ways. A record with a gap, or one that drifts, has to be corrected or discarded.",
+    rows: [
+      ["radar", "Non-contact radar alone", "A gap when the pipe runs full"],
+      ["wetted", "Wetted sensor on the invert", "Drifts as rag and grease build up"],
+      ["eflow", "E-Flow 3", "The whole storm, with no gap"],
+    ],
+    gap: "No reading",
+    legend: [["truth", "What actually flowed"], ["band", "Pipe running full"], ["recr", "Recorded by radar"], ["recu", "Recorded by ultrasonic and pressure"], ["recw", "Recorded by a wetted sensor"]],
   },
 };
 
@@ -2166,25 +2188,42 @@ export const productPages = [
       heading: "Fill the pipe. Watch it change over.",
       lede: "Drag the water level, or play a storm. E-Flow 3 checks all four sensors every cycle and hands over between pairs as the pipe fills and drains, with no blind zone between them.",
     },
+    why: {
+      nav: "Why E-Flow 3",
+      heading: "Other flowmeters do half the job. E-Flow 3 does both.",
+      lede: "A radar on its own loses its reading the moment the pipe surcharges. A wetted sensor on the invert keeps measuring, but fouls with rag and grease and drifts. E-Flow 3 uses each technology where it works best and switches between them seamlessly, which is what makes it better than any other sewer flowmeter on the market.",
+      diagram: "eflowCompare",
+      columns: ["Radar alone", "Wetted sensor on the invert", "E-Flow 3"],
+      rows: [
+        ["Measures without touching the flow", "yes", "no", "yes"],
+        ["Keeps measuring when the pipe runs full", "no", "yes", "yes"],
+        ["Nothing on the invert for rag and grease to foul", "yes", "no", "yes"],
+        ["One continuous record through a storm", "no", "Until it fouls", "yes"],
+      ],
+    },
+    accuracy: {
+      nav: "Accuracy",
+      heading: "Unmatched accuracy, from the surface down.",
+      lede: "Flow is only as good as its velocity and its area. E-Flow 3 reads surface velocity across its radar footprint and corrects it to mean velocity through the depth, measures depth with 1 mm resolution, and works out the wetted area from the pipe profile. Then it computes flow in the sensor itself.",
+      diagram: "eflowProfile",
+      heading2: "Accuracy that holds from dry weather to full surcharge",
+      stats: [
+        ["1 %", "of reading, ultrasonic velocity", "± 0.005 m/s"],
+        ["2 %", "of reading, radar velocity", "± 0.01 m/s"],
+        ["0.2 %", "of full scale, depth", "± 0.001 m"],
+        ["1 mm", "depth resolution", "and 0.001 m/s velocity"],
+      ],
+    },
     upkeep: {
       nav: "Maintenance",
-      heading: "Less maintenance. Unmatched accuracy.",
-      lede: "E-Flow 3 needs less maintenance than any other type of open channel flowmeter, and it doesn't give up accuracy to get there. Most meters sit on the invert, in the path of everything the sewer carries. E-Flow 3 sits at the obvert, above the flow, and only touches the water when the pipe runs full.",
+      heading: "Less maintenance than any other open channel flowmeter.",
+      lede: "Most open channel flowmeters sit on the invert, in the path of everything the sewer carries. E-Flow 3 sits at the obvert, above the flow, and only touches the water when the pipe runs full. So there's far less to clean, and nothing to give up in accuracy to get there.",
       diagram: "eflowObvert",
       items: [
         ["No cleaning visits in normal service", "The velocity and depth radars have no wetted element to foul, and the potted body sheds material once a surcharge drains away. Site visits become checks, not clean-outs."],
         ["No confined space entry", "Install, retrieve, commission and verify it all from the manhole opening, with EMS-Flow through the EDS logger."],
         ["Check it from the office", "Every sensor reports its own value and status over Modbus, so you can see which pair is active, and why, before anyone drives out."],
       ],
-      accuracy: {
-        heading: "Accuracy that holds from dry weather to full surcharge",
-        stats: [
-          ["1 %", "of reading, ultrasonic velocity", "± 0.005 m/s"],
-          ["2 %", "of reading, radar velocity", "± 0.01 m/s"],
-          ["0.2 %", "of full scale, depth", "± 0.001 m"],
-          ["1 mm", "depth resolution", "and 0.001 m/s velocity"],
-        ],
-      },
     },
     tough: {
       nav: "Built for the sewer",

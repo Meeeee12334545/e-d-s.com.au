@@ -8,7 +8,7 @@ import { createHash } from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import * as C from "./src/data/content.mjs";
-import { diagram } from "./diagrams.mjs";
+import { diagram, efDefs, efSensor, efSection, efBeam } from "./diagrams.mjs";
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const DIST = path.join(ROOT, "dist");
@@ -1708,58 +1708,62 @@ const applicationsBand = (a) => `<div class="section-head"><h2 class="h-lg" data
 const anatomyFigure = (a, src) => `
 <figure class="anat" data-reveal>
   <p class="anat-h">${esc(a.heading)}</p>
-  <div class="anat-plate"><img src="${src}" alt="${esc(a.alt)}" width="963" height="471" loading="lazy">${a.pairs.flatMap(([pair, , items]) => items.map(([n, , , x, y]) => `<span class="anat-pin ${pair}" style="--x:${x};--y:${y}" aria-hidden="true">${n}</span>`)).join("")}</div>
+  <div class="anat-plate"><div class="anat-img"><img src="${src}" alt="${esc(a.alt)}" width="963" height="471" loading="lazy">${a.pairs.flatMap(([pair, , items]) => items.map(([n, , , x, y]) => `<span class="anat-pin ${pair}" style="--x:${x};--y:${y}" aria-hidden="true">${n}</span>`)).join("")}</div></div>
   <div class="anat-key">${a.pairs.map(([pair, label, items]) => `<div class="anat-pair ${pair}"><p>${esc(label)}</p><ol>${items.map(([n, t, d]) => `<li><span class="anat-n" aria-hidden="true">${n}</span><span><b>${esc(t)}</b><small>${esc(d)}</small></span></li>`).join("")}</ol></div>`).join("")}</div>
   <figcaption>${esc(a.caption)}</figcaption>
 </figure>`;
 // An illustration across the page under its heading (`modes`).
 const diagramBand = (b) => `${bandHead(b)}${diagram(b.diagram, C.diagrams[b.diagram])}`;
-// Upkeep and accuracy (`upkeep`): the drawing, what it saves, then the figures.
+// Why it beats the alternatives (`why`): the storm drawn three ways, then
+// what each kind of meter can and cannot do.
+const MARK = { yes: ["check", "Yes"], no: ["x", "No"] };
+const whyBand = (w) => `${bandHead(w)}${diagram(w.diagram, C.diagrams[w.diagram])}
+  <div class="ef-matrix-wrap" data-reveal><table class="ef-matrix"><thead><tr><th scope="col"><span class="sr-only">What it does</span></th>${w.columns.map((c, i) => `<th scope="col"${i === w.columns.length - 1 ? ' class="us"' : ""}>${esc(c)}</th>`).join("")}</tr></thead>
+  <tbody>${w.rows.map(([what, ...cells]) => `<tr><th scope="row">${esc(what)}</th>${cells.map((c, i) => {
+    const [ic, word] = MARK[c] || ["minus", c];
+    return `<td class="${MARK[c] ? c : "part"}${i === cells.length - 1 ? " us" : ""}">${icon(ic, false)}<span${MARK[c] ? ' class="sr-only"' : ""}>${esc(word)}</span></td>`;
+  }).join("")}</tr>`).join("")}</tbody></table></div>`;
+// Accuracy (`accuracy`): how velocity and depth become flow, then the figures.
+const accuracyBand = (a) => `${bandHead(a)}${diagram(a.diagram, C.diagrams[a.diagram])}
+  <div class="ef-acc"><h3 data-reveal>${esc(a.heading2)}</h3><ul class="ef-stats">${a.stats.map(([v, l, d], n) => `<li data-reveal style="--i:${n}"><b>${esc(v)}</b><span>${esc(l)}</span><small>${esc(d)}</small></li>`).join("")}</ul></div>`;
+// Upkeep (`upkeep`): the drawing, then what it saves.
 const upkeepBand = (u) => `${bandHead(u)}${diagram(u.diagram, C.diagrams[u.diagram])}
-  <ul class="deliv n${u.items.length} ef-upkeep">${u.items.map(([t, d], n) => `<li data-reveal style="--i:${n}"><b>${esc(t)}</b><p>${esc(d)}</p></li>`).join("")}</ul>
-  <div class="ef-acc"><h3 data-reveal>${esc(u.accuracy.heading)}</h3><ul class="ef-stats">${u.accuracy.stats.map(([v, l, d], n) => `<li data-reveal style="--i:${n}"><b>${esc(v)}</b><span>${esc(l)}</span><small>${esc(d)}</small></li>`).join("")}</ul></div>`;
+  <ul class="deliv n${u.items.length} ef-upkeep">${u.items.map(([t, d], n) => `<li data-reveal style="--i:${n}"><b>${esc(t)}</b><p>${esc(d)}</p></li>`).join("")}</ul>`;
 // What the sewer throws at it, beside how it is built (`tough`).
 const toughBand = (t) => `<div class="split-band"><div class="band-head"><h2 class="h-lg" data-reveal>${esc(t.heading)}</h2><p class="lede" data-reveal style="--i:1">${esc(t.lede)}</p><ul class="ef-hazards" data-reveal style="--i:2" aria-label="What it faces">${t.hazards.map((h) => `<li>${esc(h)}</li>`).join("")}</ul></div>${flatItems(t.items)}</div>`;
 
 // The changeover demo: a sewer and manhole in section with E-Flow 3 at the
-// obvert. The water level is dragged (or a storm played), and the drawing,
-// the sensor states, the readings and the record follow (widgets.js). The
-// sensor is drawn as in diagrams.mjs, at the crown from x 310.
-const EF_BODY = "M8 0H70A8 8 0 0 1 78 8V10A8 8 0 0 1 70 18H68V40Q68 46 62 46H55Q52 46 51 43L48 33L30 18H8A8 8 0 0 1 0 10V8A8 8 0 0 1 8 0Z";
-const eflowDemo = () => `
+// obvert, drawn with the kit in diagrams.mjs on the deep teal. The water
+// level is dragged (or a storm played), and the water, beams, velocity
+// profile, sensor states, readings and record follow (widgets.js, which
+// shares this geometry: sensor at the crown from x 310).
+const DEMO = { w: 560, h: 312, ground: 40, crown: 176, inv: 296, wall: 10, shaft: [400, 456] };
+function eflowDemo() {
+  const p = "efd";
+  const ef = efSensor(p, 310, DEMO.crown, 1, { cable: "C404 185 412.5 182 412.5 168V74" });
+  const bu = efBeam(p, "bu", ef.us, 3.4, { len: 104, kind: "u", waves: 5 });
+  const rad = (id, [x, y], r) => `<radialGradient id="${p}-${id}" gradientUnits="userSpaceOnUse" cx="${x}" cy="${y}" r="${r}"><stop offset="0" class="ef-g0 r"/><stop offset="1" class="ef-g1 r"/></radialGradient>`;
+  const defs = `${efDefs(p, { dark: true })}${rad("bv", ef.vel, 112)}${rad("bd", ef.depth, 90)}${bu.defs}
+    <linearGradient id="${p}-wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="ef-w0"/><stop offset=".18" class="ef-w1"/><stop offset="1" class="ef-w2"/></linearGradient>
+    <pattern id="${p}-grid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0H0V20" class="ef-gridline"/></pattern>
+    <clipPath id="ef-clip"><path id="ef-clip-r" d="M0 266H560V296H0Z"/></clipPath>`;
+  const water = `<path id="ef-water" fill="url(#${p}-wg)" d="M0 266H560V296H0Z"/><path id="ef-surf" class="ef-surf" d="M0 266H560"/>`;
+  const corners = [[6, 6, 1, 1], [554, 6, -1, 1], [6, 306, 1, -1], [554, 306, -1, -1]].map(([x, y, sx, sy]) => `M${x} ${y + 14 * sy}V${y}H${x + 14 * sx}`).join("");
+  const inner = `
+    <rect width="${DEMO.w}" height="${DEMO.h}" fill="url(#${p}-grid)"/>
+    <g clip-path="url(#ef-clip)" class="ef-bits">${[[30, 282, 0], [120, 290, -2], [210, 250, -4.5], [70, 236, -6], [160, 214, -1], [250, 288, -3.4], [20, 204, -5.2], [90, 262, -3]].map(([x, y, d]) => `<circle cx="${x}" cy="${y}" r="2" style="--d:${d}s"/>`).join("")}</g>
+    <g class="ef-prof-g"><path id="ef-pf-base" class="ef-prof-base"/><path id="ef-pf-env" class="ef-prof-env"/><path id="ef-pf" class="ef-prof"/><path id="ef-pf-top" class="ef-prof-top"/><path id="ef-pf-mean" class="ef-prof-mean"/><text id="ef-vtag" class="ef-tag" x="0" y="0"></text></g>
+    <g class="ef-radar"><path id="ef-bv" class="ef-beam r" fill="url(#${p}-bv)"/><path id="ef-bd" class="ef-beam r" fill="url(#${p}-bd)"/><g class="ef-waves" id="ef-wv">${'<path class="ef-wave r"/>'.repeat(4)}</g><g class="ef-waves" id="ef-wd">${'<path class="ef-wave r"/>'.repeat(3)}</g><path id="ef-foot" class="ef-foot r"/></g>
+    <g class="ef-uswrap">${bu.draw}</g>
+    ${ef.draw}
+    <g id="ef-head" class="ef-head"><path id="ef-head-ext" class="ef-ext"/><path id="ef-head-dim" class="ef-dim"/><text id="ef-head-t" x="484" y="120"><tspan id="ef-head-v">0.00 m</tspan><tspan x="484" dy="1.2em">head</tspan></text></g>
+    <g class="ef-txt"><text x="12" y="26">Ground</text><text x="472" y="72">Logger</text><text class="fine" x="12" y="166">Upstream</text><text x="300" y="166" text-anchor="end">E-Flow 3 at the obvert</text></g>
+    <path class="ef-hud" d="${corners}"/>`;
+  return `
 <div class="demo ef-demo" data-reveal>
   <div class="panel">
     <div class="panel-head"><div class="panel-title">${icon("waves", false)} Drag the water level</div><button class="btn btn-ghost btn-sm" type="button" id="ef-play">${icon("cloud-rain", false)} Play a storm</button></div>
-    <svg id="ef-svg" viewBox="0 0 560 312" data-pair="radar" role="img" aria-label="A sewer pipe and manhole in section, with E-Flow 3 at the top of the pipe and a logger near the top of the manhole. The water level can be raised from low flow to a full surcharge up the manhole.">
-      <defs>
-        <linearGradient id="ef-wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5fb4a6" stop-opacity=".75"/><stop offset="1" stop-color="#0d7c72" stop-opacity=".95"/></linearGradient>
-        <clipPath id="ef-clip"><rect id="ef-clip-r" x="0" y="0" width="560" height="296"/></clipPath>
-      </defs>
-      <rect x="0" y="40" width="560" height="272" fill="#0b302d"/>
-      <rect x="0" y="36" width="560" height="6" fill="#14605a"/>
-      <rect x="0" y="176" width="560" height="120" fill="#04201d"/>
-      <rect x="400" y="40" width="56" height="136" fill="#04201d"/>
-      <rect id="ef-wp" x="0" y="248" width="560" height="48" fill="url(#ef-wg)"/>
-      <rect id="ef-ws" x="400" y="176" width="56" height="0" fill="url(#ef-wg)"/>
-      <path id="ef-surf" class="ef-surf" d="M0 248H560"/>
-      <g clip-path="url(#ef-clip)" class="ef-bits">${[[30, 262, 0], [120, 280, -2], [210, 240, -4.5], [70, 226, -6], [160, 206, -1], [250, 288, -3.4], [20, 196, -5.2]].map(([x, y, d]) => `<circle cx="${x}" cy="${y}" r="2.2" style="--d:${d}s"/>`).join("")}</g>
-      <path id="ef-flow" class="ef-flow" d="M10 272H550"/>
-      <path class="ef-wall" d="M0 176H400M456 176H560M0 296H560M400 40V176M456 40V176"/>
-      <rect x="392" y="33" width="72" height="7" rx="2" fill="#2e4543" stroke="rgba(255,255,255,.3)"/>
-      <path class="ef-beam r" id="ef-bv"/><path class="ef-beam r" id="ef-bd"/>
-      <path class="ef-beam u" id="ef-bu" d="M359.5 214L270.3 274.7L274.4 280.1Z"/>
-      <path class="ef-cable" d="M388 185H406V62H436"/>
-      <rect x="436" y="50" width="14" height="24" rx="3" fill="#e8f3f1" stroke="#5fb4a6" stroke-width="1.5"/>
-      <g class="ef-sensor" transform="translate(310 176)">
-        <path class="ef-body" d="${EF_BODY}"/>
-        <rect class="ef-plate" x="44" y="5" width="22" height="9" rx="1.5"/>
-        <path class="ef-el r" d="M11 18A5 5 0 0 0 21 18ZM31.5 18L48 31.8"/>
-        <path class="ef-el u" d="M48.4 34.3L50.6 41.6M57 46.6H62"/>
-      </g>
-      <g id="ef-head" class="ef-head"><path id="ef-head-ext" class="ef-ext"/><path id="ef-head-dim" class="ef-dim"/><text id="ef-head-t" x="484" y="120"><tspan id="ef-head-v">0.00 m</tspan><tspan x="484" dy="1.2em">head</tspan></text></g>
-      <g class="ef-txt"><text x="12" y="26">Ground</text><text x="472" y="58">Logger</text><text class="fine" x="12" y="166">Upstream</text><text x="300" y="166" text-anchor="end">E-Flow 3 at the obvert</text></g>
-      <path class="ef-arrow" d="M14 305h34m-7-4 7 4-7 4"/>
-    </svg>
+    <svg id="ef-svg" viewBox="0 0 ${DEMO.w} ${DEMO.h}" data-pair="radar" role="img" aria-label="A sewer pipe and manhole in section, with E-Flow 3 at the top of the pipe and a logger near the top of the manhole. Arrows in the water show the velocity through the depth. The water level can be raised from low flow to a full surcharge up the manhole."><defs>${defs}</defs>${efSection(p, water, inner, DEMO)}</svg>
     <div class="ef-trace">
       <p class="ef-trace-h"><b>The record</b><span><i class="r"></i>Radar <i class="u"></i>Ultrasonic and pressure</span></p>
       <svg id="ef-trace" viewBox="0 0 560 84" aria-hidden="true"><path class="ef-obv" d="M0 40H560"/><text x="556" y="35" text-anchor="end">Pipe obvert</text><path id="ef-tr-r" class="ef-tr r"/><path id="ef-tr-u" class="ef-tr u"/></svg>
@@ -1779,6 +1783,7 @@ const eflowDemo = () => `
     <p class="note">An illustration of how E-Flow 3 changes over, in a 600 mm sewer. Not to scale, and not live data.</p>
   </div>
 </div>`;
+}
 
 for (const pg of C.productPages) {
   const b = brand("eds");
@@ -1789,6 +1794,8 @@ for (const pg of C.productPages) {
   const extra = [
     pg.modes && ["how-it-measures", pg.modes.nav, diagramBand(pg.modes)],
     pg.demo && ["changeover", pg.demo.nav, `<div class="section-head"><h2 class="h-lg" data-reveal>${esc(pg.demo.heading)}</h2><p class="lede" data-reveal style="--i:1">${esc(pg.demo.lede)}</p></div>${eflowDemo()}`, "dark"],
+    pg.why && ["why-e-flow-3", pg.why.nav, whyBand(pg.why)],
+    pg.accuracy && ["accuracy", pg.accuracy.nav, accuracyBand(pg.accuracy)],
     pg.upkeep && ["maintenance", pg.upkeep.nav, upkeepBand(pg.upkeep)],
     pg.tough && ["built-for-the-sewer", pg.tough.nav, toughBand(pg.tough)],
     pg.terminals && ["connections", "", terminalBand(pg.terminals)],
@@ -2348,7 +2355,7 @@ function searchIndex() {
   for (const s of C.solutions) put("Solutions", s.title, s.summary, `solutions/${s.slug}.html`, { i: s.icon, b: text(s.intro, blockText(s.blocks)) });
   put("Products", "LIDoTT Alarm", `Detectronic · ${C.lidott.lede}`, "products/lidott-alarm.html", { img: plain(C.lidott.image), b: text("level radar alarm", C.lidott.description, C.lidott.sections, C.lidott.specs) });
   put("Products", "Alarm2", `Detectronic · ${C.alarm2.tag}`, "products/alarm2.html", { img: plain(C.alarm2.image), b: text("radar level alarm LoRaWAN 4G", C.alarm2.description, C.alarm2.sections, C.alarm2.highlights.map(([, t, d]) => [t, d]), C.alarm2.specs) });
-  for (const pg of C.productPages) put("Products", pg.name, `EDS · ${pg.tag}`, `products/${pg.slug}.html`, { img: plain(pg.image), b: text(pg.lede, pg.intro, pg.features, [pg.modes, pg.upkeep, pg.tough].map((x) => x && [x.heading, x.lede, x.items]), pg.specs.map(([g, rows]) => [g, rows])) });
+  for (const pg of C.productPages) put("Products", pg.name, `EDS · ${pg.tag}`, `products/${pg.slug}.html`, { img: plain(pg.image), b: text(pg.lede, pg.intro, pg.features, [pg.modes, pg.why, pg.accuracy, pg.upkeep, pg.tough].map((x) => x && [x.heading, x.lede, x.items]), pg.specs.map(([g, rows]) => [g, rows])) });
   for (const p of products) {
     if (p.href) continue; // has a page of its own, listed above
     put("Products", p.name, `${p.brand.name} · ${p.note || p.range || typeOf(p.type).label}`, `products/${p.brand.slug}.html#${p.id}`, { img: plain(p.image), b: text(typeOf(p.type).label, p.group) });

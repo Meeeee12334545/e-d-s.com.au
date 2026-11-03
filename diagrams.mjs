@@ -24,7 +24,7 @@ const label = (x, y, lines, { a = "start", cls = "" } = {}) => {
   const [first, ...rest] = [].concat(lines);
   return `<text x="${x}" y="${y}"${a !== "start" ? ` text-anchor="${a}"` : ""}${cls ? ` class="${cls}"` : ""}>${esc(first)}${rest.map((l) => `<tspan x="${x}" dy="1.25em">${esc(l)}</tspan>`).join("")}</text>`;
 };
-const leader = (d) => `<path class="dg-leader" d="${d}"/>`;
+const leader = (d, cls = "") => `<path class="dg-leader${cls ? ` ${cls}` : ""}" d="${d}"/>`;
 const svg = (w, h, body, defs = "") => `<svg viewBox="0 0 ${w} ${h}" aria-hidden="true">${defs ? `<defs>${defs}</defs>` : ""}${body}</svg>`;
 // Soil, shared by the drawings that cut through the ground.
 const soil = (id) => `<pattern id="${id}" width="14" height="14" patternUnits="userSpaceOnUse"><rect width="14" height="14" fill="#f5f2ea"/><circle cx="3" cy="4" r=".9" fill="#ddd5c4"/><circle cx="10" cy="10" r=".7" fill="#e3dccd"/></pattern>`;
@@ -170,155 +170,326 @@ function scatter(t) {
   return svg(480, 296, body);
 }
 
-/* ---- E-Flow 3: the sensor at the obvert ---- */
-// E-Flow 3 in profile as it hangs from the pipe crown, upstream to the left:
-// the body against the crown, the depth radar's dome at the upstream end,
-// the sloping face over the velocity radar, and the nose block with the
-// ultrasonic face in front and the pressure port beneath (datasheet figure
-// 3). Drawn in its own units, 80 long and 46 deep; each element is
-// [x, y, dx, dy]: where it sits and which way it looks.
+/* ---- E-Flow 3: a drawing kit ---- */
+// Shared by the E-Flow 3 drawings and the changeover demo (build.mjs):
+// gradients and section hatching for cut concrete and soil (ids prefixed per
+// drawing, as several sit on one page), the sensor drawn after the product
+// photograph, beams with wavefronts travelling out along them, and velocity
+// profiles. The sensor hangs from the pipe crown with upstream to the left,
+// as in datasheet figure 3: the depth radar's dome at the upstream end, the
+// velocity radar behind the sloping face, the ultrasonic face on the front of
+// the nose and the pressure port beneath it. It is drawn in its own units,
+// 84 long and 46 deep; each element is [x, y, dx, dy]: where it sits and
+// which way it looks.
 const EF = {
   body: "M8 0H70A8 8 0 0 1 78 8V10A8 8 0 0 1 70 18H68V40Q68 46 62 46H55Q52 46 51 43L48 33L30 18H8A8 8 0 0 1 0 10V8A8 8 0 0 1 8 0Z",
-  depth: [16, 23, 0, 1], vel: [39, 25.5, -0.77, 0.64], us: [49.5, 38, -0.8, 0.6], press: [59.5, 46, 0, 1],
+  depth: [16, 23.6, 0, 1], vel: [40, 25.8, -0.77, 0.64], us: [50.4, 38.4, -0.8, 0.6], press: [59.5, 46.6, 0, 1],
 };
-// The sensor placed with its upstream end at the crown (x, y) and scaled by
-// s; its cable runs to `cable` (a path continuing from the gland). `off`
-// names the pair that is standing by, drawn faint.
-function eflowAt(x, y, s, { cable = "", off = "" } = {}) {
+const turn = (dx, dy, a) => { const r = (a * Math.PI) / 180; return [dx * Math.cos(r) - dy * Math.sin(r), dx * Math.sin(r) + dy * Math.cos(r)]; };
+export function efDefs(p, { dark = false } = {}) {
+  const c = dark
+    ? { soil: "#0b3532", stone: ["#0f403b", "#0d3b37"], cut: "#123f3b", line: "#1f5650", air: ["#021614", "#052421"] }
+    : { soil: "#f2eee4", stone: ["#e3dbc9", "#e9e2d3"], cut: "#e6ebea", line: "#b4c2c0", air: ["#eaf1ef", "#fbfdfc"] };
+  return `
+  <pattern id="${p}-soil" width="24" height="20" patternUnits="userSpaceOnUse"><rect width="24" height="20" fill="${c.soil}"/><ellipse cx="5" cy="5" rx="2.4" ry="1.5" fill="${c.stone[0]}"/><ellipse cx="16" cy="13" rx="1.8" ry="1.2" fill="${c.stone[1]}"/><circle cx="20" cy="4" r=".9" fill="${c.stone[0]}"/><circle cx="9" cy="16" r=".8" fill="${c.stone[1]}"/></pattern>
+  <pattern id="${p}-cut" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="${c.cut}"/><path d="M0 0V6" stroke="${c.line}" stroke-width="1.1"/></pattern>
+  <linearGradient id="${p}-air" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c.air[0]}"/><stop offset="1" stop-color="${c.air[1]}"/></linearGradient>
+  <linearGradient id="${p}-body" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5b6764"/><stop offset=".3" stop-color="#2b3533"/><stop offset="1" stop-color="#141b1a"/></linearGradient>
+  <radialGradient id="${p}-dome" cx=".36" cy=".2" r=".9"><stop offset="0" stop-color="#8a9997"/><stop offset=".4" stop-color="#1f2928"/><stop offset="1" stop-color="#040707"/></radialGradient>
+  <linearGradient id="${p}-face" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b6c0be"/><stop offset="1" stop-color="#66726f"/></linearGradient>
+  <linearGradient id="${p}-gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f6dc96"/><stop offset=".55" stop-color="#d1a24b"/><stop offset="1" stop-color="#94681f"/></linearGradient>
+  <linearGradient id="${p}-steel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f4f7f7"/><stop offset="1" stop-color="#97a4a3"/></linearGradient>`;
+}
+// The sensor with its upstream end at the crown (x, y), scaled by s, and its
+// cable running on along `cable` (a path continuing from the gland).
+export function efSensor(p, x, y, s, { cable = "" } = {}) {
   const at = ([u, v, dx, dy]) => [x + u * s, y + v * s, dx, dy];
   const draw = `
-  ${cable ? `<path class="dg-cable" d="M${f1(x + 78 * s)} ${f1(y + 9 * s)}${cable}"/>` : ""}
-  <g class="dg-ef${off ? ` off-${off}` : ""}" transform="translate(${x} ${y}) scale(${s})">
-    <path class="dg-ef-body" d="${EF.body}"/>
-    <rect class="dg-ef-plate" x="44" y="5" width="22" height="9" rx="1.5"/>
-    <path class="dg-ef-radar" d="M11 18A5 5 0 0 0 21 18ZM31.5 18L48 31.8"/>
-    <path class="dg-ef-us" d="M48.4 34.3L50.6 41.6"/>
-    <path class="dg-ef-port" d="M57 46.6H62"/>
+  ${cable ? `<path class="ef-cable" d="M${f1(x + 83 * s)} ${f1(y + 9 * s)}${cable}"/>` : ""}
+  <g class="ef-sensor" transform="translate(${x} ${y}) scale(${s})">
+    <rect x="4" y="-3.4" width="70" height="3.6" rx=".8" fill="url(#${p}-steel)" class="ef-bracket"/>
+    <circle class="ef-bolt" cx="10" cy="-1.6" r="1.1"/><circle class="ef-bolt" cx="68" cy="-1.6" r="1.1"/>
+    <path d="${EF.body}" fill="url(#${p}-body)" class="ef-body"/>
+    <path class="ef-shine" d="M10 1.6H68"/>
+    <path d="M27.6 18L47.6 34.2L52 30.6L35.6 18Z" fill="url(#${p}-face)" class="ef-face"/>
+    <path class="ef-grille" d="M35 19.4l12.6 10.2M39 19.4l11 8.9"/>
+    <path d="M10.2 18A5.8 5.8 0 0 0 21.8 18Z" fill="url(#${p}-dome)" class="ef-dome"/>
+    <ellipse class="ef-glint" cx="14" cy="19.5" rx="1.7" ry=".8"/>
+    <rect class="ef-label" x="44.6" y="4.2" width="21.4" height="9.8" rx="1.2"/>
+    <rect class="ef-mark" x="44.6" y="4.2" width="2.8" height="9.8" rx="1"/>
+    <path class="ef-print" d="M49.6 7.4h9.4M49.6 9.7h13.4M49.6 11.8h7"/>
+    <path d="M48.2 33.8L51 43.4L53.6 42.4L50.9 32.8Z" fill="url(#${p}-gold)" class="ef-us"/>
+    <ellipse cx="59.5" cy="46.3" rx="3.3" ry="1.2" fill="url(#${p}-steel)" class="ef-port"/>
+    <rect class="ef-gland" x="77.6" y="4.8" width="6" height="8.4" rx="1.2"/>
+    <path class="ef-rib" d="M79.6 4.8v8.4M81.6 4.8v8.4"/>
   </g>`;
   return { draw, depth: at(EF.depth), vel: at(EF.vel), us: at(EF.us), press: at(EF.press) };
 }
-// A beam from an element: a cone of the given half angle, out to a level
-// (`toY`) or a length.
-const turn = (dx, dy, a) => { const r = (a * Math.PI) / 180; return [dx * Math.cos(r) - dy * Math.sin(r), dx * Math.sin(r) + dy * Math.cos(r)]; };
-function cone([ox, oy, dx, dy], half, { toY, len }) {
-  const edge = (a) => { const [ex, ey] = turn(dx, dy, a); const t = toY != null ? (toY - oy) / ey : len; return `${f1(ox + ex * t)} ${f1(oy + ey * t)}`; };
-  return `M${f1(ox)} ${f1(oy)}L${edge(-half)}L${edge(half)}Z`;
+// A beam from an element: a cone of the given half angle out to a level
+// (`toY`) or a length, shaded from its emitter, with wavefronts that travel
+// out along it. `kind` is "r" (radar) or "u" (ultrasonic). Returns its
+// gradient (for defs), the drawing, and where it meets the level.
+export function efBeam(p, id, el, half, { toY, len, kind = "r", waves = 4 } = {}) {
+  const [ox, oy, dx, dy] = el;
+  const reach = (a) => { const [ex, ey] = turn(dx, dy, a); const t = toY != null ? (toY - oy) / ey : len; return [t, ox + ex * t, oy + ey * t]; };
+  const [t1, x1, y1] = reach(-half), [t2, x2, y2] = reach(half);
+  const near = Math.min(t1, t2), far = Math.max(t1, t2), gid = `${p}-${id}`;
+  const [ax, ay] = turn(dx, dy, -half), [bx, by] = turn(dx, dy, half);
+  const arcs = Array.from({ length: waves }, (_, k) => {
+    const r = (near * (k + 0.7)) / (waves + 0.2);
+    return `<path class="ef-wave ${kind}" style="--d:${(k * 0.3).toFixed(2)}s" d="M${f1(ox + ax * r)} ${f1(oy + ay * r)}A${f1(r)} ${f1(r)} 0 0 1 ${f1(ox + bx * r)} ${f1(oy + by * r)}"/>`;
+  }).join("");
+  return {
+    defs: `<radialGradient id="${gid}" gradientUnits="userSpaceOnUse" cx="${f1(ox)}" cy="${f1(oy)}" r="${f1(far)}"><stop offset="0" class="ef-g0 ${kind}"/><stop offset="1" class="ef-g1 ${kind}"/></radialGradient>`,
+    draw: `<path class="ef-beam ${kind}" fill="url(#${gid})" d="M${f1(ox)} ${f1(oy)}L${f1(x1)} ${f1(y1)}L${f1(x2)} ${f1(y2)}Z"/><g class="ef-waves">${arcs}</g>`,
+    foot: [Math.min(x1, x2), Math.max(x1, x2)],
+  };
 }
-// A numbered marker, coloured by its pair, as on the anatomy figure.
-const pin = (x, y, n, pair) => `<g class="dg-pin ${pair}"><circle cx="${x}" cy="${y}" r="9"/><text x="${x}" y="${y + 4.2}" text-anchor="middle">${n}</text></g>`;
+// Velocity through the depth at one station: arrows sized by a power law
+// from the bed (a free surface) or from both walls (the pipe full), the
+// curve through their tips and the mean as a dashed line.
+export function efProfile(x0, top, bottom, len, { full = false, step = 7, surface = false } = {}) {
+  const v = (y) => (full ? Math.pow(Math.max(0, 1 - Math.abs((2 * y - top - bottom) / (bottom - top))), 1 / 7) : Math.pow(Math.max(0, (bottom - y) / (bottom - top)), 1 / 6));
+  const ys = []; for (let y = top + step * 0.6; y < bottom - 2; y += step) ys.push(y);
+  const arrow = (y) => { const l = len * v(y); return l < 7 ? "" : `M${x0} ${f1(y)}H${f1(x0 + l)}m-4.4-2.8 4.4 2.8-4.4 2.8`; };
+  const env = sample(top, bottom, (bottom - top) / 24, (y) => y).map(([y]) => [x0 + len * v(y), y]);
+  const mean = x0 + len * (full ? 0.82 : 0.857);
+  return {
+    mean,
+    draw: `<path class="ef-prof-base" d="M${x0} ${top}V${bottom}"/><path class="ef-prof-env" d="${smooth(env)}"/>
+  <path class="ef-prof" d="${(surface ? ys.slice(1) : ys).map(arrow).join("")}"/>${surface ? `<path class="ef-prof-top" d="${arrow(ys[0])}"/>` : ""}
+  <path class="ef-prof-mean" d="M${f1(mean)} ${top + 3}V${bottom - 3}"/>`,
+  };
+}
 // Something the sewer carries: a lump of rag, grease and silt.
 const LUMPS = ["M0 0q3-6 9-4q6-3 8 3q3 5-3 7q-6 2-10-1q-6-1-4-5z", "M0 0q2-5 7-4q5 0 6 4q1 5-5 5q-7 1-8-5z", "M0 0q4-4 10-2q4 2 2 6q-3 3-8 1q-5-1-4-5z"];
 const lumps = (list) => list.map(([x, y, k, d, cls = ""]) => `<path class="dg-solid${cls ? ` ${cls}` : ""}" d="M${x} ${y}${LUMPS[k % 3].slice(4)}" style="--d:${d}s"/>`).join("");
+const efPin = (x, y, n, pair) => `<g class="dg-pin ${pair}"><circle cx="${f1(x)}" cy="${f1(y)}" r="9"/><text x="${f1(x)}" y="${f1(y + 4.2)}" text-anchor="middle">${n}</text></g>`;
+const flowMark = (x, y, label) => `<text x="${x}" y="${y}" class="dg-w">${esc(label)}</text><path class="dg-arrow w" d="M${x + 34} ${y - 4}h26m-6-4 6 4-6 4"/>`;
 
-// The shared scene for the two modes: ground, a manhole beside the sensor,
-// the pipe in long section with E-Flow 3 at the obvert just upstream of it.
-const EFW = 480, CROWN = 96, INVERT = 226, SHAFT = [320, 366];
-function eflowScene(water, inner, id) {
-  const [s0, s1] = SHAFT;
+// A sewer in long section with a manhole beside the sensor: road and soil,
+// the pipe and shaft walls cut and hatched, a cover and frame, step irons,
+// and a logger hung near the top of the shaft. `level` is the water surface
+// (in the shaft when `full`). Light or dark, as `p` was defined.
+export const LS = { w: 480, h: 250, ground: 18, crown: 104, inv: 226, wall: 10, shaft: [326, 370] };
+export function efWater(p, level, full, g = LS) {
+  const { w, crown, inv } = g, [s0, s1] = g.shaft;
+  const grad = `<linearGradient id="${p}-wg" gradientUnits="userSpaceOnUse" x1="0" y1="${f1(level)}" x2="0" y2="${inv}"><stop offset="0" class="ef-w0"/><stop offset=".18" class="ef-w1"/><stop offset="1" class="ef-w2"/></linearGradient>`;
+  const body = full
+    ? `<path fill="url(#${p}-wg)" d="M0 ${crown}H${s0}V${f1(level)}H${s1}V${crown}H${w}V${inv}H0Z"/><path class="ef-surf" d="M${s0} ${f1(level)}H${s1}"/>`
+    : `<rect x="0" y="${f1(level)}" width="${w}" height="${f1(inv - level)}" fill="url(#${p}-wg)"/><path class="ef-surf" d="M0 ${f1(level)}H${w}"/><path class="ef-surf-hi" d="M0 ${f1(level + 2.6)}H${w}"/>`;
+  return { grad, body };
+}
+export function efSection(p, water, inner, g = LS) {
+  const { w, h, ground, crown, inv, wall } = g, [s0, s1] = g.shaft;
   return `
-  <rect x="0" y="14" width="${EFW}" height="${240 - 14}" fill="url(#${id})"/>
-  <path class="dg-surface" d="M0 14H${EFW}"/>
-  <rect class="dg-pipe-in" x="0" y="${CROWN}" width="${EFW}" height="${INVERT - CROWN}"/>
-  <rect class="dg-pipe-in" x="${s0}" y="14" width="${s1 - s0}" height="${CROWN - 14}"/>
+  <rect x="0" y="${ground}" width="${w}" height="${h - ground}" fill="url(#${p}-soil)"/>
+  <rect class="ef-road" x="0" y="${ground - 5}" width="${w}" height="5"/>
+  <rect x="0" y="${crown}" width="${w}" height="${inv - crown}" fill="url(#${p}-air)"/>
+  <rect x="${s0}" y="${ground}" width="${s1 - s0}" height="${crown - ground}" fill="url(#${p}-air)"/>
   ${water}
-  <path class="dg-pipe" d="M0 ${CROWN}H${s0}M${s1} ${CROWN}H${EFW}M0 ${INVERT}H${EFW}M${s0} 14V${CROWN}M${s1} 14V${CROWN}"/>
-  <rect class="dg-concrete" x="${s0 - 8}" y="9" width="${s1 - s0 + 16}" height="6" rx="1"/>
-  <rect class="dg-box" x="${s0 + 6}" y="20" width="14" height="18" rx="2"/>
+  <path fill="url(#${p}-cut)" d="M0 ${crown - wall}H${s0 - wall}V${ground}H${s0}V${crown}H0ZM${s1} ${ground}H${s1 + wall}V${crown - wall}H${w}V${crown}H${s1}ZM0 ${inv}H${w}V${inv + wall}H0Z"/>
+  <path class="ef-edge" d="M0 ${crown}H${s0}V${ground}M${s1} ${ground}V${crown}H${w}M0 ${inv}H${w}M0 ${crown - wall}H${s0 - wall}V${ground}M${s1 + wall} ${ground}V${crown - wall}H${w}M0 ${inv + wall}H${w}"/>
+  <rect class="ef-frame" x="${s0 - wall - 5}" y="${ground - 8}" width="${s1 - s0 + 2 * wall + 10}" height="4" rx="1"/>
+  <rect class="ef-lid" x="${s0 - 1}" y="${ground - 9.5}" width="${s1 - s0 + 2}" height="3.6" rx="1"/>
+  ${Array.from({ length: 10 }, (_, k) => ground + 18 + 16 * k).filter((y) => y < crown - 6).map((y) => `<path class="ef-step" d="M${s1} ${y}h-7v5h7"/>`).join("")}
+  <path class="ef-strap" d="M${s0} ${ground + 9}h7"/><rect class="ef-logger" x="${s0 + 5}" y="${ground + 6}" width="15" height="28" rx="4"/><rect class="ef-logger-cap" x="${s0 + 5}" y="${ground + 6}" width="15" height="6.5" rx="3"/>
   ${inner}`;
 }
-const flowMark = (x, y, label) => `${label ? `<text x="${x}" y="${y}" class="dg-m">${esc(label)}</text>` : ""}<path class="dg-arrow" d="M${x + 38} ${y - 4}h26m-6-4 6 4-6 4"/>`;
 
 /* ---- eflowModes: radar in normal flow, ultrasonic and pressure in surcharge ---- */
+const LOGGER_CABLE = `C322 113 339 110 339 96V52`;
 function eflowNormal(t) {
-  const L = t.labels, surf = 178;
-  const ef = eflowAt(226, CROWN, 1, { off: "us", cable: `H${SHAFT[0] + 4}V30H${SHAFT[0] + 13}` });
-  const water = `<rect class="dg-sewage" x="0" y="${surf}" width="${EFW}" height="${INVERT - surf}"/>
-  <path class="dg-sewage-top" d="M0 ${surf}H${EFW}"/>
-  <path class="dg-flow" d="M16 ${surf + 26}H470"/>`;
-  const beams = `
-  <path class="dg-beam-r" d="${cone(ef.vel, 12, { toY: surf })}"/>
-  <path class="dg-beam-r" d="${cone(ef.depth, 7, { toY: surf })}"/>
-  <path class="dg-footprint" d="M${f1(ef.vel[0] - (surf - ef.vel[1]) / ef.vel[3] * 0.77 - 24)} ${surf}h40"/>`;
-  return svg(EFW, 240, eflowScene(water, `${beams}${ef.draw}
-  ${pin(180, 150, 1, "radar")}${pin(255, 160, 2, "radar")}
-  ${label(16, surf - 8, L.surface, { cls: "dg-m" })}
-  ${flowMark(16, 220, L.flow)}
-  ${label(16, 40, L.above, { cls: "dg-b" })}`, "dg-soil-e1"), soil("dg-soil-e1"));
+  const L = t.labels, p = "efn", level = 170;
+  const ef = efSensor(p, 226, LS.crown, 1, { cable: LOGGER_CABLE });
+  const bv = efBeam(p, "bv", ef.vel, 12, { toY: level }), bd = efBeam(p, "bd", ef.depth, 7, { toY: level, waves: 3 });
+  const pr = efProfile(118, level + 1, LS.inv - 1, 70, { surface: true });
+  const w = efWater(p, level, false);
+  const [f0, f1x] = bv.foot;
+  return svg(LS.w, LS.h, efSection(p, w.body, `
+  ${pr.draw}
+  ${bv.draw}${bd.draw}
+  <path class="ef-foot r" d="M${f1(f0)} ${level}H${f1(f1x)}"/>
+  ${ef.draw}
+  ${efPin(f0 + 2, level - 30, 1, "radar")}${efPin(ef.depth[0] + 14, level - 16, 2, "radar")}
+  ${label(f1(f0 - 8), level - 8, L.surface, { a: "end", cls: "dg-h" })}
+  ${label(16, level + 24, L.profile, { cls: "dg-w" })}
+  ${label(f1(pr.mean + 6), LS.inv - 8, L.mean, { cls: "dg-w dg-b" })}
+  ${flowMark(386, LS.inv - 10, L.flow)}
+  ${label(16, 50, L.above, { cls: "dg-b dg-h" })}`), `${efDefs(p)}${w.grad}${bv.defs}${bd.defs}`);
 }
 function eflowSurcharge(t) {
-  const L = t.labels, level = 50;
-  const ef = eflowAt(226, CROWN, 1, { off: "radar", cable: `H${SHAFT[0] + 4}V30H${SHAFT[0] + 13}` });
-  const [px, py] = ef.press;
-  const water = `<rect class="dg-sewage" x="0" y="${CROWN}" width="${EFW}" height="${INVERT - CROWN}"/>
-  <rect class="dg-sewage" x="${SHAFT[0]}" y="${level}" width="${SHAFT[1] - SHAFT[0]}" height="${CROWN - level}"/>
-  <path class="dg-sewage-top" d="M${SHAFT[0]} ${level}H${SHAFT[1]}"/>
-  <path class="dg-flow" d="M16 206H470"/>
-  <g class="dg-bits">${[[20, 168, 0], [60, 192, -2.4], [8, 212, -4.6], [40, 182, -6.8], [14, 158, -8.4]].map(([x, y, d]) => `<circle cx="${x}" cy="${y}" r="2.4" style="--d:${d}s"/>`).join("")}</g>`;
-  const dim = 386;
+  const L = t.labels, p = "efs", level = 56;
+  const ef = efSensor(p, 226, LS.crown, 1, { cable: LOGGER_CABLE });
+  const bu = efBeam(p, "bu", ef.us, 3.4, { len: 130, kind: "u", waves: 5 });
+  const pr = efProfile(118, LS.crown + 1, LS.inv - 1, 72, { full: true });
+  const w = efWater(p, level, true);
+  const [px, py] = ef.press, dim = 394;
   const head = `
-  <path class="dg-ext" d="M${f1(px + 4)} ${f1(py)}H${dim + 6}M${SHAFT[1] + 2} ${level}H${dim + 6}"/>
-  <path class="dg-dim" d="M${dim} ${f1(py - 2)}V${level + 2}m-4 6 4-6 4 6M${dim - 4} ${f1(py - 8)}l4 6 4-6"/>
-  ${label(dim + 10, f1((py + level) / 2 - 4), L.head, { cls: "dg-b" })}`;
-  return svg(EFW, 240, eflowScene(water, `
-  <path class="dg-beam-u" d="${cone(ef.us, 3, { len: 128 })}"/>
+  <path class="ef-ext" d="M${f1(px + 5)} ${f1(py)}H${dim + 6}M${LS.shaft[1] + 12} ${level}H${dim + 6}"/>
+  <path class="ef-dim" d="M${dim} ${f1(py - 2)}V${level + 2}m-4 6 4-6 4 6M${dim - 4} ${f1(py - 8)}l4 6 4-6"/>
+  ${label(dim + 9, f1((py + level) / 2 - 6), L.head, { cls: "dg-b dg-h" })}`;
+  const bits = `<g class="dg-bits">${[[20, 168, 0], [60, 192, -2.4], [8, 212, -4.6], [40, 182, -6.8], [14, 150, -8.4], [70, 130, -3.6]].map(([x, y, d]) => `<circle cx="${x}" cy="${y}" r="2.2" style="--d:${d}s"/>`).join("")}</g>`;
+  return svg(LS.w, LS.h, efSection(p, w.body, `
+  ${bits}${pr.draw}
+  ${bu.draw}
   <g class="dg-ping-u">${[0, 1, 2].map((n) => `<path d="M${f1(px - 7)} ${f1(py + 6)}q7 5 14 0" style="--d:${n * 0.5}s"/>`).join("")}</g>
   ${ef.draw}${head}
-  ${pin(196, 194, 3, "us")}${pin(px - 18, py + 20, 4, "us")}
-  ${label(16, 118, L.standby, { cls: "dg-m" })}
-  ${flowMark(16, 220, L.flow)}
-  ${label(16, 40, L.full, { cls: "dg-b" })}`, "dg-soil-e2"), soil("dg-soil-e2"));
+  ${efPin(ef.us[0] - 52, ef.us[1] + 30, 3, "us")}${efPin(px + 12, py + 22, 4, "us")}
+  ${label(16, 124, L.standby, { cls: "dg-w" })}
+  ${label(16, 206, L.profile, { cls: "dg-w" })}
+  ${flowMark(386, LS.inv - 10, L.flow)}
+  ${label(16, 50, L.full, { cls: "dg-b dg-h" })}`), `${efDefs(p)}${w.grad}${bu.defs}`);
 }
 
 /* ---- eflowObvert: a sensor on the invert, against E-Flow 3 at the obvert ---- */
-const OBW = 480, OB_CROWN = 34, OB_INVERT = 174, OB_SURF = 118;
-function obvertScene(inner, id) {
-  return `
-  <rect x="0" y="0" width="${OBW}" height="${OB_INVERT + 14}" fill="url(#${id})"/>
-  <rect class="dg-pipe-in" x="0" y="${OB_CROWN}" width="${OBW}" height="${OB_INVERT - OB_CROWN}"/>
-  <rect class="dg-sewage" x="0" y="${OB_SURF}" width="${OBW}" height="${OB_INVERT - OB_SURF}"/>
-  <path class="dg-sewage-top" d="M0 ${OB_SURF}H${OBW}"/>
-  <path class="dg-flow" d="M16 ${OB_SURF + 18}H470"/>
-  <path class="dg-pipe" d="M0 ${OB_CROWN}H${OBW}M0 ${OB_INVERT}H${OBW}"/>
-  ${inner}`;
+const OB = { w: 480, h: 196, crown: 42, inv: 168, wall: 10, surf: 116 };
+function obvertScene(p, inner) {
+  const { w, h, crown, inv, wall, surf } = OB;
+  const water = efWater(p, surf, false, { ...LS, w, crown, inv });
+  return { grad: water.grad, body: `
+  <rect width="${w}" height="${h}" fill="url(#${p}-soil)"/>
+  <rect x="0" y="${crown}" width="${w}" height="${inv - crown}" fill="url(#${p}-air)"/>
+  ${water.body}
+  <path fill="url(#${p}-cut)" d="M0 ${crown - wall}H${w}V${crown}H0ZM0 ${inv}H${w}V${inv + wall}H0Z"/>
+  <path class="ef-edge" d="M0 ${crown}H${w}M0 ${crown - wall}H${w}M0 ${inv}H${w}M0 ${inv + wall}H${w}"/>
+  ${inner}` };
 }
 function invertPanel(t) {
-  const L = t.labels;
-  // the sensor on the invert, and what has wrapped round it
-  const body = `
-  ${lumps([[10, 150, 0, 0], [6, 132, 1, -2.2], [14, 162, 2, -4.4], [4, 142, 0, -6.6]].map(([x, y, k, d]) => [x, y, k, d, "stop"]))}
-  <path class="dg-cable" d="M0 ${OB_INVERT - 3}H236"/>
-  <path class="dg-mound" d="M214 ${OB_INVERT}q4-14 16-18q6-10 18-8q10-8 22-2q14-2 18 10q12 4 12 18z"/>
-  <path class="dg-rag" d="M296 158q14 4 24-2t24 2M292 166q12 2 22-2t22 3"/>
-  <path class="dg-inv-sensor" d="M236 ${OB_INVERT}l8-9q3-3 8-3h24q6 0 6 6v6z"/>
-  ${label(16, 62, L.invert, { cls: "dg-b" })}${leader("M120 66L232 152")}
-  ${label(300, 62, L.fouled, { cls: "dg-m" })}${leader("M318 84L284 146")}
-  ${flowMark(16, 160, "")}`;
-  return svg(OBW, 188, obvertScene(body, "dg-soil-o1"), soil("dg-soil-o1"));
+  const L = t.labels, p = "eoa", { inv, surf } = OB;
+  const sc = obvertScene(p, `
+  ${lumps([[10, 150, 0, 0], [6, 134, 1, -2.2], [14, 158, 2, -4.4], [4, 142, 0, -6.6]].map(([x, y, k, d]) => [x, y, k, d, "stop"]))}
+  <path class="ef-cable" d="M0 ${inv - 3}H236"/>
+  <path class="dg-mound" d="M212 ${inv}q4-15 16-19q6-11 19-9q10-8 23-2q14-2 19 11q12 4 12 19z"/>
+  <path class="dg-mound-tx" d="M226 ${inv - 12}q10-6 20-3M244 ${inv - 20}q12-4 22 2M262 ${inv - 9}q10-5 22 0"/>
+  <path class="dg-rag" d="M298 ${inv - 10}q14 4 24-2t24 2M294 ${inv - 3}q12 2 22-2t22 3"/>
+  <path d="M234 ${inv}l9-9q3-3 8-3h24q6 0 6 6v6z" fill="url(#${p}-body)"/>
+  ${[[150, 0], [340, 1], [420, 2]].map(([x, k]) => `<ellipse class="dg-grease" cx="${x}" cy="${surf + 1}" rx="${7 + k * 2}" ry="2.2"/>`).join("")}
+  ${label(16, 70, L.invert, { cls: "dg-b dg-h" })}${leader(`M118 74L234 ${inv - 14}`)}
+  ${label(300, 70, L.fouled, { cls: "dg-h dg-m" })}${leader(`M318 92L286 ${inv - 20}`)}
+  ${flowMark(16, inv - 8, L.flow)}`);
+  return svg(OB.w, OB.h, sc.body, `${efDefs(p)}${sc.grad}`);
 }
 function obvertPanel(t) {
-  const L = t.labels;
-  const ef = eflowAt(204, OB_CROWN, 1.05, { off: "us", cable: "H480" });
-  const body = `
-  ${lumps([[10, 150, 0, 0], [6, 132, 1, -2.2], [14, 162, 2, -4.4], [4, 142, 0, -6.6]].map(([x, y, k, d]) => [x, y, k, d, "pass"]))}
-  <path class="dg-beam-r" d="${cone(ef.vel, 12, { toY: OB_SURF })}"/>
-  <path class="dg-beam-r" d="${cone(ef.depth, 7, { toY: OB_SURF })}"/>
+  const L = t.labels, p = "eob", { crown, inv, surf } = OB;
+  const ef = efSensor(p, 200, crown, 1.05, { cable: "H480" });
+  const bv = efBeam(p, "bv", ef.vel, 12, { toY: surf }), bd = efBeam(p, "bd", ef.depth, 7, { toY: surf, waves: 3 });
+  const sc = obvertScene(p, `
+  ${lumps([[10, 150, 0, 0], [6, 134, 1, -2.2], [14, 158, 2, -4.4], [4, 142, 0, -6.6]].map(([x, y, k, d]) => [x, y, k, d, "pass"]))}
+  ${bv.draw}${bd.draw}
+  <path class="ef-foot r" d="M${f1(bv.foot[0])} ${surf}H${f1(bv.foot[1])}"/>
   ${ef.draw}
-  ${label(16, 62, L.obvert, { cls: "dg-b" })}${leader("M114 66L200 56")}
-  ${label(330, 82, L.clear, { cls: "dg-m" })}
-  ${flowMark(16, 160, "")}`;
-  return svg(OBW, 188, obvertScene(body, "dg-soil-o2"), soil("dg-soil-o2"));
+  ${label(16, 70, L.obvert, { cls: "dg-b dg-h" })}${leader("M152 64L198 56")}
+  ${label(330, 86, L.clear, { cls: "dg-h dg-m" })}
+  ${flowMark(16, inv - 8, L.flow)}`);
+  return svg(OB.w, OB.h, sc.body, `${efDefs(p)}${sc.grad}${bv.defs}${bd.defs}`);
+}
+
+/* ---- eflowProfile: from surface velocity and depth to flow ---- */
+// Left, a close look along the pipe: the radar reads the surface across its
+// footprint, and the velocity through the depth beneath it gives the mean.
+// Right, the pipe in cross-section: depth and the pipe profile give the
+// wetted area, shaded by how fast the water moves (lighter is faster).
+function profileLong(t) {
+  const L = t.labels, p = "epl", g = { ...LS, w: 560, h: 330, ground: 0, crown: 40, inv: 300, wall: 10 }, level = 152;
+  const ef = efSensor(p, 376, g.crown, 1.55, { cable: "H560" });
+  const bv = efBeam(p, "bv", ef.vel, 12, { toY: level }), bd = efBeam(p, "bd", ef.depth, 7, { toY: level, waves: 3 });
+  const pr = efProfile(238, level + 1, g.inv - 1, 124, { surface: true, step: 9 });
+  const w = efWater(p, level, false, g);
+  const [f0, f1x] = bv.foot, dim = 536;
+  const body = `
+  <rect width="${g.w}" height="${g.h}" fill="url(#${p}-soil)"/>
+  <rect x="0" y="${g.crown}" width="${g.w}" height="${g.inv - g.crown}" fill="url(#${p}-air)"/>
+  ${w.body}
+  <path fill="url(#${p}-cut)" d="M0 ${g.crown - g.wall}H${g.w}V${g.crown}H0ZM0 ${g.inv}H${g.w}V${g.inv + g.wall}H0Z"/>
+  <path class="ef-edge" d="M0 ${g.crown}H${g.w}M0 ${g.crown - g.wall}H${g.w}M0 ${g.inv}H${g.w}M0 ${g.inv + g.wall}H${g.w}"/>
+  ${pr.draw}${bv.draw}${bd.draw}
+  <path class="ef-foot r" d="M${f1(f0)} ${level}H${f1(f1x)}"/>
+  ${ef.draw}
+  <path class="ef-ext" d="M${f1(ef.depth[0] + 10)} ${level}H${dim + 6}M${dim - 30} ${g.inv}H${dim + 6}"/>
+  <path class="ef-dim d" d="M${dim} ${level + 2}V${g.inv - 2}m-4-6 4 6 4-6M${dim - 4} ${level + 8}l4-6 4 6"/>
+  ${label(dim - 8, 236, L.depth, { a: "end", cls: "dg-w dg-b" })}
+  ${efPin(f0 - 6, level - 26, 1, "radar")}
+  ${label(24, 76, L.surface, { cls: "dg-h" })}${leader(`M${f1(f0 - 14)} ${level - 28}L${f1(f0 - 40)} 92`)}
+  ${label(24, 232, L.mean, { cls: "dg-w dg-b" })}${leader(`M180 248L${f1(pr.mean - 2)} 262`, "w")}
+  ${flowMark(24, g.inv - 12, L.flow)}`;
+  return svg(g.w, g.h, body, `${efDefs(p)}${w.grad}${bv.defs}${bd.defs}`);
+}
+function profileCross(t) {
+  const L = t.labels, p = "epc", cx = 190, cy = 168, R = 126, wall = 11, surf = 152;
+  const half = Math.sqrt(R * R - (cy - surf) ** 2), xl = cx - half, xr = cx + half;
+  const seg = `M${f1(xl)} ${surf}H${f1(xr)}A${R} ${R} 0 1 1 ${f1(xl)} ${surf}Z`;
+  const bands = [["#2f887d", 1.0], ["#3f998d", 0.82], ["#57ab9e", 0.64], ["#79c0b3", 0.47], ["#a6dace", 0.31], ["#d3efe8", 0.16]];
+  const iso = bands.map(([c, k]) => `<ellipse cx="${cx}" cy="${surf + 18}" rx="${f1(150 * k)}" ry="${f1(150 * k * 0.86)}" fill="${c}"/>`).join("");
+  const lines = bands.slice(1).map(([, k]) => `<ellipse cx="${cx}" cy="${surf + 18}" rx="${f1(150 * k)}" ry="${f1(150 * k * 0.86)}"/>`).join("");
+  const beamL = cx - Math.tan((10 * Math.PI) / 180) * (surf - 60), beamR = cx + (cx - beamL);
+  const body = `
+  <rect width="380" height="330" fill="url(#${p}-soil)"/>
+  <path fill="url(#${p}-cut)" fill-rule="evenodd" d="M${cx - R - wall} ${cy}a${R + wall} ${R + wall} 0 1 0 ${2 * (R + wall)} 0a${R + wall} ${R + wall} 0 1 0 -${2 * (R + wall)} 0ZM${cx - R} ${cy}a${R} ${R} 0 1 0 ${2 * R} 0a${R} ${R} 0 1 0 -${2 * R} 0Z"/>
+  <circle cx="${cx}" cy="${cy}" r="${R}" fill="url(#${p}-air)"/>
+  <clipPath id="${p}-seg"><path d="${seg}"/></clipPath>
+  <g clip-path="url(#${p}-seg)">${iso}<g class="dg-isovel">${lines}</g></g>
+  <path class="ef-surf" d="M${f1(xl)} ${surf}H${f1(xr)}"/>
+  <path class="ef-edge" fill="none" d="M${cx - R} ${cy}a${R} ${R} 0 1 0 ${2 * R} 0a${R} ${R} 0 1 0 -${2 * R} 0M${cx - R - wall} ${cy}a${R + wall} ${R + wall} 0 1 0 ${2 * (R + wall)} 0a${R + wall} ${R + wall} 0 1 0 -${2 * (R + wall)} 0"/>
+  <path class="ef-beam r" fill="url(#${p}-xb)" d="M${cx} 60L${f1(beamL)} ${surf}H${f1(beamR)}Z"/>
+  <path class="ef-foot r" d="M${f1(beamL)} ${surf}H${f1(beamR)}"/>
+  <rect x="${cx - 13}" y="${cy - R}" width="26" height="18" rx="5" fill="url(#${p}-body)"/>
+  <ellipse cx="${cx}" cy="${cy - R + 18}" rx="5" ry="2.4" fill="url(#${p}-dome)"/>
+  <path class="ef-ext" d="M${f1(xr - 6)} ${surf}H352M${cx + 30} ${cy + R}H352"/>
+  <path class="ef-dim d" d="M346 ${surf + 2}V${cy + R - 2}m-4-6 4 6 4-6M342 ${surf + 8}l4-6 4 6"/>
+  ${label(338, 250, "h", { a: "end", cls: "dg-b dg-h dg-i" })}
+  ${label(cx, 238, L.area, { a: "middle", cls: "dg-w dg-b" })}
+  ${label(16, 318, L.key, { cls: "dg-m dg-h" })}`;
+  const defs = `${efDefs(p)}<linearGradient id="${p}-xb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="ef-g0 r"/><stop offset="1" class="ef-g1 r"/></linearGradient>`;
+  return svg(380, 330, body, defs);
+}
+
+/* ---- eflowCompare: one storm, three kinds of flowmeter ---- */
+// The same storm under each meter: what actually flowed (dashed), the time
+// the pipe ran full (shaded), and what the meter recorded.
+const CX = (t) => 6 + t * 588, CY = (q) => 86 - q * 68;
+const stormQ = (t) => { const u = (t - 0.12) / 0.26; return 0.22 + (u <= 0 ? 0 : 0.86 * u * u * Math.exp(2 * (1 - u))); };
+const QF = 0.72;
+function compareRow(kind, gap = "") {
+  const ts = sample(0, 1, 0.005, (t) => t).map(([t]) => t);
+  const over = ts.filter((t) => stormQ(t) > QF), s0 = over[0], s1 = over[over.length - 1];
+  let seed = 11;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647) - 0.5;
+  const line = (fn, keep = () => true) => {
+    let d = "", on = false;
+    for (const t of ts) { if (!keep(t)) { on = false; continue; } d += `${on ? "L" : "M"}${f1(CX(t))} ${f1(CY(fn(t)))}`; on = true; }
+    return d;
+  };
+  const truth = `<path class="dg-truth" d="${line(stormQ)}"/>`;
+  const band = `<rect class="dg-sband" x="${f1(CX(s0))}" y="4" width="${f1(CX(s1) - CX(s0))}" height="84"/>`;
+  let rec = "";
+  if (kind === "radar") rec = `<path class="dg-rec r" d="${line(stormQ, (t) => t < s0 || t > s1)}"/><rect class="dg-gap" x="${f1(CX(s0) + 2)}" y="8" width="${f1(CX(s1) - CX(s0) - 4)}" height="76" rx="4"/><text class="dg-gap-t" x="${f1((CX(s0) + CX(s1)) / 2)}" y="56" text-anchor="middle">${esc(gap)}</text>`;
+  else if (kind === "wetted") rec = `<path class="dg-rec w" d="${line((t) => stormQ(t) * (1 - 0.34 * Math.min(1, Math.max(0, (t - 0.08) / 0.92))) + rnd() * 0.035)}"/>`;
+  else rec = `<path class="dg-rec r" d="${line(stormQ, (t) => t <= s0 + 0.0026)}"/><path class="dg-rec u" d="${line(stormQ, (t) => t >= s0 && t <= s1 + 0.0026)}"/><path class="dg-rec r" d="${line(stormQ, (t) => t >= s1)}"/>`;
+  return svg(600, 92, `<path class="dg-axis" d="M6 88H594"/>${band}${truth}${rec}`);
 }
 
 // Two drawings with their titles above and what each pair does beneath.
 const KEY_EF = {
-  radar: `<svg viewBox="0 0 16 10"><path d="M1 1L15 5L1 9Z" class="dg-beam-r"/></svg>`,
-  us: `<svg viewBox="0 0 16 10"><path d="M1 4L15 5L1 6Z" class="dg-beam-u"/></svg>`,
+  radar: `<svg viewBox="0 0 16 10"><path d="M1 1L15 5L1 9Z" class="ef-key r"/></svg>`,
+  us: `<svg viewBox="0 0 16 10"><path d="M1 4L15 5L1 6Z" class="ef-key u"/></svg>`,
   solid: `<svg viewBox="0 0 16 10"><path d="M3 6q2-5 6-3q5-2 5 2q1 4-4 4q-6 1-7-3z" class="dg-solid"/></svg>`,
+  profile: `<svg viewBox="0 0 16 10"><path d="M1 2H13m-3-2 3 2-3 2M1 7H9m-3-2 3 2-3 2" class="ef-key p"/></svg>`,
+  mean: `<svg viewBox="0 0 16 10"><path d="M1 5H15" class="ef-key m"/></svg>`,
+  truth: `<svg viewBox="0 0 16 10"><path d="M1 5H15" class="dg-truth"/></svg>`,
+  band: `<svg viewBox="0 0 16 10"><rect x="1" y="1" width="14" height="8" rx="2" class="dg-sband"/></svg>`,
+  recr: `<svg viewBox="0 0 16 10"><path d="M1 5H15" class="dg-rec r"/></svg>`,
+  recu: `<svg viewBox="0 0 16 10"><path d="M1 5H15" class="dg-rec u"/></svg>`,
+  recw: `<svg viewBox="0 0 16 10"><path d="M1 5H15" class="dg-rec w"/></svg>`,
 };
+const efLegend = (t) => (t.legend ? `<ul class="dg-legend">${t.legend.map(([k, l]) => `<li>${KEY_EF[k].replace("<svg ", '<svg aria-hidden="true" ')}${esc(l)}</li>`).join("")}</ul>` : "");
 const efPanels = (t, drawings) => `<div class="dg-panels">${drawings.map((d, i) => {
   const [title, note, facts] = t.panels[i];
   return `<div class="dg-panel"><p class="dg-panel-h"><b>${esc(title)}</b>${note ? `<span>${esc(note)}</span>` : ""}</p>${d}${facts ? `<ul class="dg-facts">${facts.map(([n, pair, f]) => `<li>${n ? `<span class="dg-n ${pair}" aria-hidden="true">${n}</span>` : ""}<span>${esc(f)}</span></li>`).join("")}</ul>` : ""}</div>`;
-}).join("")}</div>${t.legend ? `<ul class="dg-legend">${t.legend.map(([k, l]) => `<li>${KEY_EF[k].replace("<svg ", '<svg aria-hidden="true" ')}${esc(l)}</li>`).join("")}</ul>` : ""}`;
+}).join("")}</div>`;
+// The profile figure ends in the sum it shows: mean velocity times area is flow.
+const efSum = (t) => `<div class="dg-sum">${t.sum.map(([sym, name, note], i) => `${i ? `<span class="dg-op" aria-hidden="true">${i === t.sum.length - 1 ? "=" : "×"}</span>` : ""}<div><i>${esc(sym)}</i><b>${esc(name)}</b><span>${esc(note)}</span></div>`).join("")}</div>`;
+const efRows = (t) => `<div class="dg-rows">${t.rows.map(([kind, title, verdict]) => `<div class="dg-row ${kind}"><p class="dg-row-h"><b>${esc(title)}</b><span>${esc(verdict)}</span></p>${compareRow(kind, t.gap)}</div>`).join("")}</div>`;
 
 /* ---- two-panel charts: HTML titles and legend, a small SVG each ---- */
 // Hydrographs over two days: dry weather flow with a daily pattern, and the
@@ -373,7 +544,7 @@ const panels = (t, list) => `<div class="dg-panels">${list.map(([title, note, dr
 
 // Drawings in two panels carry their titles and key as page text; the
 // others are one picture with an alt text.
-const PANELS = new Set(["beforeafter", "sampling", "eflowModes", "eflowObvert"]);
+const PANELS = new Set(["beforeafter", "sampling", "eflowModes", "eflowObvert", "eflowProfile", "eflowCompare"]);
 const DRAW = {
   thermal: (t) => thermal(t),
   wetwell: (t) => wetwell(t),
@@ -381,8 +552,10 @@ const DRAW = {
   scatter: (t) => scatter(t),
   beforeafter: (t) => panels(t, [[t.panels[0][0], t.panels[0][1], hydro(1.05, 0.28)], [t.panels[1][0], t.panels[1][1], hydro(0.26, 0.06)]]),
   sampling: (t) => panels(t, [[t.panels[0][0], t.panels[0][1], sampling("time")], [t.panels[1][0], t.panels[1][1], sampling("flow")]]),
-  eflowModes: (t) => efPanels(t, [eflowNormal(t), eflowSurcharge(t)]),
-  eflowObvert: (t) => efPanels(t, [invertPanel(t), obvertPanel(t)]),
+  eflowModes: (t) => efPanels(t, [eflowNormal(t), eflowSurcharge(t)]) + efLegend(t),
+  eflowObvert: (t) => efPanels(t, [invertPanel(t), obvertPanel(t)]) + efLegend(t),
+  eflowProfile: (t) => efPanels(t, [profileLong(t), profileCross(t)]) + efSum(t) + efLegend(t),
+  eflowCompare: (t) => efRows(t) + efLegend(t),
 };
 
 // The figure: the drawing on a white plate, described for screen readers by

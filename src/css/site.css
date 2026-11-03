@@ -1818,42 +1818,51 @@ main:has(> .alt:last-child) + .footer { background: var(--bg); }
 #lidott-svg { width: 100%; max-width: 360px; margin-inline: auto; touch-action: none; }
 .demo .panel { display: flex; flex-direction: column; }
 .demo .sms { flex: 1; }
-/* E-Flow 3 changeover demo: amber is the radar pair, sky blue ultrasonic and pressure */
+/* E-Flow 3 changeover demo: the kit's drawing on the deep teal, read like
+   an instrument. Amber is the radar pair, sky blue ultrasonic and pressure. */
 .ef-demo { grid-template-columns: minmax(0, 1.55fr) minmax(280px, 1fr); }
-#ef-svg { display: block; width: 100%; height: auto; touch-action: none; cursor: ns-resize; user-select: none; }
-#ef-svg text, #ef-trace text { font: 400 11px var(--font-body); fill: rgba(255, 255, 255, .62); }
+#ef-svg { display: block; width: 100%; height: auto; touch-action: none; cursor: ns-resize; user-select: none; border-radius: 12px; }
+#ef-svg text, #ef-trace text { font: 400 11px var(--font-body); fill: rgba(255, 255, 255, .66); }
+#ef-svg .ef-tag { font: 500 11px var(--font-mono); fill: #9fe7da; paint-order: stroke; stroke: #04201d; stroke-width: 3px; }
 #ef-svg .ef-head text { fill: #7dd3fc; font-weight: 500; }
-.ef-wall { fill: none; stroke: #2f6b64; stroke-width: 5; }
-.ef-surf { fill: none; stroke: #9fe0d4; stroke-width: 1.5; }
-.ef-flow { fill: none; stroke: rgba(255, 255, 255, .75); stroke-width: 2; stroke-linecap: round; stroke-dasharray: 3 16; animation: dg-flow var(--dur, 1.4s) linear infinite; }
-.ef-bits circle { fill: #c8e8e1; fill-opacity: .7; animation: dg-pass 7s var(--d, 0s) linear infinite; }
-.ef-arrow { fill: none; stroke: rgba(255, 255, 255, .6); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-.ef-cable { fill: none; stroke: #8fa9a5; stroke-width: 1.4; }
-.ef-body { fill: #1b2928; stroke: #9fc7c0; stroke-width: 1.2; stroke-linejoin: round; }
-.ef-el { fill: none; stroke-width: 3; stroke-linecap: round; transition: stroke .4s var(--ease), fill .4s var(--ease); }
-.ef-el.r { stroke: #6b7c7a; fill: #6b7c7a; }
-.ef-el.u { stroke: #4f6f80; }
-#ef-svg[data-pair="radar"] .ef-el.r { stroke: #f6a04d; fill: #f6a04d; }
-#ef-svg[data-pair="us"] .ef-el.u, #ef-svg[data-wet="1"] .ef-el.u { stroke: #38bdf8; }
-.ef-beam { transition: opacity .5s var(--ease); }
-.ef-beam.r { fill: #f6a04d; fill-opacity: .2; stroke: #f6a04d; stroke-opacity: .75; stroke-width: 1; stroke-dasharray: 3 3; }
-.ef-beam.u { fill: #38bdf8; fill-opacity: .35; stroke: #38bdf8; stroke-width: 1; opacity: 0; }
-#ef-svg[data-pair="us"] .ef-beam.r { opacity: 0; }
-#ef-svg[data-wet="1"] .ef-beam.u { opacity: .35; }
-#ef-svg[data-pair="us"] .ef-beam.u { opacity: 1; }
-.ef-head { opacity: 0; transition: opacity .5s var(--ease); }
+#ef-svg .ef-road { fill: #1d4c47; }
+#ef-svg .ef-edge { stroke: #2f6b64; }
+#ef-svg .ef-frame { fill: #2e4543; } #ef-svg .ef-lid { fill: #46605d; }
+#ef-svg .ef-step, #ef-svg .ef-strap { stroke: #3f6f69; }
+#ef-svg .ef-logger { fill: #dfeeeb; stroke: #5fb4a6; }
+#ef-svg .ef-cable { stroke: #8fa9a5; stroke-width: 1.4; }
+#ef-svg .ef-body { stroke: #9fc7c0; stroke-width: .9; }
+#ef-svg .ef-surf { stroke: #b4efe4; stroke-width: 1.5; }
+#ef-svg .ef-w0 { stop-color: #7fd1c4; stop-opacity: .9; } #ef-svg .ef-w1 { stop-color: #3fa596; stop-opacity: .85; } #ef-svg .ef-w2 { stop-color: #0d6b62; stop-opacity: .95; }
+#ef-svg .ef-g0.r { stop-color: #f6a04d; stop-opacity: .55; } #ef-svg .ef-g1.r { stop-color: #f6a04d; stop-opacity: .05; }
+#ef-svg .ef-g0.u { stop-color: #38bdf8; stop-opacity: .8; } #ef-svg .ef-g1.u { stop-color: #38bdf8; stop-opacity: .15; }
+#ef-svg .ef-beam.r { stroke: #f6a04d; } #ef-svg .ef-wave.r, #ef-svg .ef-foot.r { stroke: #ffb56b; }
+#ef-svg .ef-beam.u { stroke: #38bdf8; } #ef-svg .ef-wave.u { stroke: #8fdcff; }
+#ef-svg .ef-prof-base, #ef-svg .ef-prof, #ef-svg .ef-prof-env { stroke: #e6fffa; }
+#ef-svg .ef-prof-env { stroke-opacity: .6; }
+#ef-svg .ef-prof-top { stroke: #ffb56b; }
+#ef-svg .ef-prof-mean { stroke: #9fe7da; }
+.ef-gridline { fill: none; stroke: rgba(127, 209, 196, .07); stroke-width: 1; }
+.ef-hud { fill: none; stroke: rgba(127, 209, 196, .55); stroke-width: 1.5; }
+.ef-bits circle { fill: #e6fffa; fill-opacity: .7; animation: dg-pass 7s var(--d, 0s) linear infinite; }
+.ef-radar, .ef-uswrap, .ef-head { transition: opacity .5s var(--ease); }
+#ef-svg[data-pair="us"] .ef-radar { opacity: 0; }
+.ef-uswrap { opacity: 0; }
+#ef-svg[data-wet="1"] .ef-uswrap { opacity: .4; }
+#ef-svg[data-pair="us"] .ef-uswrap { opacity: 1; }
+.ef-head { opacity: 0; }
 #ef-svg[data-pair="us"] .ef-head { opacity: 1; }
-.ef-ext { fill: none; stroke: #38bdf8; stroke-opacity: .6; stroke-width: 1; stroke-dasharray: 3 3; }
-.ef-dim { fill: none; stroke: #7dd3fc; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+#ef-svg .ef-ext { stroke: #38bdf8; stroke-opacity: .6; }
+#ef-svg .ef-dim { stroke: #7dd3fc; }
 .ef-trace { margin-top: 10px; padding: 10px 12px 6px; border-radius: 14px; background: rgba(var(--abyss-rgb), .45); border: 1px solid var(--line-dark); }
 .ef-trace-h { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 14px; font-size: .78rem; color: var(--on-dark-faint); }
 .ef-trace-h b { color: #fff; font-weight: 600; }
 .ef-trace-h span { display: flex; align-items: center; gap: 6px; }
 .ef-trace-h i { display: inline-block; width: 14px; height: 3px; border-radius: 2px; margin-left: 6px; }
-.ef-trace-h i.r, .ef-tr.r { background: #f6a04d; stroke: #f6a04d; }
-.ef-trace-h i.u, .ef-tr.u { background: #38bdf8; stroke: #38bdf8; }
+.ef-trace-h i.r { background: #f6a04d; } .ef-trace-h i.u { background: #38bdf8; }
 #ef-trace { display: block; width: 100%; height: auto; margin-top: 4px; }
-.ef-tr { fill: none; stroke-width: 2.4; stroke-linejoin: round; stroke-linecap: round; background: none; }
+.ef-tr { fill: none; stroke-width: 2.4; stroke-linejoin: round; stroke-linecap: round; }
+.ef-tr.r { stroke: #f6a04d; } .ef-tr.u { stroke: #38bdf8; }
 .ef-obv { fill: none; stroke: rgba(255, 255, 255, .3); stroke-dasharray: 4 4; }
 .ef-demo .range { margin-top: 12px; }
 .ef-state { margin-top: 0; }
@@ -1875,12 +1884,12 @@ main:has(> .alt:last-child) + .footer { background: var(--bg); }
 .ef-sensors li[data-state="primary"][data-pair="r"] em { background: #f6a04d; }
 .ef-sensors li[data-state="primary"][data-pair="u"] em { background: #38bdf8; }
 .ef-readouts { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 14px; }
-.ef-readouts .readout b { font-size: 1.3rem; }
-.ef-readouts .readout b small { font-size: .78rem; }
+.ef-readouts .readout b { font-family: var(--font-mono); font-size: 1.22rem; font-weight: 500; letter-spacing: -.02em; }
+.ef-readouts .readout b small { font-family: var(--font-body); font-size: .76rem; }
 .ef-demo .note { margin-top: auto; padding-top: 14px; }
 .ef-demo .panel-head .btn .icon { width: 16px; height: 16px; }
 /* on a phone the drawing is about half size, so its words are set larger */
-@media (max-width: 700px) { #ef-svg text, #ef-trace text { font-size: 17px; } #ef-svg .ef-txt .fine { display: none; } }
+@media (max-width: 700px) { #ef-svg text, #ef-trace text, #ef-svg .ef-tag { font-size: 17px; } #ef-svg .ef-txt .fine { display: none; } }
 .sms { display: grid; gap: 8px; margin-top: 14px; min-height: 150px; align-content: start; }
 .sms div { padding: 10px 13px; border-radius: 14px 14px 14px 4px; background: rgba(255, 255, 255, .08); border: 1px solid var(--line-dark); font-size: .85rem; color: #fff; animation: sms-in .45s var(--ease-spring); }
 .sms div small { display: block; color: var(--on-dark-faint); font-size: .72rem; }
@@ -2544,29 +2553,77 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: 6
 .dg-meas { fill: none; stroke: var(--brand-dark); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
 .dg-area { fill: var(--aqua); fill-opacity: .14; }
 .dg-sample { fill: var(--eds); }
-/* E-Flow 3: the sensor at the obvert, its two pairs of beams, and what the
-   sewer carries. Radar is amber and ultrasonic and pressure blue, on the
-   drawings, the anatomy figure and the demo alike. */
-.dg-eflowModes .dg-panels, .dg-eflowObvert .dg-panels { grid-template-columns: repeat(auto-fit, minmax(min(100%, 400px), 1fr)); gap: 22px 28px; }
-.dg-eflowModes svg, .dg-eflowObvert svg { overflow: hidden; }
-.dg-ef path { vector-effect: non-scaling-stroke; }
-.dg-ef-plate, .ef-plate { fill: #dfe7e5; }
-.dg-bits circle { fill: #6f5d45; fill-opacity: .55; animation: dg-pass 9s var(--d, 0s) linear infinite; }
-.dg-ef-body { fill: #24312f; stroke: #0f1c1b; stroke-width: 1; stroke-linejoin: round; }
-.dg-ef-radar { fill: #f08c2b; stroke: #f08c2b; stroke-width: 2.6; stroke-linecap: round; }
-.dg-ef-us, .dg-ef-port { fill: none; stroke: #2b9bd0; stroke-width: 3; stroke-linecap: round; }
-.dg-ef.off-radar .dg-ef-radar { fill: #8a9896; stroke: #8a9896; }
-.dg-ef.off-us .dg-ef-us, .dg-ef.off-us .dg-ef-port { stroke: #6d8a9a; }
-.dg-beam-r { fill: #f08c2b; fill-opacity: .16; stroke: #e07b1a; stroke-opacity: .7; stroke-width: 1; stroke-dasharray: 3 3; }
-.dg-beam-u { fill: #2b9bd0; fill-opacity: .3; stroke: #1d84b8; stroke-opacity: .8; stroke-width: 1; }
-.dg-footprint { stroke: #e07b1a; stroke-width: 3; stroke-linecap: round; fill: none; }
+/* E-Flow 3: drawn as an engineering section (diagrams.mjs, the E-Flow 3
+   kit): concrete cut and hatched, the sensor shaded after its photograph,
+   beams that fade from their emitter with wavefronts travelling out, and the
+   velocity through the depth. Radar is amber and ultrasonic and pressure
+   blue, on the drawings, the anatomy figure and the demo alike. Fills that
+   come from gradients are left to the drawing; only strokes are set here. */
+.dg-eflowModes .dg-panels, .dg-eflowObvert .dg-panels, .dg-eflowProfile .dg-panels { grid-template-columns: repeat(auto-fit, minmax(min(100%, 400px), 1fr)); gap: 22px 28px; }
+.dg-eflowProfile .dg-panels { grid-template-columns: minmax(0, 1.47fr) minmax(0, 1fr); }
+@media (max-width: 900px) { .dg-eflowProfile .dg-panels { grid-template-columns: minmax(0, 1fr); } .dg-eflowProfile .dg-panel:last-child svg { max-width: 420px; } }
+.dg-eflowModes svg, .dg-eflowObvert svg, .dg-eflowProfile svg { overflow: hidden; border-radius: 8px; }
+.diagram .dg-h { paint-order: stroke; stroke: rgba(255, 255, 255, .88); stroke-width: 3.2px; stroke-linejoin: round; }
+.diagram .dg-t { fill: var(--brand-dark); font-weight: 600; }
+.diagram .dg-w { fill: #fff; paint-order: stroke; stroke: rgba(9, 76, 70, .55); stroke-width: 3px; stroke-linejoin: round; }
+.dg-leader.w { stroke: rgba(255, 255, 255, .75); }
+.dg-arrow.w { stroke: #fff; }
+.diagram .dg-gap-t { fill: #9a4f46; font-weight: 600; font-size: 12px; }
+.diagram .dg-i { font-style: italic; font-size: 15px; }
+.ef-road { fill: #59625f; }
+.ef-edge { fill: none; stroke: #8ea19e; stroke-width: 1; }
+.ef-frame { fill: #3e4846; }
+.ef-lid { fill: #5d6866; }
+.ef-step { fill: none; stroke: #7c8b89; stroke-width: 1.6; stroke-linejoin: round; }
+.ef-strap { stroke: #7c8b89; stroke-width: 2; }
+.ef-logger { fill: #e9f0ef; stroke: #627371; stroke-width: 1.2; }
+.ef-logger-cap { fill: #2f3b39; }
+.ef-cable { fill: none; stroke: #1d2726; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.ef-body { stroke: #0f1716; stroke-width: .7; }
+.ef-shine { fill: none; stroke: rgba(255, 255, 255, .3); stroke-width: 1; stroke-linecap: round; }
+.ef-face { stroke: #4d5856; stroke-width: .5; }
+.ef-grille { fill: none; stroke: rgba(255, 255, 255, .28); stroke-width: .6; }
+.ef-glint { fill: rgba(255, 255, 255, .55); }
+.ef-label { fill: #eef2f1; }
+.ef-mark { fill: var(--eds); }
+.ef-print { fill: none; stroke: #9aa6a4; stroke-width: .7; }
+.ef-us { stroke: #7a5418; stroke-width: .5; }
+.ef-port { stroke: #5c6a68; stroke-width: .5; }
+.ef-bolt { fill: #7f8d8b; }
+.ef-gland { fill: #101716; }
+.ef-rib { stroke: #33403e; stroke-width: .7; }
+.ef-surf { fill: none; stroke: #2a8a7f; stroke-width: 1.4; }
+.ef-surf-hi { fill: none; stroke: rgba(255, 255, 255, .7); stroke-width: 1; }
+.ef-w0 { stop-color: #b2e3d9; } .ef-w1 { stop-color: #7fc7b9; } .ef-w2 { stop-color: #2e8479; }
+.ef-g0.r { stop-color: #f08c2b; stop-opacity: .5; } .ef-g1.r { stop-color: #f08c2b; stop-opacity: .06; }
+.ef-g0.u { stop-color: #2b9bd0; stop-opacity: .7; } .ef-g1.u { stop-color: #2b9bd0; stop-opacity: .12; }
+.ef-beam { stroke-width: .8; stroke-dasharray: 2.5 2.5; }
+.ef-beam.r { stroke: #e07b1a; stroke-opacity: .6; }
+.ef-beam.u { stroke: #1d84b8; stroke-opacity: .7; stroke-dasharray: none; }
+.ef-wave { fill: none; stroke-width: 1.4; stroke-linecap: round; opacity: 0; animation: ef-wave 1.5s var(--d, 0s) linear infinite; }
+.ef-wave.r { stroke: #e07b1a; }
+.ef-wave.u { stroke: #1d78a8; }
+@keyframes ef-wave { 0% { opacity: 0; } 15% { opacity: .95; } 55%, 100% { opacity: 0; } }
+.ef-foot { fill: none; stroke-width: 3.2; stroke-linecap: round; }
+.ef-foot.r { stroke: #e07b1a; }
+.ef-prof-base { fill: none; stroke: var(--brand-dark); stroke-width: 1.4; }
+.ef-prof { fill: none; stroke: #0b5f57; stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round; }
+.ef-prof-top { fill: none; stroke: #c76a12; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.ef-prof-env { fill: none; stroke: #0b5f57; stroke-width: 1; stroke-dasharray: 1.5 2.5; }
+.ef-prof-mean { fill: none; stroke: var(--brand); stroke-width: 1.8; stroke-dasharray: 6 4; }
+.ef-ext { fill: none; stroke: #5d7b8a; stroke-width: .9; stroke-dasharray: 3 3; }
+.ef-dim { fill: none; stroke: #1d78a8; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+.ef-dim.d { stroke: var(--brand-dark); }
+.ef-key { fill: none; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+.ef-key.r { fill: #f08c2b; fill-opacity: .35; stroke: #e07b1a; }
+.ef-key.u { fill: #2b9bd0; stroke: #1d78a8; }
+.ef-key.p { stroke: #0b5f57; }
+.ef-key.m { stroke: var(--brand); stroke-width: 1.8; stroke-dasharray: 3 2; }
 .dg-pin circle { stroke: #fff; stroke-width: 1.5; }
 .dg-pin.radar circle { fill: #c76a12; }
 .dg-pin.us circle { fill: #1d78a8; }
 .diagram .dg-pin text { fill: #fff; font-weight: 700; font-size: 11.5px; }
 .dg-arrow { fill: none; stroke: var(--brand-dark); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-.dg-ext { fill: none; stroke: #2b9bd0; stroke-width: 1; stroke-dasharray: 3 3; }
-.dg-dim { fill: none; stroke: #1d78a8; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
 .dg-ping-u path { fill: none; stroke: #1d78a8; stroke-width: 1.4; stroke-linecap: round; opacity: 0; animation: dg-ping-u 1.5s var(--d, 0s) ease-out infinite; }
 @keyframes dg-ping-u { 0% { translate: 0 0; opacity: .9; } 100% { translate: 0 12px; opacity: 0; } }
 .dg-solid { fill: #9b8466; stroke: #6f5d45; stroke-width: .8; }
@@ -2574,22 +2631,76 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: 6
 .dg-solid.stop { animation: dg-stop 8.8s var(--d, 0s) linear infinite; }
 @keyframes dg-pass { from { translate: -30px 0; } to { translate: 500px 0; } }
 @keyframes dg-stop { 0% { translate: -30px 0; opacity: 0; } 6% { opacity: 1; } 78% { translate: 208px 0; opacity: 1; } 90%, 100% { translate: 216px 0; opacity: 0; } }
+.dg-bits circle { fill: #fff; fill-opacity: .75; animation: dg-pass 9s var(--d, 0s) linear infinite; }
 .dg-mound { fill: #8f7859; stroke: #6f5d45; stroke-width: 1; stroke-linejoin: round; }
+.dg-mound-tx { fill: none; stroke: #6f5d45; stroke-width: 1.2; stroke-linecap: round; }
 .dg-rag { fill: none; stroke: #7a6549; stroke-width: 2.2; stroke-linecap: round; }
-.dg-inv-sensor { fill: #24312f; }
+.dg-grease { fill: #efe3b8; stroke: #cdbb86; stroke-width: .7; }
+.dg-isovel ellipse { fill: none; stroke: rgba(255, 255, 255, .45); stroke-width: .8; }
 .dg-facts { display: grid; gap: 8px; margin: 14px 0 0; padding: 0; list-style: none; font-size: .93rem; line-height: 1.45; color: var(--ink-2); }
 .dg-facts li { display: grid; grid-template-columns: 22px 1fr; gap: 10px; align-items: start; }
 .dg-n, .anat-n, .ef-n { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; font: 700 .75rem/1 var(--font-body); color: #fff; font-variant-numeric: tabular-nums; }
 .dg-n.radar, .anat-pair.radar .anat-n, .anat-pin.radar { background: #c76a12; }
 .dg-n.us, .anat-pair.us .anat-n, .anat-pin.us { background: #1d78a8; }
-.dg-legend svg .dg-beam-r, .dg-legend svg .dg-beam-u { stroke-dasharray: none; }
+/* mean velocity times wetted area is flow */
+.dg-sum { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr); align-items: stretch; gap: 10px; margin-top: 20px; }
+.dg-sum > div { display: grid; gap: 2px; align-content: start; padding: 14px 16px; border-radius: 12px; background: var(--bg-alt); }
+.dg-sum > div:last-child { background: var(--brand-dark); }
+.dg-sum i { font: italic 600 1.7rem/1.1 Georgia, "Times New Roman", serif; color: var(--brand-dark); }
+.dg-sum b { font-family: var(--font-display); font-weight: 620; font-size: .98rem; color: var(--ink); }
+.dg-sum span { font-size: .84rem; line-height: 1.4; color: var(--muted); }
+.dg-sum > div:last-child i, .dg-sum > div:last-child b { color: #fff; }
+.dg-sum > div:last-child span { color: rgba(255, 255, 255, .8); }
+.dg-op { align-self: center; font: 300 1.6rem/1 var(--font-body); color: var(--muted); }
+@media (max-width: 700px) { .dg-sum { grid-template-columns: 1fr; } .dg-op { justify-self: center; line-height: .6; } }
+/* one storm, three kinds of meter */
+.dg-rows { display: grid; gap: 6px; }
+.dg-row { display: grid; grid-template-columns: minmax(170px, .32fr) minmax(0, 1fr); gap: 6px 24px; align-items: center; padding: 10px 0; border-top: 1px solid var(--border); }
+.dg-row:first-child { border-top: 0; padding-top: 0; }
+.dg-row-h { display: grid; gap: 4px; }
+.dg-row-h b { font-family: var(--font-display); font-weight: 620; font-size: 1.02rem; color: var(--ink); }
+.dg-row-h span { display: inline-flex; align-items: center; gap: 7px; font-size: .86rem; color: var(--muted); }
+.dg-row-h span::before { content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%; background: #b9645a; }
+.dg-row.eflow .dg-row-h span { color: var(--brand-dark); font-weight: 600; }
+.dg-row.eflow .dg-row-h span::before { background: var(--green); box-shadow: 0 0 0 3px rgba(34, 197, 94, .18); }
+.dg-row.eflow { margin-top: 4px; padding: 14px 16px; border-radius: 12px; border-top: 0; background: var(--bg-alt); }
+.dg-sband { fill: #2b9bd0; fill-opacity: .1; }
+.dg-truth { fill: none; stroke: #7b8f8d; stroke-width: 1.4; stroke-dasharray: 4 3; }
+.dg-rec { fill: none; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.dg-rec.r { stroke: #e07b1a; } .dg-rec.u { stroke: #1d84b8; } .dg-rec.w { stroke: #6d6458; stroke-width: 2; }
+.dg-gap { fill: #fff; fill-opacity: .55; stroke: #b9645a; stroke-width: 1.2; stroke-dasharray: 4 3; }
+@media (max-width: 700px) { .dg-row { grid-template-columns: 1fr; } }
+/* what each kind of meter can do */
+.ef-matrix-wrap { margin-top: clamp(28px, 3.5vw, 40px); overflow-x: auto; }
+.ef-matrix { width: 100%; table-layout: fixed; border-collapse: separate; border-spacing: 0; font-size: .95rem; }
+.ef-matrix col:first-child, .ef-matrix thead th:first-child { width: 40%; }
+.ef-matrix th, .ef-matrix td { padding: 14px 16px; border-bottom: 1px solid var(--border); text-align: center; }
+.ef-matrix thead th { font-family: var(--font-display); font-weight: 620; font-size: .95rem; color: var(--ink); vertical-align: bottom; }
+.ef-matrix tbody th { text-align: left; font-weight: 500; color: var(--ink-2); }
+.ef-matrix .us { background: var(--bg-alt); }
+.ef-matrix thead .us { border-radius: 12px 12px 0 0; color: var(--brand-dark); }
+.ef-matrix tbody tr:last-child .us { border-radius: 0 0 12px 12px; }
+.ef-matrix tbody tr:last-child > * { border-bottom: 0; }
+.ef-matrix td .icon { display: block; width: 22px; height: 22px; margin-inline: auto; }
+.ef-matrix td.yes .icon { color: var(--brand); stroke-width: 2.6; }
+.ef-matrix td.no .icon { color: #b9645a; }
+.ef-matrix td.part { color: var(--muted); font-size: .86rem; }
+.ef-matrix td.part .icon { margin-bottom: 2px; color: #b98a3a; }
+@media (max-width: 700px) {
+  .ef-matrix { font-size: .84rem; }
+  .ef-matrix th, .ef-matrix td { padding: 12px 6px; }
+  .ef-matrix thead th { font-size: .78rem; line-height: 1.25; }
+  .ef-matrix tbody th { padding-left: 0; }
+  .diagram .dg-gap-t { font-size: 22px; }
+}
 
 /* the product shot with its four sensors numbered, and the key in pairs */
 .anat { margin: clamp(36px, 4vw, 52px) 0 0; }
 .anat-h { font-family: var(--font-display); font-weight: 620; font-size: 1.2rem; color: var(--ink); margin-bottom: 14px; }
-.anat-plate { position: relative; padding: clamp(16px, 3vw, 32px); border-radius: var(--radius); background: var(--bg-alt); }
-.anat-plate img { display: block; width: 100%; height: auto; mix-blend-mode: multiply; }
-.anat-pin { --pad: clamp(16px, 3vw, 32px); position: absolute; left: calc(var(--pad) + (100% - 2 * var(--pad)) * var(--x) / 100); top: calc(var(--pad) + (100% - 2 * var(--pad)) * var(--y) / 100); translate: -50% -50%; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; font: 700 .82rem/1 var(--font-body); color: #fff; box-shadow: 0 0 0 3px #fff, 0 4px 12px rgba(6, 48, 44, .3); }
+.anat-plate { padding: clamp(16px, 3vw, 32px); border-radius: var(--radius); background: var(--bg-alt); }
+.anat-img { position: relative; width: min(100%, 482px); margin-inline: auto; }
+.anat-img img { display: block; width: 100%; height: auto; mix-blend-mode: multiply; }
+.anat-pin { position: absolute; left: calc(var(--x) * 1%); top: calc(var(--y) * 1%); translate: -50% -50%; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; font: 700 .82rem/1 var(--font-body); color: #fff; box-shadow: 0 0 0 3px #fff, 0 4px 12px rgba(6, 48, 44, .3); }
 .anat-pin::after { content: ""; position: absolute; inset: -3px; border-radius: 50%; border: 2px solid currentColor; opacity: 0; animation: anat-ring 3.2s calc(var(--x) * .03s) ease-out infinite; color: inherit; }
 .anat-pin.radar::after { border-color: #f08c2b; }
 .anat-pin.us::after { border-color: #2b9bd0; }
