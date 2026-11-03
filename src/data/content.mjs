@@ -2026,6 +2026,28 @@ export const diagrams = {
     legend: [["radar", "Radar beam"], ["profile", "Velocity through the depth"], ["mean", "Mean velocity"]],
     labels: { surface: ["Surface velocity, read across", "the 24 GHz radar footprint"], mean: ["Corrected through the depth", "to mean velocity"], depth: ["Depth by", "120 GHz radar"], flow: "Flow", area: "Wetted area A", key: ["Slower", "Faster"] },
   },
+  eflowXray: {
+    alt: "Illustration of E-Flow 3 seen through its housing as it hangs from the pipe crown: the stainless mounting bracket at the crown, the composite housing, the potted electronics inside it, the radar windows in the dome and the sloping face with their beams reaching the water, the ultrasonic face and pressure port on the nose, and the integral cable leaving the gland toward the manhole. Numbered markers match the list beneath.",
+    caption: "Illustration: how E-Flow 3 is built, seen through its housing. Not an engineering drawing.",
+    items: [
+      ["Obvert mounting sheds debris.", "Fixed to the pipe crown on an EDS bracket, out of the flow path, so material can't build up on the sensor face."],
+      ["Tough composite housing.", "Alloy and engineering plastic composite that resists corrosion, impact and water."],
+      ["Fully potted, sealed for life.", "The electronics are fully potted and unaffected by temperature cycling."],
+      ["316 stainless where it's wet.", "A sealed 316 stainless steel pressure transducer reads depth to 10 m of surcharge."],
+      ["Sealed ultrasonic face.", "Dual 1 MHz transducers sealed into the face. The bidirectional E-Flow 3 B also reports reverse flow."],
+      ["Integral cable.", "Supply and RS485 in one cable, its length to suit the manhole, with firmware updates over RS485 through an EDS logger."],
+    ],
+  },
+  eflowInstall: {
+    alt: "Four illustrations of one manhole, each adding the next part. First, E-Flow 3 is fitted at the top of the pipe from the manhole opening. Second, its cable is clipped up the shaft wall. Third, the logger hangs near the top of the shaft and reports over 4G. Fourth, a tablet at the surface commissions it through the logger.",
+    caption: "Illustration: an E-Flow 3 installation, step by step, all from the surface.",
+    steps: [
+      ["Fit the sensor at the crown", "On an EDS bracket sized to the pipe, sensor face toward the incoming flow, from the manhole opening."],
+      ["Run the cable up the shaft", "The integral cable is clipped to the shaft wall, its length specified to suit the manhole."],
+      ["Hang the logger near the top", "The EDS logger powers and polls the sensor over RS485, and reports over 4G."],
+      ["Commission from the surface", "Set up and verified with EMS-Flow through the logger, with no confined space entry."],
+    ],
+  },
   eflowCompare: {
     alt: "Illustration of one storm recorded by three kinds of flowmeter. Each row shows the flow that actually passed as a dashed line, with the time the pipe ran full shaded. A non-contact radar alone records the flow until the pipe surcharges, then has a gap until the surface returns. A wetted sensor on the invert records through the surcharge, but its reading drifts low as rag and grease build up. E-Flow 3 records the whole storm, by radar before and after the surcharge and by ultrasonic and pressure through it, with no gap.",
     caption: "Illustration: the same storm, recorded three ways. A record with a gap, or one that drifts, has to be corrected or discarded.",
@@ -2225,19 +2247,22 @@ export const productPages = [
         ["Check it from the office", "Every sensor reports its own value and status over Modbus, so you can see which pair is active, and why, before anyone drives out."],
       ],
     },
+    install: {
+      nav: "Installation",
+      heading: "Installed and commissioned from the surface.",
+      lede: "No one needs to enter the manhole. E-Flow 3 goes in from the opening and is set up from the surface, and EDS field crews install and commission across Australia.",
+      diagram: "eflowInstall",
+    },
     tough: {
       nav: "Built for the sewer",
       heading: "Built for sewers and the harshest conditions.",
       lede: "Hydrogen sulphide, grease, rag, silt, temperature swings and the odd full surcharge. E-Flow 3 is built to sit in all of it for years and keep reporting.",
       hazards: ["Hydrogen sulphide", "Grease", "Rag", "Silt", "Temperature swings", "Full surcharge"],
-      items: [
-        ["Fully potted, sealed for life", "The electronics are fully potted and unaffected by temperature cycling."],
-        ["Tough composite housing", "Alloy and engineering plastic composite that resists corrosion, impact and water."],
-        ["316 stainless where it's wet", "The only wetted parts are a sealed 316 stainless steel pressure transducer and ultrasonic transducers sealed into the sensor face."],
-        ["Obvert mounting sheds debris", "Fixed to the pipe crown on an EDS bracket, out of the flow path, so material can't build up on the sensor face."],
-        ["Reverse flow, too", "The bidirectional E-Flow 3 B reports signed velocity and flow, so backing up from a downstream restriction shows in the record."],
-        ["Remote firmware updates", "Firmware updates over RS485 through an EDS logger, with no need to lift the sensor."],
+      photos: [
+        { photo: "sewer-overflow-street", alt: "Wastewater surging up around a manhole cover and across a flooded street", caption: "A surcharge forcing wastewater up around a manhole cover." },
+        { photo: "inflow-manhole-rain", alt: "Water cascading down the step irons of a manhole during heavy rain", caption: "Stormwater pouring into a manhole in heavy rain." },
       ],
+      diagram: "eflowXray",
     },
     applications: {
       nav: "Applications",
@@ -2248,6 +2273,20 @@ export const productPages = [
         ["waves", "Overflow and surcharge", "Capture the peak, the duration and, with the bidirectional model, any reverse flow."],
         ["fan", "Pump station and catchment", "Inflow to wet wells and catchment boundaries, feeding capacity and growth planning."],
       ],
+    },
+    system: {
+      nav: "System",
+      heading: "From the manhole to your desk.",
+      lede: "E-Flow 3 is part of one EDS system: the sensor, the Hawk logger in the manhole, 4G telemetry and FlowSense. One team looks after all of it, from the sensor to the report.",
+      nodes: [
+        { kind: "product", name: "E-Flow 3", line: "Velocity, depth, flow, temperature and diagnostics, in the manhole", image: img("e-flow-3.png") },
+        { kind: "product tall", name: "Hawk 4G logger", line: "Powers and polls the sensor, stores every reading and reports over 4G", image: img("hawk.png") },
+        { kind: "screen", name: "EDS FlowSense", line: "Hydrographs, surcharge and reverse flow alarms, quality auditing and export", shot: "overview" },
+        { kind: "team", name: "Your team", line: "Engineers, operators, hydraulic modellers and regulatory reporting" },
+      ],
+      links: ["RS485 Modbus", "4G LTE", "Web and API"],
+      ems: ["EMS-Flow", "commissions and verifies the sensor from the surface, through the logger."],
+      caption: "The EDS monitoring system around E-Flow 3. It can also be polled by third party RTUs and loggers over Modbus RTU.",
     },
     specs: [
       ["Velocity", [

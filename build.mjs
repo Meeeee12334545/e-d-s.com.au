@@ -1729,8 +1729,17 @@ const accuracyBand = (a) => `${bandHead(a)}${diagram(a.diagram, C.diagrams[a.dia
 // Upkeep (`upkeep`): the drawing, then what it saves.
 const upkeepBand = (u) => `${bandHead(u)}${diagram(u.diagram, C.diagrams[u.diagram])}
   <ul class="deliv n${u.items.length} ef-upkeep">${u.items.map(([t, d], n) => `<li data-reveal style="--i:${n}"><b>${esc(t)}</b><p>${esc(d)}</p></li>`).join("")}</ul>`;
-// What the sewer throws at it, beside how it is built (`tough`).
-const toughBand = (t) => `<div class="split-band"><div class="band-head"><h2 class="h-lg" data-reveal>${esc(t.heading)}</h2><p class="lede" data-reveal style="--i:1">${esc(t.lede)}</p><ul class="ef-hazards" data-reveal style="--i:2" aria-label="What it faces">${t.hazards.map((h) => `<li>${esc(h)}</li>`).join("")}</ul></div>${flatItems(t.items)}</div>`;
+// What the sewer throws at it, in EDS's own photographs, then how E-Flow 3
+// is built for it, seen through its housing (`tough`).
+const toughBand = (t) => `<div class="split-band ef-tough"><div class="band-head"><h2 class="h-lg" data-reveal>${esc(t.heading)}</h2><p class="lede" data-reveal style="--i:1">${esc(t.lede)}</p><ul class="ef-hazards" data-reveal style="--i:2" aria-label="What it faces">${t.hazards.map((h) => `<li>${esc(h)}</li>`).join("")}</ul></div>${figureRow(t.photos)}</div>${diagram(t.diagram, C.diagrams[t.diagram])}`;
+// The system around the sensor (`system`): the sensor, the logger, the
+// platform and the people, joined by what carries the data, on the same
+// instrument screen as the drawings. Product shots and a FlowSense screen.
+const systemBand = (y) => `${bandHead(y)}
+  <figure class="diagram dg-screen ef-dark dg-system" data-reveal><div class="dg-plate">
+    <ol class="sys">${y.nodes.map((n, i) => `${i ? `<li class="sys-link" aria-hidden="true"><span>${esc(y.links[i - 1])}</span><i></i></li>` : ""}<li class="sys-node ${n.kind}"><span class="sys-img">${n.shot ? shot(n.shot, "The FlowSense overview screen", { sizes: "(max-width: 980px) 80vw, 300px" }) : n.image ? `<img src="${n.image}" alt="" loading="lazy">` : icon("users", false)}</span><b>${esc(n.name)}</b><span>${esc(n.line)}</span></li>`).join("")}</ol>
+    <p class="sys-ems">${icon("tablet-smartphone", false)}<span><b>${esc(y.ems[0])}</b> ${esc(y.ems[1])}</span></p>
+  </div><figcaption>${esc(y.caption)}</figcaption></figure>`;
 
 // The changeover demo: a sewer and manhole in section with E-Flow 3 at the
 // obvert, drawn with the kit in diagrams.mjs on the deep teal. The water
@@ -1802,9 +1811,11 @@ for (const pg of C.productPages) {
     pg.why && ["why-e-flow-3", pg.why.nav, whyBand(pg.why)],
     pg.accuracy && ["accuracy", pg.accuracy.nav, accuracyBand(pg.accuracy)],
     pg.upkeep && ["maintenance", pg.upkeep.nav, upkeepBand(pg.upkeep)],
+    pg.install && ["installation", pg.install.nav, diagramBand(pg.install)],
     pg.tough && ["built-for-the-sewer", pg.tough.nav, toughBand(pg.tough)],
     pg.terminals && ["connections", "", terminalBand(pg.terminals)],
     pg.applications && ["applications", pg.applications.nav || "", applicationsBand(pg.applications)],
+    pg.system && ["system", pg.system.nav, systemBand(pg.system)],
   ].filter(Boolean);
   let light = 0;
   const tones = extra.map(([, , , dark]) => (dark ? " dark" : light++ % 2 ? "" : " alt"));
@@ -2360,7 +2371,7 @@ function searchIndex() {
   for (const s of C.solutions) put("Solutions", s.title, s.summary, `solutions/${s.slug}.html`, { i: s.icon, b: text(s.intro, blockText(s.blocks)) });
   put("Products", "LIDoTT Alarm", `Detectronic · ${C.lidott.lede}`, "products/lidott-alarm.html", { img: plain(C.lidott.image), b: text("level radar alarm", C.lidott.description, C.lidott.sections, C.lidott.specs) });
   put("Products", "Alarm2", `Detectronic · ${C.alarm2.tag}`, "products/alarm2.html", { img: plain(C.alarm2.image), b: text("radar level alarm LoRaWAN 4G", C.alarm2.description, C.alarm2.sections, C.alarm2.highlights.map(([, t, d]) => [t, d]), C.alarm2.specs) });
-  for (const pg of C.productPages) put("Products", pg.name, `EDS · ${pg.tag}`, `products/${pg.slug}.html`, { img: plain(pg.image), b: text(pg.lede, pg.intro, pg.features, [pg.modes, pg.why, pg.accuracy, pg.upkeep, pg.tough].map((x) => x && [x.heading, x.lede, x.items]), pg.specs.map(([g, rows]) => [g, rows])) });
+  for (const pg of C.productPages) put("Products", pg.name, `EDS · ${pg.tag}`, `products/${pg.slug}.html`, { img: plain(pg.image), b: text(pg.lede, pg.intro, pg.features, [pg.modes, pg.why, pg.accuracy, pg.upkeep, pg.install, pg.tough, pg.system].map((x) => x && [x.heading, x.lede, x.items]), pg.specs.map(([g, rows]) => [g, rows])) });
   for (const p of products) {
     if (p.href) continue; // has a page of its own, listed above
     put("Products", p.name, `${p.brand.name} · ${p.note || p.range || typeOf(p.type).label}`, `products/${p.brand.slug}.html#${p.id}`, { img: plain(p.image), b: text(typeOf(p.type).label, p.group) });

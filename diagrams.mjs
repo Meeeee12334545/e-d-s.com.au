@@ -452,6 +452,80 @@ function profileCross(t) {
   return svg(380, 330, body, defs);
 }
 
+/* ---- eflowXray: how E-Flow 3 is built, seen through its housing ---- */
+// The sensor large and see-through: the bracket at the crown, the composite
+// housing, the potted electronics inside, the radar windows, the sealed
+// wetted parts and the integral cable. Numbered pins match the list under
+// the drawing (`items` on the page). Construction after the datasheet's
+// mechanical section; an illustration, not an engineering drawing.
+function xray(t) {
+  const p = "exr", s = 4.6, x0 = 236, crownY = 58, y0 = crownY + 16.6;
+  const P = (u, v) => [x0 + u * s, y0 + v * s];
+  const sens = { vel: [...P(40, 25.8), -0.77, 0.64], depth: [...P(16, 23.6), 0, 1], us: [...P(50.4, 38.4), -0.8, 0.6] };
+  const water = 306;
+  const bv = efBeam(p, "bv", sens.vel, 12, { toY: water }), bd = efBeam(p, "bd", sens.depth, 7, { toY: water, waves: 3 });
+  const pins = [[1, P(4, -2), [x0 - 26, crownY + 6]], [2, P(68, 30), [x0 + 68 * s + 30, y0 + 30 * s]], [3, P(22, 9), null], [4, P(59.5, 46.6), [x0 + 59.5 * s + 34, 300]], [5, P(50, 38), [x0 + 50 * s - 40, y0 + 38 * s + 14]], [6, P(83.6, 9), [x0 + 83.6 * s + 22, y0 + 9 * s + 30]]];
+  const body = `
+  <rect x="0" y="${water}" width="900" height="${330 - water}" fill="url(#${p}-wg)"/><path class="ef-surf" d="M0 ${water}H900"/>
+  <path fill="url(#${p}-cut)" d="M0 ${crownY - 22}H900V${crownY}H0Z"/><path class="ef-edge" d="M0 ${crownY}H900M0 ${crownY - 22}H900"/>
+  ${bv.draw}${bd.draw}
+  <path class="ef-cable xr" d="M${f1(x0 + 83.6 * s)} ${f1(y0 + 9 * s)}C700 ${f1(y0 + 9 * s)} 700 ${crownY + 10} 760 ${crownY + 10}H900"/>
+  <rect x="${x0 + 4 * s}" y="${crownY}" width="${70 * s}" height="${16.6}" rx="3" fill="url(#${p}-steel)"/>
+  ${[10, 68].map((u) => `<circle class="ef-bolt" cx="${f1(x0 + u * s)}" cy="${crownY + 8}" r="3.4"/>`).join("")}
+  <clipPath id="${p}-in"><path transform="translate(${x0} ${y0}) scale(${s})" d="${EF.body}"/></clipPath>
+  <g clip-path="url(#${p}-in)">
+    <rect x="${x0}" y="${y0}" width="${84 * s}" height="${46 * s}" fill="url(#${p}-glass)"/>
+    <rect x="${x0}" y="${y0}" width="${84 * s}" height="${46 * s}" fill="url(#${p}-pot)"/>
+    <g class="xr-pcb" transform="translate(${x0} ${y0}) scale(${s})">
+      <rect class="xr-chip" x="14" y="5" width="9" height="5.5" rx=".6"/><rect class="xr-chip" x="30" y="4" width="7" height="7" rx=".6"/><rect class="xr-chip" x="56" y="20" width="8" height="9" rx=".6"/>
+      <path d="M6 8H14M23 7.6H30M37 7.6H50V20H56M23 9.6H27V15H45M60 29V36M64 24H66M10 12V15H22"/>
+    </g>
+  </g>
+  <g transform="translate(${x0} ${y0}) scale(${s})">
+    <path class="xr-edge" d="${EF.body}"/>
+    <path class="xr-radar" d="M27.6 18L47.6 34.2L52 30.6L35.6 18Z"/>
+    <path class="xr-radar" d="M10.2 18A5.8 5.8 0 0 0 21.8 18Z"/>
+    <path class="xr-us" d="M48.2 33.8L51 43.4L53.6 42.4L50.9 32.8Z"/>
+    <ellipse class="xr-us" cx="59.5" cy="46.3" rx="3.3" ry="1.2"/>
+    <rect class="xr-gland" x="77.6" y="4.8" width="6" height="8.4" rx="1.2"/>
+  </g>
+  ${pins.map(([n, [tx, ty], at]) => (at ? `${leader(`M${f1(at[0])} ${f1(at[1])}L${f1(tx)} ${f1(ty)}`)}${efPin(at[0], at[1], n, "xr")}` : efPin(tx, ty, n, "xr"))).join("")}`;
+  const defs = `${efDefs(p, { dark: true })}${bv.defs}${bd.defs}
+  <linearGradient id="${p}-glass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7fd1c4" stop-opacity=".22"/><stop offset="1" stop-color="#7fd1c4" stop-opacity=".06"/></linearGradient>
+  <pattern id="${p}-pot" width="11" height="11" patternUnits="userSpaceOnUse"><circle cx="2" cy="3" r=".9" fill="#7fd1c4" fill-opacity=".22"/><circle cx="7.5" cy="8" r=".7" fill="#7fd1c4" fill-opacity=".16"/></pattern>
+  <linearGradient id="${p}-wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="ef-w0"/><stop offset="1" class="ef-w2"/></linearGradient>`;
+  return `<div class="dg-xray">${svg(900, 330, body, defs)}</div><ol class="dg-facts dg-numbered">${t.items.map(([title, line], i) => `<li><span class="dg-n xr" aria-hidden="true">${i + 1}</span><span><b>${esc(title)}</b> ${esc(line)}</span></li>`).join("")}</ol>`;
+}
+
+/* ---- eflowInstall: installed and commissioned from the surface ---- */
+// Four small scenes of one manhole, each adding the next part: the sensor
+// at the crown, the cable up the shaft, the logger near the top, and the
+// phone or tablet at the surface that commissions it through the logger.
+const IN = { ground: 44, crown: 134, inv: 188, wall: 8, shaft: [108, 148], surf: 168 };
+function installScene(step) {
+  const p = `ein${step}`, { ground, crown, inv, wall, surf } = IN, [s0, s1] = IN.shaft;
+  const ef = efSensor(p, 40, crown, 0.62);
+  const on = (k) => (k === step ? " ins-on" : "");
+  const part = (k, html) => (k <= step ? `<g class="ins-part${on(k)}">${html}</g>` : "");
+  const body = `
+  <rect x="0" y="${ground}" width="240" height="${200 - ground}" fill="url(#${p}-soil)"/>
+  <rect class="ef-road" x="0" y="${ground - 4}" width="240" height="4"/>
+  <rect x="0" y="${crown}" width="240" height="${inv - crown}" fill="url(#${p}-air)"/>
+  <rect x="${s0}" y="${ground}" width="${s1 - s0}" height="${crown - ground}" fill="url(#${p}-air)"/>
+  <rect x="0" y="${surf}" width="240" height="${inv - surf}" fill="url(#${p}-wg)"/><path class="ef-surf" d="M0 ${surf}H240"/>
+  <path fill="url(#${p}-cut)" d="M0 ${crown - wall}H${s0 - wall}V${ground}H${s0}V${crown}H0ZM${s1} ${ground}H${s1 + wall}V${crown - wall}H240V${crown}H${s1}ZM0 ${inv}H240V${inv + wall}H0Z"/>
+  <path class="ef-edge" d="M0 ${crown}H${s0}V${ground}M${s1} ${ground}V${crown}H240M0 ${inv}H240"/>
+  <rect class="ef-frame" x="${s0 - wall - 4}" y="${ground - 7}" width="${s1 - s0 + 2 * wall + 8}" height="3.4" rx="1"/>
+  <ellipse class="ef-lid" cx="${s1 + 40}" cy="${ground - 3}" rx="18" ry="3"/>
+  ${step === 1 ? `<path class="ins-move" d="M${(s0 + s1) / 2} ${ground + 4}V${crown - 14}Q${(s0 + s1) / 2} ${crown} ${s0 - 6} ${crown + 4}H100m6-4-6 4 6 4"/>` : ""}
+  ${part(1, ef.draw)}
+  ${part(2, `<path class="ef-cable" d="M95.5 139.6H112V70H${s0 + 12}"/>${[86, 102, 118].map((y) => `<path class="ins-clip" d="M109 ${y}h6"/>`).join("")}`)}
+  ${part(3, `<path class="ef-strap" d="M${s0} ${ground + 6}h8"/><rect class="ef-logger" x="${s0 + 6}" y="${ground + 4}" width="12" height="22" rx="3"/><rect class="ef-logger-cap" x="${s0 + 6}" y="${ground + 4}" width="12" height="5" rx="2.5"/>${[0, 1, 2].map((n) => `<path class="ins-wave" style="--d:${n * 0.4}s" d="M${s0 + 4 - n * 6} ${ground - 14 - n * 6}q${8 + n * 6} -${6 + n * 4} ${16 + n * 12} 0"/>`).join("")}`)}
+  ${part(4, `<path class="ins-link" d="M${s0 + 12} ${ground + 4}C${s0 + 14} ${ground - 18} 190 ${ground - 26} 196 ${ground - 22}"/><rect class="ins-tablet" x="186" y="${ground - 36}" width="30" height="20" rx="3"/><rect class="ins-screen" x="189" y="${ground - 33}" width="24" height="14" rx="1.5"/>`)}`;
+  return svg(240, 200, body, `${efDefs(p, { dark: true })}<linearGradient id="${p}-wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="ef-w0"/><stop offset="1" class="ef-w2"/></linearGradient>`);
+}
+const installSteps = (t) => `<ol class="dg-steps">${t.steps.map(([title, line], i) => `<li><p class="dg-step-h"><span class="dg-step-n">${i + 1}</span><b>${esc(title)}</b></p>${installScene(i + 1)}<p>${esc(line)}</p></li>`).join("")}</ol>`;
+
 /* ---- eflowCompare: one storm, three kinds of flowmeter ---- */
 // The same storm under each meter: what actually flowed (dashed), the time
 // the pipe ran full (shaded), and what the meter recorded.
@@ -552,9 +626,9 @@ const panels = (t, list) => `<div class="dg-panels">${list.map(([title, note, dr
 
 // Drawings in two panels carry their titles and key as page text; the
 // others are one picture with an alt text.
-const PANELS = new Set(["beforeafter", "sampling", "eflowModes", "eflowObvert", "eflowProfile", "eflowCompare"]);
+const PANELS = new Set(["beforeafter", "sampling", "eflowModes", "eflowObvert", "eflowProfile", "eflowCompare", "eflowXray", "eflowInstall"]);
 // The E-Flow 3 drawings sit on a dark instrument screen, like the demo.
-const SCREEN = new Set(["eflowModes", "eflowObvert", "eflowProfile", "eflowCompare"]);
+const SCREEN = new Set(["eflowModes", "eflowObvert", "eflowProfile", "eflowCompare", "eflowXray", "eflowInstall"]);
 const DRAW = {
   thermal: (t) => thermal(t),
   wetwell: (t) => wetwell(t),
@@ -566,6 +640,8 @@ const DRAW = {
   eflowObvert: (t) => efPanels(t, [invertPanel(t), obvertPanel(t)]) + efLegend(t),
   eflowProfile: (t) => efPanels(t, [profileLong(t), profileCross(t)]) + efSum(t) + efLegend(t),
   eflowCompare: (t) => efRows(t) + efLegend(t),
+  eflowXray: (t) => xray(t),
+  eflowInstall: (t) => installSteps(t),
 };
 
 // The figure: the drawing on a white plate, described for screen readers by
