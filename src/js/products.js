@@ -10,6 +10,8 @@
   const $ = (k) => dialog.querySelector(`[data-qv="${k}"]`);
   const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   const docIcon = $("docIcon").innerHTML;
+  // A PDF opens in a new tab; anything else downloads.
+  const docLink = (href) => `href="${esc(href)}" rel="noopener" ${/\.pdf$/i.test(href) ? 'target="_blank"' : "download"}`;
   for (const card of cards) card.product = JSON.parse(card.dataset.product);
   const label = (d) => (d.name === d.brand ? d.name : `${d.name} (${d.brand})`);
   let list = cards, at = -1;
@@ -61,7 +63,7 @@
     $("page").hidden = !d.page || !$("specsAll").hidden;
     if (d.page) $("page").href = d.page;
     $("docs").hidden = !d.docs.length;
-    $("docs").querySelector("ul").innerHTML = d.docs.map((doc) => `<li><a href="${esc(doc.href)}" rel="noopener" download>${esc(doc.label)}${docIcon}</a></li>`).join("");
+    $("docs").querySelector("ul").innerHTML = d.docs.map((doc) => `<li><a ${docLink(doc.href)}>${esc(doc.label)}${docIcon}</a></li>`).join("");
     $("count").textContent = `${at + 1} of ${list.length}`;
     dialog.querySelectorAll("[data-qv-step]").forEach((b) => (b.disabled = list.length < 2));
     history.replaceState(null, "", `#${card.id}`);
@@ -195,7 +197,7 @@
         row("Type", items.map((p) => esc(p.type))),
         // The family (the group on its brand page), unless each only repeats the type.
         ...(items.some((p) => p.range && p.range !== p.type) ? [row("Family", items.map((p) => esc(p.range)))] : []),
-        row("Documents", items.map((p) => p.docs.map((d) => `<a href="${esc(d.href)}" rel="noopener" download>${esc(d.label)}</a>`).join("<br>"))),
+        row("Documents", items.map((p) => p.docs.map((d) => `<a ${docLink(d.href)}>${esc(d.label)}</a>`).join("<br>"))),
       ];
       // Every specification group any of them has, in the order first met,
       // each with its rows from all of them. Wiring, lights and order codes
