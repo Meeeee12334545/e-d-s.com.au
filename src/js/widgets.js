@@ -137,16 +137,44 @@
     const hOf = (y) => (y >= CROWN ? ((INV - y) / (INV - CROWN)) * D : D + ((CROWN - y) / (CROWN - SHAFT_TOP)) * (TOP - D));
     const $ = (id) => document.getElementById(id);
     const range = $("ef-range"), play = $("ef-play"), live = $("ef-live"), state = $("ef-state");
-    const wp = $("ef-wp"), ws = $("ef-ws"), surf = $("ef-surf"), flow = $("ef-flow"), clip = $("ef-clip-r");
+    const water = $("ef-water"), surf = $("ef-surf"), clip = $("ef-clip-r"), foot = $("ef-foot");
+    const wv = [...$("ef-wv").children], wd = [...$("ef-wd").children], vtag = $("ef-vtag");
+    const pf = { base: $("ef-pf-base"), env: $("ef-pf-env"), arrows: $("ef-pf"), top: $("ef-pf-top"), mean: $("ef-pf-mean") };
     const bv = $("ef-bv"), bd = $("ef-bd"), hExt = $("ef-head-ext"), hDim = $("ef-head-dim"), hText = $("ef-head-t"), hVal = $("ef-head-v");
     const trR = $("ef-tr-r"), trU = $("ef-tr-u");
     const out = { level: $("ef-level"), d: $("ef-d"), v: $("ef-v"), q: $("ef-q") };
     const rows = Object.fromEntries([...document.querySelectorAll(".ef-sensors li")].map((li) => [li.dataset.s, li]));
-    // where the elements sit (the sensor is drawn at the crown from x 310)
-    const VEL = [349, 201.5, -0.77, 0.64], DEP = [326, 199, 0, 1], PORT = [369.5, 222.6];
-    const cone = ([ox, oy, dx, dy], half, toY) => {
-      const edge = (a) => { const r = (a * Math.PI) / 180, ex = dx * Math.cos(r) - dy * Math.sin(r), ey = dx * Math.sin(r) + dy * Math.cos(r), t = (toY - oy) / ey; return `${(ox + ex * t).toFixed(1)} ${(oy + ey * t).toFixed(1)}`; };
-      return `M${ox} ${oy}L${edge(-half)}L${edge(half)}Z`;
+    // where the elements sit (the sensor is drawn at the crown from x 310,
+    // as diagrams.mjs draws it), and the station the velocity profile is drawn at
+    const VEL = [350, 201.8, -0.77, 0.64], DEP = [326, 199.6, 0, 1], PORT = [369.5, 222.6], X0 = 186;
+    const n1 = (n) => n.toFixed(1);
+    const turn = (dx, dy, a) => { const r = (a * Math.PI) / 180; return [dx * Math.cos(r) - dy * Math.sin(r), dx * Math.sin(r) + dy * Math.cos(r)]; };
+    // a radar beam to the surface, its wavefronts, and its footprint
+    const beam = (path, waves, [ox, oy, dx, dy], half, toY) => {
+      const [ax, ay] = turn(dx, dy, -half), [bx, by] = turn(dx, dy, half), ta = (toY - oy) / ay, tb = (toY - oy) / by;
+      path.setAttribute("d", `M${ox} ${oy}L${n1(ox + ax * ta)} ${n1(toY)}L${n1(ox + bx * tb)} ${n1(toY)}Z`);
+      const near = Math.min(ta, tb);
+      waves.forEach((w, k) => {
+        const r = (near * (k + 0.7)) / (waves.length + 0.2);
+        w.setAttribute("d", `M${n1(ox + ax * r)} ${n1(oy + ay * r)}A${n1(r)} ${n1(r)} 0 0 1 ${n1(ox + bx * r)} ${n1(oy + by * r)}`);
+        w.style.setProperty("--d", `${(k * 0.3).toFixed(1)}s`);
+      });
+      return [Math.min(ox + ax * ta, ox + bx * tb), Math.max(ox + ax * ta, ox + bx * tb)];
+    };
+    // velocity through the depth: a power law from the bed under a free
+    // surface, or from both walls with the pipe full; the mean dashed
+    const profile = (top, bottom, len, full) => {
+      const v = (y) => (full ? Math.pow(Math.max(0, 1 - Math.abs((2 * y - top - bottom) / (bottom - top))), 1 / 7) : Math.pow(Math.max(0, (bottom - y) / (bottom - top)), 1 / 6));
+      const arrow = (y) => { const l = len * v(y); return l < 7 ? "" : `M${X0} ${n1(y)}H${n1(X0 + l)}m-4.4-2.8 4.4 2.8-4.4 2.8`; };
+      const ys = []; for (let y = top + 4.2; y < bottom - 2; y += 7) ys.push(y);
+      let env = ""; for (let k = 0; k <= 20; k++) { const y = top + ((bottom - top) * k) / 20; env += `${k ? "L" : "M"}${n1(X0 + len * v(y))} ${n1(y)}`; }
+      const mean = X0 + len * (full ? 0.82 : 0.857);
+      pf.base.setAttribute("d", `M${X0} ${n1(top)}V${n1(bottom)}`);
+      pf.env.setAttribute("d", env);
+      pf.arrows.setAttribute("d", (full ? ys : ys.slice(1)).map(arrow).join(""));
+      pf.top.setAttribute("d", full ? "" : arrow(ys[0]));
+      pf.mean.setAttribute("d", `M${n1(mean)} ${n1(top + 3)}V${n1(bottom - 3)}`);
+      return mean;
     };
     // an illustrative site: velocity rises with depth, and a little more
     // with head once the pipe is full; flow is velocity times wetted area
@@ -161,16 +189,18 @@
       if (pair === "radar" && h >= UP) pair = "us";
       else if (pair === "us" && h < DOWN) pair = "radar";
       // water in the pipe, then up the shaft
-      const py = Math.max(CROWN, y);
-      wp.setAttribute("y", py.toFixed(1)); wp.setAttribute("height", (INV - py).toFixed(1));
-      ws.setAttribute("y", (full ? y : CROWN).toFixed(1)); ws.setAttribute("height", (full ? CROWN - y : 0).toFixed(1));
-      clip.setAttribute("y", py.toFixed(1)); clip.setAttribute("height", (INV - py).toFixed(1));
-      surf.setAttribute("d", full ? `M400 ${y.toFixed(1)}H456` : `M0 ${y.toFixed(1)}H560`);
-      flow.setAttribute("d", `M10 ${((py + INV) / 2).toFixed(1)}H550`);
-      if (pair === "radar") { bv.setAttribute("d", cone(VEL, 12, y)); bd.setAttribute("d", cone(DEP, 7, y)); }
+      const py = Math.max(CROWN, y), wy = n1(y);
+      water.setAttribute("d", full ? `M0 ${CROWN}H400V${wy}H456V${CROWN}H560V${INV}H0Z` : `M0 ${wy}H560V${INV}H0Z`);
+      clip.setAttribute("d", `M0 ${n1(py)}H560V${INV}H0Z`);
+      surf.setAttribute("d", full ? `M400 ${wy}H456` : `M0 ${wy}H560`);
+      if (pair === "radar") {
+        const [a, b] = beam(bv, wv, VEL, 12, y);
+        beam(bd, wd, DEP, 7, y);
+        foot.setAttribute("d", `M${n1(a)} ${wy}H${n1(b)}`);
+      }
       // the head of water over the pressure port, measured beside the shaft
       const top = Math.min(y, PORT[1] - 6);
-      hExt.setAttribute("d", `M${PORT[0] + 4} ${PORT[1]}H482M${full ? 458 : 392} ${y.toFixed(1)}H482`);
+      hExt.setAttribute("d", `M${PORT[0] + 4} ${PORT[1]}H482M${full ? 468 : 392} ${wy}H482`);
       hDim.setAttribute("d", `M476 ${PORT[1] - 2}V${(top + 2).toFixed(1)}m-4 6 4-6 4 6M472 ${PORT[1] - 8}l4 6 4-6`);
       hText.setAttribute("y", ((PORT[1] + top) / 2 - 4).toFixed(1));
       hVal.textContent = `${Math.max(0, h - ((INV - PORT[1]) / (INV - CROWN)) * D).toFixed(2)} m`;
@@ -181,7 +211,9 @@
       out.level.textContent = h.toFixed(2);
       range.value = h; range.setAttribute("aria-valuetext", `${h.toFixed(2)} metres`);
       out.d.textContent = h.toFixed(3); out.v.textContent = v.toFixed(2); out.q.textContent = Math.round(q);
-      flow.style.setProperty("--dur", `${(1.1 / v).toFixed(2)}s`);
+      const mean = profile(py + 1, INV - 1, 46 * v, py <= CROWN);
+      vtag.setAttribute("x", n1(mean + 6)); vtag.setAttribute("y", n1(INV - 8));
+      vtag.textContent = `v\u0304 ${v.toFixed(2)} m/s`;
       const set = (k, s) => { if (rows[k].dataset.state !== s) { rows[k].dataset.state = s; rows[k].querySelector("em").textContent = { primary: "Primary", check: "Cross-checking", standby: "Standing by" }[s]; } };
       set("vel", pair === "radar" ? "primary" : "standby");
       set("dep", pair === "radar" ? "primary" : "standby");
