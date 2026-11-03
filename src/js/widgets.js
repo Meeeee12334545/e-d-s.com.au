@@ -136,7 +136,7 @@
     const yOf = (h) => (h <= D ? INV - (h / D) * (INV - CROWN) : CROWN - ((h - D) / (TOP - D)) * (CROWN - SHAFT_TOP));
     const hOf = (y) => (y >= CROWN ? ((INV - y) / (INV - CROWN)) * D : D + ((CROWN - y) / (CROWN - SHAFT_TOP)) * (TOP - D));
     const $ = (id) => document.getElementById(id);
-    const range = $("ef-range"), play = $("ef-play"), live = $("ef-live"), state = $("ef-state");
+    const range = $("ef-range"), play = $("ef-play"), pause = $("ef-pause"), live = $("ef-live"), state = $("ef-state");
     const wp = $("ef-wp"), ws = $("ef-ws"), surf = $("ef-surf"), flow = $("ef-flow"), clip = $("ef-clip-r");
     const bv = $("ef-bv"), bd = $("ef-bd"), hExt = $("ef-head-ext"), hDim = $("ef-head-dim"), hText = $("ef-head-t"), hVal = $("ef-head-v");
     const trR = $("ef-tr-r"), trU = $("ef-tr-u");
@@ -152,7 +152,7 @@
     // with head once the pipe is full; flow is velocity times wetted area
     const vOf = (h) => (h <= D ? 0.3 + Math.pow(h / D, 0.67) : 1.3 + 0.08 * (h - D));
     const aOf = (h) => { const r = D / 2; if (h >= D) return Math.PI * r * r; const th = 2 * Math.acos((r - h) / r); return (r * r * (th - Math.sin(th))) / 2; };
-    let h = 0.2, pair = "radar", storm = null, drag = false, inView = false;
+    let h = 0.2, pair = "radar", storm = null, drag = false, inView = false, paused = false;
     const N = 300, hist = [];
     const traceY = (x) => (x <= D ? 78 - (x / D) * 38 : 40 - ((x - D) / (TOP - D)) * 34);
 
@@ -214,10 +214,17 @@
     const startStorm = () => { storm = 0; };
     const stopStorm = () => { storm = null; };
     setInterval(() => {
-      if (!inView || document.hidden) return;
+      if (!inView || document.hidden || paused) return;
       if (storm !== null) { storm += 0.1; h = at(storm); if (storm >= STORM) stopStorm(); }
       draw(); record();
     }, 100);
+    pause.addEventListener("click", () => {
+      paused = !paused;
+      ef.closest(".ef-demo").classList.toggle("paused", paused);
+      pause.setAttribute("aria-pressed", String(paused));
+      pause.querySelector(".when-running").hidden = paused;
+      pause.querySelector(".when-paused").hidden = !paused;
+    });
     range.addEventListener("input", () => { stopStorm(); h = parseFloat(range.value); draw(); });
     play.addEventListener("click", startStorm);
     const fromEvent = (e) => {

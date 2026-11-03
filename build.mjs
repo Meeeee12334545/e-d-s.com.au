@@ -1728,7 +1728,7 @@ const EF_BODY = "M8 0H70A8 8 0 0 1 78 8V10A8 8 0 0 1 70 18H68V40Q68 46 62 46H55Q
 const eflowDemo = () => `
 <div class="demo ef-demo" data-reveal>
   <div class="panel">
-    <div class="panel-head"><div class="panel-title">${icon("waves", false)} Drag the water level</div><button class="btn btn-ghost btn-sm" type="button" id="ef-play">${icon("cloud-rain", false)} Play a storm</button></div>
+    <div class="panel-head"><div class="panel-title">${icon("waves", false)} Drag the water level</div><div class="btn-row"><button class="btn btn-ghost btn-sm" type="button" id="ef-play">${icon("cloud-rain", false)} Play a storm</button><button class="btn btn-ghost btn-sm" type="button" id="ef-pause" aria-pressed="false" aria-label="Pause the demo"><span class="when-running">${icon("pause", false)} Pause</span><span class="when-paused" hidden>${icon("play", false)} Resume</span></button></div></div>
     <svg id="ef-svg" viewBox="0 0 560 312" data-pair="radar" role="img" aria-label="A sewer pipe and manhole in section, with E-Flow 3 at the top of the pipe and a logger near the top of the manhole. The water level can be raised from low flow to a full surcharge up the manhole.">
       <defs>
         <linearGradient id="ef-wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5fb4a6" stop-opacity=".75"/><stop offset="1" stop-color="#0d7c72" stop-opacity=".95"/></linearGradient>
@@ -1940,7 +1940,7 @@ ${first.map(fsStop).join("")}
   <div class="fs-psm-stage">
     <figure class="fs-frame lg fs-pinned" data-reveal style="--i:2">
       ${shot(FS.psm.shot[0], FS.psm.shot[1], { sizes: "(max-width: 980px) calc(100vw - 40px), 760px" })}
-      ${FS.psm.pins.map(([t, , x, y], i) => `<span class="fs-pin" data-n="${i + 1}" style="--x:${x};--y:${y}" aria-hidden="true"><b>${i + 1}</b></span>`).join("")}
+      ${FS.psm.pins.map(([t, , x, y], i) => `<span class="fs-pin" data-n="${i + 1}" style="--x:${x}%;--y:${y}%" aria-hidden="true"><b>${i + 1}</b></span>`).join("")}
     </figure>
     <ol class="fs-key" aria-label="What the screen shows">
       ${FS.psm.pins.map(([t, d], i) => `<li data-n="${i + 1}" data-reveal style="--i:${i + 3}"><span>${i + 1}</span><div><b>${esc(t)}</b><p>${esc(d)}</p></div></li>`).join("")}

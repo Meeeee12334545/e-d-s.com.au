@@ -1820,6 +1820,7 @@ main:has(> .alt:last-child) + .footer { background: var(--bg); }
 .demo .sms { flex: 1; }
 /* E-Flow 3 changeover demo: amber is the radar pair, sky blue ultrasonic and pressure */
 .ef-demo { grid-template-columns: minmax(0, 1.55fr) minmax(280px, 1fr); }
+.ef-demo.paused * { animation-play-state: paused !important; }
 #ef-svg { display: block; width: 100%; height: auto; touch-action: none; cursor: ns-resize; user-select: none; }
 #ef-svg text, #ef-trace text { font: 400 11px var(--font-body); fill: rgba(255, 255, 255, .62); }
 #ef-svg .ef-head text { fill: #7dd3fc; font-weight: 500; }
