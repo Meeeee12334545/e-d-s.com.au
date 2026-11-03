@@ -1,5 +1,6 @@
-// Smaller interactive pieces: the office map, the LIDoTT Alarm demo and the
-// EDS Asset Score dial. Each one starts only if its element is on the page.
+// Smaller interactive pieces: the office map, the LIDoTT Alarm demo, the E-Flow 3
+// changeover demo and the EDS Asset Score dial. Each one starts only if its
+// element is on the page.
 (() => {
   const NS = "http://www.w3.org/2000/svg";
   const el = (tag, attrs = {}, parent) => {
@@ -119,6 +120,120 @@
       lid.addEventListener("pointerdown", () => clearInterval(id), { once: true });
       range.addEventListener("pointerdown", () => clearInterval(id), { once: true });
     }, { threshold: 0.5 }).observe(lid);
+  }
+
+  /* ================= E-Flow 3: fill the pipe, watch it change over ================= */
+  // A 600 mm sewer in section (build.mjs: eflowDemo). The level maps to the
+  // drawing in two scales: the pipe from invert to crown, then the manhole
+  // above it. The radar pair leads while there is a free surface below the
+  // sensor; once the water reaches the radar faces, ultrasonic and pressure
+  // lead until it drops back (a little hysteresis, so a level held at the
+  // boundary does not flicker).
+  const ef = document.getElementById("ef-svg");
+  if (ef) {
+    const D = 0.6, TOP = 2.6, INV = 296, CROWN = 176, SHAFT_TOP = 48;
+    const WET = 0.41, UP = 0.47, DOWN = 0.45; // ultrasonic face under water; radar faces under, and clear again
+    const yOf = (h) => (h <= D ? INV - (h / D) * (INV - CROWN) : CROWN - ((h - D) / (TOP - D)) * (CROWN - SHAFT_TOP));
+    const hOf = (y) => (y >= CROWN ? ((INV - y) / (INV - CROWN)) * D : D + ((CROWN - y) / (CROWN - SHAFT_TOP)) * (TOP - D));
+    const $ = (id) => document.getElementById(id);
+    const range = $("ef-range"), play = $("ef-play"), live = $("ef-live"), state = $("ef-state");
+    const wp = $("ef-wp"), ws = $("ef-ws"), surf = $("ef-surf"), flow = $("ef-flow"), clip = $("ef-clip-r");
+    const bv = $("ef-bv"), bd = $("ef-bd"), hExt = $("ef-head-ext"), hDim = $("ef-head-dim"), hText = $("ef-head-t"), hVal = $("ef-head-v");
+    const trR = $("ef-tr-r"), trU = $("ef-tr-u");
+    const out = { level: $("ef-level"), d: $("ef-d"), v: $("ef-v"), q: $("ef-q") };
+    const rows = Object.fromEntries([...document.querySelectorAll(".ef-sensors li")].map((li) => [li.dataset.s, li]));
+    // where the elements sit (the sensor is drawn at the crown from x 310)
+    const VEL = [349, 201.5, -0.77, 0.64], DEP = [326, 199, 0, 1], PORT = [369.5, 222.6];
+    const cone = ([ox, oy, dx, dy], half, toY) => {
+      const edge = (a) => { const r = (a * Math.PI) / 180, ex = dx * Math.cos(r) - dy * Math.sin(r), ey = dx * Math.sin(r) + dy * Math.cos(r), t = (toY - oy) / ey; return `${(ox + ex * t).toFixed(1)} ${(oy + ey * t).toFixed(1)}`; };
+      return `M${ox} ${oy}L${edge(-half)}L${edge(half)}Z`;
+    };
+    // an illustrative site: velocity rises with depth, and a little more
+    // with head once the pipe is full; flow is velocity times wetted area
+    const vOf = (h) => (h <= D ? 0.3 + Math.pow(h / D, 0.67) : 1.3 + 0.08 * (h - D));
+    const aOf = (h) => { const r = D / 2; if (h >= D) return Math.PI * r * r; const th = 2 * Math.acos((r - h) / r); return (r * r * (th - Math.sin(th))) / 2; };
+    let h = 0.2, pair = "radar", storm = null, drag = false, inView = false;
+    const N = 300, hist = [];
+    const traceY = (x) => (x <= D ? 78 - (x / D) * 38 : 40 - ((x - D) / (TOP - D)) * 34);
+
+    const draw = () => {
+      const y = yOf(h), full = h >= D;
+      if (pair === "radar" && h >= UP) pair = "us";
+      else if (pair === "us" && h < DOWN) pair = "radar";
+      // water in the pipe, then up the shaft
+      const py = Math.max(CROWN, y);
+      wp.setAttribute("y", py.toFixed(1)); wp.setAttribute("height", (INV - py).toFixed(1));
+      ws.setAttribute("y", (full ? y : CROWN).toFixed(1)); ws.setAttribute("height", (full ? CROWN - y : 0).toFixed(1));
+      clip.setAttribute("y", py.toFixed(1)); clip.setAttribute("height", (INV - py).toFixed(1));
+      surf.setAttribute("d", full ? `M400 ${y.toFixed(1)}H456` : `M0 ${y.toFixed(1)}H560`);
+      flow.setAttribute("d", `M10 ${((py + INV) / 2).toFixed(1)}H550`);
+      if (pair === "radar") { bv.setAttribute("d", cone(VEL, 12, y)); bd.setAttribute("d", cone(DEP, 7, y)); }
+      // the head of water over the pressure port, measured beside the shaft
+      const top = Math.min(y, PORT[1] - 6);
+      hExt.setAttribute("d", `M${PORT[0] + 4} ${PORT[1]}H482M${full ? 458 : 392} ${y.toFixed(1)}H482`);
+      hDim.setAttribute("d", `M476 ${PORT[1] - 2}V${(top + 2).toFixed(1)}m-4 6 4-6 4 6M472 ${PORT[1] - 8}l4 6 4-6`);
+      hText.setAttribute("y", ((PORT[1] + top) / 2 - 4).toFixed(1));
+      hVal.textContent = `${Math.max(0, h - ((INV - PORT[1]) / (INV - CROWN)) * D).toFixed(2)} m`;
+      ef.dataset.pair = pair;
+      ef.dataset.wet = h >= WET ? "1" : "0";
+      // what the sensor reports
+      const v = vOf(h) + (Math.random() - 0.5) * 0.008, q = v * aOf(h) * 1000;
+      out.level.textContent = h.toFixed(2);
+      range.value = h; range.setAttribute("aria-valuetext", `${h.toFixed(2)} metres`);
+      out.d.textContent = h.toFixed(3); out.v.textContent = v.toFixed(2); out.q.textContent = Math.round(q);
+      flow.style.setProperty("--dur", `${(1.1 / v).toFixed(2)}s`);
+      const set = (k, s) => { if (rows[k].dataset.state !== s) { rows[k].dataset.state = s; rows[k].querySelector("em").textContent = { primary: "Primary", check: "Cross-checking", standby: "Standing by" }[s]; } };
+      set("vel", pair === "radar" ? "primary" : "standby");
+      set("dep", pair === "radar" ? "primary" : "standby");
+      set("us", pair === "us" ? "primary" : h >= WET ? "check" : "standby");
+      set("pr", pair === "us" ? "primary" : "check");
+      if (state.dataset.pair !== pair) {
+        state.dataset.pair = pair;
+        state.querySelector("b").textContent = pair === "radar" ? "Dual radar, non-contact" : "Ultrasonic and pressure";
+        live.textContent = pair === "radar" ? "Free surface back: dual radar is primary again." : "No free surface: ultrasonic and pressure have taken over.";
+      }
+      state.querySelector("small").textContent = pair === "radar"
+        ? h >= WET ? "Free surface present. Ultrasonic and pressure cross-check in the background." : "Free surface below the sensor. Pressure cross-checks in the background."
+        : full ? `Surcharged ${(h - D).toFixed(2)} m above the obvert. Radar stands by.` : "Water up to the sensor, no free surface. Radar stands by.";
+    };
+    // the record: the last N readings, each stretch in the colour of the pair that made it
+    const record = () => {
+      hist.push([h, pair]);
+      if (hist.length > N) hist.shift();
+      const dx = 560 / (N - 1), x0 = 560 - (hist.length - 1) * dx;
+      const d = { radar: "", us: "" };
+      for (let i = 1; i < hist.length; i++) {
+        const [a] = hist[i - 1], [b, p] = hist[i], ax = (x0 + (i - 1) * dx).toFixed(1), bx = (x0 + i * dx).toFixed(1);
+        const joined = i > 1 && hist[i - 1][1] === p;
+        d[p] += `${joined ? "" : `M${ax} ${traceY(a).toFixed(1)}`}L${bx} ${traceY(b).toFixed(1)}`;
+      }
+      trR.setAttribute("d", d.radar); trU.setAttribute("d", d.us);
+    };
+    // a storm: the level rises to a surcharge up the manhole and drains away
+    const STORM = 30, base = 0.2, peak = 2.1, at = (t) => { const u = t / 8; return base + (peak - base) * u ** 3 * Math.exp(3 * (1 - u)); };
+    const startStorm = () => { storm = 0; };
+    const stopStorm = () => { storm = null; };
+    setInterval(() => {
+      if (!inView || document.hidden) return;
+      if (storm !== null) { storm += 0.1; h = at(storm); if (storm >= STORM) stopStorm(); }
+      draw(); record();
+    }, 100);
+    range.addEventListener("input", () => { stopStorm(); h = parseFloat(range.value); draw(); });
+    play.addEventListener("click", startStorm);
+    const fromEvent = (e) => {
+      const r = ef.getBoundingClientRect(), sy = ((e.clientY - r.top) / r.height) * 312;
+      h = Math.max(0.05, Math.min(TOP, hOf(sy))); draw();
+    };
+    ef.addEventListener("pointerdown", (e) => { drag = true; stopStorm(); ef.setPointerCapture(e.pointerId); fromEvent(e); });
+    ef.addEventListener("pointermove", (e) => drag && fromEvent(e));
+    ef.addEventListener("pointerup", () => { drag = false; });
+    draw();
+    // a storm plays the first time the demo comes into view, to show the changeover
+    let first = true;
+    new IntersectionObserver(([en]) => {
+      inView = en.isIntersecting;
+      if (inView && first) { first = false; startStorm(); }
+    }, { threshold: 0.35 }).observe(ef);
   }
 
   /* ================= EDS Asset Score dial ================= */

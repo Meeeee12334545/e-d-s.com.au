@@ -1701,27 +1701,125 @@ function terminalBand(t) {
 const applicationsBand = (a) => `<div class="section-head"><h2 class="h-lg" data-reveal>${esc(a.heading)}</h2></div>
   <div class="grid c4">${a.items.map(([ic, t, d], i) => `<div class="card holder" data-reveal style="--i:${i}"><span class="card-icon">${icon(ic)}</span><h3>${esc(t)}</h3><p>${esc(d)}</p></div>`).join("")}</div>`;
 
+/* ---- E-Flow 3: how a two-pair sensor shows itself ---- */
+// The product shot with its sensors numbered, and a key in their pairs
+// (`anatomy`): beside the opening text, under it.
+const anatomyFigure = (a, src) => `
+<figure class="anat" data-reveal>
+  <p class="anat-h">${esc(a.heading)}</p>
+  <div class="anat-plate"><img src="${src}" alt="${esc(a.alt)}" width="963" height="471" loading="lazy">${a.pairs.flatMap(([pair, , items]) => items.map(([n, , , x, y]) => `<span class="anat-pin ${pair}" style="--x:${x};--y:${y}" aria-hidden="true">${n}</span>`)).join("")}</div>
+  <div class="anat-key">${a.pairs.map(([pair, label, items]) => `<div class="anat-pair ${pair}"><p>${esc(label)}</p><ol>${items.map(([n, t, d]) => `<li><span class="anat-n" aria-hidden="true">${n}</span><span><b>${esc(t)}</b><small>${esc(d)}</small></span></li>`).join("")}</ol></div>`).join("")}</div>
+  <figcaption>${esc(a.caption)}</figcaption>
+</figure>`;
+// An illustration across the page under its heading (`modes`).
+const diagramBand = (b) => `${bandHead(b)}${diagram(b.diagram, C.diagrams[b.diagram])}`;
+// Upkeep and accuracy (`upkeep`): the drawing, what it saves, then the figures.
+const upkeepBand = (u) => `${bandHead(u)}${diagram(u.diagram, C.diagrams[u.diagram])}
+  <ul class="deliv n${u.items.length} ef-upkeep">${u.items.map(([t, d], n) => `<li data-reveal style="--i:${n}"><b>${esc(t)}</b><p>${esc(d)}</p></li>`).join("")}</ul>
+  <div class="ef-acc"><h3 data-reveal>${esc(u.accuracy.heading)}</h3><ul class="ef-stats">${u.accuracy.stats.map(([v, l, d], n) => `<li data-reveal style="--i:${n}"><b>${esc(v)}</b><span>${esc(l)}</span><small>${esc(d)}</small></li>`).join("")}</ul></div>`;
+// What the sewer throws at it, beside how it is built (`tough`).
+const toughBand = (t) => `<div class="split-band"><div class="band-head"><h2 class="h-lg" data-reveal>${esc(t.heading)}</h2><p class="lede" data-reveal style="--i:1">${esc(t.lede)}</p><ul class="ef-hazards" data-reveal style="--i:2" aria-label="What it faces">${t.hazards.map((h) => `<li>${esc(h)}</li>`).join("")}</ul></div>${flatItems(t.items)}</div>`;
+
+// The changeover demo: a sewer and manhole in section with E-Flow 3 at the
+// obvert. The water level is dragged (or a storm played), and the drawing,
+// the sensor states, the readings and the record follow (widgets.js). The
+// sensor is drawn as in diagrams.mjs, at the crown from x 310.
+const EF_BODY = "M8 0H70A8 8 0 0 1 78 8V10A8 8 0 0 1 70 18H68V40Q68 46 62 46H55Q52 46 51 43L48 33L30 18H8A8 8 0 0 1 0 10V8A8 8 0 0 1 8 0Z";
+const eflowDemo = () => `
+<div class="demo ef-demo" data-reveal>
+  <div class="panel">
+    <div class="panel-head"><div class="panel-title">${icon("waves", false)} Drag the water level</div><button class="btn btn-ghost btn-sm" type="button" id="ef-play">${icon("cloud-rain", false)} Play a storm</button></div>
+    <svg id="ef-svg" viewBox="0 0 560 312" data-pair="radar" role="img" aria-label="A sewer pipe and manhole in section, with E-Flow 3 at the top of the pipe and a logger near the top of the manhole. The water level can be raised from low flow to a full surcharge up the manhole.">
+      <defs>
+        <linearGradient id="ef-wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5fb4a6" stop-opacity=".75"/><stop offset="1" stop-color="#0d7c72" stop-opacity=".95"/></linearGradient>
+        <clipPath id="ef-clip"><rect id="ef-clip-r" x="0" y="0" width="560" height="296"/></clipPath>
+      </defs>
+      <rect x="0" y="40" width="560" height="272" fill="#0b302d"/>
+      <rect x="0" y="36" width="560" height="6" fill="#14605a"/>
+      <rect x="0" y="176" width="560" height="120" fill="#04201d"/>
+      <rect x="400" y="40" width="56" height="136" fill="#04201d"/>
+      <rect id="ef-wp" x="0" y="248" width="560" height="48" fill="url(#ef-wg)"/>
+      <rect id="ef-ws" x="400" y="176" width="56" height="0" fill="url(#ef-wg)"/>
+      <path id="ef-surf" class="ef-surf" d="M0 248H560"/>
+      <g clip-path="url(#ef-clip)" class="ef-bits">${[[30, 262, 0], [120, 280, -2], [210, 240, -4.5], [70, 226, -6], [160, 206, -1], [250, 288, -3.4], [20, 196, -5.2]].map(([x, y, d]) => `<circle cx="${x}" cy="${y}" r="2.2" style="--d:${d}s"/>`).join("")}</g>
+      <path id="ef-flow" class="ef-flow" d="M10 272H550"/>
+      <path class="ef-wall" d="M0 176H400M456 176H560M0 296H560M400 40V176M456 40V176"/>
+      <rect x="392" y="33" width="72" height="7" rx="2" fill="#2e4543" stroke="rgba(255,255,255,.3)"/>
+      <path class="ef-beam r" id="ef-bv"/><path class="ef-beam r" id="ef-bd"/>
+      <path class="ef-beam u" id="ef-bu" d="M359.5 214L270.3 274.7L274.4 280.1Z"/>
+      <path class="ef-cable" d="M388 185H406V62H436"/>
+      <rect x="436" y="50" width="14" height="24" rx="3" fill="#e8f3f1" stroke="#5fb4a6" stroke-width="1.5"/>
+      <g class="ef-sensor" transform="translate(310 176)">
+        <path class="ef-body" d="${EF_BODY}"/>
+        <rect class="ef-plate" x="44" y="5" width="22" height="9" rx="1.5"/>
+        <path class="ef-el r" d="M11 18A5 5 0 0 0 21 18ZM31.5 18L48 31.8"/>
+        <path class="ef-el u" d="M48.4 34.3L50.6 41.6M57 46.6H62"/>
+      </g>
+      <g id="ef-head" class="ef-head"><path id="ef-head-ext" class="ef-ext"/><path id="ef-head-dim" class="ef-dim"/><text id="ef-head-t" x="484" y="120"><tspan id="ef-head-v">0.00 m</tspan><tspan x="484" dy="1.2em">head</tspan></text></g>
+      <g class="ef-txt"><text x="12" y="26">Ground</text><text x="472" y="58">Logger</text><text class="fine" x="12" y="166">Upstream</text><text x="300" y="166" text-anchor="end">E-Flow 3 at the obvert</text></g>
+      <path class="ef-arrow" d="M14 305h34m-7-4 7 4-7 4"/>
+    </svg>
+    <div class="ef-trace">
+      <p class="ef-trace-h"><b>The record</b><span><i class="r"></i>Radar <i class="u"></i>Ultrasonic and pressure</span></p>
+      <svg id="ef-trace" viewBox="0 0 560 84" aria-hidden="true"><path class="ef-obv" d="M0 40H560"/><text x="556" y="35" text-anchor="end">Pipe obvert</text><path id="ef-tr-r" class="ef-tr r"/><path id="ef-tr-u" class="ef-tr u"/></svg>
+    </div>
+    <label class="range"><span>Water level <output><span id="ef-level">0.20</span> m</output></span><input id="ef-range" type="range" min="0.05" max="2.6" step="0.01" value="0.2"></label>
+  </div>
+  <div class="panel">
+    <div class="panel-head"><div class="panel-title">${icon("radar", false)} What E-Flow 3 reports</div></div>
+    <div class="state ef-state" id="ef-state" data-pair="radar"><i></i><div><b>Dual radar, non-contact</b><small>Free surface below the sensor.</small></div></div>
+    <p class="sr-only" id="ef-live" aria-live="polite"></p>
+    <ol class="ef-sensors">${[["vel", 1, "r", "Velocity radar", "24 GHz"], ["dep", 2, "r", "Depth radar", "120 GHz"], ["us", 3, "u", "Doppler ultrasonic", "Dual 1 MHz"], ["pr", 4, "u", "Pressure", "316 stainless"]].map(([k, n, pair, t, d]) => `<li data-s="${k}" data-pair="${pair}" data-state="standby"><span class="ef-n ${pair}" aria-hidden="true">${n}</span><span>${t}<small>${d}</small></span><em>Standing by</em></li>`).join("")}</ol>
+    <div class="readouts ef-readouts">
+      <div class="readout"><b><span id="ef-d">0.200</span><small>m</small></b><span>Depth</span></div>
+      <div class="readout"><b><span id="ef-v">0.80</span><small>m/s</small></b><span>Velocity</span></div>
+      <div class="readout"><b><span id="ef-q">0</span><small>L/s</small></b><span>Flow</span></div>
+    </div>
+    <p class="note">An illustration of how E-Flow 3 changes over, in a 600 mm sewer. Not to scale, and not live data.</p>
+  </div>
+</div>`;
+
 for (const pg of C.productPages) {
   const b = brand("eds");
   const pricing = { topic: "Product pricing", product: `${pg.name} (${b.name})` };
   const datasheet = pg.docs.find((d) => d.label === "Datasheet");
-  // optional bands between the overview (white) and the specifications, alternating grey and white
-  const extra = [pg.terminals && ["connections", terminalBand(pg.terminals)], pg.applications && ["applications", applicationsBand(pg.applications)]].filter(Boolean);
-  const tone = (i) => (i % 2 ? "" : " alt");
+  // optional bands between the overview (white) and the specifications: the
+  // light ones alternate grey and white, and the demo sits on the deep teal
+  const extra = [
+    pg.modes && ["how-it-measures", pg.modes.nav, diagramBand(pg.modes)],
+    pg.demo && ["changeover", pg.demo.nav, `<div class="section-head"><h2 class="h-lg" data-reveal>${esc(pg.demo.heading)}</h2><p class="lede" data-reveal style="--i:1">${esc(pg.demo.lede)}</p></div>${eflowDemo()}`, "dark"],
+    pg.upkeep && ["maintenance", pg.upkeep.nav, upkeepBand(pg.upkeep)],
+    pg.tough && ["built-for-the-sewer", pg.tough.nav, toughBand(pg.tough)],
+    pg.terminals && ["connections", "", terminalBand(pg.terminals)],
+    pg.applications && ["applications", pg.applications.nav || "", applicationsBand(pg.applications)],
+  ].filter(Boolean);
+  let light = 0;
+  const tones = extra.map(([, , , dark]) => (dark ? " dark" : light++ % 2 ? "" : " alt"));
+  const specTone = light % 2 ? "" : " alt";
+  // A page with several bands gets the section bar the service pages have.
+  const nav = [["overview", "Overview"], ...extra.filter(([, label]) => label).map(([id, label]) => [id, label]), ["specifications", "Specifications"]];
+  const bar = (r) => nav.length > 4 ? `
+<nav class="secbar" aria-label="On this page"><div class="wrap secbar-in">
+  <ol>${nav.map(([id, label]) => `<li><a href="#${id}">${esc(label)}</a></li>`).join("")}</ol>
+  <a class="btn btn-brand secbar-cta" href="${contactHref(r, pricing)}">Request pricing</a>
+</div></nav>` : "";
   add({
     file: `products/${pg.slug}.html`,
     title: pg.title,
     description: pg.description,
     current: "products",
+    scripts: pg.demo ? ["widgets.js"] : [],
     body: (r) => `
 ${pageHero(r, { crumbs: [["Products", "products/index.html"], [b.name, `products/${b.slug}.html`], [pg.name]], iconName: pg.icon, eyebrow: pg.tag, title: pg.name, lede: pg.lede, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${contactHref(r, pricing)}">Request pricing ${icon("arrow-right")}</a>${quoteBtn(quoteItem(products.find((p) => p.href === `products/${pg.slug}.html`)), "btn-lg")}<a class="btn btn-ghost btn-lg" href="${datasheet.href}" rel="noopener">${icon("download")} Datasheet</a>`, visual: heroProduct(pg.image, pg.name) })}
+<div class="secbar-scope">${bar(r)}
 <section class="section hl-band"><div class="wrap">
   <div class="hl-grid">${pg.highlights.map(([ic, t, d], i) => `<div class="hl holder" data-reveal style="--i:${i % 3}">${icon(ic)}<b>${esc(t)}</b><span>${esc(d)}</span></div>`).join("")}</div>
 </div></section>
-<section class="section"><div class="wrap split">
+<section class="section" id="overview"><div class="wrap split">
   <div>
     <div class="prose" data-reveal>${pg.intro.map((p) => `<p>${esc(p)}</p>`).join("")}</div>
-    <div class="feature-list" style="margin-top:40px">${pg.features.map(([t, d]) => `<div class="feature holder" data-reveal><div><b>${esc(t)}</b><span>${esc(d)}</span></div></div>`).join("")}</div>
+    ${pg.features ? `<div class="feature-list" style="margin-top:40px">${pg.features.map(([t, d]) => `<div class="feature holder" data-reveal><div><b>${esc(t)}</b><span>${esc(d)}</span></div></div>`).join("")}</div>` : ""}
+    ${pg.anatomy ? anatomyFigure(pg.anatomy, pg.image) : ""}
   </div>
   <aside class="aside">
     <figure class="aside-figure" data-reveal="right"><div class="aside-plate"><img src="${pg.figure.src}" alt="${esc(pg.figure.alt)}" loading="lazy"></div><figcaption>${esc(pg.figure.caption)}</figcaption></figure>
@@ -1729,14 +1827,14 @@ ${pageHero(r, { crumbs: [["Products", "products/index.html"], [b.name, `products
     <div class="aside-card" data-reveal="right"><h2>Works with</h2><ul class="aside-links docs">${pg.worksWith.map(([href, t, d]) => `<li><a href="${r}${href}"><span>${esc(t)}<small>${esc(d)}</small></span>${icon("arrow-right")}</a></li>`).join("")}</ul></div>
   </aside>
 </div></section>
-${extra.map(([id, html], i) => `<section class="section band${tone(i)}" id="${id}"><div class="wrap">
+${extra.map(([id, , html], i) => `<section class="section band${tones[i]}" id="${id}"><div class="wrap">
   ${html}
 </div></section>`).join("\n")}
-<section class="section band${tone(extra.length)}" id="specifications"><div class="wrap">
+<section class="section band${specTone}" id="specifications"><div class="wrap">
   <div class="section-head"><p class="eyebrow">Specifications</p><h2 class="h-lg" data-reveal>${esc(pg.name)} in detail.</h2></div>
   <div class="spec-groups">${pg.specs.map(([group, rows], i) => `<div class="aside-card" data-reveal style="--i:${i % 3}"><h3>${esc(group)}</h3><table class="specs"><tbody>${rows.map(([k, v]) => `<tr><th>${esc(k)}</th><td>${esc(v)}</td></tr>`).join("")}</tbody></table></div>`).join("")}</div>
   <p class="note spec-note" data-reveal>${esc(pg.specNote)} Full details are in the <a href="${datasheet.href}" rel="noopener">${esc(pg.name)} datasheet</a>.</p>
-</div></section>
+</div></section></div>
 ${ctaSection(r, { ...pg.cta, ...pricing })}`,
   });
 }
@@ -1842,7 +1940,7 @@ ${first.map(fsStop).join("")}
   <div class="fs-psm-stage">
     <figure class="fs-frame lg fs-pinned" data-reveal style="--i:2">
       ${shot(FS.psm.shot[0], FS.psm.shot[1], { sizes: "(max-width: 980px) calc(100vw - 40px), 760px" })}
-      ${FS.psm.pins.map(([t, , x, y], i) => `<span class="fs-pin" data-n="${i + 1}" style="--x:${x}%;--y:${y}%" aria-hidden="true"><b>${i + 1}</b></span>`).join("")}
+      ${FS.psm.pins.map(([t, , x, y], i) => `<span class="fs-pin" data-n="${i + 1}" style="--x:${x};--y:${y}" aria-hidden="true"><b>${i + 1}</b></span>`).join("")}
     </figure>
     <ol class="fs-key" aria-label="What the screen shows">
       ${FS.psm.pins.map(([t, d], i) => `<li data-n="${i + 1}" data-reveal style="--i:${i + 3}"><span>${i + 1}</span><div><b>${esc(t)}</b><p>${esc(d)}</p></div></li>`).join("")}
@@ -2248,7 +2346,7 @@ function searchIndex() {
   for (const s of C.solutions) put("Solutions", s.title, s.summary, `solutions/${s.slug}.html`, { i: s.icon, b: text(s.intro, blockText(s.blocks)) });
   put("Products", "LIDoTT Alarm", `Detectronic · ${C.lidott.lede}`, "products/lidott-alarm.html", { img: plain(C.lidott.image), b: text("level radar alarm", C.lidott.description, C.lidott.sections, C.lidott.specs) });
   put("Products", "Alarm2", `Detectronic · ${C.alarm2.tag}`, "products/alarm2.html", { img: plain(C.alarm2.image), b: text("radar level alarm LoRaWAN 4G", C.alarm2.description, C.alarm2.sections, C.alarm2.highlights.map(([, t, d]) => [t, d]), C.alarm2.specs) });
-  for (const pg of C.productPages) put("Products", pg.name, `EDS · ${pg.tag}`, `products/${pg.slug}.html`, { img: plain(pg.image), b: text(pg.lede, pg.intro, pg.features, pg.specs.map(([g, rows]) => [g, rows])) });
+  for (const pg of C.productPages) put("Products", pg.name, `EDS · ${pg.tag}`, `products/${pg.slug}.html`, { img: plain(pg.image), b: text(pg.lede, pg.intro, pg.features, [pg.modes, pg.upkeep, pg.tough].map((x) => x && [x.heading, x.lede, x.items]), pg.specs.map(([g, rows]) => [g, rows])) });
   for (const p of products) {
     if (p.href) continue; // has a page of its own, listed above
     put("Products", p.name, `${p.brand.name} · ${p.note || p.range || typeOf(p.type).label}`, `products/${p.brand.slug}.html#${p.id}`, { img: plain(p.image), b: text(typeOf(p.type).label, p.group) });

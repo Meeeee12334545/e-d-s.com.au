@@ -170,6 +170,156 @@ function scatter(t) {
   return svg(480, 296, body);
 }
 
+/* ---- E-Flow 3: the sensor at the obvert ---- */
+// E-Flow 3 in profile as it hangs from the pipe crown, upstream to the left:
+// the body against the crown, the depth radar's dome at the upstream end,
+// the sloping face over the velocity radar, and the nose block with the
+// ultrasonic face in front and the pressure port beneath (datasheet figure
+// 3). Drawn in its own units, 80 long and 46 deep; each element is
+// [x, y, dx, dy]: where it sits and which way it looks.
+const EF = {
+  body: "M8 0H70A8 8 0 0 1 78 8V10A8 8 0 0 1 70 18H68V40Q68 46 62 46H55Q52 46 51 43L48 33L30 18H8A8 8 0 0 1 0 10V8A8 8 0 0 1 8 0Z",
+  depth: [16, 23, 0, 1], vel: [39, 25.5, -0.77, 0.64], us: [49.5, 38, -0.8, 0.6], press: [59.5, 46, 0, 1],
+};
+// The sensor placed with its upstream end at the crown (x, y) and scaled by
+// s; its cable runs to `cable` (a path continuing from the gland). `off`
+// names the pair that is standing by, drawn faint.
+function eflowAt(x, y, s, { cable = "", off = "" } = {}) {
+  const at = ([u, v, dx, dy]) => [x + u * s, y + v * s, dx, dy];
+  const draw = `
+  ${cable ? `<path class="dg-cable" d="M${f1(x + 78 * s)} ${f1(y + 9 * s)}${cable}"/>` : ""}
+  <g class="dg-ef${off ? ` off-${off}` : ""}" transform="translate(${x} ${y}) scale(${s})">
+    <path class="dg-ef-body" d="${EF.body}"/>
+    <rect class="dg-ef-plate" x="44" y="5" width="22" height="9" rx="1.5"/>
+    <path class="dg-ef-radar" d="M11 18A5 5 0 0 0 21 18ZM31.5 18L48 31.8"/>
+    <path class="dg-ef-us" d="M48.4 34.3L50.6 41.6"/>
+    <path class="dg-ef-port" d="M57 46.6H62"/>
+  </g>`;
+  return { draw, depth: at(EF.depth), vel: at(EF.vel), us: at(EF.us), press: at(EF.press) };
+}
+// A beam from an element: a cone of the given half angle, out to a level
+// (`toY`) or a length.
+const turn = (dx, dy, a) => { const r = (a * Math.PI) / 180; return [dx * Math.cos(r) - dy * Math.sin(r), dx * Math.sin(r) + dy * Math.cos(r)]; };
+function cone([ox, oy, dx, dy], half, { toY, len }) {
+  const edge = (a) => { const [ex, ey] = turn(dx, dy, a); const t = toY != null ? (toY - oy) / ey : len; return `${f1(ox + ex * t)} ${f1(oy + ey * t)}`; };
+  return `M${f1(ox)} ${f1(oy)}L${edge(-half)}L${edge(half)}Z`;
+}
+// A numbered marker, coloured by its pair, as on the anatomy figure.
+const pin = (x, y, n, pair) => `<g class="dg-pin ${pair}"><circle cx="${x}" cy="${y}" r="9"/><text x="${x}" y="${y + 4.2}" text-anchor="middle">${n}</text></g>`;
+// Something the sewer carries: a lump of rag, grease and silt.
+const LUMPS = ["M0 0q3-6 9-4q6-3 8 3q3 5-3 7q-6 2-10-1q-6-1-4-5z", "M0 0q2-5 7-4q5 0 6 4q1 5-5 5q-7 1-8-5z", "M0 0q4-4 10-2q4 2 2 6q-3 3-8 1q-5-1-4-5z"];
+const lumps = (list) => list.map(([x, y, k, d, cls = ""]) => `<path class="dg-solid${cls ? ` ${cls}` : ""}" d="M${x} ${y}${LUMPS[k % 3].slice(4)}" style="--d:${d}s"/>`).join("");
+
+// The shared scene for the two modes: ground, a manhole beside the sensor,
+// the pipe in long section with E-Flow 3 at the obvert just upstream of it.
+const EFW = 480, CROWN = 96, INVERT = 226, SHAFT = [320, 366];
+function eflowScene(water, inner, id) {
+  const [s0, s1] = SHAFT;
+  return `
+  <rect x="0" y="14" width="${EFW}" height="${240 - 14}" fill="url(#${id})"/>
+  <path class="dg-surface" d="M0 14H${EFW}"/>
+  <rect class="dg-pipe-in" x="0" y="${CROWN}" width="${EFW}" height="${INVERT - CROWN}"/>
+  <rect class="dg-pipe-in" x="${s0}" y="14" width="${s1 - s0}" height="${CROWN - 14}"/>
+  ${water}
+  <path class="dg-pipe" d="M0 ${CROWN}H${s0}M${s1} ${CROWN}H${EFW}M0 ${INVERT}H${EFW}M${s0} 14V${CROWN}M${s1} 14V${CROWN}"/>
+  <rect class="dg-concrete" x="${s0 - 8}" y="9" width="${s1 - s0 + 16}" height="6" rx="1"/>
+  <rect class="dg-box" x="${s0 + 6}" y="20" width="14" height="18" rx="2"/>
+  ${inner}`;
+}
+const flowMark = (x, y, label) => `${label ? `<text x="${x}" y="${y}" class="dg-m">${esc(label)}</text>` : ""}<path class="dg-arrow" d="M${x + 38} ${y - 4}h26m-6-4 6 4-6 4"/>`;
+
+/* ---- eflowModes: radar in normal flow, ultrasonic and pressure in surcharge ---- */
+function eflowNormal(t) {
+  const L = t.labels, surf = 178;
+  const ef = eflowAt(226, CROWN, 1, { off: "us", cable: `H${SHAFT[0] + 4}V30H${SHAFT[0] + 13}` });
+  const water = `<rect class="dg-sewage" x="0" y="${surf}" width="${EFW}" height="${INVERT - surf}"/>
+  <path class="dg-sewage-top" d="M0 ${surf}H${EFW}"/>
+  <path class="dg-flow" d="M16 ${surf + 26}H470"/>`;
+  const beams = `
+  <path class="dg-beam-r" d="${cone(ef.vel, 12, { toY: surf })}"/>
+  <path class="dg-beam-r" d="${cone(ef.depth, 7, { toY: surf })}"/>
+  <path class="dg-footprint" d="M${f1(ef.vel[0] - (surf - ef.vel[1]) / ef.vel[3] * 0.77 - 24)} ${surf}h40"/>`;
+  return svg(EFW, 240, eflowScene(water, `${beams}${ef.draw}
+  ${pin(180, 150, 1, "radar")}${pin(255, 160, 2, "radar")}
+  ${label(16, surf - 8, L.surface, { cls: "dg-m" })}
+  ${flowMark(16, 220, L.flow)}
+  ${label(16, 40, L.above, { cls: "dg-b" })}`, "dg-soil-e1"), soil("dg-soil-e1"));
+}
+function eflowSurcharge(t) {
+  const L = t.labels, level = 50;
+  const ef = eflowAt(226, CROWN, 1, { off: "radar", cable: `H${SHAFT[0] + 4}V30H${SHAFT[0] + 13}` });
+  const [px, py] = ef.press;
+  const water = `<rect class="dg-sewage" x="0" y="${CROWN}" width="${EFW}" height="${INVERT - CROWN}"/>
+  <rect class="dg-sewage" x="${SHAFT[0]}" y="${level}" width="${SHAFT[1] - SHAFT[0]}" height="${CROWN - level}"/>
+  <path class="dg-sewage-top" d="M${SHAFT[0]} ${level}H${SHAFT[1]}"/>
+  <path class="dg-flow" d="M16 206H470"/>
+  <g class="dg-bits">${[[20, 168, 0], [60, 192, -2.4], [8, 212, -4.6], [40, 182, -6.8], [14, 158, -8.4]].map(([x, y, d]) => `<circle cx="${x}" cy="${y}" r="2.4" style="--d:${d}s"/>`).join("")}</g>`;
+  const dim = 386;
+  const head = `
+  <path class="dg-ext" d="M${f1(px + 4)} ${f1(py)}H${dim + 6}M${SHAFT[1] + 2} ${level}H${dim + 6}"/>
+  <path class="dg-dim" d="M${dim} ${f1(py - 2)}V${level + 2}m-4 6 4-6 4 6M${dim - 4} ${f1(py - 8)}l4 6 4-6"/>
+  ${label(dim + 10, f1((py + level) / 2 - 4), L.head, { cls: "dg-b" })}`;
+  return svg(EFW, 240, eflowScene(water, `
+  <path class="dg-beam-u" d="${cone(ef.us, 3, { len: 128 })}"/>
+  <g class="dg-ping-u">${[0, 1, 2].map((n) => `<path d="M${f1(px - 7)} ${f1(py + 6)}q7 5 14 0" style="--d:${n * 0.5}s"/>`).join("")}</g>
+  ${ef.draw}${head}
+  ${pin(196, 194, 3, "us")}${pin(px - 18, py + 20, 4, "us")}
+  ${label(16, 118, L.standby, { cls: "dg-m" })}
+  ${flowMark(16, 220, L.flow)}
+  ${label(16, 40, L.full, { cls: "dg-b" })}`, "dg-soil-e2"), soil("dg-soil-e2"));
+}
+
+/* ---- eflowObvert: a sensor on the invert, against E-Flow 3 at the obvert ---- */
+const OBW = 480, OB_CROWN = 34, OB_INVERT = 174, OB_SURF = 118;
+function obvertScene(inner, id) {
+  return `
+  <rect x="0" y="0" width="${OBW}" height="${OB_INVERT + 14}" fill="url(#${id})"/>
+  <rect class="dg-pipe-in" x="0" y="${OB_CROWN}" width="${OBW}" height="${OB_INVERT - OB_CROWN}"/>
+  <rect class="dg-sewage" x="0" y="${OB_SURF}" width="${OBW}" height="${OB_INVERT - OB_SURF}"/>
+  <path class="dg-sewage-top" d="M0 ${OB_SURF}H${OBW}"/>
+  <path class="dg-flow" d="M16 ${OB_SURF + 18}H470"/>
+  <path class="dg-pipe" d="M0 ${OB_CROWN}H${OBW}M0 ${OB_INVERT}H${OBW}"/>
+  ${inner}`;
+}
+function invertPanel(t) {
+  const L = t.labels;
+  // the sensor on the invert, and what has wrapped round it
+  const body = `
+  ${lumps([[10, 150, 0, 0], [6, 132, 1, -2.2], [14, 162, 2, -4.4], [4, 142, 0, -6.6]].map(([x, y, k, d]) => [x, y, k, d, "stop"]))}
+  <path class="dg-cable" d="M0 ${OB_INVERT - 3}H236"/>
+  <path class="dg-mound" d="M214 ${OB_INVERT}q4-14 16-18q6-10 18-8q10-8 22-2q14-2 18 10q12 4 12 18z"/>
+  <path class="dg-rag" d="M296 158q14 4 24-2t24 2M292 166q12 2 22-2t22 3"/>
+  <path class="dg-inv-sensor" d="M236 ${OB_INVERT}l8-9q3-3 8-3h24q6 0 6 6v6z"/>
+  ${label(16, 62, L.invert, { cls: "dg-b" })}${leader("M120 66L232 152")}
+  ${label(300, 62, L.fouled, { cls: "dg-m" })}${leader("M318 84L284 146")}
+  ${flowMark(16, 160, "")}`;
+  return svg(OBW, 188, obvertScene(body, "dg-soil-o1"), soil("dg-soil-o1"));
+}
+function obvertPanel(t) {
+  const L = t.labels;
+  const ef = eflowAt(204, OB_CROWN, 1.05, { off: "us", cable: "H480" });
+  const body = `
+  ${lumps([[10, 150, 0, 0], [6, 132, 1, -2.2], [14, 162, 2, -4.4], [4, 142, 0, -6.6]].map(([x, y, k, d]) => [x, y, k, d, "pass"]))}
+  <path class="dg-beam-r" d="${cone(ef.vel, 12, { toY: OB_SURF })}"/>
+  <path class="dg-beam-r" d="${cone(ef.depth, 7, { toY: OB_SURF })}"/>
+  ${ef.draw}
+  ${label(16, 62, L.obvert, { cls: "dg-b" })}${leader("M114 66L200 56")}
+  ${label(330, 82, L.clear, { cls: "dg-m" })}
+  ${flowMark(16, 160, "")}`;
+  return svg(OBW, 188, obvertScene(body, "dg-soil-o2"), soil("dg-soil-o2"));
+}
+
+// Two drawings with their titles above and what each pair does beneath.
+const KEY_EF = {
+  radar: `<svg viewBox="0 0 16 10"><path d="M1 1L15 5L1 9Z" class="dg-beam-r"/></svg>`,
+  us: `<svg viewBox="0 0 16 10"><path d="M1 4L15 5L1 6Z" class="dg-beam-u"/></svg>`,
+  solid: `<svg viewBox="0 0 16 10"><path d="M3 6q2-5 6-3q5-2 5 2q1 4-4 4q-6 1-7-3z" class="dg-solid"/></svg>`,
+};
+const efPanels = (t, drawings) => `<div class="dg-panels">${drawings.map((d, i) => {
+  const [title, note, facts] = t.panels[i];
+  return `<div class="dg-panel"><p class="dg-panel-h"><b>${esc(title)}</b>${note ? `<span>${esc(note)}</span>` : ""}</p>${d}${facts ? `<ul class="dg-facts">${facts.map(([n, pair, f]) => `<li>${n ? `<span class="dg-n ${pair}" aria-hidden="true">${n}</span>` : ""}<span>${esc(f)}</span></li>`).join("")}</ul>` : ""}</div>`;
+}).join("")}</div>${t.legend ? `<ul class="dg-legend">${t.legend.map(([k, l]) => `<li>${KEY_EF[k].replace("<svg ", '<svg aria-hidden="true" ')}${esc(l)}</li>`).join("")}</ul>` : ""}`;
+
 /* ---- two-panel charts: HTML titles and legend, a small SVG each ---- */
 // Hydrographs over two days: dry weather flow with a daily pattern, and the
 // response to one storm.
@@ -223,7 +373,7 @@ const panels = (t, list) => `<div class="dg-panels">${list.map(([title, note, dr
 
 // Drawings in two panels carry their titles and key as page text; the
 // others are one picture with an alt text.
-const PANELS = new Set(["beforeafter", "sampling"]);
+const PANELS = new Set(["beforeafter", "sampling", "eflowModes", "eflowObvert"]);
 const DRAW = {
   thermal: (t) => thermal(t),
   wetwell: (t) => wetwell(t),
@@ -231,6 +381,8 @@ const DRAW = {
   scatter: (t) => scatter(t),
   beforeafter: (t) => panels(t, [[t.panels[0][0], t.panels[0][1], hydro(1.05, 0.28)], [t.panels[1][0], t.panels[1][1], hydro(0.26, 0.06)]]),
   sampling: (t) => panels(t, [[t.panels[0][0], t.panels[0][1], sampling("time")], [t.panels[1][0], t.panels[1][1], sampling("flow")]]),
+  eflowModes: (t) => efPanels(t, [eflowNormal(t), eflowSurcharge(t)]),
+  eflowObvert: (t) => efPanels(t, [invertPanel(t), obvertPanel(t)]),
 };
 
 // The figure: the drawing on a white plate, described for screen readers by
