@@ -2636,7 +2636,7 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: 6
   background: linear-gradient(rgba(127, 209, 196, .05) 1px, transparent 1px) 0 0 / 22px 22px, linear-gradient(90deg, rgba(127, 209, 196, .05) 1px, transparent 1px) 0 0 / 22px 22px, radial-gradient(120% 90% at 82% 0%, #105049 0%, #08312e 55%, #052523 100%); }
 .dg-screen .dg-plate::before { content: ""; position: absolute; inset: 8px; pointer-events: none; --c: rgba(127, 209, 196, .6);
   background: linear-gradient(var(--c), var(--c)) top left / 16px 1.5px no-repeat, linear-gradient(var(--c), var(--c)) top left / 1.5px 16px no-repeat, linear-gradient(var(--c), var(--c)) top right / 16px 1.5px no-repeat, linear-gradient(var(--c), var(--c)) top right / 1.5px 16px no-repeat, linear-gradient(var(--c), var(--c)) bottom left / 16px 1.5px no-repeat, linear-gradient(var(--c), var(--c)) bottom left / 1.5px 16px no-repeat, linear-gradient(var(--c), var(--c)) bottom right / 16px 1.5px no-repeat, linear-gradient(var(--c), var(--c)) bottom right / 1.5px 16px no-repeat; }
-.dg-screen svg { box-shadow: 0 0 0 1px rgba(127, 209, 196, .14); }
+.dg-screen .dg-panel > svg, .dg-screen .dg-xray > svg, .dg-screen .dg-row > svg { box-shadow: 0 0 0 1px rgba(127, 209, 196, .14); }
 .dg-screen .dg-panel-h b { color: #fff; }
 .dg-screen .dg-panel-h span, .dg-screen .dg-legend { color: var(--on-dark-faint); }
 .dg-screen .dg-legend { border-top-color: var(--line-dark); }
@@ -2673,6 +2673,72 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: 6
 .dg-screen .dg-gap { fill: rgba(4, 33, 31, .55); stroke: #f87171; }
 .diagram.dg-screen .dg-gap-t { fill: #fca5a5; }
 .dg-screen .dg-isovel ellipse { stroke: rgba(255, 255, 255, .22); }
+/* E-Flow 3 seen through its housing (eflowXray) */
+.dg-xray svg { display: block; }
+.xr-edge { fill: none; stroke: #9fe7da; stroke-width: 1.6; vector-effect: non-scaling-stroke; filter: drop-shadow(0 0 6px rgba(127, 209, 196, .7)); }
+.xr-pcb path { fill: none; stroke: rgba(127, 209, 196, .45); stroke-width: .9; vector-effect: non-scaling-stroke; }
+.xr-chip { fill: rgba(127, 209, 196, .14); stroke: rgba(127, 209, 196, .5); stroke-width: .9; vector-effect: non-scaling-stroke; }
+.xr-radar { fill: rgba(246, 160, 77, .35); stroke: #f6a04d; stroke-width: 1.4; vector-effect: non-scaling-stroke; filter: drop-shadow(0 0 5px rgba(246, 160, 77, .7)); }
+.xr-us { fill: rgba(56, 189, 248, .35); stroke: #38bdf8; stroke-width: 1.4; vector-effect: non-scaling-stroke; filter: drop-shadow(0 0 5px rgba(56, 189, 248, .7)); }
+.xr-gland { fill: #0e1716; stroke: #9fe7da; stroke-width: 1.2; vector-effect: non-scaling-stroke; }
+.ef-cable.xr { stroke: #9fc7c0; stroke-width: 3; }
+.dg-pin.xr circle { fill: #0d7c72; stroke: #9fe7da; box-shadow: none; }
+.dg-n.xr { background: #0d7c72; box-shadow: inset 0 0 0 1px #9fe7da; }
+.dg-numbered { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px 28px; margin-top: 18px; }
+.dg-numbered b { color: #fff; font-weight: 600; }
+@media (max-width: 980px) { .dg-numbered { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) { .dg-numbered { grid-template-columns: minmax(0, 1fr); } }
+/* installation, step by step (eflowInstall) */
+.dg-steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; margin: 0; padding: 0; list-style: none; counter-reset: none; }
+.dg-steps li { display: grid; align-content: start; gap: 10px; }
+.dg-steps svg { border-radius: 8px; box-shadow: 0 0 0 1px rgba(127, 209, 196, .14); }
+.dg-step-h { display: flex; align-items: center; gap: 10px; }
+.dg-step-h b { font-family: var(--font-display); font-weight: 620; font-size: .98rem; color: #fff; line-height: 1.25; }
+.dg-step-n { flex: none; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; font: 600 .8rem/1 var(--font-mono); color: var(--on-aqua); background: var(--aqua); box-shadow: 0 0 14px rgba(95, 180, 166, .6); }
+.dg-steps li > p:last-child { font-size: .9rem; line-height: 1.5; color: var(--on-dark-soft); }
+@media (max-width: 1100px) { .dg-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 18px; } }
+@media (max-width: 560px) { .dg-steps { grid-template-columns: minmax(0, 1fr); } }
+.ins-part { transition: opacity .4s var(--ease); }
+.ins-on { filter: drop-shadow(0 0 5px rgba(127, 209, 196, .9)); }
+.ins-move { fill: none; stroke: #9fe7da; stroke-width: 1.4; stroke-dasharray: 4 3; stroke-linecap: round; stroke-linejoin: round; animation: dg-flow 1.2s linear infinite; }
+.ins-clip { stroke: #9fe7da; stroke-width: 2; stroke-linecap: round; }
+.ins-wave { fill: none; stroke: #7fd1c4; stroke-width: 1.4; stroke-linecap: round; opacity: 0; animation: ef-wave 1.6s var(--d, 0s) linear infinite; }
+.ins-link { fill: none; stroke: #9fe7da; stroke-width: 1.3; stroke-dasharray: 3 4; animation: dg-flow 1.4s linear infinite reverse; }
+.ins-tablet { fill: #10201f; stroke: #9fe7da; stroke-width: 1.2; }
+.ins-screen { fill: #5fb4a6; fill-opacity: .55; }
+/* field photographs beside the heading in the built-for-the-sewer band */
+.ef-tough { align-items: center; }
+.ef-tough .photo-row .photo { margin-top: 0; }
+.ef-tough + .diagram { margin-top: clamp(32px, 4vw, 48px); }
+/* from the manhole to your desk (systemBand) */
+.sys { display: grid; grid-template-columns: minmax(0, 1fr) 70px minmax(0, 1fr) 70px minmax(0, 1.25fr) 70px minmax(0, 1fr); align-items: start; margin: 0; padding: clamp(6px, 1.5vw, 14px) 0 0; list-style: none; }
+.sys-node { display: grid; justify-items: center; gap: 6px; text-align: center; }
+.sys-node b { font-family: var(--font-display); font-weight: 620; color: #fff; font-size: 1.02rem; }
+.sys-node > span:last-child { font-size: .86rem; line-height: 1.45; color: var(--on-dark-faint); max-width: 24ch; }
+.sys-img { display: grid; place-items: center; width: 100%; height: 150px; margin-bottom: 6px; border-radius: 14px; background: radial-gradient(60% 60% at 50% 50%, rgba(159, 231, 218, .3), rgba(159, 231, 218, 0) 72%); }
+.sys-img img { max-width: 88%; max-height: 120px; width: auto; height: auto; object-fit: contain; filter: drop-shadow(0 10px 18px rgba(0, 0, 0, .45)); }
+.sys-node.tall .sys-img img { max-height: 140px; }
+.sys-node.screen .sys-img { background: none; }
+.sys-node.screen .sys-img picture { display: block; height: 150px; width: auto; aspect-ratio: 16 / 10; max-width: 100%; }
+.sys-node.screen .sys-img img { display: block; width: 100%; height: 100%; max-width: none; max-height: none; object-fit: cover; object-position: 0 0; border-radius: 8px; box-shadow: 0 0 0 1px rgba(127, 209, 196, .25), 0 0 30px -6px rgba(95, 180, 166, .55); filter: none; }
+.sys-node.team .sys-img .icon { width: 64px; height: 64px; color: #9fe7da; stroke-width: 1.4; filter: drop-shadow(0 0 10px rgba(127, 209, 196, .6)); }
+.sys-link { position: relative; align-self: start; height: 150px; display: grid; place-items: center; }
+.sys-link i { position: absolute; left: 4px; right: 4px; top: 50%; height: 2px; border-radius: 2px; background: repeating-linear-gradient(90deg, #9fe7da 0 8px, transparent 8px 14px); background-size: 28px 2px; animation: sys-flow 1s linear infinite; box-shadow: 0 0 8px rgba(127, 209, 196, .6); }
+.sys-link i::after { content: ""; position: absolute; right: -2px; top: -4px; border: 5px solid transparent; border-left: 7px solid #9fe7da; border-right: 0; }
+.sys-link span { position: relative; top: -16px; font: 500 .7rem/1.2 var(--font-mono); color: var(--aqua-text); text-align: center; }
+@keyframes sys-flow { to { background-position: 28px 0; } }
+.sys-ems { display: flex; align-items: center; gap: 10px; margin: 18px 0 0; padding: 12px 14px; border-radius: 12px; background: rgba(255, 255, 255, .04); box-shadow: inset 0 0 0 1px var(--line-dark); font-size: .9rem; color: var(--on-dark-soft); }
+.sys-ems .icon { flex: none; width: 22px; height: 22px; color: #9fe7da; }
+.sys-ems b { color: #fff; font-weight: 600; }
+@media (max-width: 900px) {
+  .sys { grid-template-columns: minmax(0, 1fr); justify-items: center; }
+  .sys-node { max-width: 360px; }
+  .sys-link { height: 54px; width: 100%; }
+  .sys-link i { left: 50%; right: auto; top: 6px; bottom: 6px; width: 2px; height: auto; background: repeating-linear-gradient(180deg, #9fe7da 0 8px, transparent 8px 14px); background-size: 2px 28px; animation-name: sys-flow-v; }
+  .sys-link i::after { right: auto; left: -4px; top: auto; bottom: -2px; border: 5px solid transparent; border-top: 7px solid #9fe7da; border-bottom: 0; }
+  .sys-link span { top: 0; left: 16px; text-align: left; justify-self: start; margin-left: 50%; }
+}
+@keyframes sys-flow-v { to { background-position: 0 28px; } }
 .dg-pin circle { stroke: #fff; stroke-width: 1.5; }
 .dg-pin.radar circle { fill: #c76a12; }
 .dg-pin.us circle { fill: #1d78a8; }
