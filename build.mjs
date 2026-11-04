@@ -191,7 +191,7 @@ function header(r, current, menuTab, file) {
               ${t.items.map(mLink).join("")}
             </div>`).join("")}
           </div>
-          <div class="mega-foot"><span>Not sure which service fits? Tell us about the site or the problem and we will point you to the right one.</span><a href="${r}enquire.html">Start an enquiry ${icon("arrow-right")}</a></div>
+          <div class="mega-foot"><span>Not sure which service fits? Tell us about the site or the problem and we'll point you to the right one.</span><a href="${r}enquire.html">Start an enquiry ${icon("arrow-right")}</a></div>
         </div>
       </div>`;
   const pRanges = C.brands.map((b) => ({ href: `products/${b.slug}.html`, icon: b.icon, label: b.name, desc: b.tag }));
@@ -960,7 +960,7 @@ const quickView = () => `
     <div class="qv-specs" data-qv="specs" hidden><h3>Specifications</h3><table class="specs"><tbody></tbody></table><a class="link-arrow" data-qv="specsAll" hidden>All specifications ${icon("arrow-right")}</a></div>
     <a class="link-arrow qv-page" data-qv="page" hidden>See how it works ${icon("arrow-right")}</a>
     <div class="qv-docs" data-qv="docs" hidden><h3>Documents</h3><ul class="aside-links"></ul></div>
-    <p class="note">Sales, hire and service from EDS, Australia wide.</p>
+    <p class="note">Sales, hire and service from EDS, Australia-wide.</p>
   </div>
   <template data-qv="docIcon">${icon("download")}</template>
 </dialog>
@@ -1046,7 +1046,7 @@ add({
 <section class="section" id="services">
   <div class="wrap">
     <div class="section-head split">
-      <h2 class="h-lg" data-reveal>Specialised services, delivered Australia wide.</h2>
+      <h2 class="h-lg" data-reveal>Specialised services, delivered Australia-wide.</h2>
       <a class="btn btn-outline" href="${r}services/index.html">All services ${icon("arrow-right")}</a>
     </div>
     <div class="grid bento">
@@ -1158,7 +1158,7 @@ ${waysSection(r)}
   <div class="wrap fs-grid">
     <div>
       <h2 class="h-lg" data-reveal>Sewer network intelligence.</h2>
-      <p class="lede" data-reveal style="--i:1">EDS FlowSense is the platform behind our monitoring, with flow analytics and engineering insight for every site EDS measures.</p>
+      <p class="lede" data-reveal style="--i:1">EDS FlowSense is the platform behind our monitoring: flow analytics and engineering insight for every site we measure.</p>
       <div class="fs-list" role="group" aria-label="FlowSense tools" data-reveal style="--i:2">
         ${[["flame", "I/I heat map", "One colour per severity band, with arrows showing which way the water runs."], ["siren", "Blockage Watch", "Early warning before a dry weather spill."], ["fan", "Pump Station Manager", "The wet well drawn to scale, with its live level."], ["bell-ring", "Alarms that reach people", "Sent to the email and mobile your team holds that day."]]
           .map(([ic, t, d], i) => `<button type="button" class="fs-item" aria-pressed="${i === 0}"><span class="card-icon">${icon(ic)}</span><span><b>${t}</b><span>${d}</span></span></button>`).join("")}
@@ -1529,13 +1529,13 @@ add({
       <div class="cat-group" role="group" aria-labelledby="cat-h-docs" data-cat-filter="docs"><p class="cat-h" id="cat-h-docs">Documents</p><ul>${opt("", "Any", products.length)}${opt("1", "Datasheet or manual", products.filter((p) => (p.docs || []).length || (p.brand.docs || []).length).length)}</ul></div>
     </aside>`;
     return `
-${pageHero(r, { crumbs: [["Products"]], title: "Industry leading instruments, backed by people who use them.", compact: true, after: `
+${pageHero(r, { crumbs: [["Products"]], title: "Industry-leading instruments, backed by the people who use them.", compact: true, after: `
     <div class="finder-bar" id="finder" data-reveal style="--i:2">
       <label class="finder-search">${icon("search", false)}<input type="search" placeholder="Try “flow”, “Hach” or “level”" aria-label="Search ${products.length} instruments by name, range or what they measure" autocomplete="off" spellcheck="false"></label>
       <p class="finder-live" hidden><span data-finder-live></span> <a class="link-arrow" href="#instruments">See them ${icon("arrow-right")}</a></p>
     </div>` })}
 <section class="section ranges-strip" id="ranges"><div class="wrap">
-  <div class="ranges-head"><h2 class="h-md" data-reveal>Browse by range</h2><p data-reveal style="--i:1">EDS makes its own instruments and represents leading manufacturers, across water supply, wastewater, flow monitoring and process control. Every range here is one we install, service and calibrate ourselves.</p></div>
+  <div class="ranges-head"><h2 class="h-md" data-reveal>Browse by range</h2><p data-reveal style="--i:1">We make our own instruments and represent leading manufacturers, across water supply, wastewater, flow monitoring and process control. We install, service and calibrate every range here ourselves.</p></div>
   <div class="range-tiles">
     ${C.brands.map((b, n) => {
       const count = products.filter((p) => p.brand === b).length;
@@ -2008,7 +2008,7 @@ ${second.map(fsStop).join("")}
   </div>
 </div></section>
 <section class="section band alt band-split" id="questions"><div class="wrap"><div class="split-band">
-  <div class="band-head"><h2 class="h-lg" data-reveal>What councils and utilities ask us.</h2><p class="lede" data-reveal style="--i:1">If your question is not here, our team will answer it on <a href="${site.phoneHref}">${site.phone}</a>.</p></div>
+  <div class="band-head"><h2 class="h-lg" data-reveal>What councils and utilities ask us.</h2><p class="lede" data-reveal style="--i:1">If your question isn't here, our team will answer it on <a href="${site.phoneHref}">${site.phone}</a>.</p></div>
   <div data-reveal>${faqHtml(FS.faq)}</div>
 </div></div></section>
 <section class="section band" id="documents"><div class="wrap">
@@ -2017,7 +2017,7 @@ ${second.map(fsStop).join("")}
     ${FS.docs.map((d, n) => `<li data-reveal style="--i:${n}"><a href="${d.href}" rel="noopener"><span class="card-icon">${icon("file-text")}</span><span>${esc(d.label)}<small>${esc(d.note)} ${docType(d.href)}.</small></span>${icon("download")}</a></li>`).join("")}
   </ul>
 </div></section>
-${ctaSection(r, { title: "See it on your own network.", lede: "Book a live demonstration on your own sites, and bring your hardest question about how a figure was calculated. We will show you the working behind every number on the screen.", topic: "EDS FlowSense" })}`;
+${ctaSection(r, { title: "See it on your own network.", lede: "Book a live demonstration on your own sites, and bring your hardest question about how a figure was calculated. We'll show you the working behind every number on the screen.", topic: "EDS FlowSense" })}`;
   },
 });
 
@@ -2048,7 +2048,7 @@ ${pageHero(r, { crumbs: [["About"]], title: "Australian owned and operated since
 </div></section>
 <section class="section alt"><div class="wrap origins">
   <div class="section-head"><p class="eyebrow">EDS origins</p><h2 class="h-lg" data-reveal>Founded by Graham and Cynthia Harper.</h2>
-  <p class="lede" data-reveal style="--i:1">EDS began in Queensland in 1991, following Graham's success with ELPRO, and alongside the release of the Pump Station Manager.</p></div>
+  <p class="lede" data-reveal style="--i:1">EDS began in Queensland in 1991, after Graham's success with ELPRO, with the release of the Pump Station Manager.</p></div>
   <div class="timeline">
     <span class="timeline-fill"></span>
     ${C.about.timeline.map(([when, t, d], i) => `${i === C.about.timeline.findIndex(([w]) => w.startsWith("2022")) ? '<p class="tl-group" id="projects">Recent projects</p>' : ""}<div class="tl" data-reveal><time>${when}</time><i></i><div><h3>${t}</h3><p>${d}</p></div></div>`).join("")}
@@ -2087,7 +2087,7 @@ add({
   current: "resources",
   scripts: ["library.js"],
   body: (r) => `
-${pageHero(r, { crumbs: [["Resources"]], title: "White papers, downloads and support.", lede: "What we have learnt in the field, and the files you need to keep instruments running.", visual: heroToc([["papers", "White papers", C.papers.length], ["downloads", "Datasheets, manuals and software", library.length], ["support", "Passwords, RMA forms and data access"]]) })}
+${pageHero(r, { crumbs: [["Resources"]], title: "White papers, downloads and support.", lede: "What we've learnt in the field, and the files you need to keep instruments running.", visual: heroToc([["papers", "White papers", C.papers.length], ["downloads", "Datasheets, manuals and software", library.length], ["support", "Passwords, RMA forms and data access"]]) })}
 <section class="section" id="papers"><div class="wrap">
   <div class="section-head"><p class="eyebrow">White papers</p><h2 class="h-lg" data-reveal>EDS publications</h2></div>
   <div class="grid ${C.papers.length % 3 ? "c2" : "c3"}">
@@ -2136,7 +2136,7 @@ const enquiryTopics = [
   { id: "pricing", icon: "tag", title: "Product pricing", subject: "Product pricing", hint: "Instruments to buy", prompt: "Which instruments, how many, and where they will be installed" },
   { id: "hire", icon: "calendar-clock", title: "Equipment hire", subject: "Equipment Rental", hint: "For a study or a season", prompt: "What you need to measure, where, and the dates you need it for" },
   { id: "service", icon: "wrench", title: "Service or calibration", subject: "Equipment service or calibration", hint: "Repairs and calibration", prompt: "The instrument, its serial number if you have it, and what it is doing" },
-  { id: "flowsense", icon: "waves", title: "EDS FlowSense", subject: "EDS FlowSense", hint: "A walkthrough of the platform", prompt: "The sites you monitor now, and what you would like to see" },
+  { id: "flowsense", icon: "waves", title: "EDS FlowSense", subject: "EDS FlowSense", hint: "A walkthrough of the platform", prompt: "The sites you monitor now, and what you'd like to see" },
   { id: "general", icon: "message-circle-more", title: "Something else", subject: "General enquiry", hint: "Any other question", prompt: "Tell us about your site, network or project" },
 ];
 
