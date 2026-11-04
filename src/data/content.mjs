@@ -1997,13 +1997,13 @@ export const diagrams = {
   },
   eflowModes: {
     alt: "Illustration of E-Flow 3 at the top of a sewer pipe beside a manhole, in two conditions. In normal flow the pipe is partly full: one radar beam reaches the water surface upstream for velocity and another reaches straight down for depth, while arrows beneath show the velocity through the depth and its mean. In surcharge the pipe is full and the water has risen up the manhole: an ultrasonic beam reaches into the water for velocity, the pressure transducer reads the head of water above it for depth, and the radar stands by.",
-    caption: "Illustration: E-Flow 3 at the pipe obvert. Radar reads the free surface from above; when the pipe runs full, ultrasonic and pressure measure through the water. Not to scale.",
+    caption: "Illustration of E-Flow 3 at the pipe obvert, not to scale.",
     panels: [
       ["Normal flow: non-contact radar", "Nothing touches the water", [[1, "radar", "24 GHz Doppler radar reads surface velocity, corrected to mean velocity through the depth"], [2, "radar", "120 GHz radar reads depth from above the flow"]]],
       ["Surcharge: Doppler ultrasonic and pressure", "Measuring through the full water column", [[3, "us", "Dual 1 MHz Doppler ultrasonic reads velocity from particles carried in the flow"], [4, "us", "Sealed 316 stainless pressure transducer reads depth, to 10 m of surcharge"]]],
     ],
     legend: [["radar", "Radar beam"], ["us", "Ultrasonic beam"], ["profile", "Velocity through the depth"], ["mean", "Mean velocity"]],
-    labels: { surface: "Surface velocity", profile: "Velocity profile", mean: "Mean", flow: "Flow", above: "Free surface present", full: "Pipe full, water up the manhole", head: ["Pressure", "head"], standby: ["No free surface:", "radar stands by"] },
+    labels: { surface: "Surface velocity", profile: "Velocity profile", mean: "Mean", flow: "Flow", above: "Free surface present", full: "Pipe full: radar stands by", head: ["Pressure", "head"] },
   },
   eflowObvert: {
     alt: "Illustration of two sewer pipes in section. In the first, a conventional flow sensor sits on the invert, and rag, grease and silt carried by the flow have built up around it. In the second, E-Flow 3 sits at the obvert above the water, reading the surface by radar, while the same solids pass beneath it.",
@@ -2166,6 +2166,7 @@ export const productPages = [
     lede: "Non-contact radar in normal flow. Doppler ultrasonic and pressure in surcharge. Seamless switching, so the record never stops.",
     description: "EDS E-Flow 3 sewer flowmeter: non-contact radar in normal flow, Doppler ultrasonic and pressure in surcharge, with seamless changeover and minimal upkeep.",
     image: img("e-flow-3.png"),
+    hero: { caption: "Illustration: radar while there's a free surface, ultrasonic and pressure when the pipe runs full.", normal: "Normal flow: radar", surcharge: "Surcharge: ultrasonic and pressure" },
     figure: { src: img("e-flow-3-installation.jpg"), alt: "Cutaway of a sewer with E-Flow 3 mounted at the pipe obvert and cabled to a data logger near the top of the manhole", caption: "E-Flow 3 at the pipe obvert, cabled to a logger in the shaft" },
     docs: [
       { label: "Datasheet", note: "Principle of operation, full specifications, installation and wiring.", href: localDoc("eds-e-flow-3-datasheet.pdf") },
@@ -2182,7 +2183,7 @@ export const productPages = [
     intro: [
       "E-Flow 3 is an area velocity flowmeter built for sewers and the harshest conditions they can throw at it. Four sensors share one body at the pipe obvert, in two pairs: non-contact radar for normal flow, and Doppler ultrasonic with a pressure depth sensor for surcharge.",
       "In normal flow the radars measure velocity and depth from above the water, so there's nothing in the flow for grease, rag and silt to foul. When the sewer surcharges and the surface is lost, the ultrasonic and pressure pair takes over on its own, then hands back as the level drops. One sensor, one continuous record, from dry weather flow to full surcharge.",
-      "That's why E-Flow 3 needs less maintenance than any other type of open channel flowmeter, with accuracy to match. And it keeps measuring through the wet weather events that drive I&I programs, capacity assessments and regulatory reporting, just when a wetted sensor is most likely to be fouled.",
+      "That's why E-Flow 3 needs less maintenance than any other type of open channel flowmeter, while keeping unmatched accuracy. And it keeps measuring through the wet weather events that drive I&I programs, capacity assessments and regulatory reporting, just when a wetted sensor is most likely to be fouled.",
     ],
     anatomy: {
       heading: "Four sensors, one body",
@@ -2200,8 +2201,8 @@ export const productPages = [
       ],
     },
     modes: {
-      nav: "How it measures",
-      heading: "Above the surface by radar. Below it by ultrasonic and pressure.",
+      nav: "Measuring",
+      heading: "Above the surface by radar.\nBelow it by ultrasonic and pressure.",
       lede: "Each pair does the job it's best at. Radar reads the flow from above whenever there's a free surface. When the pipe runs full, Doppler ultrasonic and pressure measure through the water column instead, so E-Flow 3 keeps one continuous record.",
       diagram: "eflowModes",
     },
@@ -2212,7 +2213,7 @@ export const productPages = [
     },
     why: {
       nav: "Why E-Flow 3",
-      heading: "Other flowmeters do half the job. E-Flow 3 does both.",
+      heading: "Other flowmeters do half the job.\nE-Flow 3 does both.",
       lede: "A radar on its own loses its reading the moment the pipe surcharges. A wetted sensor on the invert keeps measuring, but fouls with rag and grease and drifts. E-Flow 3 uses each technology where it works best and switches between them seamlessly, which is what makes it better than any other sewer flowmeter on the market.",
       diagram: "eflowCompare",
       columns: ["Radar alone", "Wetted sensor on the invert", "E-Flow 3"],
@@ -2228,12 +2229,14 @@ export const productPages = [
       heading: "Unmatched accuracy, from the surface down.",
       lede: "Flow is only as good as its velocity and its area. E-Flow 3 reads surface velocity across its radar footprint and corrects it to mean velocity through the depth, measures depth with 1 mm resolution, and works out the wetted area from the pipe profile. Then it computes flow in the sensor itself.",
       diagram: "eflowProfile",
-      heading2: "Accuracy that holds from dry weather to full surcharge",
+      heading2: "The figures, from dry weather to full surcharge",
       stats: [
         ["1 %", "of reading, ultrasonic velocity", "± 0.005 m/s"],
         ["2 %", "of reading, radar velocity", "± 0.01 m/s"],
         ["0.2 %", "of full scale, depth", "± 0.001 m"],
         ["1 mm", "depth resolution", "and 0.001 m/s velocity"],
+        ["0.05 to 20 m/s", "velocity range", "recommended above 0.2 m/s"],
+        ["0 to 10 m", "depth range", "including surcharge"],
       ],
     },
     upkeep: {
@@ -2254,7 +2257,7 @@ export const productPages = [
       diagram: "eflowInstall",
     },
     tough: {
-      nav: "Built for the sewer",
+      nav: "Build",
       heading: "Built for sewers and the harshest conditions.",
       lede: "Hydrogen sulphide, grease, rag, silt, temperature swings and the odd full surcharge. E-Flow 3 is built to sit in all of it for years and keep reporting.",
       hazards: ["Hydrogen sulphide", "Grease", "Rag", "Silt", "Temperature swings", "Full surcharge"],
@@ -2265,7 +2268,7 @@ export const productPages = [
       diagram: "eflowXray",
     },
     applications: {
-      nav: "Applications",
+      nav: "Uses",
       heading: "Where E-Flow 3 fits.",
       items: [
         ["cloud-rain", "Inflow and infiltration", "Reliable wet weather velocity and depth through surcharge, the events that define an I&I program."],
@@ -2285,6 +2288,7 @@ export const productPages = [
         { kind: "team", name: "Your team", line: "Engineers, operators, hydraulic modellers and regulatory reporting" },
       ],
       links: ["RS485 Modbus", "4G LTE", "Web and API"],
+      alt: "The FlowSense network overview screen, with alarms, a site list and a map of the network",
       ems: ["EMS-Flow", "commissions and verifies the sensor from the surface, through the logger."],
       caption: "The EDS monitoring system around E-Flow 3. It can also be polled by third party RTUs and loggers over Modbus RTU.",
     },
@@ -2330,6 +2334,7 @@ export const productPages = [
         ["Cable", "Integral, length specified at order"],
       ]],
     ],
+    specNav: "Specs",
     specNote: "Accuracy is stated under reference conditions. Radar velocity needs a free surface with enough texture to return a signal; below 0.2 m/s the sensor prefers ultrasonic velocity where it is available. Specifications may change without notice.",
     worksWith: [
       ["products/hawk.html", "Hawk 4G logger", "Powers and polls E-Flow 3 over RS485 and reports over 4G."],

@@ -137,12 +137,12 @@
     const hOf = (y) => (y >= CROWN ? ((INV - y) / (INV - CROWN)) * D : D + ((CROWN - y) / (CROWN - SHAFT_TOP)) * (TOP - D));
     const $ = (id) => document.getElementById(id);
     const range = $("ef-range"), play = $("ef-play"), live = $("ef-live"), state = $("ef-state");
-    const water = $("ef-water"), surf = $("ef-surf"), clip = $("ef-clip-r"), foot = $("ef-foot");
+    const water = $("ef-water"), surf = $("ef-surf"), surfG = $("ef-surf-g"), playL = $("ef-play-l"), clip = $("ef-clip-r"), foot = $("ef-foot");
     const wv = [...$("ef-wv").children], wd = [...$("ef-wd").children], vtag = $("ef-vtag");
     const pf = { base: $("ef-pf-base"), env: $("ef-pf-env"), arrows: $("ef-pf"), top: $("ef-pf-top"), mean: $("ef-pf-mean") };
     const bv = $("ef-bv"), bd = $("ef-bd"), hExt = $("ef-head-ext"), hDim = $("ef-head-dim"), hText = $("ef-head-t"), hVal = $("ef-head-v");
     const trR = $("ef-tr-r"), trU = $("ef-tr-u");
-    const spec = { box: $("ef-spec-box"), label: $("ef-spec-l"), noise: $("ef-spec-n"), peak: $("ef-spec-p"), span: $("ef-spec-d") };
+    const spec = { box: $("ef-spec-box"), label: $("ef-spec-l"), noise: $("ef-spec-n"), peak: $("ef-spec-p") };
     const out = { level: $("ef-level"), d: $("ef-d"), v: $("ef-v"), q: $("ef-q") };
     const rows = Object.fromEntries([...document.querySelectorAll(".ef-sensors li")].map((li) => [li.dataset.s, li]));
     // where the elements sit (the sensor is drawn at the crown from x 310,
@@ -183,7 +183,8 @@
     const vOf = (h) => (h <= D ? 0.3 + Math.pow(h / D, 0.67) : 1.3 + 0.08 * (h - D));
     const aOf = (h) => { const r = D / 2; if (h >= D) return Math.PI * r * r; const th = 2 * Math.acos((r - h) / r); return (r * r * (th - Math.sin(th))) / 2; };
     let h = 0.2, pair = "radar", storm = null, drag = false, inView = false;
-    const N = 300, hist = [];
+    // the record starts with a day of steady flow behind it, so it never opens empty
+    const N = 300, hist = Array.from({ length: N }, (_, i) => [0.2 + 0.018 * Math.sin(i / 19) + 0.006 * Math.sin(i / 5), "radar"]);
     const traceY = (x) => (x <= D ? 78 - (x / D) * 38 : 40 - ((x - D) / (TOP - D)) * 34);
 
     const draw = () => {
@@ -194,7 +195,8 @@
       const py = Math.max(CROWN, y), wy = n1(y);
       water.setAttribute("d", full ? `M0 ${CROWN}H400V${wy}H456V${CROWN}H560V${INV}H0Z` : `M0 ${wy}H560V${INV}H0Z`);
       clip.setAttribute("d", `M0 ${n1(py)}H560V${INV}H0Z`);
-      surf.setAttribute("d", full ? `M400 ${wy}H456` : `M0 ${wy}H560`);
+      const line = full ? `M400 ${wy}H456` : `M0 ${wy}H560`;
+      surf.setAttribute("d", line); surfG.setAttribute("d", line);
       if (pair === "radar") {
         const [a, b] = beam(bv, wv, VEL, 12, y);
         beam(bd, wd, DEP, 7, y);
@@ -223,7 +225,6 @@
       let pk = ""; for (let x = px - 24; x <= px + 24; x += 3) pk += `${pk ? "L" : "M"}${n1(x)} ${n1(56 - 40 * Math.exp(-(((x - px) / 8) ** 2)) - Math.random() * 1.2)}`;
       spec.noise.setAttribute("d", n.join(""));
       spec.peak.setAttribute("d", `${pk}Z`);
-      spec.span.setAttribute("d", `M${n1(px)} 6V12`);
       if (spec.box.dataset.pair !== pair) { spec.box.dataset.pair = pair; spec.label.textContent = pair === "radar" ? "Radar" : "Ultrasonic"; }
       const set = (k, s) => { if (rows[k].dataset.state !== s) { rows[k].dataset.state = s; rows[k].querySelector("em").textContent = { primary: "Primary", check: "Cross-checking", standby: "Standing by" }[s]; } };
       set("vel", pair === "radar" ? "primary" : "standby");
@@ -241,7 +242,7 @@
     };
     // the record: the last N readings, each stretch in the colour of the pair that made it
     const record = () => {
-      hist.push([h, pair]);
+      hist.push([h + (Math.random() - 0.5) * 0.006, pair]);
       if (hist.length > N) hist.shift();
       const dx = 560 / (N - 1), x0 = 560 - (hist.length - 1) * dx;
       const d = { radar: "", us: "" };
@@ -254,15 +255,16 @@
     };
     // a storm: the level rises to a surcharge up the manhole and drains away
     const STORM = 30, base = 0.2, peak = 2.1, at = (t) => { const u = t / 8; return base + (peak - base) * u ** 3 * Math.exp(3 * (1 - u)); };
-    const startStorm = () => { storm = 0; };
-    const stopStorm = () => { storm = null; };
+    const setPlay = (on) => { play.setAttribute("aria-pressed", String(on)); playL.textContent = on ? "Stop the storm" : "Play a storm"; };
+    const startStorm = () => { storm = 0; setPlay(true); };
+    const stopStorm = () => { storm = null; setPlay(false); };
     setInterval(() => {
       if (!inView || document.hidden) return;
       if (storm !== null) { storm += 0.1; h = at(storm); if (storm >= STORM) stopStorm(); }
       draw(); record();
     }, 100);
     range.addEventListener("input", () => { stopStorm(); h = parseFloat(range.value); draw(); });
-    play.addEventListener("click", startStorm);
+    play.addEventListener("click", () => (storm === null ? startStorm() : stopStorm()));
     const fromEvent = (e) => {
       const r = ef.getBoundingClientRect(), sy = ((e.clientY - r.top) / r.height) * 312;
       h = Math.max(0.05, Math.min(TOP, hOf(sy))); draw();
