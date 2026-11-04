@@ -1365,7 +1365,7 @@ const paperLinks = (ids = []) => ids.map((id) => { const p = C.papers.find((x) =
 // of two, or one that follows a list of the same kind, sits beside its
 // heading as ruled rows instead. Every band heading is set at the same size.
 const isSteps = (b) => Boolean(b.list && (b.steps || b.heading.includes("approach")));
-const bandHead = (b) => `<div class="band-head"><h2 class="h-lg" data-reveal>${esc(b.heading)}</h2>${b.lede ? `<p class="lede" data-reveal style="--i:1">${esc(b.lede)}</p>` : ""}</div>`;
+const bandHead = (b) => `<div class="band-head"><h2 class="h-lg" data-reveal>${esc(b.heading).replace(/\n/g, "<br>")}</h2>${b.lede ? `<p class="lede" data-reveal style="--i:1">${esc(b.lede)}</p>` : ""}</div>`;
 const flatItems = (items) => `<ul class="flat-list">${items.map(([t, d], n) => `<li data-reveal style="--i:${n % 4}"><span><b>${esc(t)}</b><span>${esc(d)}</span></span></li>`).join("")}</ul>`;
 const checkList = (list) => `<ul class="checks" data-reveal>${list.map((l) => `<li>${icon("check", false)}<span>${esc(l)}</span></li>`).join("")}</ul>`;
 const blockBody = (b) => (b.items ? flatItems(b.items) : b.list ? checkList(b.list) : "");
@@ -1737,9 +1737,35 @@ const toughBand = (t) => `<div class="split-band ef-tough"><div class="band-head
 // instrument screen as the drawings. Product shots and a FlowSense screen.
 const systemBand = (y) => `${bandHead(y)}
   <figure class="diagram dg-screen ef-dark dg-system" data-reveal><div class="dg-plate">
-    <ol class="sys">${y.nodes.map((n, i) => `${i ? `<li class="sys-link" aria-hidden="true"><span>${esc(y.links[i - 1])}</span><i></i></li>` : ""}<li class="sys-node ${n.kind}"><span class="sys-img">${n.shot ? shot(n.shot, "The FlowSense overview screen", { sizes: "(max-width: 980px) 80vw, 300px" }) : n.image ? `<img src="${n.image}" alt="" loading="lazy">` : icon("users", false)}</span><b>${esc(n.name)}</b><span>${esc(n.line)}</span></li>`).join("")}</ol>
+    <ol class="sys">${y.nodes.map((n, i) => `${i ? `<li class="sys-link" aria-hidden="true"><span>${esc(y.links[i - 1])}</span><i></i></li>` : ""}<li class="sys-node ${n.kind}"><span class="sys-img">${n.shot ? shot(n.shot, y.alt, { sizes: "(max-width: 980px) 240px, 240px" }) : n.image ? `<img src="${n.image}" alt="${esc(n.name)}" loading="lazy" decoding="async">` : icon("users", false)}</span><b>${esc(n.name)}</b><span>${esc(n.line)}</span></li>`).join("")}</ol>
     <p class="sys-ems">${icon("tablet-smartphone", false)}<span><b>${esc(y.ems[0])}</b> ${esc(y.ems[1])}</span></p>
   </div><figcaption>${esc(y.caption)}</figcaption></figure>`;
+
+// The E-Flow 3 hero: the product on an instrument screen in a looped storm.
+// Water rises over the sensor and falls again and the beams change over with
+// it, so the page's point is made in its first screen. Each moving part is its
+// own layer, moved by transform and opacity only (site.css: .ef-hero). Laid
+// out in a 400 unit square that a short plate crops top and bottom.
+function eflowHero(pg) {
+  const p = "efh", surf = 312, us = [212, 195, -0.6, 0.8];
+  const rv = efBeam(p, "rv", [170, 158, -0.6, 0.8], 12, { toY: surf, waves: 4 }), rd = efBeam(p, "rd", [97.5, 147, 0, 1], 7, { toY: surf, waves: 3 });
+  const u1 = efBeam(p, "u1", [us[0] - 0.8, us[1] - 3, us[2], us[3]], 2.5, { len: 128, kind: "u", waves: 4 }), u2 = efBeam(p, "u2", [us[0] + 0.8, us[1] + 3, us[2], us[3]], 2.5, { len: 116, kind: "u", waves: 4 });
+  const layer = (cls, body, defs = "") => `<svg class="${cls}" viewBox="0 0 400 400" aria-hidden="true"><defs>${defs}</defs>${body}</svg>`;
+  return `
+<figure class="hero-product" data-reveal="scale" style="--i:2">
+  <div class="hero-product-shot ef-hero">
+    <div class="ef-hero-stage">
+      ${layer("ef-dark", `<rect width="400" height="400" fill="url(#${p}-soil)"/><rect y="68" width="400" height="332" fill="url(#${p}-air)"/><path fill="url(#${p}-cut)" d="M0 46H400V68H0ZM0 382H400V400H0Z"/><path class="ef-edge" d="M0 46H400M0 68H400M0 382H400"/><rect x="92" y="67" width="196" height="16" rx="2" fill="url(#${p}-steel)" fill-opacity=".7"/>`, efDefs(p, { dark: true }))}
+      ${layer("ef-dark ef-hero-radar", `${rv.draw}${rd.draw}`, `${rv.defs}${rd.defs}`)}
+      ${layer("ef-dark ef-hero-us", `${u1.draw}${u2.draw}`, `${u1.defs}${u2.defs}`)}
+      <img src="${pg.image}" alt="${esc(pg.name)}" width="963" height="471" fetchpriority="high">
+      ${layer("ef-hero-water", `<rect width="400" height="400" fill="url(#${p}-w)"/><rect width="400" height="7" fill="#9fe7da" fill-opacity=".28"/><rect width="400" height="2" fill="#d6fff7"/>${[[200, 30], [300, 54], [40, 196], [168, 256], [292, 214]].map(([x, y]) => `<path class="ef-hero-arrow" d="M${x} ${y}h44m-7-4.6 7 4.6-7 4.6"/>`).join("")}`, `<linearGradient id="${p}-w" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5fc4b4" stop-opacity=".62"/><stop offset=".5" stop-color="#1b8a7d" stop-opacity=".78"/><stop offset="1" stop-color="#0d6b62" stop-opacity=".9"/></linearGradient>`)}
+    </div>
+    <p class="ef-hero-tag" aria-hidden="true"><span class="n"><i></i>${esc(pg.hero.normal)}</span><span class="s"><i></i>${esc(pg.hero.surcharge)}</span></p>
+  </div>
+  <figcaption>${esc(pg.hero.caption)}</figcaption>
+</figure>`;
+}
 
 // The changeover demo: a sewer and manhole in section with E-Flow 3 at the
 // obvert, drawn with the kit in diagrams.mjs on the deep teal. The water
@@ -1757,7 +1783,7 @@ function eflowDemo() {
     <linearGradient id="${p}-wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="ef-w0"/><stop offset=".18" class="ef-w1"/><stop offset="1" class="ef-w2"/></linearGradient>
     <pattern id="${p}-grid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0H0V20" class="ef-gridline"/></pattern>
     <clipPath id="ef-clip"><path id="ef-clip-r" d="M0 266H560V296H0Z"/></clipPath>`;
-  const water = `<path id="ef-water" fill="url(#${p}-wg)" d="M0 266H560V296H0Z"/><path id="ef-surf" class="ef-surf" d="M0 266H560"/>`;
+  const water = `<path id="ef-water" fill="url(#${p}-wg)" d="M0 266H560V296H0Z"/><path id="ef-surf-g" class="ef-surf-g" d="M0 266H560"/><path id="ef-surf" class="ef-surf" d="M0 266H560"/>`;
   const corners = [[6, 6, 1, 1], [554, 6, -1, 1], [6, 306, 1, -1], [554, 306, -1, -1]].map(([x, y, sx, sy]) => `M${x} ${y + 14 * sy}V${y}H${x + 14 * sx}`).join("");
   const inner = `
     <rect width="${DEMO.w}" height="${DEMO.h}" fill="url(#${p}-grid)"/>
@@ -1767,18 +1793,19 @@ function eflowDemo() {
     <g class="ef-uswrap">${bu.draw}${bu2.draw}<text class="ef-tag u" x="12" y="196">Ultrasonic measuring</text></g>
     ${ef.draw}
     <g id="ef-head" class="ef-head"><path id="ef-head-ext" class="ef-ext"/><path id="ef-head-dim" class="ef-dim"/><text id="ef-head-t" x="484" y="120"><tspan id="ef-head-v">0.00 m</tspan><tspan x="484" dy="1.2em">head</tspan></text></g>
-    <g class="ef-txt"><text x="12" y="26">Ground</text><text x="472" y="72">Logger</text><text class="fine" x="12" y="166">Upstream</text><text x="300" y="166" text-anchor="end">E-Flow 3 at the obvert</text></g>
+    <g class="ef-txt"><text x="12" y="26">Ground</text><text x="472" y="72">Logger</text><text x="300" y="166" text-anchor="end">E-Flow 3 at the obvert</text></g>
+    <text class="ef-flow-l" x="494" y="287">Flow</text><path class="dg-arrow w" d="M526 283h20m-5-3.6 5 3.6-5 3.6"/>
     <path class="ef-hud" d="${corners}"/>`;
   return `
 <div class="demo ef-demo" data-reveal>
   <div class="panel">
-    <div class="panel-head"><div class="panel-title">${icon("waves", false)} Drag the water level</div><button class="btn btn-ghost btn-sm" type="button" id="ef-play">${icon("cloud-rain", false)} Play a storm</button></div>
+    <div class="panel-head"><div class="panel-title">${icon("waves", false)} Drag the water level</div><button class="btn btn-ghost btn-sm" type="button" id="ef-play" aria-pressed="false">${icon("cloud-rain", false)} <span id="ef-play-l">Play a storm</span></button></div>
     <svg id="ef-svg" class="ef-dark" viewBox="0 0 ${DEMO.w} ${DEMO.h}" data-pair="radar" role="img" aria-label="A sewer pipe and manhole in section, with E-Flow 3 at the top of the pipe and a logger near the top of the manhole. Arrows in the water show the velocity through the depth. The water level can be raised from low flow to a full surcharge up the manhole."><defs>${defs}</defs>${efSection(p, water, inner, DEMO)}</svg>
+    <label class="range"><span>Water level <output><span id="ef-level">0.20</span> m</output></span><input id="ef-range" type="range" min="0.05" max="2.6" step="0.01" value="0.2"></label>
     <div class="ef-trace">
       <p class="ef-trace-h"><b>The record</b><span><i class="r"></i>Radar <i class="u"></i>Ultrasonic and pressure</span></p>
-      <svg id="ef-trace" viewBox="0 0 560 84" aria-hidden="true"><path class="ef-obv" d="M0 40H560"/><text x="556" y="35" text-anchor="end">Pipe obvert</text><path id="ef-tr-r" class="ef-tr r"/><path id="ef-tr-u" class="ef-tr u"/></svg>
+      <div class="ef-trace-plot"><svg id="ef-trace" viewBox="0 0 560 84" preserveAspectRatio="none" aria-hidden="true"><path class="ef-obv" d="M0 40H560"/><path id="ef-tr-r" class="ef-tr r"/><path id="ef-tr-u" class="ef-tr u"/></svg><span class="ef-obv-l">Pipe obvert</span></div>
     </div>
-    <label class="range"><span>Water level <output><span id="ef-level">0.20</span> m</output></span><input id="ef-range" type="range" min="0.05" max="2.6" step="0.01" value="0.2"></label>
   </div>
   <div class="panel">
     <div class="panel-head"><div class="panel-title">${icon("radar", false)} What E-Flow 3 reports</div></div>
@@ -1787,7 +1814,7 @@ function eflowDemo() {
     <ol class="ef-sensors">${[["vel", 1, "r", "Velocity radar", "24 GHz"], ["dep", 2, "r", "Depth radar", "120 GHz"], ["us", 3, "u", "Doppler ultrasonic", "Dual 1 MHz"], ["pr", 4, "u", "Pressure", "316 stainless"]].map(([k, n, pair, t, d]) => `<li data-s="${k}" data-pair="${pair}" data-state="standby"><span class="ef-n ${pair}" aria-hidden="true">${n}</span><span>${t}<small>${d}</small></span><em>Standing by</em></li>`).join("")}</ol>
     <div class="ef-spec" id="ef-spec-box" data-pair="radar">
       <p class="ef-trace-h"><b>Velocity signal</b><span id="ef-spec-l">Radar</span></p>
-      <svg id="ef-spec" viewBox="0 0 280 64" aria-hidden="true"><path class="ef-spec-axis" d="M4 56H276"/><path id="ef-spec-n" class="ef-spec-n"/><path id="ef-spec-p" class="ef-spec-p"/><path id="ef-spec-d" class="ef-spec-d"/></svg>
+      <svg id="ef-spec" viewBox="0 0 280 64" aria-hidden="true"><path class="ef-spec-axis" d="M4 56H276"/><path id="ef-spec-n" class="ef-spec-n"/><path id="ef-spec-p" class="ef-spec-p"/></svg>
     </div>
     <div class="readouts ef-readouts">
       <div class="readout"><b><span id="ef-d">0.200</span><small>m</small></b><span>Depth</span></div>
@@ -1821,7 +1848,7 @@ for (const pg of C.productPages) {
   const tones = extra.map(([, , , dark]) => (dark ? " dark" : light++ % 2 ? "" : " alt"));
   const specTone = light % 2 ? "" : " alt";
   // A page with several bands gets the section bar the service pages have.
-  const nav = [["overview", "Overview"], ...extra.filter(([, label]) => label).map(([id, label]) => [id, label]), ["specifications", "Specifications"]];
+  const nav = [["overview", "Overview"], ...extra.filter(([, label]) => label).map(([id, label]) => [id, label]), ["specifications", pg.specNav || "Specifications"]];
   const bar = (r) => nav.length > 4 ? `
 <nav class="secbar" aria-label="On this page"><div class="wrap secbar-in">
   <ol>${nav.map(([id, label]) => `<li><a href="#${id}">${esc(label)}</a></li>`).join("")}</ol>
@@ -1834,7 +1861,7 @@ for (const pg of C.productPages) {
     current: "products",
     scripts: pg.demo ? ["widgets.js"] : [],
     body: (r) => `
-${pageHero(r, { crumbs: [["Products", "products/index.html"], [b.name, `products/${b.slug}.html`], [pg.name]], iconName: pg.icon, eyebrow: pg.tag, title: pg.name, lede: pg.lede, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${contactHref(r, pricing)}">Request pricing ${icon("arrow-right")}</a>${quoteBtn(quoteItem(products.find((p) => p.href === `products/${pg.slug}.html`)), "btn-lg")}<a class="btn btn-ghost btn-lg" href="${datasheet.href}" rel="noopener">${icon("download")} Datasheet</a>`, visual: heroProduct(pg.image, pg.name) })}
+${pageHero(r, { crumbs: [["Products", "products/index.html"], [b.name, `products/${b.slug}.html`], [pg.name]], iconName: pg.icon, eyebrow: pg.tag, title: pg.name, lede: pg.lede, actions: `<a class="btn btn-primary btn-lg" data-magnetic href="${contactHref(r, pricing)}">Request pricing ${icon("arrow-right")}</a>${quoteBtn(quoteItem(products.find((p) => p.href === `products/${pg.slug}.html`)), "btn-lg")}<a class="btn btn-ghost btn-lg" href="${datasheet.href}" rel="noopener">${icon("download")} Datasheet</a>`, visual: pg.hero ? eflowHero(pg) : heroProduct(pg.image, pg.name) })}
 <div class="secbar-scope">${bar(r)}
 <section class="section hl-band"><div class="wrap">
   <div class="hl-grid">${pg.highlights.map(([ic, t, d], i) => `<div class="hl holder" data-reveal style="--i:${i % 3}">${icon(ic)}<b>${esc(t)}</b><span>${esc(d)}</span></div>`).join("")}</div>
