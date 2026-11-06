@@ -1224,7 +1224,7 @@ add({
   title: "Environmental Data Services | Water & Wastewater Monitoring",
   description: "Environmental Data Services (EDS): flow meters, samplers, trained field crews and FlowSense data for water and wastewater. Australian owned since 1991.",
   current: "home",
-  scripts: ["city-scene.js", "city-weather.js", "city.js"],
+  scripts: ["city-scene.js", "city-traffic.js", "city-weather.js", "city.js"],
   body: (r) => {
     const words = ["Every", "drop,", "measured."];
     // The page tells one story in ten bands. Dark bands run on a schedule:

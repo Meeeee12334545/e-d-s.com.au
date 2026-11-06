@@ -577,6 +577,10 @@ ul { margin: 0; padding: 0; list-style: none; }
 .city-svg .road { fill: #2a3135; }
 .city-svg .road.deck { fill: #3b4549; }
 .city-svg .kerb { fill: none; stroke: rgba(255, 255, 255, .2); stroke-width: 1; }
+.city-svg .gutter { fill: none; stroke: rgba(0, 0, 0, .3); stroke-width: 1.4; }
+.city-svg .asphalt { pointer-events: none; }
+/* the light rail's overhead wire, between the catenary poles on the north footpath */
+.city-svg .catenary { fill: none; stroke: rgba(255, 255, 255, .36); stroke-width: .6; stroke-linejoin: round; }
 .city-svg .stopline { fill: none; stroke: rgba(255, 255, 255, .5); stroke-width: 1.4; }
 .city-svg .road-line { stroke: rgba(255, 255, 255, .34); stroke-width: 1; stroke-dasharray: 5 7; fill: none; }
 .city-svg .pier { fill: #4c585c; }
@@ -755,6 +759,11 @@ ul { margin: 0; padding: 0; list-style: none; }
 .city-svg .zone.active .entry { opacity: .9; }
 .city-svg .zone .pole { stroke: #a89f8a; stroke-width: .9; stroke-linecap: round; }
 .city-svg .zone .wire { fill: none; stroke: rgba(255, 255, 255, .2); stroke-width: .45; }
+/* the signals at the two lit intersections: the heads stand in the still
+   city, their lamps in the overlay, one lit per head by city-traffic.js */
+.city-fx .sig .lamp { fill-opacity: .14; stroke-width: 2.4; stroke-opacity: 0; transition: fill-opacity .2s var(--ease), stroke-opacity .2s var(--ease); }
+.city-fx .sig .lamp-r { fill: var(--red); stroke: var(--red); } .city-fx .sig .lamp-a { fill: var(--amber); stroke: var(--amber); } .city-fx .sig .lamp-g { fill: var(--green); stroke: var(--green); }
+.city-fx .sig[data-state="r"] .lamp-r, .city-fx .sig[data-state="a"] .lamp-a, .city-fx .sig[data-state="g"] .lamp-g { fill-opacity: 1; stroke-opacity: .28; }
 /* people on the footpaths step as they go; a storm sends the kayak home */
 .city-fx .walker use { animation: walk-bob .38s ease-in-out infinite alternate; }
 .city-fx .walker:nth-child(odd) use { animation-delay: -.19s; }
@@ -775,6 +784,16 @@ ul { margin: 0; padding: 0; list-style: none; }
 .city-svg .zone .deck { fill: #b07a4a; }
 .city-svg .zone .flume { opacity: .9; transition: translate .8s var(--ease); }
 .city-svg .zone .stair, .city-svg .zone .ladder { fill: none; stroke: rgba(255, 255, 255, .35); stroke-width: 1; }
+/* definition (November 2026): a dark line along the foot of every block and
+   down its near corner where no lit edge runs; and the detail pass's
+   pickets, flower beds, awnings, helipad, lit crown and grated walkway */
+.city-svg .zone .ink { fill: none; stroke: rgba(2, 10, 14, .34); stroke-width: .7; stroke-linejoin: round; stroke-linecap: round; }
+.city-svg .zone .picket { fill: none; stroke: rgba(240, 244, 242, .6); stroke-width: .6; }
+.city-svg .zone .flower-a { fill: #f472b6; } .city-svg .zone .flower-b { fill: #fde68a; }
+.city-svg .zone .awning { fill: #e6dccb; } .city-svg .zone .awning-edge { stroke: rgba(0, 0, 0, .35); stroke-width: .7; }
+.city-svg .zone .helipad { fill: rgba(255, 255, 255, .08); stroke: rgba(255, 255, 255, .6); stroke-width: .8; } .city-svg .zone .heli-h { fill: none; stroke: rgba(255, 255, 255, .7); stroke-width: 1; }
+.city-svg .zone .crown { fill: rgba(255, 236, 190, .6); }
+.city-svg .zone .grate { fill: rgba(220, 228, 226, .55); }
 .city-svg .zone-fx .screen { fill: #7dd3fc; fill-opacity: .45; }
 .city-svg .zone-fx .hub { fill: url(#hub-glow); opacity: .35; transition: opacity .4s var(--ease); }
 .city-svg .zone-fx .beacon { fill: #fff; fill-opacity: 0; transform-box: fill-box; transform-origin: center; }
