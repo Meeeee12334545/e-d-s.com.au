@@ -1073,9 +1073,11 @@ body.city-lock { overflow: hidden; }
 /* with the camera in close, the city stays inside its own frame */
 .city-stage.is-exploded .city-view, .city-stage.is-asset .city-view { overflow: hidden; }
 .btn.city-btn[aria-disabled="true"] { opacity: .4; pointer-events: none; }
-.city-btn[data-act="explode"] .icon + .icon, .city-btn[data-act="asset-toggle"] .icon + .icon { display: none; }
-.city-btn[data-pressed="true"][data-act="explode"] .icon:first-child, .city-btn[data-pressed="true"][data-act="asset-toggle"] .icon:first-child { display: none; }
-.city-btn[data-pressed="true"][data-act="explode"] .icon + .icon, .city-btn[data-pressed="true"][data-act="asset-toggle"] .icon + .icon { display: block; }
+.city-btn[data-act="explode"] .icon + .icon, .city-btn[data-act="asset-toggle"] .icon + .icon, .city-btn[data-act="sound"] .icon + .icon { display: none; }
+.city-btn[data-pressed="true"][data-act="explode"] .icon:first-child, .city-btn[data-pressed="true"][data-act="asset-toggle"] .icon:first-child, .city-btn[data-pressed="true"][data-act="sound"] .icon:first-child { display: none; }
+.city-btn[data-pressed="true"][data-act="explode"] .icon + .icon, .city-btn[data-pressed="true"][data-act="asset-toggle"] .icon + .icon, .city-btn[data-pressed="true"][data-act="sound"] .icon + .icon { display: block; }
+/* just the speaker, as tall as the buttons with words beside it */
+.city-toolbar .btn.city-btn[data-act="sound"] { align-self: stretch; min-width: 44px; padding-inline: .8em; }
 /* the layers: a block of ground below, guides at the corners, a ghost floor
    under the lifted structures (opacity and offsets come from city.js) */
 .city-svg .below-block, .city-svg .below-fx, .city-svg .ghost, .city-svg .guide { opacity: 0; }

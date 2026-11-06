@@ -36,7 +36,7 @@
   // on phones, the list of labels under it
   const section = svg.closest(".city-section"), stage = svg.closest(".city-stage"), view = svg.closest(".city-view");
   const cards = $$(".city-card"), tabs = $$(".city-tab"), caption = $(".city-caption"), liveEl = $("#city-live");
-  const btn = { tour: $('.city-btn[data-act="tour"]'), storm: $('.city-btn[data-act="storm"]'), under: $('.city-btn[data-act="under"]'), expand: $('.city-btn[data-act="expand"]'), explode: $('.city-btn[data-act="explode"]') };
+  const btn = { tour: $('.city-btn[data-act="tour"]'), storm: $('.city-btn[data-act="storm"]'), sound: $('.city-btn[data-act="sound"]'), under: $('.city-btn[data-act="under"]'), expand: $('.city-btn[data-act="expand"]'), explode: $('.city-btn[data-act="explode"]') };
   const grid = $("#city-grid"), closeBtn = $(".city-close");
   const tiles = Object.fromEntries($$(".city-tile[data-tile]").map((t) => [t.dataset.tile, t]));
   const tip = $(".city-tip"), tipBody = $(".city-tip-body"), tipClose = $(".city-tip-close");
@@ -525,8 +525,10 @@
     setTimeout(() => sc.sms.classList.remove("on"), 1400);
   }
   const stormElapsed = () => state.storm ? state.storm.elapsed + (state.storm.running ? (performance.now() - state.storm.t0) / 1000 : 0) : 0;
+  // the storm's wind, rain and thunder, silent until a storm is sent
+  const sound = window.CitySound ? CitySound() : null;
   // the rain, cloud and lightning, painted between the two layers
-  const weather = window.CityWeather ? CityWeather(sc, { clock: () => (state.storm ? stormElapsed() : null), script: stormData }) : null;
+  const weather = window.CityWeather ? CityWeather(sc, { clock: () => (state.storm ? stormElapsed() : null), script: stormData, sound }) : null;
   // the traffic and its signals (city-traffic.js) run with the overlay
   const traffic = window.CityTraffic ? CityTraffic(sc) : null;
   // a hook for the check scripts: svg.cityTraffic.lanes holds every vehicle's state
@@ -550,6 +552,7 @@
     announce(ui.live.stormStart);
     scheduleStorm();
     weather?.start();
+    sound?.start();
     drawSpark();
   }
   function clearStormClasses() {
@@ -566,6 +569,7 @@
     state.storm = null;
     clearStormClasses();
     weather?.end(cancelled);
+    sound?.end(cancelled);
     hudTarget(hudRest);
     btn.storm?.setAttribute("data-pressed", "false"); $("span", btn.storm).textContent = ui.toolbar.storm;
     if (cancelled) { setCaption(ui.toolbar.stormCancelled); announce(ui.live.stormCancelled); }
@@ -579,6 +583,13 @@
     drawSpark();
   }
   btn.storm?.addEventListener("click", startStorm);
+  // a visitor can have the storm without its sound, before or during it
+  if (btn.sound && !sound) btn.sound.hidden = true;
+  btn.sound?.addEventListener("click", () => {
+    const muted = sound.toggle();
+    btn.sound.setAttribute("data-pressed", String(muted));
+    btn.sound.setAttribute("aria-label", muted ? ui.toolbar.unmute : ui.toolbar.mute);
+  });
   // Escape stops a storm or closes a readout from anywhere on the page, and
   // a click anywhere else closes the readout
   document.addEventListener("keydown", (e) => {
@@ -659,11 +670,11 @@
       layers.forEach((s) => { try { s.unpauseAnimations(); } catch {} });
       startTicker(); kick();
       if (state.storm && !state.storm.running) scheduleStorm();
-      weather?.run(true); traffic?.run(true);
+      weather?.run(true); traffic?.run(true); sound?.run(true);
     } else {
       layers.forEach((s) => { try { s.pauseAnimations(); } catch {} });
       stopTicker(); suspendStorm();
-      weather?.run(false); traffic?.run(false);
+      weather?.run(false); traffic?.run(false); sound?.run(false);
     }
   }
   new IntersectionObserver(([en]) => { state.inView = en.isIntersecting; sync(); }, { threshold: 0.3 }).observe(svg);

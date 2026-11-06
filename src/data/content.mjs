@@ -3329,7 +3329,7 @@ export const cityUi = {
   zoneLabel: "{name}: show EDS services and products",
   tabsLabel: "City districts",
   toolbarLabel: "City controls",
-  toolbar: { tour: "Take the tour", storm: "Send a storm", stormBusy: "Stop the storm", stormCancelled: "Storm stopped.", under: "Show the sewer", underOn: "Show the surface", expand: "Expand the city", collapse: "Back to the page", close: "Close" },
+  toolbar: { tour: "Take the tour", storm: "Send a storm", stormBusy: "Stop the storm", stormCancelled: "Storm stopped.", mute: "Mute the storm", unmute: "Unmute the storm", under: "Show the sewer", underOn: "Show the surface", expand: "Expand the city", collapse: "Back to the page", close: "Close" },
   captionRest: "Send a storm, take a district apart, or show the sewer beneath the streets.",
   sensorsHeading: "Sensors on the map",
   tipLabel: "Sensor readings",
