@@ -1935,16 +1935,23 @@ const fsBar = (r) => `
 // The wet well trace beside the Pump Station Manager: five hours of level
 // drawn as a schematic, filling slowly as sewage arrives and emptying fast
 // as the pumps run, between the start and stop levels.
-const fsTrace = (t) => `
+const fsTrace = (t) => {
+  const cycle = "M20 168 L170 56 L198 168 L348 56 L376 168 L526 56 L554 168 L620 118";
+  return `
 <figure class="fs-trace" data-reveal>
   <svg viewBox="0 0 640 230" aria-hidden="true">
-    <g stroke="#dfe5ec" stroke-width="1"><path d="M20 20V200M20 200H620"/></g>
+    <defs><linearGradient id="fst-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5fb4a6" stop-opacity=".3"/><stop offset="1" stop-color="#5fb4a6" stop-opacity=".02"/></linearGradient></defs>
+    <rect class="fst-band" x="20" y="56" width="600" height="112"/>
+    <path class="fst-grid" d="M20 84H620M20 112H620M20 140H620M170 20V200M348 20V200M526 20V200"/>
+    <path class="fst-axis" d="M20 20V200M20 200H620"/>
     <g stroke-dasharray="5 5" stroke-width="1.3"><path d="M20 56H620" stroke="#0d7c72"/><path d="M20 168H620" stroke="#4e6361"/></g>
-    <path d="M20 168 L170 56 L198 168 L348 56 L376 168 L526 56 L554 168 L620 118 V200 H20 Z" fill="#5fb4a6" fill-opacity=".14"/>
-    <path class="draw" pathLength="100" d="M20 168 L170 56 L198 168 L348 56 L376 168 L526 56 L554 168 L620 118" fill="none" stroke="#0c5f59" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="${cycle} V200 H20 Z" fill="url(#fst-fill)"/>
+    <path class="fst-glow draw" pathLength="100" d="${cycle}"/>
+    <path class="draw" pathLength="100" d="${cycle}" fill="none" stroke="#0c5f59" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
+    <g class="fst-runs">${[170, 348, 526].map((x) => `<rect x="${x}" y="203" width="28" height="4" rx="2"/>`).join("")}</g>
     <g font-family="'EDS Text', 'Helvetica Neue', sans-serif" font-size="11.5" fill="#2e4543">
       <text x="572" y="50" font-weight="650">Start</text><text x="574" y="184" font-weight="650">Stop</text>
-      <text x="22" y="216" fill="#4e6361">${esc(t.rise)}</text>
+      <text x="22" y="220" fill="#4e6361">${esc(t.rise)}</text>
       <text x="206" y="40" fill="#4e6361">${esc(t.fall)}</text>
       <text x="22" y="40" fill="#4e6361" font-size="10.5">Wet well level</text>
     </g>
@@ -1952,6 +1959,7 @@ const fsTrace = (t) => `
   </svg>
   <figcaption><b>${esc(t.title)}</b> ${esc(t.text)}</figcaption>
 </figure>`;
+};
 add({
   file: "flowsense.html",
   title: "EDS FlowSense | Sewer network intelligence",

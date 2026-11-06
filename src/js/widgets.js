@@ -26,12 +26,15 @@
     };
     const K = 14, XY = (lon, lat) => [(lon - 111) * K, (-lat - 9) * K * 1.13];
     map.setAttribute("viewBox", `0 0 ${45 * K} ${36.5 * K * 1.13}`);
-    const land = el("g", { class: "land" }, map);
+    // the coast is a shade brighter than the interior, so the outline reads
+    const isLand = (lon, lat) => inside([lon, lat], MAIN) || inside([lon, lat], TAS);
+    const land = el("g", { class: "land" }, map), coast = el("g", { class: "land coast" }, map);
     for (let lat = -10; lat >= -44; lat -= 0.82) {
       for (let lon = 112.5; lon <= 154; lon += 0.92) {
-        if (inside([lon, lat], MAIN) || inside([lon, lat], TAS)) {
+        if (isLand(lon, lat)) {
           const [x, y] = XY(lon, lat);
-          el("circle", { cx: x.toFixed(1), cy: y.toFixed(1), r: 2.6 }, land);
+          const edge = !(isLand(lon + 0.92, lat) && isLand(lon - 0.92, lat) && isLand(lon, lat + 0.82) && isLand(lon, lat - 0.82));
+          el("circle", { cx: x.toFixed(1), cy: y.toFixed(1), r: edge ? 2.8 : 2.4 }, edge ? coast : land);
         }
       }
     }
@@ -47,6 +50,7 @@
       }
       // The map is one image to assistive technology; the office buttons beside it are the controls.
       const g = el("g", { class: "pin" }, map);
+      el("circle", { class: "halo", cx: x, cy: y, r: o.head ? 26 : 18 }, g);
       el("circle", { class: "ring", cx: x, cy: y, r: 8, style: `animation-delay:${i * 0.5}s` }, g);
       el("circle", { class: "core", cx: x, cy: y, r: 6 }, g);
       const left = o.lon > 152;
