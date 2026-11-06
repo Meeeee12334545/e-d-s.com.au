@@ -192,7 +192,11 @@
   }
 
   /* ---- readouts + pipe section ---- */
-  const waterG = $("lab-water-g"), arrows = $("lab-arrows"), beam = $("lab-beam");
+  const waterG = $("lab-water-g"), arrows = $("lab-arrows"), wclip = $("lab-wclip-r");
+  // the meter's ultrasonic beam, from its face on the invert up to the surface
+  const beam = $("lab-beam"), foot = $("lab-foot"), waves = [...$("lab-waves").children];
+  const OX = 116, OY = 168.5, HALF = (5 * Math.PI) / 180, SIN = Math.sin(HALF), COS = Math.cos(HALF);
+  let lastSy = -1;
   const state = $("lab-state"), stateText = state.querySelector("div");
   const chip = $("lab-raining"), rainOut = $("lab-rain-out"), clock = $("lab-clock"), delta = $("lab-dq"), summary = $("lab-summary");
   let lastLevel = -1, swapTimer = 0, frames = 0;
@@ -212,12 +216,24 @@
     chip.classList.toggle("on", raining);
     if (raining) rainOut.textContent = Math.round(last.rain);
 
-    // the pipe is drawn from y=20 to y=180; the water slides down from full
-    const dy = (1 - hr) * 160;
+    // the pipe is drawn from y=20 to y=180; the water slides down from full,
+    // the arrows sit in the middle of the depth and are clipped to the water
+    const dy = (1 - hr) * 160, sy = 20 + dy;
     waterG.style.transform = `translateY(${dy.toFixed(1)}px)`;
-    beam.setAttribute("y2", (20 + dy + 1).toFixed(1));
+    wclip.setAttribute("y", sy.toFixed(1));
     arrows.style.setProperty("--dur", `${Math.max(0.45, 1.9 - v * 1.2).toFixed(2)}s`);
-    arrows.setAttribute("transform", `translate(0 ${(20 + dy + (160 - dy) / 2 - 100).toFixed(1)})`);
+    arrows.setAttribute("transform", `translate(0 ${(sy + (160 - dy) / 2 - 100).toFixed(1)})`);
+    // the beam cone to the surface, its wavefronts and its footprint
+    if (Math.abs(sy - lastSy) > 0.05) {
+      lastSy = sy;
+      const top = sy + 0.8, t = Math.max(0, OY - top), dx = t * (SIN / COS), n1 = (n) => n.toFixed(1);
+      beam.setAttribute("d", t < 3 ? "" : `M${OX} ${OY}L${n1(OX - dx)} ${n1(top)}L${n1(OX + dx)} ${n1(top)}Z`);
+      foot.setAttribute("d", t < 3 ? "" : `M${n1(OX - dx)} ${n1(top)}H${n1(OX + dx)}`);
+      waves.forEach((w, k) => {
+        const r = ((t / COS) * (k + 0.7)) / (waves.length + 0.2);
+        w.setAttribute("d", r < 1.5 ? "" : `M${n1(OX - SIN * r)} ${n1(OY - COS * r)}A${n1(r)} ${n1(r)} 0 0 1 ${n1(OX + SIN * r)} ${n1(OY - COS * r)}`);
+      });
+    }
 
     const level = hr >= 0.85 ? 2 : hr >= 0.6 ? 1 : 0;
     if (level !== lastLevel) {
