@@ -1,0 +1,60 @@
+# Environmental Data Services (EDS)
+
+> Australia's largest supplier of water and wastewater monitoring equipment, with our own crews and data platform. Australian owned since 1991.
+
+Monitoring Australia's water, wastewater and environment since 1991. Offices: Brisbane QLD (head office), Richmond NSW, Boronia VIC, Adelaide SA. Phone 1300 721 683, email eds@e-d-s.com.au. Enquiries: https://www.e-d-s.com.au/enquire.html
+
+## Services
+
+- [Sewer Flow Monitoring](https://www.e-d-s.com.au/services/sewer-flow-monitoring.html): Temporary and permanent sewer flow monitoring for councils and water authorities, with Detectronic MSFM meters installed by our crews Australia-wide.
+- [Inflow & Infiltration Studies](https://www.e-d-s.com.au/services/inflow-infiltration-studies.html): Find where stormwater and groundwater get into the sewer, and how much. EDS I&I studies run through wet weather, with rain gauges in the catchment.
+- [Sewer Flow Data as a Service](https://www.e-d-s.com.au/services/data-as-a-service.html): Sewer flow monitoring with no capital outlay. EDS supplies, installs and looks after the equipment, and you get validated data.
+- [Sewer Model Calibration](https://www.e-d-s.com.au/services/sewer-model-calibration.html): Flow and rainfall monitoring designed to calibrate your hydraulic model: logged every 1 to 5 minutes, scored storm by storm and ready for EPA SWMM.
+- [Thermal Infiltration Surveys](https://www.e-d-s.com.au/services/thermal-infiltration-surveys.html): Thermistor strings and open channel flow meters, used together to pinpoint where groundwater gets into a sewer.
+- [Blockage & Overflow Alarms](https://www.e-d-s.com.au/services/blockage-overflow-alarms.html): Level alarms that warn as a sewer surcharges, and Blockage Watch, which finds a blockage weeks before it overflows.
+- [Rehabilitation & Works Verification](https://www.e-d-s.com.au/services/rehabilitation-verification.html): Before-and-after flow monitoring, with rainfall alongside, that shows whether relining, cleaning and repair works delivered what was paid for.
+- [Water Quality Monitoring](https://www.e-d-s.com.au/services/water-quality-monitoring.html): pH, EC, turbidity and nutrient monitoring for wastewater, process water and the environment, from one sensor to a whole network.
+- [Sampling & Sampler Hire](https://www.e-d-s.com.au/services/sampling-programs.html): Automatic water and wastewater samplers to buy or hire, including the only true intrinsically safe sampler in Australia.
+- [Trade Waste Monitoring](https://www.e-d-s.com.au/services/trade-waste.html): Trade waste flow, sampling and quality monitoring for industrial discharge. EDS supplies, installs and services all three, so staying compliant is simple.
+- [Closed Channel Flow Monitoring](https://www.e-d-s.com.au/services/closed-channel-flow.html): Magnetic, ultrasonic, pressure and contacting flow meters for full pipes. EDS helps you choose, then supplies, installs, audits and calibrates them.
+- [Rainfall Monitoring](https://www.e-d-s.com.au/services/rainfall-monitoring.html): Tipping bucket rain gauges installed alongside flow meters, so every change in the network can be read against the rain that caused it.
+- [Real-Time Monitoring](https://www.e-d-s.com.au/services/real-time-monitoring.html): Rugged 4G monitoring that reports to one map and to the SCADA you already run, with email and SMS alarms when a level rises or a logger goes quiet.
+- [Pump Station Monitoring](https://www.e-d-s.com.au/services/pump-station-monitoring.html): Wet well levels, pump runs and alarms watched around the clock and linked to your SCADA, from the company that built the Pump Station Manager.
+- [SCADA & Telemetry Integration](https://www.e-d-s.com.au/services/scada-telemetry-integration.html): Monitoring data delivered into the SCADA, telemetry and building systems you already run: ClearSCADA, Schneider CITECT and ELPRO, or by API and MQTT.
+- [Data Analysis & Reporting](https://www.e-d-s.com.au/services/data-analysis-reporting.html): Validated flow, depth and rainfall data turned into reports that show where the problems are and what to fix first. Our data validation is ISO compliant.
+- [Network Assessment & Review](https://www.e-d-s.com.au/services/network-assessment.html): A clear picture of how your water or wastewater network is performing, where it is struggling, and what to fix first, from validated monitoring data.
+- [Auditing & Calibration](https://www.e-d-s.com.au/services/auditing-calibration.html): Audits and calibration of your monitoring equipment where it's installed, by experienced EDS technicians, so your data holds up.
+- [Equipment Rental](https://www.e-d-s.com.au/services/equipment-rental.html): Hire flow meters, loggers, samplers and analytical equipment from the EDS fleet, short or long term, installed by you or by trained EDS crews.
+- [Facility Management](https://www.e-d-s.com.au/services/facility-management.html): Facility management with the monitoring built in, for major corporate and government organisations including Defence.
+- [Training & Technical Support](https://www.e-d-s.com.au/services/training-support.html): Training for your staff in monitoring and modelling practice, and support for the instruments and software we supply.
+
+## Solutions
+
+- [Wastewater Monitoring](https://www.e-d-s.com.au/solutions/wastewater-monitoring.html): Wastewater flow and quality monitoring from Australia's largest service contractor for water and wastewater studies, from one EC point to thousands.
+- [Asset & Network Assessment](https://www.e-d-s.com.au/solutions/asset-network-assessment.html): Network assessments that catch blockages, structural defects and cross connections early, and map inflow across catchments so you know where to spend.
+- [Network Thermal Monitoring](https://www.e-d-s.com.au/solutions/network-thermal-monitoring.html): Temperature studies that pinpoint where water gets into a pipe, with Beadedstream cables of up to 125 sensors, in water and wastewater networks alike.
+- [Automatic Sampling](https://www.e-d-s.com.au/solutions/automatic-sampling.html): Australia's widest range of automatic water and wastewater samplers, including the only true intrinsically safe sampler in the country. Buy or hire.
+- [Environmental Monitoring](https://www.e-d-s.com.au/solutions/environmental-monitoring.html): Water quality, rainfall, temperature and sampling designed around your project, to set the baseline, assess the impacts and demonstrate compliance.
+- [Structure Performance & Monitoring](https://www.e-d-s.com.au/solutions/structure-performance.html): 24/7 condition monitoring of critical structures with the EDS Asset Score: one number from 0 to 1000, and alarms to the right people when it changes.
+
+## Products
+
+- [All instruments](https://www.e-d-s.com.au/products/index.html): Flow meters, loggers, samplers and sensors for water and wastewater, from EDS, Detectronic, Hach Flow, ORI, Beadedstream, MicroLevel, Aquamonitrix and Dynaflox.
+- [EDS Instruments](https://www.e-d-s.com.au/products/eds.html): Data loggers, sensors and the Pump Station Manager, designed and built by EDS, including the 4G Hawk and Metalog loggers and the E-Flow 3 sewer flow meter.
+- [Detectronic](https://www.e-d-s.com.au/products/detectronic.html): Detectronic ultrasonic flow, level and water quality instruments for sewer networks, including the MSFM and LIDoTT, supplied and installed by EDS.
+- [ORI Samplers](https://www.e-d-s.com.au/products/ori.html): ORI mobile and stationary samplers from the maker recognised as the world leader in ATEX and IECEx certified sampling, brought to Australia by EDS.
+- [Hach Flow](https://www.e-d-s.com.au/products/hach-flow.html): Hach flow loggers and sensors, including the FL900, FL1500, Flo-Dar and the Sigma and Marsh-McBirney lines. Supplied by EDS since the 1990s.
+- [Beadedstream](https://www.e-d-s.com.au/products/beadedstream.html): Beadedstream temperature loggers, thermistor strings and cloud data, proven in Alaska. EDS lays the cables in sewers to find where groundwater gets in.
+- [MicroLevel Samplers](https://www.e-d-s.com.au/products/microlevel.html): MicroLevel MICROSAMPLER composite samplers: the portable 10P, fixed 10B and refrigerated 10R, for wastewater, drains, manholes and process liquids.
+- [Aquamonitrix](https://www.e-d-s.com.au/products/aquamonitrix.html): Aquamonitrix measures nitrate and nitrite in the field in real time, with laboratory accuracy, and handles wastewater without sample pre-treatment.
+- [Dynaflox](https://www.e-d-s.com.au/products/dynaflox.html): Dynaflox ultrasonic water meters and flow meters, made to ISO and AWWA standards. EDS supplies, installs and calibrates them for full pipe flow.
+- [E-Flow 3](https://www.e-d-s.com.au/products/e-flow-3.html): EDS E-Flow 3 sewer flow meter: non-contact radar in normal flow, Doppler ultrasonic and pressure in surcharge, with seamless changeover and minimal upkeep.
+- [Hawk](https://www.e-d-s.com.au/products/hawk.html): EDS Hawk: a battery-powered 4G LTE data logger for sewer manholes. IP68 submersible, with three RS485 sensor ports and logging from every second.
+- [Metalog 4G](https://www.e-d-s.com.au/products/metalog-4g.html): EDS Metalog 4G: a compact remote data logger with four 4 to 20 mA inputs and an RS485 Modbus RTU port, returning the data over the 4G network.
+
+## About EDS
+
+- [EDS FlowSense](https://www.e-d-s.com.au/flowsense.html): EDS FlowSense: live operations, infiltration and inflow, pump stations and calibrated hydraulic models on one validated record. Built in Australia by EDS.
+- [About EDS](https://www.e-d-s.com.au/about.html): EDS: Australian owned and operated since 1991, and Australia's largest supplier of monitoring equipment to the water and wastewater industry.
+- [Resources: white papers, downloads and manuals](https://www.e-d-s.com.au/resources.html): EDS white papers on inflow and infiltration, and on locating it with thermistor strings, plus software, drivers, datasheets and selection guides.
+- [Contact EDS](https://www.e-d-s.com.au/contact.html): Contact Environmental Data Services. Head office at Meadowbrook, Queensland, with offices in New South Wales, Victoria and South Australia.
