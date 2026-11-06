@@ -63,15 +63,25 @@
   }
 
   /* ================= LIDoTT Alarm: drag the water level ================= */
+  // A manhole in section (build.mjs: lidottDemo, which shares this
+  // geometry): the radar face 4 m above the invert, the sewer through the
+  // bottom of the shaft. The level moves the water and its surface, the
+  // radar cone with its wavefronts and footprint, and the range dimension
+  // beside the shaft; the LED on the body follows data-level (site.css).
   const lid = document.getElementById("lidott-svg");
   if (lid) {
-    const range = document.getElementById("lidott-level");
-    const TOP = 70, BOT = 380, DEPTH = 4; // chamber drawn between these y's, metres deep
+    const $ = (id) => document.getElementById(id);
+    const range = $("lidott-level");
+    const TOP = 133, BOT = 368, DEPTH = 4, H = 400, W = 480, CX = 240, S0 = 165, S1 = 315, CROWN = 316, HALF = 6;
     const HIGH = 2.0, HH = 3.0;
     const y = (m) => BOT - (m / DEPTH) * (BOT - TOP);
-    const water = lid.querySelector("#lid-water"), beam = lid.querySelector("#lid-beam"), dim = lid.querySelector("#lid-dim");
-    const log = document.getElementById("lidott-log");
-    const out = { level: document.getElementById("lid-level"), dist: document.getElementById("lid-dist"), state: document.getElementById("lid-state") };
+    const n1 = (n) => n.toFixed(1);
+    const sin = Math.sin((HALF * Math.PI) / 180), cos = Math.cos((HALF * Math.PI) / 180);
+    const water = $("lid-water"), beam = $("lid-beam"), foot = $("lid-foot"), waves = [...$("lid-waves").children];
+    const surf = $("lid-surf"), surfG = $("lid-surf-g"), bclip = $("lid-bclip-r");
+    const ext = $("lid-ext"), dim = $("lid-dim"), dimT = $("lid-dim-t"), dimV = $("lid-dim-v");
+    const log = $("lidott-log");
+    const out = { level: $("lid-level"), dist: $("lid-dist"), state: $("lid-state") };
     let last = 0, minute = 9 * 60 + 12;
     const stamp = () => { minute += 5; return `${String(Math.floor(minute / 60) % 24).padStart(2, "0")}:${String(minute % 60).padStart(2, "0")}`; };
     const sms = (text) => {
@@ -84,10 +94,25 @@
       m = Math.max(0.2, Math.min(3.8, m));
       range.value = m;
       range.setAttribute("aria-valuetext", `${m.toFixed(2)} metres`);
-      const wy = y(m);
-      water.setAttribute("y", wy); water.setAttribute("height", BOT - wy);
-      beam.setAttribute("points", `180,${TOP + 26} ${180 - (wy - TOP - 26) * 0.09 - 3},${wy} ${180 + (wy - TOP - 26) * 0.09 + 3},${wy}`);
-      dim.setAttribute("y2", wy);
+      const wy = y(m), up = wy < CROWN, wys = n1(wy); // up the shaft, or still in the sewer
+      water.setAttribute("y", wys); water.setAttribute("height", n1(BOT - wy));
+      const by = Math.max(wy, CROWN);
+      bclip.setAttribute("y", n1(by)); bclip.setAttribute("height", n1(BOT - by));
+      const line = up ? `M${S0} ${wys}H${S1}` : `M0 ${wys}H${W}`;
+      surf.setAttribute("d", line); surfG.setAttribute("d", line);
+      // the radar cone down to the surface, its wavefronts and its footprint
+      const t = (wy - TOP) / cos, dx = (wy - TOP) * (sin / cos);
+      beam.setAttribute("d", `M${CX} ${TOP}L${n1(CX - dx)} ${wys}L${n1(CX + dx)} ${wys}Z`);
+      waves.forEach((wv, k) => {
+        const r = (t * (k + 0.7)) / (waves.length + 0.2);
+        wv.setAttribute("d", `M${n1(CX + sin * r)} ${n1(TOP + cos * r)}A${n1(r)} ${n1(r)} 0 0 1 ${n1(CX - sin * r)} ${n1(TOP + cos * r)}`);
+      });
+      foot.setAttribute("d", `M${n1(CX - dx)} ${wys}H${n1(CX + dx)}`);
+      // the range, dimensioned beside the shaft
+      ext.setAttribute("d", `M112 ${TOP}H${CX - 14}M112 ${wys}H${S0}`);
+      dim.setAttribute("d", `M118 ${TOP + 2}V${n1(wy - 2)}m-4-6 4 6 4-6M114 ${TOP + 8}l4-6 4 6`);
+      dimT.setAttribute("y", n1((TOP + wy) / 2 - 3));
+      dimV.textContent = `${(DEPTH - m).toFixed(2)} m`;
       const level = m >= HH ? 2 : m >= HIGH ? 1 : 0;
       out.level.textContent = m.toFixed(2);
       out.dist.textContent = (DEPTH - m).toFixed(2);
@@ -103,7 +128,7 @@
     range.addEventListener("input", () => set(parseFloat(range.value)));
     let drag = false;
     const fromEvent = (e) => {
-      const r = lid.getBoundingClientRect(), sy = ((e.clientY - r.top) / r.height) * 420;
+      const r = lid.getBoundingClientRect(), sy = ((e.clientY - r.top) / r.height) * H;
       set(((BOT - sy) / (BOT - TOP)) * DEPTH);
     };
     lid.addEventListener("pointerdown", (e) => { drag = true; lid.setPointerCapture(e.pointerId); fromEvent(e); });
