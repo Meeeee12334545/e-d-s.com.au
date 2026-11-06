@@ -157,6 +157,8 @@
       for (const s of S) tiles.push([mix(a, A, s), mix(b, A, s), mix(c, A, s)]);
       ridge.push([a, A, c], [A, b]);
     }
+    // and the gutter line along the eaves of the two visible faces
+    ridge.push([P(x, yd, h), P(xw, yd, h), P(xw, y, h)]);
     return [shapes("eave", eave), shapes("hwin", dark), shapes("hwin hwin-lit", lit), strokes("sill", sills), strokes("tiles", tiles), strokes("ridge", ridge)];
   }
   // An open transit canopy on its platform (z 1): a glass wall at the back,
@@ -171,6 +173,19 @@
       item(x + w + y + d - 0.01, xs.map((px) => post(px, y + d - 0.04))),
       box(x, y, w, d, 2.4, { z: 9, cls: "white" }),
     ].map(lo);
+  };
+  // A tram shelter on the north footpath of the main road: a glass back, a
+  // white roof on two posts, a bench, a sign and people waiting. Street
+  // furniture, so it stays at street level when its district comes apart.
+  const shelter = (x0, w = 0.4) => {
+    const d = x0 + w + 4.68;
+    return [
+      lo(item(d, poly("pane", [P(x0 + 0.03, 4.605, 1), P(x0 + w - 0.03, 4.605, 1), P(x0 + w - 0.03, 4.605, 6.5), P(x0 + 0.03, 4.605, 6.5)]), strokes("det", [[P(x0 + 0.03, 4.67), P(x0 + 0.03, 4.67, 7)], [P(x0 + w - 0.03, 4.67), P(x0 + w - 0.03, 4.67, 7)]]))),
+      use("bench", x0 + 0.08, 4.625, 0, { cls: "fine", d: d + 0.001 }),
+      who(x0 + 0.14, 4.655, "#38bdf8", { d: d + 0.0015 }), who(x0 + 0.3, 4.66, "#f2c14e", { d: d + 0.0016 }),
+      { ...box(x0, 4.6, w, 0.08, 1.6, { z: 7, cls: "white" }), d: d + 0.002, s: "lo" },
+      use("sign", x0 + w + 0.04, 4.66, 0, { cls: "fine", d: d + 0.003 }),
+    ];
   };
   // a flat roof in sheeting: ribs running across it, painted with the block
   const ribbed = (b, x, y, w, d, h) => {
@@ -229,11 +244,11 @@
       const [x0, y0] = points[i], [x1, y1] = points[i + 1], n = Math.max(1, Math.round(Math.hypot(x1 - x0, y1 - y0) / o.posts));
       for (let k = i ? 1 : 0; k <= n; k++) {
         const t = k / n, x = x0 + (x1 - x0) * t, y = y0 + (y1 - y0) * t;
-        posts.push([P(x, y), P(x, y, z)]);
+        posts.push([P(x, y, o.base || 0), P(x, y, z)]);
       }
     }
     // a mid rail halfway up, on fences and railings alike
-    if (o.posts && !/pipe-rack/.test(o.cls || "")) nodes.push(pl("rail mid" + c, points.map(([x, y]) => P(x, y, z / 2))));
+    if (o.posts && !/pipe-rack/.test(o.cls || "")) nodes.push(pl("rail mid" + c, points.map(([x, y]) => P(x, y, ((o.base || 0) + z) / 2))));
     nodes.push(strokes("post" + c, posts));
     return { d: o.d ?? Math.max(...points.map(([x, y]) => x + y)), nodes, s: /fence/.test(o.cls || "") ? "lo" : "hi" };
   }
@@ -322,6 +337,8 @@
     // vehicles: one symbol per direction of travel, so the beam leads
     const vehicle = (id, len, wid, h, cols, dir, o = {}) => sym(id, (g) => {
       const x = -len / 2, y = -wid / 2, w = len, d = wid;
+      // its shadow on the road, thrown the same way as the buildings'
+      g.append(poly("", castOf([[x, y], [x + w, y], [x + w, y + d], [x, y + d]], h), { style: F("rgba(3,12,18,.3)") }));
       const beam = { e: [P(x + w, y, 2), P(x + w, y + d, 2), P(x + w + 0.42, y + d + 0.1, 0), P(x + w + 0.42, y - 0.1, 0), "url(#beam)"],
         w: [P(x, y, 2), P(x, y + d, 2), P(x - 0.42, y + d + 0.1, 0), P(x - 0.42, y - 0.1, 0), "url(#beam-r)"],
         s: [P(x, y + d, 2), P(x + w, y + d, 2), P(x + w + 0.1, y + d + 0.42, 0), P(x - 0.1, y + d + 0.42, 0), "url(#beam-r)"],
@@ -370,22 +387,25 @@
     // the EDS vans, a little larger than the cars to carry the logo
     vehicle("van-e", 0.4, 0.19, 5.6, VAN, "e", { eds: true }); vehicle("van-w", 0.4, 0.19, 5.6, VAN, "w", { eds: true }); vehicle("van-s", 0.19, 0.4, 5.6, VAN, "s", { eds: true }); vehicle("van-n", 0.19, 0.4, 5.6, VAN, "n", { eds: true });
     vehicle("van-x", 0.4, 0.19, 5.6, VAN, "", { eds: true }); vehicle("van-y", 0.19, 0.4, 5.6, VAN, "", { eds: true });
-    // light rail: a two-car tram with a dark window band and a pantograph
+    // light rail: a two-car tram with a dark window band and a pantograph,
+    // narrow enough to pass the other tram and the cars in the lanes beside it
     for (const dir of ["e", "w"]) sym(`tram-${dir}`, (g) => {
-      const b = box(-0.55, -0.1, 1.1, 0.2, 8);
+      g.append(poly("", castOf([[-0.55, -0.065], [0.55, -0.065], [0.55, 0.065], [-0.55, 0.065]], 8), { style: F("rgba(3,12,18,.3)") }));
+      const b = box(-0.55, -0.065, 1.1, 0.13, 8);
       b.nodes[0].style.fill = "#c9dbd7"; b.nodes[1].style.fill = "#dfeae8"; b.nodes[2].style.fill = "#eef6f4";
-      g.append(...b.nodes, poly("", [P(-0.55, 0.1, 4.2), P(0.55, 0.1, 4.2), P(0.55, 0.1, 6.6), P(-0.55, 0.1, 6.6)], { style: F("#123b37") }), seg("", P(0, 0.1, 0.6), P(0, 0.1, 7.6), { style: "stroke:#8aa7a2;stroke-width:1" }));
+      g.append(...b.nodes, poly("", [P(-0.55, 0.065, 4.2), P(0.55, 0.065, 4.2), P(0.55, 0.065, 6.6), P(-0.55, 0.065, 6.6)], { style: F("#123b37") }), seg("", P(0, 0.065, 0.6), P(0, 0.065, 7.6), { style: "stroke:#8aa7a2;stroke-width:1" }));
       g.append(pl("", [P(-0.08, 0, 8), P(0.02, 0, 12.5), P(0.12, 0, 8)], { style: "fill:none;stroke:rgba(255,255,255,.6);stroke-width:.9" }));
       // pillars between the panes, two doors on each car, glass across the end
-      g.append(strokes("", [-0.44, -0.33, -0.22, -0.11, 0.11, 0.22, 0.33, 0.44].map((k) => [P(k, 0.1, 4.2), P(k, 0.1, 6.6)]), { style: "fill:none;stroke:#c9dbd7;stroke-width:.5" }));
-      g.append(strokes("", [-0.36, -0.2, 0.2, 0.36].map((k) => [P(k - 0.04, 0.1, 0.6), P(k - 0.04, 0.1, 6.6), P(k + 0.04, 0.1, 6.6), P(k + 0.04, 0.1, 0.6)]), { style: "fill:none;stroke:#8aa7a2;stroke-width:.5" }));
-      g.append(poly("", onR(0.55, -0.1, 0.03, 0.17, 4.2, 7), { style: F("#123b37") }));
+      g.append(strokes("", [-0.44, -0.33, -0.22, -0.11, 0.11, 0.22, 0.33, 0.44].map((k) => [P(k, 0.065, 4.2), P(k, 0.065, 6.6)]), { style: "fill:none;stroke:#c9dbd7;stroke-width:.5" }));
+      g.append(strokes("", [-0.36, -0.2, 0.2, 0.36].map((k) => [P(k - 0.04, 0.065, 0.6), P(k - 0.04, 0.065, 6.6), P(k + 0.04, 0.065, 6.6), P(k + 0.04, 0.065, 0.6)]), { style: "fill:none;stroke:#8aa7a2;stroke-width:.5" }));
+      g.append(poly("", onR(0.55, -0.065, 0.015, 0.115, 4.2, 7), { style: F("#123b37") }));
       const [lx, ly] = P(dir === "e" ? 0.55 : -0.55, 0, 3); el("circle", { cx: f(lx), cy: f(ly), r: 1.1, style: F("#fff7d6") }, g);
     });
     // trucks: a box body and, ahead of it, a lower cab with a windscreen
     const truck = (id, along, len, wid, h) => sym(id, (g) => {
       const x = along ? -len / 2 : -wid / 2, y = along ? -wid / 2 : -len / 2, cab = 0.13, gap = 0.015;
       const paint = (b, cols) => { b.nodes.forEach((n, i) => (n.style.fill = cols[i])); g.append(...b.nodes); return b; };
+      g.append(poly("", castOf(along ? [[x, y], [x + len, y], [x + len, y + wid], [x, y + wid]] : [[x, y], [x + wid, y], [x + wid, y + len], [x, y + len]], h), { style: F("rgba(3,12,18,.3)") }));
       if (along) {
         // heading +x: the body behind, the cab nearer the viewer
         paint(box(x, y, len - cab - gap, wid, h), [TRK[1], TRK[2], TRK[0]]);
@@ -631,17 +651,19 @@
   const HEADS = [[4.55, 4.55, "A", "main"], [5.45, 5.45, "A", "main"], [5.45, 4.55, "A", "side"], [4.55, 5.45, "A", "side"], [9.55, 4.55, "B", "main"], [10.45, 5.45, "B", "main"], [10.45, 4.55, "B", "side"], [9.55, 5.45, "B", "side"]];
   // The lanes the traffic runs: straight, from `from` to `to` in tiles; a
   // stop is where a lane's traffic halts (the front of a vehicle at the stop
-  // line) and which signal it waits on. city-traffic.js drives it.
+  // line) and which signal it waits on. city-traffic.js drives it. On the
+  // main road the cars keep to the kerb side and the trams to their track
+  // centres, so a car and a tram stopped side by side at a light stay apart.
   const LANES = {
-    E: { from: [-0.9, 4.85], to: [15.9, 4.85], stops: [[4.55, "A", "main"], [9.55, "B", "main"]] },
-    W: { from: [15.9, 5.15], to: [-0.9, 5.15], stops: [[10.45, "B", "main"], [5.45, "A", "main"]] },
+    E: { from: [-0.9, 4.79], to: [15.9, 4.79], stops: [[4.55, "A", "main"], [9.55, "B", "main"]] },
+    W: { from: [15.9, 5.21], to: [-0.9, 5.21], stops: [[10.45, "B", "main"], [5.45, "A", "main"]] },
     S5: { from: [5.15, -0.9], to: [5.15, 10.9], stops: [[4.55, "A", "side"]] },
     N5: { from: [4.85, 10.9], to: [4.85, -0.9], stops: [[5.45, "A", "side"]] },
     S10: { from: [10.15, -0.9], to: [10.15, 10.9], stops: [[4.55, "B", "side"]] },
     N10: { from: [9.85, 10.9], to: [9.85, -0.9], stops: [[5.45, "B", "side"]] },
-    S7: { from: [7.6, 5.0], to: [7.6, 10.9], stops: [] },
-    TE: { from: [-1.6, 4.97], to: [16.6, 4.97], stops: [[4.55, "A", "main"], [9.55, "B", "main"]] },
-    TW: { from: [16.6, 5.03], to: [-1.6, 5.03], stops: [[10.45, "B", "main"], [5.45, "A", "main"]] },
+    S7: { from: [7.6, 5.45], to: [7.6, 10.9], stops: [] },
+    TE: { from: [-1.6, 4.94], to: [16.6, 4.94], stops: [[4.55, "A", "main"], [9.55, "B", "main"]] },
+    TW: { from: [16.6, 5.06], to: [-1.6, 5.06], stops: [[10.45, "B", "main"], [5.45, "A", "main"]] },
   };
   let traffic = null;
   function base(svg, fx) {
@@ -652,6 +674,8 @@
       ...[-4, -9].map((z) => poly("strata", [P(S[0], S[3], z), P(S[2], S[3], z), P(S[2], S[3], z - 1.5), P(S[0], S[3], z - 1.5)])),
       ...[-4, -9].map((z) => poly("strata", [P(S[2], S[1], z), P(S[2], S[3], z), P(S[2], S[3], z - 1.5), P(S[2], S[1], z - 1.5)])),
       poly("soil", [P(S[0], S[3]), P(S[2], S[3]), P(S[2], S[3], -T), P(S[0], S[3], -T)]), poly("soil", [P(S[2], S[1]), P(S[2], S[3]), P(S[2], S[3], -T), P(S[2], S[1], -T)]),
+      // the turf's own layer, a band of sod under the top edge of the cut
+      poly("sod", [P(S[0], S[3], 0), P(S[2], S[3], 0), P(S[2], S[3], -1.8), P(S[0], S[3], -1.8)]), poly("sod", [P(S[2], S[1], 0), P(S[2], S[3], 0), P(S[2], S[3], -1.8), P(S[2], S[1], -1.8)]),
       poly("slab-top", slabTop),
       pl("rim", [P(S[0], S[3]), P(S[2], S[3]), P(S[2], S[1])])
     );
@@ -740,7 +764,7 @@
       [["r", -18.8], ["a", -17.2], ["g", -15.6]].forEach(([k, cy]) => el("circle", { class: `lamp lamp-${k}`, cx: 0, cy, r: 0.85 }, h));
       return h;
     });
-    traffic = { lanes: LANES, vehicles, heads };
+    traffic = { lanes: LANES, vehicles, heads, layer: t };
     return g;
   }
 
@@ -1029,11 +1053,12 @@
           // the EDS wordmark lit on the south face, skewed into the wall like the vans' livery
           item(8.25 + 1.1 + 5.8 + 2.3 + 0.0035, (() => { const [ox, oy] = P(8.42, 8.1, 33), t = el("text", { class: "eds-sign", transform: `matrix(0.894 0.447 0 1 ${f(ox)} ${f(oy)})` }); t.textContent = "EDS"; return t; })()),
           item(8.25 + 1.1 + 5.8 + 2.3 + 0.004, ...[0, 1, 2].flatMap((i) => [0, 1].map((j) => poly("screen", [P(8.4 + i * 0.3, 8.1, 20 + j * 9), P(8.62 + i * 0.3, 8.1, 20 + j * 9), P(8.62 + i * 0.3, 8.1, 27 + j * 9), P(8.4 + i * 0.3, 8.1, 27 + j * 9)], { style: `--i:${i + j * 3}` })))),
-          ...[[8.4, 6.0, 44], [8.4, 6.5, 44], [8.4, 7.0, 44], [8.4, 7.5, 44]].map(([x, y, z]) => use("solar", x, y, z, { d: x + y + 0.3 })),
-          use("ac", 8.95, 7.6, 44, { d: 16.9 }), use("ac", 8.95, 7.2, 44, { d: 16.5 }),
-          item(16.95, seg("mast", P(8.8, 6.5, 44), P(8.8, 6.5, 76), { style: "stroke-width:2" }), seg("mast", P(8.72, 6.42, 58), P(8.88, 6.58, 58)), seg("mast", P(8.72, 6.42, 66), P(8.88, 6.58, 66)), seg("mast", P(8.74, 6.44, 72), P(8.86, 6.56, 72))),
-          use("dish", 8.8, 6.5, 62, { d: 16.96 }), use("dish", 8.86, 6.56, 70, { d: 16.97 }),
-          item(16.98, el("ellipse", { class: "hub", cx: f(hub[0]), cy: f(hub[1]), rx: 16, ry: 10 }), el("circle", { class: "beacon", cx: f(hub[0]), cy: f(hub[1]), r: 4 }), el("circle", { class: "blink", cx: f(hub[0]), cy: f(hub[1] - 2), r: 1.8 })),
+          // everything on the roof sorts just after the building (x + w + y + d = 17.45)
+          ...[[8.4, 6.0, 44], [8.4, 6.5, 44], [8.4, 7.0, 44], [8.4, 7.5, 44]].map(([x, y, z]) => use("solar", x, y, z, { d: 17.46 + (x + y) * 0.001 })),
+          use("ac", 8.95, 7.6, 44, { d: 17.49 }), use("ac", 8.95, 7.2, 44, { d: 17.485 }),
+          item(17.5, seg("mast", P(8.8, 6.5, 44), P(8.8, 6.5, 76), { style: "stroke-width:2" }), seg("mast", P(8.72, 6.42, 58), P(8.88, 6.58, 58)), seg("mast", P(8.72, 6.42, 66), P(8.88, 6.58, 66)), seg("mast", P(8.74, 6.44, 72), P(8.86, 6.56, 72))),
+          use("dish", 8.8, 6.5, 62, { d: 17.51 }), use("dish", 8.86, 6.56, 70, { d: 17.52 }),
+          item(17.53, el("ellipse", { class: "hub", cx: f(hub[0]), cy: f(hub[1]), rx: 16, ry: 10 }), el("circle", { class: "beacon", cx: f(hub[0]), cy: f(hub[1]), r: 4 }), el("circle", { class: "blink", cx: f(hub[0]), cy: f(hub[1] - 2), r: 1.8 })),
           box(8.3, 8.3, 0.9, 0.8, 18, { top: "lit", clad: true, cls: "zinc" }), flat("door fine", [P(8.55, 9.1, 0), P(8.95, 9.1, 0), P(8.95, 9.1, 11), P(8.55, 9.1, 11)], 8.3 + 0.9 + 8.3 + 0.8 + 0.001),
           // the EDS fleet parked nose-in, side by side, so each van's logo shows
           ...[[8.5, 9.4], [8.8, 9.4], [9.1, 9.4]].map(([x, y], i) => use("van-y", x, y, 0, { d: x + y + 0.2, cls: i === 2 ? "yard-van" : undefined })), use("car-e", 8.5, 9.68, 0, { d: 18.4 }), use("car-e", 8.9, 9.68, 0, { d: 18.8 }),
@@ -1096,6 +1121,8 @@
       use("antenna", 1.95, 1.25, 12, { d: 3.3 }), ...many("bollard", [[0.95, 2.25], [1.15, 2.25], [1.35, 2.25]], { cls: "fine" }), use("swing", 1.35, 2.95, 0, { cls: "fine" }),
       ...many("sign", [[4.45, 2.35], [0.4, 0.4]], { cls: "fine" }), use("bench", 2.75, 1.65, 0, { cls: "fine" }),
       lo(flat("bank", [P(2.75, 2.75), P(3.1, 2.85), P(3.2, 3.05), P(2.8, 3.0)])),
+      // street trees on the main road's north footpath
+      ...[[0.5, 4.57], [1.45, 4.57], [2.3, 4.57]].map(([x, y]) => tree(x, y, "s")),
     ],
     sewer: () => [
       ...many("solar", [[5.85, 0.55, 14], [7.2, 2.55, 14], [8.55, 3.55, 14], [5.85, 2.55, 14]]),
@@ -1112,6 +1139,14 @@
       ...[[6.35, 2.95, "s"], [7.75, 1.0, "s"], [9.15, 2.95, "s"], [9.1, 0.4, "s"], [9.5, 0.95, "s"]].map(([x, y, k]) => tree(x, y, k)),
       jac(6.35, 0.95), jac(7.75, 2.95),
       ...many("lamp", [[6.78, 4.3], [8.13, 0.55]]),
+      // street trees and a tram shelter on the main road's north footpath
+      ...[[7.65, 4.57], [9.25, 4.57]].map(([x, y]) => tree(x, y, "s")), ...shelter(7.05),
+      // a concrete path from each porch to the street, kerbs and asphalt on the lanes, a trampoline in a back yard
+      lo(item(0.6, shapes("drive", [[5.7, 0.4, "px"], [5.7, 1.4, "py"], [5.7, 2.4, "h"], [5.7, 3.4, "py"], [7.05, 0.4, "px"], [7.05, 1.4, "h"], [7.05, 2.4, "py"], [7.05, 3.4, "h"], [8.4, 1.4, "px"], [8.4, 2.4, "py"], [8.4, 3.4, "px"]].map(([x, y, k]) => { const yd = y + (k === "px" ? 0.7 : 0.75) + 0.14; return [P(x + 0.31, yd), P(x + 0.39, yd), P(x + 0.39, y + 0.97), P(x + 0.31, y + 0.97)]; })))),
+      lo(item(10.905, shapes("asphalt", [[6.6, 0.3, 6.95, 4.45], [7.95, 0.3, 8.3, 4.45]].map(([x0, y0, x1, y1]) => [P(x0, y0), P(x1, y0), P(x1, y1), P(x0, y1)]), { style: "fill:url(#asphalt)" }))),
+      lo(item(10.91, strokes("kerb", [6.6, 6.95, 7.95, 8.3].map((x) => [P(x, 0.3), P(x, 4.45)])))),
+      lo(item(0.7, el("ellipse", { class: "tramp", cx: f(P(7.6, 3.24)[0]), cy: f(P(7.6, 3.24)[1]), rx: 5.2, ry: 2.6 }), el("ellipse", { class: "tramp-mat", cx: f(P(7.6, 3.24)[0]), cy: f(P(7.6, 3.24)[1] - 0.4), rx: 4.2, ry: 2.1 }))),
+      ...many("car-s", [[6.6, 2.1], [7.95, 1.1]], { d: 0 }).map((u) => ({ ...u, d: 99 })),
     ],
     cbd: () => [
       box(13.35, 1.55, 0.45, 0.5, 34, { win: "b", cls: "glass" }), box(10.5, 1.85, 0.3, 0.4, 20, { win: "a", cls: "glass" }),
@@ -1123,6 +1158,15 @@
       use("bench", 11.1, 4.2, 0, { cls: "fine" }), use("bench", 11.65, 4.2, 0, { cls: "fine" }),
       ...many("flag", [[12.95, 3.7], [13.25, 3.7]], { cls: "fine" }), ...many("ac", [[12.6, 2.4, 86], [13.95, 0.75, 64], [11.0, 2.55, 46]]),
       ...[[13.0, 1.3, "s"], [14.9, 1.9, "s"], [11.5, 2.2, "s"], [13.7, 3.6, "s"]].map(([x, y, k]) => tree(x, y, k)),
+      ...[[12.9, 4.57], [14.1, 4.57]].map(([x, y]) => tree(x, y, "s")), ...shelter(11.95),
+      // parapet rails along the roof edges, each sorting just after its tower
+      rail([[10.8, 1.6], [11.9, 1.6], [11.9, 0.5]], 88, { posts: 0.22, base: 86, cls: "fine", d: 13.501 }),
+      rail([[10.9, 3.3], [12.1, 3.3], [12.1, 2.4]], 48, { posts: 0.22, base: 46, cls: "fine", d: 15.4015 }),
+      rail([[14.0, 3.3], [14.7, 3.3], [14.7, 2.5]], 56, { posts: 0.22, base: 54, cls: "fine", d: 18.001 }),
+      // the window-washing gantry on the tallest tower: its hoist on the parapet, the cradle part way down the face
+      { ...box(12.95, 1.28, 0.12, 0.08, 3, { z: 118, cls: "yellow" }), d: 14.802 },
+      item(14.803, strokes("crane-line", [[P(12.97, 1.4, 118), P(12.97, 1.4, 72.2)], [P(13.05, 1.4, 118), P(13.05, 1.4, 72.2)]])),
+      { ...box(12.94, 1.37, 0.14, 0.03, 2.2, { z: 70, cls: "yellow" }), d: 14.804 },
     ],
     plant: () => [
       rail([[2.42, 8.32], [3.68, 8.32], [3.68, 9.38], [2.42, 9.38], [2.42, 8.32]], 8, { posts: 0.35, cls: "fine safety", d: 13.2 }),
@@ -1142,6 +1186,7 @@
       line("stair fine", [P(3.62, 7.3, 2), P(3.72, 7.2, 8), P(3.86, 7.06, 14), P(3.98, 6.94, 20)], 11.2),
       item(10.65, pl("rail pipe-rack", [P(3.42, 6.62, 27), P(3.75, 6.85, 27), P(3.98, 7.02, 22)])),
       flat("deck grate", [P(2.3, 8.8, 6), P(3.8, 8.8, 6), P(3.8, 8.9, 6), P(2.3, 8.9, 6)], 12.99), rail([[2.3, 8.8], [3.8, 8.8]], 10, { posts: 0.3, cls: "fine safety", d: 12.995 }),
+      who(0.7, 6.52, "#f97316", { z: 5, d: 8.77 }), who(3.55, 5.75, "#f97316"),
     ],
     pump: () => [
       ...many("solar", [[6.55, 5.7, 3], [6.85, 5.7, 3], [6.55, 5.95, 3], [6.85, 5.95, 3]]),
@@ -1157,7 +1202,7 @@
       ...many("car-e", [[8.5, 9.9], [8.9, 9.9]]), ...many("bollard", [[9.4, 6.4], [9.4, 6.7], [9.4, 7.0], [9.4, 7.3]], { cls: "fine" }),
       ...[0, 1, 2].map((i) => slab(9.35 + i * 0.07, 6.85, 0.07, 0.3, "platform", 3 - i, {})),
       use("flag", 9.5, 6.2, 0, { d: 15.75 }), ...many("bin", [[9.5, 7.6], [8.1, 9.0]], { cls: "fine" }), use("sign", 8.15, 6.0, 0, { cls: "fine" }),
-      ...many("solar", [[8.7, 6.0, 44], [8.7, 6.4, 44], [8.7, 7.3, 44], [8.7, 7.7, 44]]), use("antenna", 9.2, 7.9, 44, { cls: "fine" }),
+      ...many("solar", [[8.7, 6.0, 44], [8.7, 6.4, 44], [8.7, 7.3, 44], [8.7, 7.7, 44]], { d: 17.2 }), use("antenna", 9.2, 7.9, 44, { cls: "fine", d: 17.54 }),
       tree(9.5, 5.95, "s"), tree(8.1, 7.6, "s"),
       // a calibration flume in the yard, solar on the workshop roof, a bike rack by the entry path
       box(9.27, 8.25, 0.12, 0.7, 4, { cls: "concrete" }), flat("wtr", [P(9.29, 8.28, 4), P(9.37, 8.28, 4), P(9.37, 8.92, 4), P(9.29, 8.92, 4)], 18.35), box(9.3, 8.55, 0.06, 0.06, 3, { z: 4, cls: "white", top: "lit", bias: 0.4 }),
@@ -1177,6 +1222,10 @@
       item(21.19, strokes("mast", [[13.56, 7.26], [13.74, 7.26], [13.74, 7.44], [13.56, 7.44]].map(([x, y]) => [P(x, y), P(x, y, 22)])), strokes("det", [[P(13.56, 7.44, 6), P(13.74, 7.44, 16)], [P(13.74, 7.44, 6), P(13.56, 7.44, 16)], [P(13.74, 7.26, 6), P(13.74, 7.44, 16)], [P(13.74, 7.44, 6), P(13.74, 7.26, 16)]])),
       cyl(13.65, 7.35, 0.16, 8, { z: 22, bands: 1, cls: "steel" }),
       rail([[14.48, 7.02], [14.92, 7.02], [14.92, 7.34], [14.48, 7.34], [14.48, 7.02]], 4, { posts: 0.11, cls: "fence fine", d: 22.27 }), ...many("transformer", [[14.54, 7.1], [14.74, 7.1]]),
+      // a container on the gantry's hook, two more stacked in the yard, and the boom gate at the gatehouse
+      use("ctr-b", 13.85, 5.6, 12, { d: 19.97 }), item(19.98, strokes("crane-line", [[P(13.95, 5.64, 20), P(13.95, 5.64, 17.5)], [P(14.1, 5.64, 20), P(14.1, 5.64, 17.5)]])),
+      lo(use("ctr-c", 13.3, 5.92, 0, { d: 19.73 })), lo(use("ctr-a", 13.3, 5.92, 5.5, { d: 19.7355 })),
+      item(18.14, seg("boom-r", P(10.53, 7.22, 3), P(10.88, 7.22, 3)), seg("boom", P(10.53, 7.22, 3), P(10.88, 7.22, 3)), seg("det", P(10.53, 7.22), P(10.53, 7.22, 3.4))),
     ],
   };
   const BASE_DETAIL = (g) => {
@@ -1226,6 +1275,7 @@
         // marked bays on the car park by the road, and a stand of gums in the corner
         slab(4.1, 2.9, 0.45, 0.5, "yard", 0, { style: "fill:url(#bays)" }),
         gum(0.2, 0.3), gum(0.3, 1.3),
+        lo(item(5.1, shapes("duck", [[3.5, 1.0], [3.62, 1.25], [3.88, 0.9]].map(([x, y]) => { const [px, py] = P(x, y); return [[px - 1.3, py + 0.2], [px - 0.3, py - 0.9], [px + 1.3, py - 0.3], [px + 0.6, py + 0.6]]; })))),
       ],
     }),
     sewer: () => ({
@@ -1745,7 +1795,7 @@
     }
     // the van FlowSense sends from the operations yard to MH 14 when the
     // alarm goes out, driven along the roads (on the left) by city.js
-    const dispatch = { g: el("g", { class: "dispatch" }, fx.querySelector(".traffic")), route: [[9.1, 9.4], [9.1, 9.12], [7.45, 9.12], [7.45, 4.85], [8.13, 4.85], [8.13, 3.4]] };
+    const dispatch = { g: el("g", { class: "dispatch" }, fx.querySelector(".traffic")), route: [[9.1, 9.4], [9.1, 9.12], [7.45, 9.12], [7.45, 4.79], [8.13, 4.79], [8.13, 3.4]] };
     dispatch.use = el("use", { href: "#van-w" }, dispatch.g);
 
     // data links: every district reports to the operations centre mast, and

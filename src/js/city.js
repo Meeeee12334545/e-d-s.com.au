@@ -529,6 +529,8 @@
   const weather = window.CityWeather ? CityWeather(sc, { clock: () => (state.storm ? stormElapsed() : null), script: stormData }) : null;
   // the traffic and its signals (city-traffic.js) run with the overlay
   const traffic = window.CityTraffic ? CityTraffic(sc) : null;
+  // a hook for the check scripts: svg.cityTraffic.lanes holds every vehicle's state
+  svg.cityTraffic = traffic;
   function scheduleStorm() {
     const st = state.storm, now = stormElapsed();
     st.timers = steps.filter((s) => !st.done.has(s)).map((s) => setTimeout(() => { st.done.add(s); s.run(); }, Math.max(0, (s.at - now) * 1000)));
@@ -1030,24 +1032,31 @@
   // (upside down at the top) and down the other side. It rolls under reduced
   // motion too: the site keeps its motion for those visitors (the owner's own
   // Mac reports reduced motion), and the roll is the point.
+  // (the same lines as the traffic's lanes of these ids in city-scene.js)
   const LANES = [
-    { from: [-0.9, 4.85], to: [15.9, 4.85], dir: "e" }, { from: [15.9, 5.15], to: [-0.9, 5.15], dir: "w" },
-    { from: [5.15, -0.9], to: [5.15, 10.9], dir: "s" }, { from: [9.85, 10.9], to: [9.85, -0.9], dir: "n" },
+    { id: "E", from: [-0.9, 4.79], to: [15.9, 4.79], dir: "e" }, { id: "W", from: [15.9, 5.21], to: [-0.9, 5.21], dir: "w" },
+    { id: "S5", from: [5.15, -0.9], to: [5.15, 10.9], dir: "s" }, { id: "N10", from: [9.85, 10.9], to: [9.85, -0.9], dir: "n" },
   ];
   const trafficLayer = $(".traffic", sc.fx);
   let stunting = false, stuntTimer = 0;
   const svgEl = (tag, attrs) => { const n = document.createElementNS(SVGNS, tag); for (const k in attrs) n.setAttribute(k, attrs[k]); return n; };
   function stunt() {
-    if (stunting) return;
-    stunting = true;
+    if (stunting || !traffic) return;
     const lane = LANES[Math.floor(Math.random() * LANES.length)], [fx0, fy0] = lane.from, [fx1, fy1] = lane.to, L = Math.hypot(fx1 - fx0, fy1 - fy0);
+    // The car is one of the traffic: it keeps its gap and stops at the lights
+    // like the rest (if there is no room for it at the start of the lane,
+    // try again shortly). The roadster comes up behind it on its own, rolls
+    // over it, and once it lands joins the traffic too, at its own pace.
+    const carV = traffic.spawn(lane.id, `#car-${lane.dir}`, 0.9);
+    if (!carV) return scheduleStunt(3000);
+    stunting = true;
     const at = (d) => CityScene.P(fx0 + (fx1 - fx0) * d / L, fy0 + (fy1 - fy0) * d / L);
     const g = svgEl("g", { class: "stunt" }), shadow = svgEl("ellipse", { class: "stunt-shadow", rx: 6, ry: 3 });
-    const car = svgEl("use", { href: `#car-${lane.dir}` }), rs = svgEl("use", { href: `#roadster-${lane.dir}` });
+    const rs = svgEl("use", { href: `#roadster-${lane.dir}` });
     // the thrusters' compressed air: two white jets from the car's underside,
     // turning with it as it flips, and puffs that billow out along them and fade
     const jets = [svgEl("polygon", { class: "stunt-jet" }), svgEl("polygon", { class: "stunt-jet" })], puffs = Array.from({ length: 26 }, () => svgEl("circle", { class: "stunt-puff", r: 0 }));
-    g.append(car, shadow, ...puffs, ...jets, rs);
+    g.append(shadow, ...puffs, ...jets, rs);
     const [ax, ay] = at(0), [bx, by] = at(1), ux = bx - ax, uy = by - ay, ul = Math.hypot(ux, uy), dxu = ux / ul, dyu = uy / ul;
     const live = [];
     let lastPuff = 0, nextPuff = 0;
@@ -1055,21 +1064,28 @@
     // The roll: the car turns once about its long axis while its path circles
     // the line of travel, R px high at the side and 2R at the top, and `swing`
     // tiles out to the side along the lane's perpendicular on the ground.
-    const vCar = 1.0, vR = 2.4, head = 3.2, air = 0.95, R = 13, swing = 0.36, t0 = performance.now();
+    // Until it takes off the roadster closes on the car but never into it,
+    // and it takes off only when the lane is clear where it will land.
+    const vR = 2.4, air = 0.95, R = 13, swing = 0.36, t0 = performance.now();
     const lx = (fx1 - fx0) / L, ly = (fy1 - fy0) / L, [perpX, perpY] = CityScene.P(-ly, lx), pl = Math.hypot(perpX, perpY);
     const angle = Math.atan2(dyu, dxu) * 180 / Math.PI;
-    let jumpAt = null;
+    let jumpAt = null, rsV = null, dR = -2.4, last = t0;
     const step = (now) => {
-      const t = (now - t0) / 1000, dC = head + vCar * t, dR = vR * t;
+      const t = (now - t0) / 1000, dt = Math.min(0.05, (now - last) / 1000), dC = carV.s;
+      last = now;
+      if (rsV) dR = rsV.s;
+      else if (jumpAt === null) dR = Math.min(dR + vR * dt, dC - 0.45);
+      else dR += vR * dt;
       // take off so that the top of the roll comes right over the car
-      if (jumpAt === null && dC - dR <= 0.65) jumpAt = t;
+      if (jumpAt === null && dC - dR <= 0.65 && traffic.clear(lane.id, dR + vR * air, 0.7)) jumpAt = t;
       const u = jumpAt === null ? 0 : Math.min(1, (t - jumpAt) / air), flying = u > 0 && u < 1, rolling = flying;
       const roll = flying ? 2 * Math.PI * u : 0, lift = flying ? R * (1 - Math.cos(roll)) : 0, out = rolling ? swing * Math.sin(roll) : 0;
-      const [cx, cy] = at(dC), [gx, gy] = at(dR), rx = gx + perpX * out, ry = gy + perpY * out;
-      car.setAttribute("transform", `translate(${cx.toFixed(1)} ${cy.toFixed(1)})`);
+      const [gx, gy] = at(dR), rx = gx + perpX * out, ry = gy + perpY * out;
+      // landed: the roadster is traffic from here, so the traffic places it
+      if (jumpAt !== null && u >= 1 && !rsV) rsV = traffic.spawn(lane.id, rs, dR, { len: 0.44, speed: 2.0, force: true });
       // turning about its long axis: squashed across its length through zero, mirrored when upside down
       const sy = rolling ? Math.cos(roll) : 1;
-      rs.setAttribute("transform", `translate(${rx.toFixed(1)} ${(ry - lift).toFixed(1)}) translate(0 -2.6) rotate(${angle.toFixed(1)}) scale(1 ${sy.toFixed(3)}) rotate(${(-angle).toFixed(1)}) translate(0 2.6)`);
+      if (!rsV) rs.setAttribute("transform", `translate(${rx.toFixed(1)} ${(ry - lift).toFixed(1)}) translate(0 -2.6) rotate(${angle.toFixed(1)}) scale(1 ${sy.toFixed(3)}) rotate(${(-angle).toFixed(1)}) translate(0 2.6)`);
       shadow.setAttribute("cx", rx.toFixed(1)); shadow.setAttribute("cy", ry.toFixed(1));
       shadow.setAttribute("opacity", flying ? (0.5 * (1 - lift / (2 * R) / 1.3)).toFixed(2) : "0");
       // the thrusters fire from just before take-off until the car lands
@@ -1097,7 +1113,8 @@
         p.setAttribute("cx", (p.x + p.vx * k / 4).toFixed(1)); p.setAttribute("cy", (p.y + p.vy * k / 4).toFixed(1));
         p.setAttribute("r", (1.6 + age * 11).toFixed(1)); p.setAttribute("opacity", (0.88 * (1 - age / 0.7)).toFixed(2));
       }
-      if (dR > L + 1 && dC > L + 1) { g.remove(); stunting = false; scheduleStunt(15000 + Math.random() * 15000); return; }
+      // both off the end of the lane: tidy up and book the next one
+      if (carV.done && rsV?.done) { traffic.despawn(carV); traffic.despawn(rsV); g.remove(); stunting = false; scheduleStunt(15000 + Math.random() * 15000); return; }
       requestAnimationFrame(step);
     };
     requestAnimationFrame(step);
