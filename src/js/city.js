@@ -527,6 +527,8 @@
   const stormElapsed = () => state.storm ? state.storm.elapsed + (state.storm.running ? (performance.now() - state.storm.t0) / 1000 : 0) : 0;
   // the rain, cloud and lightning, painted between the two layers
   const weather = window.CityWeather ? CityWeather(sc, { clock: () => (state.storm ? stormElapsed() : null), script: stormData }) : null;
+  // the traffic and its signals (city-traffic.js) run with the overlay
+  const traffic = window.CityTraffic ? CityTraffic(sc) : null;
   function scheduleStorm() {
     const st = state.storm, now = stormElapsed();
     st.timers = steps.filter((s) => !st.done.has(s)).map((s) => setTimeout(() => { st.done.add(s); s.run(); }, Math.max(0, (s.at - now) * 1000)));
@@ -655,11 +657,11 @@
       layers.forEach((s) => { try { s.unpauseAnimations(); } catch {} });
       startTicker(); kick();
       if (state.storm && !state.storm.running) scheduleStorm();
-      weather?.run(true);
+      weather?.run(true); traffic?.run(true);
     } else {
       layers.forEach((s) => { try { s.pauseAnimations(); } catch {} });
       stopTicker(); suspendStorm();
-      weather?.run(false);
+      weather?.run(false); traffic?.run(false);
     }
   }
   new IntersectionObserver(([en]) => { state.inView = en.isIntersecting; sync(); }, { threshold: 0.3 }).observe(svg);
