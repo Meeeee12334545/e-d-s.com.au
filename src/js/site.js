@@ -618,7 +618,7 @@
   // as a page is open. Off screen they would
   // still be restyled and repainted on every frame, so they pause until
   // they are back in view (site.css: .offscreen).
-  const loops = $$(".fs-screen, #ausmap, #lab-pipe, .diagram, #ef-svg, .ef-hero, .open-status, .live-tag");
+  const loops = $$(".fs-screen, #ausmap, #lab-pipe, .diagram, #ef-svg, #eas-svg, .ef-hero, .open-status, .live-tag");
   if (loops.length) {
     const io3 = new IntersectionObserver((entries) => entries.forEach((en) => en.target.classList.toggle("offscreen", !en.isIntersecting)), { rootMargin: "80px 0px" });
     loops.forEach((el) => io3.observe(el));
