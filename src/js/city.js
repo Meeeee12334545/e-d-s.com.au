@@ -355,7 +355,7 @@
     stage.addEventListener("pointerenter", (e) => { if (e.pointerType === "mouse") box = stage.getBoundingClientRect(); });
     stage.addEventListener("pointermove", (e) => {
       if (e.pointerType !== "mouse" || !box || state.tour) return;
-      if (state.view !== "city") { setTilt(0, 0); return; }
+      if (state.view !== "city" || Z.on) { setTilt(0, 0); return; }
       px = (e.clientX - box.left) / box.width - 0.5;
       py = (e.clientY - box.top) / box.height - 0.5;
       if (!raf) raf = requestAnimationFrame(() => { raf = 0; setTilt(-py * 4, px * 5); });
@@ -587,7 +587,9 @@
     else if (state.view === "district") setDistrict(false);
     else if (state.expanded) setExpanded(false);
   });
-  document.addEventListener("pointerdown", (e) => { if (openTip && !e.target.closest?.(".city-tip, .hit, .city-sensors")) hideTip(); });
+  // a finger on the map may be about to pan or pinch, so only a tap there
+  // (the map's own click) closes a readout
+  document.addEventListener("pointerdown", (e) => { if (openTip && !e.target.closest?.(".city-tip, .hit, .city-sensors, .city-zoom") && !(e.pointerType === "touch" && e.target.closest?.(".city-model"))) hideTip(); });
 
   /* ---- the underground view ---- */
   /* ---- the expanded view: the city nearly full screen, with every pill ---- */
@@ -664,7 +666,7 @@
       weather?.run(false); traffic?.run(false);
     }
   }
-  new IntersectionObserver(([en]) => { state.inView = en.isIntersecting; sync(); }, { threshold: 0.3 }).observe(svg);
+  new IntersectionObserver(([en]) => { state.inView = en.isIntersecting; sync(); }, { threshold: 0.3 }).observe(view);
   document.addEventListener("visibilitychange", sync);
 
   /* ---- taking it apart: a district in three layers, an asset in parts ---- */
@@ -681,7 +683,7 @@
   const easeIO = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
   const clamp = (v) => Math.max(0, Math.min(1, v));
   // two channels, so opening an asset never cuts short the camera
-  const anims = { d: 0, a: 0 };
+  const anims = { d: 0, a: 0, z: 0 };
   function run(ch, ms, step, done) {
     cancelAnimationFrame(anims[ch]);
     // a hidden tab gets no frames: go straight to the end
@@ -755,6 +757,7 @@
     if (state.view === "district" && id === state.active) setCaption(next ? `${X.strata[next]}: ${zoneOf[id].strata[next]}` : fill(X.caption, { name: zoneOf[id].name }));
   }
   function setDistrict(on) {
+    if (on) zoomDrop();
     const id = state.active, kit = sc.explode(id), from = vb.slice(), k0 = dk[id] || 0;
     if (on) {
       if (state.view !== "city") return;
@@ -914,6 +917,7 @@
     if (state.tour) { state.tour.leave({ select: id }); from = "city"; trigger = $(`.city-inside[data-zone="${id}"]`); }
     if (state.storm) finishStorm(true);
     hideTip();
+    if (Z.on) { zoomDrop(); setVB(VB0); }
     const z = zoneOf[id];
     state.view = "asset"; state.assetFrom = from;
     assetEl.hidden = false;
@@ -996,6 +1000,7 @@
   function reframe() {
     if (state.view === "district" && !anims.d) setVB(frame(sc.explode(state.active).box));
     if (state.view === "asset") fitAsset();
+    if (Z.on && !Z.grip && !anims.z) { zMeasure(); zSettled(); }
     layoutNotes();
   }
   let rf = 0;
@@ -1104,6 +1109,119 @@
   scheduleStunt(5000 + Math.random() * 5000);
   // a hook for checking it without waiting: svg.dispatchEvent(new Event("citystunt"))
   svg.addEventListener("citystunt", stunt);
+
+  /* ---- zooming in: pinch, drag and the buttons in the frame's corner ---- */
+  // On a touch screen the city zooms inside its own frame: the frame and the
+  // page around it stay exactly where they are. Two fingers zoom about the
+  // point between them and, once zoomed in, one finger drags the city; at the
+  // whole city one finger still scrolls the page. While it moves the camera
+  // is a transform on .city-model (the compositor moves one texture), and at
+  // rest it is baked into the viewBox, so the drawing is crisp at any zoom,
+  // as on the tour. A district apart, an asset and the tour have cameras of
+  // their own, so this is for the plain city and ends when one of them opens.
+  const ZOOM_MAX = 5, ZOOM_CLOSE = 1.5, VB_RATIO = VB0[3] / VB0[2];
+  const zClip = $(".city-clip", stage), zIn = $('[data-act="zoom-in"]', stage), zOut = $('[data-act="zoom-out"]', stage), zRain = $(".city-weather", stage);
+  // F is the frame on show and B the frame the drawing is baked at
+  const Z = { F: VB0.slice(), B: VB0.slice(), to: null, on: false, close: false, grip: null, moved: false, idle: 0, raf: 0, L: 0, Tp: 0, W: 1, H: 1 };
+  const zoomable = () => state.view === "city" && !state.tour;
+  const zFit = (x, y, w) => {
+    w = Math.max(VB0[2] / ZOOM_MAX, Math.min(VB0[2], w));
+    const h = w * VB_RATIO;
+    return [Math.max(VB0[0], Math.min(VB0[0] + VB0[2] - w, x)), Math.max(VB0[1], Math.min(VB0[1] + VB0[3] - h, y)), w, h];
+  };
+  const zMeasure = () => { const r = zClip.getBoundingClientRect(); Z.L = r.left; Z.Tp = r.top; Z.W = r.width; Z.H = r.height; };
+  const zOn = (on) => { if (Z.on !== on) { Z.on = on; stage.classList.toggle("is-zoomed", on); } };
+  const zPaint = () => {
+    const [bx, by, bw] = Z.B, [x, y, w, h] = Z.F;
+    model.style.transform = `translate3d(${((bx - x) / w * Z.W).toFixed(2)}px, ${((by - y) / h * Z.H).toFixed(2)}px, 0px) scale(${(bw / w).toFixed(4)})`;
+  };
+  // everything that follows from the frame at rest: the rain canvas is mapped
+  // to the whole city, so it takes the frame as a transform; close in, a phone
+  // shows the fine detail it leaves out of the whole city (people, fences)
+  function zSettled() {
+    const [x, y, w, h] = Z.F, whole = w >= VB0[2] - 0.01, close = VB0[2] / w >= ZOOM_CLOSE;
+    model.style.transform = "";
+    if (zRain) zRain.style.transform = whole ? "" : `translate(${((VB0[0] - x) / w * Z.W).toFixed(2)}px, ${((VB0[1] - y) / h * Z.H).toFixed(2)}px) scale(${(VB0[2] / w).toFixed(4)})`;
+    zOn(!whole);
+    if (close !== Z.close) { Z.close = close; cls("is-close", close); }
+    zIn.disabled = w <= VB0[2] / ZOOM_MAX + 0.01; zOut.disabled = whole;
+  }
+  function zBake() {
+    clearTimeout(Z.idle); cancelAnimationFrame(Z.raf); Z.raf = 0; Z.to = null;
+    Z.B = Z.F.slice(); setVB(Z.F); zSettled();
+  }
+  // Another camera is taking over. It starts from what is on screen, so the
+  // viewBox is left on the current frame for it to fly from.
+  function zoomDrop() {
+    if (!Z.on) return;
+    cancelAnimationFrame(anims.z); anims.z = 0; cancelAnimationFrame(Z.raf); Z.raf = 0; clearTimeout(Z.idle);
+    Z.grip = null; Z.to = null;
+    setVB(Z.F);
+    Z.F = VB0.slice(); Z.B = VB0.slice(); zSettled();
+  }
+  function zGo(to) {
+    clearTimeout(Z.idle); zMeasure(); zOn(true);
+    const from = Z.F.slice(), ms = T(300);
+    Z.to = to;
+    run("z", ms, (t) => { Z.F = lerp(from, to, easeOut(clamp(t / ms))); zPaint(); }, zBake);
+  }
+  // the buttons step about the middle of the frame, from where a step in
+  // flight is heading, so two quick taps count as two
+  const zStep = (by) => { if (!zoomable()) return; const [x, y, w, h] = Z.to || Z.F, nw = w / by; zGo(zFit(x + w / 2 - nw / 2, y + h / 2 - nw * VB_RATIO / 2, nw)); };
+  zIn?.addEventListener("click", () => zStep(2));
+  zOut?.addEventListener("click", () => zStep(0.5));
+
+  const zTouches = (e) => [...e.touches].filter((t) => model.contains(t.target)).slice(0, 2);
+  const zGrip = (ts) => {
+    const a = ts[0], b = ts[ts.length - 1];
+    return { n: ts.length, x: (a.clientX + b.clientX) / 2 - Z.L, y: (a.clientY + b.clientY) / 2 - Z.Tp, d: Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY) };
+  };
+  model.addEventListener("touchstart", (e) => {
+    const ts = zTouches(e);
+    // one finger on the whole city is the page scrolling: leave it alone
+    if (!zoomable() || !ts.length || (ts.length < 2 && !Z.on)) { Z.grip = null; return; }
+    cancelAnimationFrame(anims.z); anims.z = 0; clearTimeout(Z.idle); Z.to = null;
+    zMeasure();
+    Z.grip = zGrip(ts); Z.moved = ts.length > 1;
+  }, { passive: true });
+  // Not passive: the one thing that can stop a pinch from also scrolling the
+  // page is cancelling its moves. Moves that are not ours are left untouched,
+  // and once the page is scrolling they cannot be cancelled, so a second
+  // finger arriving then is ignored.
+  model.addEventListener("touchmove", (e) => {
+    if (!Z.grip) return;
+    if (!e.cancelable || !zoomable()) { Z.grip = null; return; }
+    const ts = zTouches(e), p = Z.grip, g = zGrip(ts), two = ts.length > 1;
+    // a finger that has barely moved may yet be a tap on a district
+    if (!two && !Z.moved) {
+      if (Math.hypot(g.x - p.x, g.y - p.y) < 8) return;
+      Z.moved = true;
+    }
+    e.preventDefault();
+    Z.grip = g;
+    if (g.n !== p.n) return;
+    // what was under the fingers stays under them, measured from the last
+    // move, so that nothing has to be undone after running into a limit
+    const [x, y, w, h] = Z.F, nw = two && g.d > 0 ? w * p.d / g.d : w;
+    Z.F = zFit(x + p.x / Z.W * w - g.x / Z.W * nw, y + p.y / Z.H * h - g.y / Z.H * nw * VB_RATIO, nw);
+    if (Z.F[2] < VB0[2]) zOn(true);
+    if (!Z.raf) Z.raf = requestAnimationFrame(() => { Z.raf = 0; zPaint(); });
+  }, { passive: false });
+  const zLift = (e) => {
+    if (!Z.grip) return;
+    const ts = zTouches(e);
+    if (ts.length) { Z.grip = zGrip(ts); Z.moved = true; return; }
+    Z.grip = null;
+    if (!Z.F.some((n, i) => n !== Z.B[i])) return;
+    // nearly back at the whole city: finish the job
+    if (Z.F[2] > VB0[2] / 1.05) zGo(VB0.slice());
+    else Z.idle = setTimeout(zBake, 120);
+  };
+  model.addEventListener("touchend", zLift, { passive: true });
+  model.addEventListener("touchcancel", zLift, { passive: true });
+  // Safari's own pinch, which would zoom the whole page
+  model.addEventListener("gesturestart", (e) => { if (zoomable()) e.preventDefault(); }, { passive: false });
+  if (!fine && ui.captionRestTouch && caption) { caption.dataset.rest = ui.captionRestTouch; setCaption(); }
 
   /* ---- the tour: the visitor's own scrolling flies the camera through the city ---- */
   // "Take the tour" pins the city to the screen and turns the page's scroll
@@ -1259,6 +1377,7 @@
       if (state.view !== "city") resetViews();
       if (state.expanded) setExpanded(false);
       hideTip();
+      zoomDrop();
       state.under = false;
       Object.assign(T, { on: true, t: 0, tr: 0, dir: 1, focus: null, k: 0, notesZ: null, cardZ: null, told: null, endTold: false, labA: "" });
       T.seen.clear();

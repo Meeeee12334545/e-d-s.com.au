@@ -1059,6 +1059,24 @@ body.city-lock { overflow: hidden; }
 .city-legend .icon { font-size: 14px; color: var(--aqua); }
 .city-legend li:nth-child(2) .icon { color: var(--amber); }
 .city-legend li:nth-child(4) .icon { color: var(--water); }
+/* ---------- zooming in ---------- */
+/* On a touch screen the city zooms inside its own frame (city.js): this box
+   stays the size it always is and cuts the map off at its edges, and the
+   readout docked under the map is left clear. */
+.city-clip { position: relative; }
+.city-stage.is-zoomed .city-clip { overflow: hidden; box-shadow: 0 0 0 1px var(--line-dark); }
+.city-stage.is-zoomed .city-model { transform-origin: 0 0; transition: none; scale: 1; translate: 0 0; touch-action: none; }
+.city-stage.is-zoomed .city-svg { touch-action: none; }
+/* close in, the data on its way to the office steps back from the detail */
+.city-svg.is-close .links, .city-svg.is-close .packets { opacity: .3; transition: opacity .4s var(--ease); }
+.city-weather { transform-origin: 0 0; }
+.city-zoom { position: absolute; right: 10px; bottom: 10px; z-index: 2; display: none; border-radius: 999px; border: 1px solid var(--line-dark-strong); background: rgba(var(--deep-rgb), .88); }
+.city-zoom button { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; color: #fff; touch-action: manipulation; transition: opacity .2s var(--ease); }
+.city-zoom button:disabled { opacity: .35; }
+.city-zoom .icon { font-size: 18px; }
+@media (hover: none), (pointer: coarse) { .city-zoom { display: inline-flex; } }
+.city-stage.is-zoomed .city-zoom { display: inline-flex; }
+.city-stage.is-exploded .city-zoom, .city-stage.is-asset .city-zoom, .city-tour-stage .city-zoom { display: none; }
 /* ---------- the city taken apart ---------- */
 /* A district apart: the rest of the city fades back, the pills and district
    labels give way to the HTML labels, and the stage stops tilting. */
@@ -3155,7 +3173,8 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: 6
 }
 
 @media (max-width: 700px) { .city-svg .callout, .city-svg.is-expanded .callout.minor { display: none; } }
-@media (max-width: 600px) { .city-svg .fine { display: none; } }
+/* the finest detail is too small for a phone's whole city, and comes back close in */
+@media (max-width: 600px) { .city-svg:not(.is-close) .fine { display: none; } }
 @media (max-width: 560px) { .city-svg .zlabel { display: none; } }
 
 /* ---------- responsive: search, heroes, products, quick actions ---------- */
@@ -3756,6 +3775,7 @@ body.is-touring { overscroll-behavior-y: contain; }
 .city-tour-stage .city-view { position: absolute; inset: 0; }
 /* the hover lift and the pointer tilt stand aside; the opener's tilt and
    the camera are set by city.js without easing, since the scroll drives them */
+.city-tour-stage .city-clip { position: absolute; inset: 0; }
 .city-tour-stage .city-model { position: absolute; inset: 0; transform-origin: 0 0; transition: none; scale: 1; translate: 0 0; }
 .city-tour-stage .city-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
 .city-tour-stage .city-weather { display: none; }
