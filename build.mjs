@@ -301,7 +301,7 @@ function footer(r) {
             <input id="f-email" name="Email" type="email" placeholder="Your email" autocomplete="email" required>
             ${botcheck}
             <button class="btn btn-primary" type="submit" aria-label="Register for updates">${icon("arrow-right")}<i class="spin" aria-hidden="true"></i></button>
-            <p class="signup-done" role="status" data-done="sent" hidden>${icon("check", false)} Thanks, you are registered for EDS updates.</p>
+            <p class="signup-done" role="status" data-done="sent" hidden>${icon("check", false)} Thanks, you're signed up for EDS updates.</p>
             <p class="signup-done form-error" role="alert" data-done="error" hidden>${icon("circle-alert", false)} That did not go through. Please try again in a moment.</p>
           </form>
         </div>
@@ -1157,8 +1157,8 @@ ${waysSection(r)}
 <section class="section fs-band" id="flowsense">
   <div class="wrap fs-grid">
     <div>
-      <h2 class="h-lg" data-reveal>Sewer network intelligence.</h2>
-      <p class="lede" data-reveal style="--i:1">EDS FlowSense is the platform behind our monitoring: flow analytics and engineering insight for every site we measure.</p>
+      <h2 class="h-lg" data-reveal>The platform behind every reading.</h2>
+      <p class="lede" data-reveal style="--i:1">EDS FlowSense, built and supported in Australia: live operations, infiltration and inflow, pump stations and calibrated models, for every site we measure.</p>
       <div class="fs-list" role="group" aria-label="FlowSense tools" data-reveal style="--i:2">
         ${[["flame", "I/I heat map", "One colour per severity band, with arrows showing which way the water runs."], ["siren", "Blockage Watch", "Early warning before a dry weather spill."], ["fan", "Pump Station Manager", "The wet well drawn to scale, with its live level."], ["bell-ring", "Alarms that reach people", "Sent to the email and mobile your team holds that day."]]
           .map(([ic, t, d], i) => `<button type="button" class="fs-item" aria-pressed="${i === 0}"><span class="card-icon">${icon(ic)}</span><span><b>${t}</b><span>${d}</span></span></button>`).join("")}
@@ -1529,7 +1529,7 @@ add({
       <div class="cat-group" role="group" aria-labelledby="cat-h-docs" data-cat-filter="docs"><p class="cat-h" id="cat-h-docs">Documents</p><ul>${opt("", "Any", products.length)}${opt("1", "Datasheet or manual", products.filter((p) => (p.docs || []).length || (p.brand.docs || []).length).length)}</ul></div>
     </aside>`;
     return `
-${pageHero(r, { crumbs: [["Products"]], title: "Industry-leading instruments, backed by the people who use them.", compact: true, after: `
+${pageHero(r, { crumbs: [["Products"]], title: "Instruments built for the field, backed by the people who use them.", compact: true, after: `
     <div class="finder-bar" id="finder" data-reveal style="--i:2">
       <label class="finder-search">${icon("search", false)}<input type="search" placeholder="Try “flow”, “Hach” or “level”" aria-label="Search ${products.length} instruments by name, range or what they measure" autocomplete="off" spellcheck="false"></label>
       <p class="finder-live" hidden><span data-finder-live></span> <a class="link-arrow" href="#instruments">See them ${icon("arrow-right")}</a></p>
@@ -2052,7 +2052,7 @@ ${ctaSection(r, { title: "See it on your own network.", lede: "Book a live demon
 add({
   file: "about.html",
   title: "About EDS | Environmental Data Services",
-  description: "EDS: Australian owned and operated since 1991, and a market leader in equipment and services for the water and wastewater industry.",
+  description: "EDS: Australian owned and operated since 1991, and Australia's largest supplier of monitoring equipment to the water and wastewater industry.",
   current: "about",
   scripts: ["widgets.js"],
   body: (r) => `
