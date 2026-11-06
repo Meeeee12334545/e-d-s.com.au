@@ -633,6 +633,49 @@ const cardLink = (r, { href, iconName, title, text, n, tilt = true, cls = "", me
   <span class="go" aria-hidden="true">${icon("arrow-right")}</span>${media}
 </a>`;
 
+// The flow meter's pipe: a 600 mm sewer in cross-section, drawn with the
+// E-Flow 3 kit on the deep teal, with an area velocity meter on the invert
+// looking up at the surface. lab.js slides the water (a 160 unit block from
+// the crown at y 20 to the invert at 180) down by the depth, centres the
+// velocity arrows in it, and points the meter's beam at the surface.
+const f1 = (n) => Math.round(n * 10) / 10;
+function labPipe() {
+  const p = "lab", w = 280, h = 200, cx = 116, cy = 100, R = 80, wall = 9, oy = 168.5;
+  const half = (y) => Math.sqrt(R * R - (y - cy) ** 2);
+  const circ = (r) => `M${cx - r} ${cy}a${r} ${r} 0 1 0 ${2 * r} 0a${r} ${r} 0 1 0 -${2 * r} 0Z`;
+  // an alarm level: a dashed line across the pipe, out to a small tag in the soil
+  const level = (hr, cls, text, width) => { const y = 180 - hr * 160; return `<path class="lab-level ${cls}" d="M${f1(cx - half(y))} ${y}H${cx + R + wall + 6}"/><g class="lab-tag ${cls}" transform="translate(${cx + R + wall + 8} ${y})"><rect x="0" y="-8" width="${width}" height="16" rx="8"/><text x="7" y="3.8">${text}</text></g>`; };
+  // the velocity through the depth as the kit draws it: a power law from the bed
+  const arrows = [0, 1, 2, 3, 4].map((i) => { const y = 82 + 9 * i, l = f1(60 * Math.pow(1 - i / 5.6, 1 / 6)), o = (1 - i * 0.11).toFixed(2); return `<path class="lab-arrow" stroke-opacity="${o}" d="M86 ${y}H${f1(86 + l)}"/><path class="lab-arrow-h" stroke-opacity="${o}" d="M${f1(86 + l - 4.4)} ${y - 2.8}L${f1(86 + l)} ${y}L${f1(86 + l - 4.4)} ${y + 2.8}"/>`; }).join("");
+  const corners = [[6, 6, 1, 1], [w - 6, 6, -1, 1], [6, h - 6, 1, -1], [w - 6, h - 6, -1, -1]].map(([x, y, sx, sy]) => `M${x} ${y + 12 * sy}V${y}H${x + 12 * sx}`).join("");
+  const defs = `${efDefs(p, { dark: true })}
+          <linearGradient id="${p}-wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="ef-w0"/><stop offset=".18" class="ef-w1"/><stop offset="1" class="ef-w2"/></linearGradient>
+          <radialGradient id="${p}-ub" gradientUnits="userSpaceOnUse" cx="${cx}" cy="${oy}" r="150"><stop offset="0" class="ef-g0 u"/><stop offset="1" class="ef-g1 u"/></radialGradient>
+          <pattern id="${p}-grid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0H0V20" class="ef-gridline"/></pattern>
+          <clipPath id="lab-clip"><circle cx="${cx}" cy="${cy}" r="${R}"/></clipPath>
+          <clipPath id="lab-wclip"><rect id="lab-wclip-r" x="0" y="20" width="${w}" height="160"/></clipPath>`;
+  return `<svg id="lab-pipe" class="ef-dark" viewBox="0 0 ${w} ${h}" role="img" aria-label="Cross-section of a 600 mm sewer pipe, cut through the ground, showing the water depth against the high and high-high alarm levels. The area velocity meter sits on the invert, its ultrasonic beam looking up at the surface, and arrows in the water show the velocity through the depth.">
+          <defs>${defs}</defs>
+          <rect width="${w}" height="${h}" fill="url(#${p}-soil)"/>
+          <path fill="url(#${p}-cut)" fill-rule="evenodd" d="${circ(R + wall)}${circ(R)}"/>
+          <circle cx="${cx}" cy="${cy}" r="${R}" fill="url(#${p}-air)"/>
+          <g clip-path="url(#lab-clip)">
+            <g id="lab-water-g"><rect x="0" y="20" width="${w}" height="160" fill="url(#${p}-wg)"/><path class="ef-surf-g" d="M0 20H${w}"/><path class="ef-surf" d="M0 20H${w}"/></g>
+            <path id="lab-beam" class="ef-beam u" fill="url(#${p}-ub)"/>
+            <g class="ef-waves" id="lab-waves">${[0, 1, 2, 3].map((k) => `<path class="ef-wave u" style="--d:${(k * 0.3).toFixed(1)}s"/>`).join("")}</g>
+            <path id="lab-foot" class="lab-foot"/>
+            <g clip-path="url(#lab-wclip)"><g id="lab-arrows" class="lab-arrows">${arrows}</g></g>
+            <path class="lab-base" fill="url(#${p}-body)" d="M96 ${cy + R + 1}H136V177.4H96Z"/>
+            <path class="lab-sensor" d="M96.5 177.4Q97.5 170 106 168.2H126Q134.5 170 135.5 177.4Z"/>
+            <ellipse class="ef-us" cx="${cx}" cy="168.4" rx="4.4" ry="1.4" fill="url(#${p}-gold)"/>
+          </g>
+          <rect width="${w}" height="${h}" fill="url(#${p}-grid)"/>
+          <path class="ef-edge" d="${circ(R + wall)}${circ(R)}"/>
+          ${level(0.6, "h", "High", 38)}${level(0.85, "hh", "High-high", 64)}
+          <path class="ef-hud" d="${corners}"/>
+        </svg>`;
+}
+
 const labSection = ({ eyebrow = "", title = "See what a storm does to a sewer.", lede = "Send a storm through a model catchment and watch the hydrograph respond. The gap between measured flow and the dry weather pattern is inflow and infiltration: water that should never have reached the sewer." } = {}) => `
 <section class="section dark band" id="flow-lab">
   <div class="wrap">
@@ -679,29 +722,7 @@ const labSection = ({ eyebrow = "", title = "See what a storm does to a sewer.",
       </div>
       <div class="panel">
         <div class="panel-head"><div class="panel-title">${icon("gauge", false)} At the flow meter</div></div>
-        <svg id="lab-pipe" viewBox="0 0 200 200" role="img" aria-label="Cross-section of a sewer pipe showing the water depth against the high and high-high alarm levels, with the area velocity meter at the bottom">
-          <defs>
-            <clipPath id="lab-clip"><circle cx="100" cy="100" r="80"/></clipPath>
-            <linearGradient id="lab-wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5fb4a6" stop-opacity=".85"/><stop offset="1" stop-color="#0d7c72" stop-opacity=".9"/></linearGradient>
-          </defs>
-          <circle cx="100" cy="100" r="87" fill="#0b302d" stroke="rgba(255,255,255,.22)" stroke-width="2"/>
-          <g clip-path="url(#lab-clip)">
-            <rect width="200" height="200" fill="#020c0b"/>
-            <g id="lab-water-g">
-              <rect x="0" y="20" width="200" height="160" fill="url(#lab-wg)"/>
-              <line x1="0" x2="200" y1="20" y2="20" stroke="#dbf0ec" stroke-width="2"/>
-            </g>
-            <g id="lab-arrows" class="lab-arrows"><line x1="20" y1="92" x2="180" y2="92"/><line x1="20" y1="100" x2="180" y2="100"/><line x1="20" y1="108" x2="180" y2="108"/></g>
-            <g stroke-dasharray="4 4" stroke-width="1.2">
-              <line x1="0" x2="200" y1="84" y2="84" stroke="rgba(245,158,11,.75)"/>
-              <line x1="0" x2="200" y1="44" y2="44" stroke="rgba(239,68,68,.8)"/>
-            </g>
-            <text x="176" y="80" text-anchor="end" fill="rgba(245,158,11,.95)">High</text>
-            <text x="140" y="40" text-anchor="end" fill="rgba(239,68,68,.95)">High-high</text>
-            <line id="lab-beam" x1="100" y1="168" x2="100" y2="121"/>
-            <rect x="89" y="167" width="22" height="11" rx="2.5" fill="#5fb4a6" stroke="#04201d" stroke-width="1.5"/>
-          </g>
-        </svg>
+        ${labPipe()}
         <p class="lab-pipe-cap">600 mm pipe. Area velocity meter at the invert; dashed lines are the alarm levels.</p>
         <div class="readouts">
           <div class="readout"><b id="lab-q">0</b><span>Flow <i>L/s</i></span></div>
@@ -717,28 +738,78 @@ const labSection = ({ eyebrow = "", title = "See what a storm does to a sewer.",
   </div>
 </section>`;
 
+// The LIDoTT Alarm demo: a manhole in section, drawn with the E-Flow 3 kit
+// on the deep teal. The alarm hangs under the cover on its bracket and its
+// radar looks down the shaft at the water; the sewer runs through the
+// benched chamber at the bottom. widgets.js shares this geometry (LID): the
+// radar face is 4 m above the invert, and the level moves the water, the
+// beam and its wavefronts, the footprint and the range dimension.
+const LID = { w: 480, h: 400, ground: 36, crown: 316, inv: 368, wall: 10, shaft: [165, 315], cx: 240, face: 133, depth: 4 };
+function lidottSvg() {
+  const p = "lid", { w, h, ground, crown, inv, wall, cx, face, depth } = LID, [s0, s1] = LID.shaft;
+  const yOf = (m) => inv - (m / depth) * (inv - face);
+  const corners = [[6, 6, 1, 1], [w - 6, 6, -1, 1], [6, h - 6, 1, -1], [w - 6, h - 6, -1, -1]].map(([x, y, sx, sy]) => `M${x} ${y + 14 * sy}V${y}H${x + 14 * sx}`).join("");
+  // an alarm level: a dashed line across the shaft, out to a pill tag that
+  // sits against the right edge (it grows leftwards on a phone)
+  const level = (m, cls, text, width) => `<path class="lid-level ${cls}" d="M${s0} ${f1(yOf(m))}H${w - 12 - width - 2}"/><g transform="translate(${w - 12 - width} ${f1(yOf(m))})"><g class="lid-tag ${cls}"><rect x="0" y="-9.5" width="${width}" height="19" rx="9.5"/><circle cx="10" cy="0" r="3"/><text x="18" y="4">${text}</text></g></g>`;
+  const defs = `${efDefs(p, { dark: true })}
+    <linearGradient id="${p}-wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="ef-w0"/><stop offset=".18" class="ef-w1"/><stop offset="1" class="ef-w2"/></linearGradient>
+    <linearGradient id="${p}-red" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#e5584c"/><stop offset=".4" stop-color="#c8352b"/><stop offset="1" stop-color="#a32a22"/></linearGradient>
+    <radialGradient id="${p}-bg" gradientUnits="userSpaceOnUse" cx="${cx}" cy="${face}" r="${inv - face}"><stop offset="0" class="ef-g0 r"/><stop offset="1" class="ef-g1 r"/></radialGradient>
+    <pattern id="${p}-grid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0H0V20" class="ef-gridline"/></pattern>
+    <clipPath id="${p}-clip"><path d="M${s0} ${ground}H${s1}V${crown}H${w}V${inv}H0V${crown}H${s0}Z"/></clipPath>
+    <clipPath id="${p}-bclip"><rect id="lid-bclip-r" x="0" y="${crown}" width="${w}" height="${inv - crown}"/></clipPath>`;
+  const y0 = f1(yOf(1.1));
+  // the ground: road and soil, the shaft and the sewer cut and hatched, the
+  // benching behind the channel, cover and frame, step irons
+  const section = `
+    <rect x="0" y="${ground}" width="${w}" height="${h - ground}" fill="url(#${p}-soil)"/>
+    <rect class="ef-road" x="0" y="${ground - 5}" width="${w}" height="5"/>
+    <rect x="0" y="${crown}" width="${w}" height="${inv - crown}" fill="url(#${p}-air)"/>
+    <rect x="${s0}" y="${ground}" width="${s1 - s0}" height="${crown - ground}" fill="url(#${p}-air)"/>
+    <rect class="lid-bench" x="${s0}" y="${crown}" width="${s1 - s0}" height="${inv - crown}" fill="url(#${p}-cut)"/>
+    <path class="lid-bench-edge" d="M${s0} ${crown + 0.5}H${s1}"/>
+    <rect id="lid-water" x="0" y="${y0}" width="${w}" height="${f1(inv - y0)}" fill="url(#${p}-wg)" clip-path="url(#${p}-clip)"/>
+    <g clip-path="url(#${p}-bclip)" class="ef-bits">${[[30, 340, 0], [140, 356, -2.6], [90, 326, -4.4], [400, 348, -1.3], [250, 334, -5.6], [330, 360, -3.2]].map(([x, y, d]) => `<circle cx="${x}" cy="${y}" r="2" style="--d:${d}s"/>`).join("")}</g>
+    <path id="lid-surf-g" class="ef-surf-g" d="M0 ${y0}H${w}"/><path id="lid-surf" class="ef-surf" d="M0 ${y0}H${w}"/>
+    <path fill="url(#${p}-cut)" d="M0 ${crown - wall}H${s0 - wall}V${ground}H${s0}V${crown}H0ZM${s1} ${ground}H${s1 + wall}V${crown - wall}H${w}V${crown}H${s1}ZM0 ${inv}H${w}V${inv + wall}H0Z"/>
+    <path class="ef-edge" d="M0 ${crown}H${s0}V${ground}M${s1} ${ground}V${crown}H${w}M0 ${inv}H${w}M0 ${crown - wall}H${s0 - wall}V${ground}M${s1 + wall} ${ground}V${crown - wall}H${w}M0 ${inv + wall}H${w}"/>
+    <rect class="ef-frame" x="${s0 - wall - 5}" y="${ground - 8}" width="${s1 - s0 + 2 * wall + 10}" height="4" rx="1"/>
+    <rect class="ef-lid" x="${s0 - 1}" y="${ground - 9.5}" width="${s1 - s0 + 2}" height="3.6" rx="1"/>
+    ${Array.from({ length: 16 }, (_, k) => ground + 30 + 16 * k).filter((y) => y < crown - 8).map((y) => `<path class="ef-step" d="M${s1} ${y}h-7v5h7"/>`).join("")}`;
+  // the alarm itself, after its photograph: the rail across the shaft, the
+  // clamp and strap, the red body with its label, the LED and the radar face
+  const device = `
+    <g class="lid-device">
+      <rect class="lid-rail" x="${s0}" y="46" width="${s1 - s0}" height="8" rx="1" fill="url(#${p}-steel)"/>
+      <rect class="lid-clamp" x="229" y="42" width="22" height="16" rx="2"/>
+      <circle class="ef-bolt" cx="234.5" cy="50" r="1.3"/><circle class="ef-bolt" cx="245.5" cy="50" r="1.3"/>
+      <path class="lid-strap" d="M235 58H245V65.5Q245 68.5 242 68.5H238Q235 68.5 235 65.5Z"/>
+      <path class="lid-body" fill="url(#${p}-red)" d="M228 68H252Q258 68 258.6 74L262 123Q262.4 130 255 130H225Q217.6 130 218 123L221.4 74Q222 68 228 68Z"/>
+      <path class="ef-shine" d="M225.6 76L223.2 118"/>
+      <rect class="ef-label" x="231" y="80" width="18" height="30" rx="1.5"/>
+      <rect class="ef-mark" x="231" y="80" width="2.6" height="30" rx="1"/>
+      <path class="ef-print" d="M236.2 85.5h9M236.2 89.5h10.5M236.2 93.5h6.5M236.2 100.5h10.5M236.2 104.5h8"/>
+      <circle class="lid-led-g" cx="240" cy="120" r="5.5"/><circle class="lid-led" cx="240" cy="120" r="2.6"/>
+      <ellipse class="lid-face" cx="240" cy="130.4" rx="13" ry="3" fill="url(#${p}-dome)"/>
+      <ellipse class="ef-glint" cx="235" cy="129.6" rx="2.2" ry=".7"/>
+    </g>`;
+  const inner = `
+    <rect width="${w}" height="${h}" fill="url(#${p}-grid)"/>
+    ${level(2, "h", "High 2.0 m", 84)}${level(3, "hh", "High-high 3.0 m", 116)}
+    <g class="lid-radar"><path id="lid-beam" class="ef-beam r" fill="url(#${p}-bg)"/><g class="ef-waves" id="lid-waves">${[0, 1, 2, 3].map((k) => `<path class="ef-wave r" style="--d:${(k * 0.3).toFixed(1)}s"/>`).join("")}</g><path id="lid-foot" class="ef-foot r"/></g>
+    <g class="lid-range"><path id="lid-ext" class="lid-ext"/><path id="lid-dim" class="lid-dim"/><text id="lid-dim-t" class="lid-dim-t" x="106" y="${f1((face + y0) / 2 - 3)}" text-anchor="end"><tspan id="lid-dim-v">2.90 m</tspan><tspan class="lid-dim-l" x="106" dy="1.3em">radar range</tspan></text></g>
+    ${device}
+    <g class="lid-txt"><text x="12" y="24">Ground</text><text x="${s1 + wall + 10}" y="78">LIDoTT Alarm</text><text x="12" y="${crown + 31}">Sewer</text></g>
+    <text class="lid-flow-l" x="${w - 42}" y="${crown + 31}" text-anchor="end">Flow</text><path class="lid-arrow" d="M${w - 34} ${crown + 27}h20m-5-3.6 5 3.6-5 3.6"/>
+    <path class="ef-hud" d="${corners}"/>`;
+  return `<svg id="lidott-svg" class="ef-dark" viewBox="0 0 ${w} ${h}" data-level="0" role="img" aria-label="A manhole in section, with a LIDoTT Alarm hung under the cover on its bracket and its radar beam measuring down the shaft to the water. Dashed lines mark the high and high-high alarm levels, and the radar range is dimensioned beside the shaft. The water level can be dragged from the sewer at the bottom up the shaft."><defs>${defs}</defs>${section}${inner}</svg>`;
+}
 const lidottDemo = ({ link = "" } = {}) => `
 <div class="demo" data-reveal>
   <div class="panel">
     <div class="panel-head"><div class="panel-title">${icon("radar", false)} Drag the water level</div></div>
-    <svg id="lidott-svg" viewBox="0 0 360 420" data-level="0" role="img" aria-label="Cross-section of a manhole with a LIDoTT Alarm measuring the water level by radar">
-      <defs><linearGradient id="lid-wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5fb4a6" stop-opacity=".8"/><stop offset="1" stop-color="#0d7c72"/></linearGradient></defs>
-      <rect x="0" y="40" width="360" height="380" fill="#0b302d"/>
-      <rect x="0" y="34" width="360" height="8" fill="#14605a"/>
-      <rect x="100" y="42" width="160" height="340" fill="#020c0b"/>
-      <rect x="0" y="330" width="100" height="50" fill="#020c0b"/><rect x="260" y="330" width="100" height="50" fill="#020c0b"/>
-      <rect id="lid-water" x="0" y="300" width="360" height="80" fill="url(#lid-wg)" clip-path="url(#lid-clip)"/>
-      <clipPath id="lid-clip"><rect x="100" y="42" width="160" height="340"/><rect x="0" y="330" width="100" height="50"/><rect x="260" y="330" width="100" height="50"/></clipPath>
-      <polygon id="lid-beam" points="180,96 170,300 190,300" fill="rgba(95,180,166,.22)" stroke="rgba(95,180,166,.7)" stroke-dasharray="3 4"/>
-      <line x1="100" x2="260" y1="225" y2="225" stroke="#f59e0b" stroke-dasharray="5 5"/><text x="268" y="229" fill="#f59e0b" font-size="12" font-weight="500">High 2.0 m</text>
-      <line x1="100" x2="260" y1="147.500" y2="147.500" stroke="#ef4444" stroke-dasharray="5 5"/><text x="268" y="151" fill="#f87171" font-size="12" font-weight="500">High-high 3.0 m</text>
-      <rect x="92" y="28" width="176" height="12" rx="3" fill="#2e4543" stroke="rgba(255,255,255,.3)"/>
-      <rect x="168" y="42" width="24" height="10" fill="#8fa3c0"/>
-      <rect x="160" y="52" width="40" height="44" rx="8" fill="#e8f3f1" stroke="#5fb4a6" stroke-width="2"/>
-      <circle class="lid-led" cx="180" cy="68" r="5" fill="#22c55e"/>
-      <line id="lid-dim" x1="118" x2="118" y1="96" y2="300" stroke="rgba(255,255,255,.45)" stroke-dasharray="2 4"/>
-      <text x="16" y="24" fill="rgba(255,255,255,.6)" font-size="11">Ground level</text>
-    </svg>
+    ${lidottSvg()}
     <label class="range" style="margin-top:12px"><span>Water level <output><span id="lid-level">1.10</span> m</output></span><input id="lidott-level" aria-label="Water level" type="range" min="0.2" max="3.8" step="0.01" value="1.1"></label>
   </div>
   <div class="panel">
@@ -754,24 +825,56 @@ const lidottDemo = ({ link = "" } = {}) => `
   </div>
 </div>`;
 
+// The EDS Asset Score as a precision gauge on an instrument screen: a 180°
+// track with fine ticks, the three alarm zones as thin arcs over a soft
+// glow, a slender needle on a hub, the score in EDS Display and the last
+// hour as a sparkline in a sub-panel. widgets.js rotates #eas-needle about
+// (200, 200) and plots #eas-spark in a 180 x 40 box at (110, 260): both sit
+// in groups that carry them to where this drawing wants them.
 function easDemo() {
-  const arc = (a, b, colour) => {
-    const pt = (s) => { const t = Math.PI + (s / 1000) * Math.PI; return `${(200 + 150 * Math.cos(t)).toFixed(1)} ${(200 + 150 * Math.sin(t)).toFixed(1)}`; };
-    return `<path d="M${pt(a)}A150 150 0 0 1 ${pt(b)}" fill="none" stroke="${colour}" stroke-width="18" stroke-linecap="butt"/>`;
-  };
-  const ticks = [0, 250, 500, 750, 1000].map((s) => { const t = Math.PI + (s / 1000) * Math.PI; return `<text x="${(200 + 178 * Math.cos(t)).toFixed(1)}" y="${(204 + 178 * Math.sin(t)).toFixed(1)}" text-anchor="middle" fill="rgba(255,255,255,.55)" font-size="11">${s}</text>`; }).join("");
+  const W = 400, H = 340, CX = 200, CY = 158, R = 120;
+  const f1 = (n) => n.toFixed(1);
+  const pt = (s, r) => { const t = Math.PI + (s / 1000) * Math.PI; return [CX + r * Math.cos(t), CY + r * Math.sin(t)]; };
+  const arc = (a, b, r) => { const [x1, y1] = pt(a, r), [x2, y2] = pt(b, r); return `M${f1(x1)} ${f1(y1)}A${r} ${r} 0 ${b - a > 500 ? 1 : 0} 1 ${f1(x2)} ${f1(y2)}`; };
+  const zones = [[0, 400, "#f87171"], [400, 700, "#f6a04d"], [700, 1000, "#4ade80"]];
+  const zoneArcs = (w, op) => zones.map(([a, b, c], i) => `<path d="${arc(a + (i ? 6 : 0), b - (i < 2 ? 6 : 0), R)}" stroke="${c}" stroke-width="${w}" stroke-opacity="${op}"/>`).join("");
+  let ticks = "";
+  for (let s = 0; s <= 1000; s += 25) {
+    const major = s % 250 === 0;
+    const [x1, y1] = pt(s, R - 9), [x2, y2] = pt(s, major ? R - 21 : R - 14);
+    ticks += `<path class="eas-tick${major ? " major" : ""}" d="M${f1(x1)} ${f1(y1)}L${f1(x2)} ${f1(y2)}"/>`;
+  }
+  const nums = [0, 250, 500, 750, 1000].map((s) => { const [x, y] = pt(s, R - 40); return `<text class="eas-mono eas-scale" x="${f1(x)}" y="${f1(y + 4)}" text-anchor="middle">${s}</text>`; }).join("");
+  const corners = [[6, 6, 1, 1], [W - 6, 6, -1, 1], [6, H - 6, 1, -1], [W - 6, H - 6, -1, -1]].map(([x, y, sx, sy]) => `M${x} ${y + 14 * sy}V${y}H${x + 14 * sx}`).join("");
+  // the sub-panel: the hour's sparkline, scaled from where widgets.js plots it
+  const SP = { x: 40, y: 258, w: 320, h: 54 };
+  const sx = SP.w / 180, sy = SP.h / 40;
+  const sparkT = `translate(${f1(SP.x - 110 * sx)} ${f1(SP.y - 260 * sy)}) scale(${sx.toFixed(4)} ${sy.toFixed(4)})`;
+  const grid = `M${SP.x} ${SP.y}H${SP.x + SP.w}M${SP.x} ${SP.y + SP.h / 2}H${SP.x + SP.w}M${SP.x} ${SP.y + SP.h}H${SP.x + SP.w}${[1, 2, 3].map((k) => `M${SP.x + (SP.w / 4) * k} ${SP.y}V${SP.y + SP.h}`).join("")}`;
   return `
 <div class="demo" data-reveal>
   <div class="panel">
     <div class="panel-head"><div class="panel-title">${icon("gauge", false)} EDS Asset Score</div></div>
-    <svg id="eas-svg" viewBox="0 0 400 320" role="img" aria-label="Dial showing an asset score from 0 to 1000">
-      ${arc(0, 396, "#ef4444")}${arc(404, 696, "#f59e0b")}${arc(704, 1000, "#22c55e")}
-      ${ticks}
-      <line id="eas-needle" x1="200" y1="200" x2="200" y2="78" stroke="#fff" stroke-width="4" stroke-linecap="round" style="transition:transform .25s linear"/>
-      <circle cx="200" cy="200" r="9" fill="#fff"/>
-      <text id="eas-num" x="200" y="250" text-anchor="middle" fill="#fff" font-size="40" font-weight="560" font-family="'EDS Display', sans-serif">930</text>
-      <polyline id="eas-spark" fill="none" stroke="#5fb4a6" stroke-width="2" stroke-linejoin="round"/>
-      <text x="200" y="314" text-anchor="middle" fill="rgba(255,255,255,.5)" font-size="10">last 60 minutes</text>
+    <svg id="eas-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="An instrument dial showing the EDS Asset Score from 0 to 1000, with red, amber and green zones on its scale, the score as a number, and the last 60 minutes of the score as a line beneath">
+      <defs>
+        <radialGradient id="eas-plate" gradientUnits="userSpaceOnUse" cx="330" cy="0" r="460"><stop offset="0" stop-color="#105049"/><stop offset=".55" stop-color="#08312e"/><stop offset="1" stop-color="#052523"/></radialGradient>
+        <pattern id="eas-grid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0H0V20" class="ef-gridline"/></pattern>
+      </defs>
+      <rect width="${W}" height="${H}" rx="14" fill="url(#eas-plate)"/><rect width="${W}" height="${H}" rx="14" fill="url(#eas-grid)"/>
+      <path class="eas-bezel" d="${arc(0, 1000, R + 11)}"/>
+      <path class="eas-track" d="${arc(0, 1000, R)}"/>
+      <g class="eas-zone">${zoneArcs(16, .16)}${zoneArcs(4, 1)}</g>
+      ${ticks}${nums}
+      <g transform="translate(0 ${CY - 200})"><g id="eas-needle"><path class="eas-needle-g" d="M200 88L203.4 200L200 218L196.6 200Z"/><path class="eas-needle" d="M200 88L203.4 200L200 218L196.6 200Z"/></g></g>
+      <circle class="eas-hub-ring" cx="${CX}" cy="${CY}" r="15"/><circle class="eas-hub" cx="${CX}" cy="${CY}" r="10.5"/><circle class="eas-hub-core" cx="${CX}" cy="${CY}" r="4.5"/>
+      <text id="eas-num" x="218" y="214" text-anchor="end">930</text><text class="eas-mono eas-of" x="225" y="214">/ 1000</text>
+      <rect class="eas-sub" x="24" y="232" width="352" height="96" rx="8"/>
+      <text class="eas-sub-h" x="36" y="249">Last 60 minutes</text>
+      <circle class="eas-live" cx="357" cy="245.5" r="3"/><text class="eas-mono eas-small" x="350" y="249" text-anchor="end">Live</text>
+      <path class="eas-sub-grid" d="${grid}"/>
+      <g transform="${sparkT}" fill="none" stroke-linejoin="round" stroke-linecap="round"><use href="#eas-spark" stroke="#9fe7da" stroke-width="7" stroke-opacity=".2"/><g stroke="#9fe7da" stroke-width="2"><polyline id="eas-spark" vector-effect="non-scaling-stroke"/></g></g>
+      <g class="eas-mono eas-small"><text x="${SP.x}" y="323">-60 min</text><text x="${SP.x + SP.w / 2}" y="323" text-anchor="middle">-30</text><text x="${SP.x + SP.w}" y="323" text-anchor="end">now</text></g>
+      <path class="ef-hud" d="${corners}"/>
     </svg>
   </div>
   <div class="panel">
@@ -788,36 +891,147 @@ function easDemo() {
 </div>`;
 }
 
-// Four small drawings of FlowSense screens. They are illustrations, labelled
-// as such, drawn in the platform's own light theme.
+// Four drawings of FlowSense screens, one to a tab: an I/I heat map over a
+// street basemap, the Blockage Watch chart, the Pump Station Manager's wet
+// well in section and the alarm list. Illustrations in the platform's own
+// light theme, labelled as such; the `fine` text goes at phone widths and
+// the `fs-lbl` text grows there (site.css).
 function fsScreen() {
-  const pipe = (d, c, w = 5) => `<path d="${d}" fill="none" stroke="${c}" stroke-width="${w}" stroke-linecap="round"/><path d="${d}" fill="none" stroke="#fff" stroke-width="1.6" stroke-dasharray="2 12" stroke-linecap="round" class="fs-dash"/>`;
-  const heat = `<svg viewBox="0 0 480 270" preserveAspectRatio="xMidYMid slice">
-    <rect width="480" height="270" fill="#eef2f6"/>
-    <g stroke="#dfe5ec" stroke-width="10" fill="none"><path d="M0 60H480M0 150H480M0 230H480M90 0V270M230 0V270M370 0V270"/></g>
-    ${pipe("M40 60H230", "#3b82f6")}${pipe("M230 60H440", "#eab308")}${pipe("M90 60V150", "#3b82f6")}${pipe("M230 60V150", "#f97316", 6)}${pipe("M370 60V150", "#eab308")}
-    ${pipe("M40 150H230", "#eab308")}${pipe("M230 150H440", "#ef4444", 7)}${pipe("M230 150V230", "#ef4444", 7)}${pipe("M90 230H230", "#f97316", 6)}${pipe("M230 230H420", "#3b82f6")}
-    <g fill="#fff" stroke="#0c5f59" stroke-width="2"><circle cx="230" cy="60" r="5"/><circle cx="230" cy="150" r="5"/><circle cx="90" cy="150" r="5"/><circle cx="370" cy="150" r="5"/><circle cx="230" cy="230" r="5"/></g>
-    <g class="fine" font-size="10" font-family="'EDS Text', 'Helvetica Neue', sans-serif" fill="#2e4543"><rect x="330" y="186" width="136" height="72" rx="8" fill="#fff" stroke="#dfe5ec"/><text x="342" y="204" font-weight="500">I/I severity</text>
-    <rect x="342" y="212" width="14" height="6" rx="3" fill="#3b82f6"/><text x="362" y="218">Low</text><rect x="402" y="212" width="14" height="6" rx="3" fill="#eab308"/><text x="422" y="218">Moderate</text>
-    <rect x="342" y="232" width="14" height="6" rx="3" fill="#f97316"/><text x="362" y="238">High</text><rect x="402" y="232" width="14" height="6" rx="3" fill="#ef4444"/><text x="422" y="238">Severe</text></g></svg>`;
-  const blockage = `<svg viewBox="0 0 480 270" preserveAspectRatio="xMidYMid meet">
-    <g stroke="#eef2f6"><path d="M40 50H460M40 100H460M40 150H460M40 200H460"/></g>
-    <path class="fs-draw" pathLength="100" d="M40 190 C90 186 120 188 160 180 S230 168 270 150 S350 110 390 86 S440 62 460 54" fill="none" stroke="#dc2626" stroke-width="3" stroke-linecap="round"/>
-    <path class="fs-draw" pathLength="100" d="M40 120 C80 114 110 126 150 120 S220 114 260 122 S340 116 380 121 S440 118 460 120" fill="none" stroke="#0d7c72" stroke-width="3" stroke-linecap="round"/>
-    <g font-size="11" font-family="'EDS Text', 'Helvetica Neue', sans-serif"><text x="46" y="210" fill="#b91c1c" font-weight="500">Depth, creeping upward</text><text x="46" y="108" fill="#095f57" font-weight="500">Flow, unchanged</text>
-    <rect x="296" y="22" width="164" height="26" rx="13" fill="#fef2f2" stroke="#fecaca"/><text x="310" y="39" fill="#b91c1c" font-weight="500">Likely obstruction building</text></g></svg>`;
-  const psm = `<svg viewBox="0 0 480 270" preserveAspectRatio="xMidYMid meet">
-    <rect x="150" y="30" width="180" height="210" rx="6" fill="#f4f7fa" stroke="#c8d2dc" stroke-width="2"/>
-    <rect class="fs-well" x="152" y="130" width="176" height="108" fill="#5cc2b6" opacity=".85"/>
-    <g font-size="10" font-family="'EDS Text', 'Helvetica Neue', sans-serif" stroke-dasharray="5 4">
-      <path d="M130 60H350" stroke="#dc2626"/><path d="M130 92H350" stroke="#d97706"/><path d="M130 130H350" stroke="#0d7c72"/><path d="M130 200H350" stroke="#4e6361"/></g>
-    <g class="fine" font-size="10.5" font-family="'EDS Text', 'Helvetica Neue', sans-serif" fill="#2e4543"><text x="358" y="63">Overflow</text><text x="358" y="95">Surcharge</text><text x="358" y="133">Pump start</text><text x="358" y="203">Pump stop</text></g>
-    <g transform="translate(46 118) scale(2.4)" fill="none" stroke="#0c5f59" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g class="fs-fan">${iconCache.get("fan") || ""}</g></g>
-    <text class="fine" x="34" y="200" font-size="10.5" font-family="'EDS Text', 'Helvetica Neue', sans-serif" fill="#2e4543" font-weight="500">Pump 1 running</text></svg>`;
-  const alarms = `<svg viewBox="0 0 480 270" preserveAspectRatio="xMidYMid meet">
-    ${[["#dc2626", "#fef2f2", "High-high level", "Site 07 · 2 min ago · SMS sent to duty officer", 26], ["#d97706", "#fffbeb", "Blockage Watch: depth drifting", "Site 14 · dry weather only · ranked 1 of 38", 104], ["#16a34a", "#f0fdf4", "Returned to normal", "Site 22 · acknowledged by the duty officer", 182]]
-      .map(([c, bg, t, s, y], i) => `<g class="fs-toast" style="--i:${i}"><rect x="30" y="${y}" width="420" height="62" rx="12" fill="${bg}" stroke="${c}" stroke-opacity=".35"/><circle cx="60" cy="${y + 31}" r="9" fill="${c}"/><text x="84" y="${y + 27}" font-size="13" font-weight="650" font-family="'EDS Text', 'Helvetica Neue', sans-serif" fill="#0f2b2a">${t}</text><text class="fine" x="84" y="${y + 45}" font-size="10.5" font-family="'EDS Text', 'Helvetica Neue', sans-serif" fill="#4e6361">${s}</text></g>`).join("")}</svg>`;
+  // a Lucide glyph at s px, from the cache icon() fills
+  const glyph = (name, x, y, s, stroke) => { icon(name, false); return `<g transform="translate(${x} ${y}) scale(${(s / 24).toFixed(3)})" fill="none" stroke="${stroke}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${iconCache.get(name)}</g>`; };
+  const SEV = { low: "#3b82f6", mod: "#eab308", high: "#f97316", severe: "#ef4444" };
+  const INK = "#0f2b2a", INK2 = "#2e4543", MUTED = "#4e6361", LINE = "#d5dde5";
+
+  // 1. I/I heat map: a catchment's sewers along its streets, each pipe
+  // coloured by severity and flowing toward the trunk, one pipe hovered.
+  const heat = (() => {
+    const X = [50, 150, 250, 350, 450], Y = [50, 125, 200, 255];
+    const xs = [-40, ...X, 520], ys = [-40, ...Y, 310];
+    let blocks = "";
+    for (let i = 0; i < xs.length - 1; i++) for (let j = 0; j < ys.length - 1; j++) {
+      const park = i === 4 && j === 2;
+      blocks += `<rect x="${xs[i] + 6}" y="${ys[j] + 6}" width="${xs[i + 1] - xs[i] - 12}" height="${ys[j + 1] - ys[j] - 12}" rx="4" fill="${park ? "#dbe9d8" : "#e6ecf1"}"/>`;
+    }
+    // [path in the direction of flow, severity, width]
+    const pipes = [
+      ["M-10 200H50", "low"], ["M50 200H150", "low"], ["M150 200H250", "mod"], ["M250 200H350", "severe", 6.5], ["M350 200H450", "high", 6.5], ["M450 200H490", "mod", 6.5],
+      ["M150 50V125", "low"], ["M150 125V200", "mod"], ["M250 50V125", "low"], ["M250 125V200", "high"],
+      ["M350 50V125", "high"], ["M350 125V200", "severe", 5.5], ["M450 125V200", "mod"],
+      ["M50 125H150", "low"], ["M250 255V200", "low"], ["M350 255V200", "high"],
+    ];
+    const mh = [[50, 200], [150, 200], [250, 200], [350, 200], [450, 200], [150, 50], [150, 125], [250, 50], [250, 125], [350, 50], [350, 125], [450, 125], [50, 125], [250, 255], [350, 255]];
+    return `<svg viewBox="0 0 480 270" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <rect width="480" height="270" fill="#f7f9fb"/>${blocks}
+    <path d="M350 125V200" fill="none" stroke="${SEV.severe}" stroke-opacity=".2" stroke-width="18" stroke-linecap="round"/>
+    <g fill="none" stroke="#fff" stroke-linecap="round">${pipes.map(([d, , w = 5]) => `<path d="${d}" stroke-width="${w + 3}"/>`).join("")}</g>
+    <g fill="none" stroke-linecap="round">${pipes.map(([d, s, w = 5]) => `<path d="${d}" stroke="${SEV[s]}" stroke-width="${w}"/>`).join("")}</g>
+    <g fill="none" stroke="#fff" stroke-width="1.5" stroke-dasharray="2 10" stroke-linecap="round" stroke-opacity=".9">${pipes.map(([d]) => `<path class="fs-dash" d="${d}"/>`).join("")}</g>
+    <g fill="#fff" stroke="#0c5f59" stroke-width="1.8">${mh.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="4"/>`).join("")}</g>
+    <circle cx="350" cy="162" r="5" fill="${SEV.severe}" stroke="#fff" stroke-width="2"/>
+    <g class="fine"><path d="M362 162l-7 -4.5v9z" fill="${INK}"/><rect x="361" y="140" width="94" height="44" rx="7" fill="${INK}"/><text x="372" y="157" font-size="10.5" font-weight="600" fill="#fff">SW-2214</text><text x="372" y="173" font-size="10" fill="rgba(255,255,255,.78)">Severe · 18.4 L/s</text></g>
+    <g class="fine"><rect x="14" y="14" width="130" height="50" rx="7" fill="#fff" stroke="${LINE}"/><text x="24" y="30" font-size="10" font-weight="600" fill="${INK}">I/I severity</text>
+      <g stroke-width="4" stroke-linecap="round" fill="none"><path d="M24 43h12" stroke="${SEV.low}"/><path d="M80 43h12" stroke="${SEV.mod}"/><path d="M24 56h12" stroke="${SEV.high}"/><path d="M80 56h12" stroke="${SEV.severe}"/></g>
+      <g font-size="10" fill="${INK2}"><text x="42" y="46.5">Low</text><text x="98" y="46.5">Moderate</text><text x="42" y="59.5">High</text><text x="98" y="59.5">Severe</text></g></g>
+    <g><rect x="446" y="12" width="22" height="44" rx="6" fill="#fff" stroke="${LINE}"/><path d="M446 34h22" stroke="${LINE}"/><path d="M452 23h10M457 18v10M452 45h10" fill="none" stroke="${INK2}" stroke-width="1.6" stroke-linecap="round"/></g>
+    <g class="fine" stroke="${INK2}" stroke-width="1.2" stroke-linecap="round"><path d="M404 254h56M404 250v8M460 250v8"/><text x="432" y="246" font-size="9" text-anchor="middle" fill="${INK2}" stroke="none">100 m</text></g>
+  </svg>`;
+  })();
+
+  // 2. Blockage Watch: depth creeping up over a fortnight of dry days while
+  // the flow holds, the two wet days set aside, and the drift called.
+  const blockage = (() => {
+    const x0 = 46, x1 = 460, y0 = 44, y1 = 222, dw = (x1 - x0) / 14;
+    const cx = (i) => x0 + dw * i + dw / 2;
+    const mm = [104, 106, 109, null, 114, 118, 124, 131, 139, null, 154, 165, 177, 190];
+    const ls = [16.2, 15.8, 16.5, null, 16.0, 15.6, 16.3, 15.9, 16.1, null, 16.4, 15.7, 16.0, 16.2];
+    const yd = (v) => y1 - (v / 400) * (y1 - y0), yq = (v) => y1 - (v / 40) * (y1 - y0);
+    const line = (v, f) => v.map((d, i) => d == null ? "" : `${i === 0 || v[i - 1] == null ? "M" : "L"}${cx(i).toFixed(1)} ${f(d).toFixed(1)}`).join("");
+    const dots = (v, f, c) => v.map((d, i) => d == null ? "" : `<circle cx="${cx(i).toFixed(1)}" cy="${f(d).toFixed(1)}" r="2.2" fill="${c}"/>`).join("");
+    const days = "MTWTFSSMTWTFSS".split("");
+    const px = cx(10);
+    return `<svg viewBox="0 0 480 270" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+    <rect x="${x0}" y="${y0}" width="${x1 - x0}" height="${y1 - y0}" fill="#0d7c72" fill-opacity=".045"/>
+    <g fill="#eef1f4">${[3, 9].map((i) => `<rect x="${(x0 + dw * i).toFixed(1)}" y="${y0}" width="${dw.toFixed(1)}" height="${y1 - y0}"/>`).join("")}</g>
+    <g class="fine">${[3, 9].map((i) => glyph("cloud-rain", cx(i) - 6, y1 - 19, 12, "#8a9a99")).join("")}</g>
+    <g fill="none" stroke="${LINE}" stroke-width="1">${[1, 2, 3, 4].map((k) => `<path d="M${x0} ${(y1 - (k / 4) * (y1 - y0)).toFixed(1)}H${x1}"/>`).join("")}</g>
+    <path d="M${x0} ${y0}V${y1}H${x1}" fill="none" stroke="#b7c3c1" stroke-width="1"/>
+    <g class="fine mono" font-size="9">${[0, 1, 2, 3, 4].map((k) => `<text x="${x0 - 6}" y="${(y1 - (k / 4) * (y1 - y0) + 3).toFixed(1)}" text-anchor="end" fill="#b91c1c" fill-opacity=".75">${k * 100}</text><text x="${x1 + 5}" y="${(y1 - (k / 4) * (y1 - y0) + 3).toFixed(1)}" fill="#095f57" fill-opacity=".8">${k * 10}</text>`).join("")}
+      <text x="${x0 - 6}" y="${y0 - 8}" text-anchor="end" fill="#b91c1c" fill-opacity=".75">mm</text><text x="${x1 + 5}" y="${y0 - 8}" fill="#095f57" fill-opacity=".8">L/s</text>
+      ${days.map((d, i) => `<text x="${cx(i).toFixed(1)}" y="${y1 + 14}" text-anchor="middle" fill="${MUTED}">${d}</text>`).join("")}</g>
+    <text class="fine" x="${x0 + 8}" y="${y0 + 15}" font-size="9.5" font-weight="600" fill="#0d7c72">Dry days only</text>
+    <path d="M${px.toFixed(1)} ${y0}V${y1}" fill="none" stroke="#dc2626" stroke-opacity=".55" stroke-width="1" stroke-dasharray="3 3"/>
+    <path class="fs-draw" pathLength="100" d="${line(ls, yq)}" fill="none" stroke="#0d7c72" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path class="fs-draw" pathLength="100" d="${line(mm, yd)}" fill="none" stroke="#dc2626" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+    ${dots(ls, yq, "#0d7c72")}${dots(mm, yd, "#dc2626")}
+    <circle cx="${px.toFixed(1)}" cy="${yd(154).toFixed(1)}" r="5" fill="#fff" stroke="#dc2626" stroke-width="2.2"/>
+    <text class="fs-lbl" x="${(px - 9).toFixed(1)}" y="66" font-size="10.5" font-weight="600" fill="#b91c1c" text-anchor="end">Drift detected</text>
+    <text class="fine" x="${(px - 9).toFixed(1)}" y="80" font-size="9.5" fill="${MUTED}" text-anchor="end">+50 mm, flow unchanged</text>
+    <text class="fs-lbl" x="${x0 + 8}" y="196" font-size="11" font-weight="500" fill="#b91c1c">Depth, creeping upward</text>
+    <text class="fs-lbl" x="${x1 - 4}" y="178" font-size="11" font-weight="500" fill="#095f57" text-anchor="end">Flow, unchanged</text>
+    <g class="fine"><rect x="300" y="8" width="160" height="26" rx="13" fill="#fef2f2" stroke="#fecaca"/><circle cx="315" cy="21" r="4" fill="#dc2626"/><text x="325" y="25" font-size="10.5" font-weight="600" fill="#b91c1c">Likely obstruction building</text></g>
+  </svg>`;
+  })();
+
+  // 3. Pump Station Manager: the wet well in section with its four levels,
+  // the level moving between pump start and stop, two submersibles with
+  // the duty one running, and the station's status beside it.
+  const psm = (() => {
+    const L = 176, Rr = 326, top = 46, floor = 246, wall = 10;
+    const lv = [["Overflow", 68, "#dc2626"], ["Surcharge", 98, "#d97706"], ["Pump start", 132, "#0d7c72"], ["Pump stop", 194, "#6b7f7d"]];
+    const pump = (x, run) => `${run ? `<rect class="fs-run" x="${x - 15}" y="193" width="30" height="55" rx="9" fill="none" stroke="#4ade80" stroke-width="10"/>` : ""}
+      <rect x="${x - 17}" y="232" width="34" height="14" rx="3" fill="#44605c"/>
+      <rect x="${x - 11}" y="198" width="22" height="36" rx="4" fill="url(#fs-steel)" stroke="#7d8f8d" stroke-width="1"/>
+      <path d="M${x - 11} 207h22M${x - 11} 213h22M${x - 11} 219h22" stroke="#aebcba" stroke-width="1"/>
+      <rect x="${x - 7}" y="193" width="14" height="6" rx="2" fill="#2b3533"/>
+      <circle cx="${x}" cy="227" r="2.2" fill="${run ? "#22c55e" : "#aebcba"}"/>`;
+    const tiles = [["Pump 1", "Running", "#16a34a"], ["Pump 2", "Standby", "#aebcba"], ["Inflow", "42.6 L/s", "#0d7c72"]];
+    return `<svg viewBox="0 0 480 270" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+    <defs>
+      <pattern id="fs-cut" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="#e6ebea"/><path d="M0 0V6" stroke="#b4c2c0" stroke-width="1.1"/></pattern>
+      <linearGradient id="fs-air" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eaf1ef"/><stop offset="1" stop-color="#fbfdfc"/></linearGradient>
+      <linearGradient id="fs-wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b2e3d9" stop-opacity=".88"/><stop offset=".18" stop-color="#7fc7b9" stop-opacity=".88"/><stop offset="1" stop-color="#2e8479" stop-opacity=".88"/></linearGradient>
+      <linearGradient id="fs-steel" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#c3cdcc"/><stop offset=".35" stop-color="#f2f5f5"/><stop offset="1" stop-color="#8a9997"/></linearGradient>
+    </defs>
+    <rect x="${L}" y="${top}" width="${Rr - L}" height="${floor - top}" fill="url(#fs-air)"/>
+    <path class="fs-cone" d="M206 56L180 132H232Z" fill="#38bdf8" fill-opacity=".12" stroke="#38bdf8" stroke-opacity=".4" stroke-width="1" vector-effect="non-scaling-stroke"/>
+    ${pump(214, true)}${pump(290, false)}
+    <g fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M307 239H318V56H242" stroke="#b3c0be" stroke-width="6"/><path d="M231 239H242V56H150" stroke="#8fa5a2" stroke-width="6"/><path class="fs-dash" d="M231 239H242V56H150" stroke="#fff" stroke-width="1.8" stroke-dasharray="2 12"/></g>
+    <path d="M150 56l-7 -4v8z" fill="#8fa5a2"/>
+    <rect class="fs-well" x="${L}" y="132" width="${Rr - L}" height="${floor - 132}" fill="url(#fs-wg)"/>
+    <g class="fs-surf" fill="none"><path d="M${L} 132H${Rr}" stroke="#2a8a7f" stroke-opacity=".22" stroke-width="6"/><path d="M${L} 132H${Rr}" stroke="#2a8a7f" stroke-width="1.4"/></g>
+    <g fill="none" stroke-width="1.3" stroke-dasharray="5 4">${lv.map(([, y, c]) => `<path d="M${L} ${y}H${Rr}" stroke="${c}"/>`).join("")}</g>
+    <path fill="url(#fs-cut)" d="M${L - wall} 36H${L}V${floor}H${Rr}V36H${Rr + wall}V${floor + wall}H${L - wall}ZM${L - wall} 36H228V${top}H${L - wall}ZM274 36H${Rr + wall}V${top}H274Z"/>
+    <path d="M${L - wall} 36V${floor + wall}H${Rr + wall}V36M${L} ${top}V${floor}H${Rr}V${top}M${L - wall} ${top}H${L}M228 36V${top}H${L}M274 36V${top}H${Rr}M${Rr} ${top}H${Rr + wall}" fill="none" stroke="#a9b8b6" stroke-width="1"/>
+    <rect x="224" y="33" width="54" height="5" rx="1.5" fill="#46605d"/>
+    <path d="M110 36H${L - wall}M${Rr + wall} 36H420" fill="none" stroke="#a9b8b6" stroke-width="1.2"/>
+    <path d="M118 36l-4 5M134 36l-4 5M150 36l-4 5M350 36l-4 5M366 36l-4 5M382 36l-4 5M398 36l-4 5M414 36l-4 5" fill="none" stroke="#c3cdcc" stroke-width="1"/>
+    <rect x="199" y="${top}" width="14" height="10" rx="2" fill="#2b3533"/><circle cx="206" cy="51" r="1.6" fill="#38bdf8"/>
+    <rect x="140" y="110" width="${L - 140}" height="14" fill="#c9d3d2" stroke="#8fa5a2" stroke-width="1"/><path class="fs-dash" d="M142 117H${L + 2}" fill="none" stroke="#0d7c72" stroke-width="1.8" stroke-dasharray="2 10" stroke-linecap="round"/>
+    <g class="fine" font-size="10.5" fill="${INK2}">${lv.map(([t, y, c]) => `<path d="M${Rr + wall} ${y}h5" stroke="${c}" stroke-width="1.3"/><text x="${Rr + wall + 10}" y="${y + 3.5}">${t}</text>`).join("")}</g>
+    <g class="fine" font-size="10.5">${tiles.map(([k, v, c], i) => { const y = 60 + i * 42; return `<rect x="14" y="${y}" width="120" height="34" rx="7" fill="#f7f9fa" stroke="#dfe5ec"/><circle cx="28" cy="${y + 17}" r="4" fill="${c}"/><text x="38" y="${y + 21}" fill="${INK2}" font-weight="600">${k}</text><text class="mono" x="126" y="${y + 21}" text-anchor="end" fill="${INK}">${v}</text>`; }).join("")}</g>
+  </svg>`;
+  })();
+
+  // 4. Alarms: three notifications, each with its severity glyph, time and
+  // an acknowledge control.
+  const alarms = (() => {
+    const list = [
+      ["#dc2626", "#fef2f2", "triangle-alert", "High-high level", "Site 07 · SMS and email to the duty officer", "14:02", "Acknowledge"],
+      ["#d97706", "#fffbeb", "trending-up", "Blockage Watch: depth drifting", "Site 14 · dry days only · ranked 1 of 38", "13:40", "Acknowledge"],
+      ["#16a34a", "#f0fdf4", "check", "Returned to normal", "Site 22 · acknowledged by the duty officer", "11:15", "Acknowledged"],
+    ];
+    return `<svg viewBox="0 0 480 270" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+    ${list.map(([c, bg, ic, t, s, time, ack], i) => { const y = 20 + i * 80, done = ack === "Acknowledged"; return `<g class="fs-toast" style="--i:${i}">
+      <rect x="20" y="${y}" width="440" height="66" rx="12" fill="${bg}" stroke="${c}" stroke-opacity=".35"/>
+      <circle cx="54" cy="${y + 33}" r="15" fill="${c}"/>${glyph(ic, 45, y + 24, 18, "#fff")}
+      <text class="fs-lbl" x="82" y="${y + 28}" font-size="13" font-weight="650" fill="${INK}">${t}</text>
+      <text class="fine" x="82" y="${y + 46}" font-size="10.5" fill="${MUTED}">${s}</text>
+      <text class="fine mono" x="446" y="${y + 27}" font-size="10" text-anchor="end" fill="${MUTED}">${time}</text>
+      <g class="fine"><rect x="${done ? 352 : 358}" y="${y + 36}" width="${done ? 94 : 88}" height="20" rx="10" fill="${done ? "#f1f4f3" : "#fff"}" stroke="${done ? "#d5dde5" : c}" stroke-opacity="${done ? 1 : .55}"/>${done ? glyph("check", 360, y + 41, 10, MUTED) : ""}<text x="${done ? 405 : 402}" y="${y + 49.5}" font-size="9.5" font-weight="600" text-anchor="middle" fill="${done ? MUTED : c}">${ack}</text></g>
+    </g>`; }).join("")}
+  </svg>`;
+  })();
+
   const views = [["I/I heat map", "Severity by pipe", heat], ["Blockage Watch", "Dry days only", blockage], ["Pump Station Manager", "Wet well, to scale", psm], ["Alarms", "Sent to people, not addresses", alarms]];
   return `
   <div class="fs-screen" data-reveal="right">
@@ -1935,16 +2149,23 @@ const fsBar = (r) => `
 // The wet well trace beside the Pump Station Manager: five hours of level
 // drawn as a schematic, filling slowly as sewage arrives and emptying fast
 // as the pumps run, between the start and stop levels.
-const fsTrace = (t) => `
+const fsTrace = (t) => {
+  const cycle = "M20 168 L170 56 L198 168 L348 56 L376 168 L526 56 L554 168 L620 118";
+  return `
 <figure class="fs-trace" data-reveal>
   <svg viewBox="0 0 640 230" aria-hidden="true">
-    <g stroke="#dfe5ec" stroke-width="1"><path d="M20 20V200M20 200H620"/></g>
+    <defs><linearGradient id="fst-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5fb4a6" stop-opacity=".3"/><stop offset="1" stop-color="#5fb4a6" stop-opacity=".02"/></linearGradient></defs>
+    <rect class="fst-band" x="20" y="56" width="600" height="112"/>
+    <path class="fst-grid" d="M20 84H620M20 112H620M20 140H620M170 20V200M348 20V200M526 20V200"/>
+    <path class="fst-axis" d="M20 20V200M20 200H620"/>
     <g stroke-dasharray="5 5" stroke-width="1.3"><path d="M20 56H620" stroke="#0d7c72"/><path d="M20 168H620" stroke="#4e6361"/></g>
-    <path d="M20 168 L170 56 L198 168 L348 56 L376 168 L526 56 L554 168 L620 118 V200 H20 Z" fill="#5fb4a6" fill-opacity=".14"/>
-    <path class="draw" pathLength="100" d="M20 168 L170 56 L198 168 L348 56 L376 168 L526 56 L554 168 L620 118" fill="none" stroke="#0c5f59" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="${cycle} V200 H20 Z" fill="url(#fst-fill)"/>
+    <path class="fst-glow draw" pathLength="100" d="${cycle}"/>
+    <path class="draw" pathLength="100" d="${cycle}" fill="none" stroke="#0c5f59" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
+    <g class="fst-runs">${[170, 348, 526].map((x) => `<rect x="${x}" y="203" width="28" height="4" rx="2"/>`).join("")}</g>
     <g font-family="'EDS Text', 'Helvetica Neue', sans-serif" font-size="11.5" fill="#2e4543">
       <text x="572" y="50" font-weight="650">Start</text><text x="574" y="184" font-weight="650">Stop</text>
-      <text x="22" y="216" fill="#4e6361">${esc(t.rise)}</text>
+      <text x="22" y="220" fill="#4e6361">${esc(t.rise)}</text>
       <text x="206" y="40" fill="#4e6361">${esc(t.fall)}</text>
       <text x="22" y="40" fill="#4e6361" font-size="10.5">Wet well level</text>
     </g>
@@ -1952,6 +2173,7 @@ const fsTrace = (t) => `
   </svg>
   <figcaption><b>${esc(t.title)}</b> ${esc(t.text)}</figcaption>
 </figure>`;
+};
 add({
   file: "flowsense.html",
   title: "EDS FlowSense | Sewer network intelligence",
@@ -2437,7 +2659,6 @@ function searchIndex() {
 /* ------------------------------------------------------------------ */
 /* write                                                               */
 /* ------------------------------------------------------------------ */
-icon("fan"); // fsScreen() reuses the fan glyph, so make sure it is cached
 await rm(DIST, { recursive: true, force: true });
 await mkdir(path.join(DIST, "assets/fonts"), { recursive: true });
 // The stylesheet ships without its comments (about a fifth of its weight);

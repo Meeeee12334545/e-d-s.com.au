@@ -26,126 +26,226 @@ const label = (x, y, lines, { a = "start", cls = "" } = {}) => {
 };
 const leader = (d, cls = "") => `<path class="dg-leader${cls ? ` ${cls}` : ""}" d="${d}"/>`;
 const svg = (w, h, body, defs = "") => `<svg viewBox="0 0 ${w} ${h}" aria-hidden="true">${defs ? `<defs>${defs}</defs>` : ""}${body}</svg>`;
-// Soil, shared by the drawings that cut through the ground.
-const soil = (id) => `<pattern id="${id}" width="14" height="14" patternUnits="userSpaceOnUse"><rect width="14" height="14" fill="#f5f2ea"/><circle cx="3" cy="4" r=".9" fill="#ddd5c4"/><circle cx="10" cy="10" r=".7" fill="#e3dccd"/></pattern>`;
+/* ---- the light kit: sections on a white plate ----
+   The service and solution figures draw with the E-Flow kit's materials in
+   their light variant (efDefs, dark: false): stippled soil, cut concrete
+   hatched, air and water gradients under a glowing surface, and instruments
+   as shaded bodies rather than boxes. One family with the instrument
+   screens, on white. Shared pieces first; each drawing then places them. */
+const LW = 6; // the cut wall of a pipe or shaft
+// a sewer in long section: air between crown and invert, the cut walls
+// hatched above and below; `gaps` leaves the top wall open where a shaft
+// comes down through it
+const ltPipe = (p, x0, x1, crown, inv, { gaps = [], w = LW } = {}) => {
+  const tops = [], top = [];
+  let x = x0;
+  for (const [a, b] of gaps) { tops.push([x, a]); x = b; }
+  tops.push([x, x1]);
+  for (const [a, b] of tops) top.push(`M${a} ${crown - w}H${b}V${crown}H${a}Z`);
+  return `
+  <rect x="${x0}" y="${crown}" width="${x1 - x0}" height="${inv - crown}" fill="url(#${p}-air)"/>
+  <path fill="url(#${p}-cut)" d="${top.join("")}M${x0} ${inv}H${x1}V${inv + w}H${x0}Z"/>
+  <path class="ef-edge" d="${tops.map(([a, b]) => `M${a} ${crown - w}H${b}M${a} ${crown}H${b}`).join("")}M${x0} ${inv}H${x1}M${x0} ${inv + w}H${x1}"/>`;
+};
+// a manhole shaft from the ground to the pipe crown: air, hatched walls, the
+// frame and lid at the surface, step irons down one wall
+const ltShaft = (p, a, b, ground, crown, inv, { steps = "right", w = LW } = {}) => `
+  <rect x="${a}" y="${ground}" width="${b - a}" height="${inv - ground}" fill="url(#${p}-air)"/>
+  <path fill="url(#${p}-cut)" d="M${a - w} ${ground}H${a}V${crown - w}H${a - w}ZM${b} ${ground}H${b + w}V${crown - w}H${b}Z"/>
+  <path class="ef-edge" d="M${a - w} ${ground}V${crown - w}M${a} ${ground}V${crown}M${b} ${ground}V${crown}M${b + w} ${ground}V${crown - w}"/>
+  <rect class="ef-frame" x="${a - w - 4}" y="${ground - 7}" width="${b - a + 2 * w + 8}" height="3.4" rx="1"/>
+  <rect class="ef-lid" x="${a - 1}" y="${ground - 8.6}" width="${b - a + 2}" height="3.2" rx="1"/>
+  ${steps ? [1, 2, 3, 4].map((k) => ground + 16 * k).filter((y) => y < crown - 10).map((y) => `<path class="ef-step" d="M${steps === "right" ? b : a} ${y}h${steps === "right" ? -6 : 6}v4h${steps === "right" ? 6 : -6}"/>`).join("") : ""}`;
+// water in a pipe or channel: the gradient under its glowing surface, and
+// the flow marked by dashes moving along it
+const ltWater = (p, x0, x1, level, inv, { flow = true } = {}) => `
+  <rect x="${x0}" y="${level}" width="${x1 - x0}" height="${inv - level}" fill="url(#${p}-wg)"/>
+  <path class="ef-surf-g" d="M${x0} ${level}H${x1}"/><path class="ef-surf" d="M${x0} ${level}H${x1}"/>
+  ${flow ? `<path class="dg-flow" d="M${x0 + 14} ${f1((level + inv) / 2 + 1)}H${x1 - 14}"/>` : ""}`;
+const ltWaterGrad = (p) => `<linearGradient id="${p}-wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="ef-w0"/><stop offset=".18" class="ef-w1"/><stop offset="1" class="ef-w2"/></linearGradient>`;
+const ltGroundGrad = (p) => `<linearGradient id="${p}-gw" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="dg-gw0"/><stop offset="1" class="dg-gw1"/></linearGradient>`;
+// a data logger hung from a strap: cream body, graphite cap, a status LED
+const ltLogger = (x, y, w = 15, h = 28) => `
+  <path class="ef-strap" d="M${x - 4} ${y + 3}h${w + 8}"/>
+  <rect class="ef-logger" x="${x}" y="${y}" width="${w}" height="${h}" rx="4"/>
+  <rect class="ef-logger-cap" x="${x}" y="${y}" width="${w}" height="${f1(h * 0.24)}" rx="3"/>
+  <path class="dg-inst-print" d="M${x + 3} ${y + h - 10}h${w - 6}M${x + 3} ${y + h - 7}h${w - 9}"/>
+  <circle class="dg-led-ok" cx="${x + w - 3.5}" cy="${y + h - 4}" r="1.3"/>`;
+// an area velocity sensor on the invert, its sloping face upstream (left)
+const ltAv = (x, y, w = 24) => `
+  <path class="dg-inst" d="M${x} ${y - 1}l${f1(w * 0.32)} -7H${f1(x + w - 3)}q3 0 3 3v4z"/>
+  <path class="dg-inst-print" d="M${f1(x + w * 0.42)} ${y - 5.5}h${f1(w * 0.36)}"/>
+  <rect class="dg-inst-base" x="${x - 1}" y="${y - 2}" width="${w + 3}" height="2.4" rx="1"/>`;
+// a radar level sensor hung looking down: cream body, the dome beneath
+const ltRadar = (p, cx, y, w = 20, h = 15) => `
+  <rect class="dg-inst" x="${cx - w / 2}" y="${y}" width="${w}" height="${h}" rx="3"/>
+  <rect class="ef-mark" x="${cx - w / 2 + 3}" y="${y + 3}" width="2" height="${h - 6}" rx="1"/>
+  <path class="dg-inst-print" d="M${cx - w / 2 + 7} ${y + 5}h${w - 11}M${cx - w / 2 + 7} ${y + 8}h${w - 14}"/>
+  <path d="M${cx - 6} ${y + h}A6 6 0 0 0 ${cx + 6} ${y + h}Z" fill="url(#${p}-dome)" class="ef-dome"/>`;
+// a cabinet at the surface: steel, a door seam, a handle and a status lamp
+const ltCabinet = (p, x, y, w, h) => `
+  <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="2.5" fill="url(#${p}-steel)" class="dg-cab"/>
+  <path class="dg-cab-seam" d="M${f1(x + w * 0.5)} ${y + 4}V${y + h - 4}"/>
+  <rect class="dg-cab-handle" x="${f1(x + w * 0.5 + 3)}" y="${f1(y + h * 0.48)}" width="2" height="7" rx="1"/>
+  <path class="dg-cab-seam" d="M${x + 5} ${y + h - 9}h${f1(w * 0.5 - 10)}M${x + 5} ${y + h - 6}h${f1(w * 0.5 - 10)}"/>
+  <circle class="dg-lamp" cx="${x + 9}" cy="${y + 8}" r="2.2"/>
+  <rect class="dg-cab-foot" x="${x - 2}" y="${y + h - 1}" width="${w + 4}" height="2.4" rx="1"/>`;
+// an antenna on a mast with its ping
+const ltAntenna = (x, y, h = 14) => `<path class="dg-cable" d="M${x} ${y}V${y - h}"/><circle class="dg-antenna" cx="${x}" cy="${y - h - 2}" r="2.6"/><circle class="dg-ping" cx="${x}" cy="${y - h - 2}" r="9"/>`;
+// an automatic sampler at the surface: a cabinet with the bottle carousel
+// seen through its window
+const ltSampler = (x, y, w = 40, h = 46) => `
+  <rect class="dg-sampler" x="${x}" y="${y}" width="${w}" height="${h}" rx="4"/>
+  <rect class="dg-sampler-top" x="${x}" y="${y}" width="${w}" height="9" rx="4"/>
+  <rect class="dg-sampler-win" x="${x + 6}" y="${y + 15}" width="${w - 12}" height="${h - 21}" rx="3"/>
+  ${[0, 1, 2].map((k) => `<rect class="dg-bottle" x="${x + 9.5 + k * 7.6}" y="${y + 21}" width="5" height="${h - 30}" rx="2"/>`).join("")}
+  <path class="dg-cab-seam" d="M${x + 6} ${y + 12}h${w - 12}"/>
+  <circle class="dg-lamp" cx="${x + w - 7}" cy="${y + 4.5}" r="1.8"/>`;
+// a flow mark inside a pipe on the light plate
+const ltFlow = (x, y, text) => `<text x="${x}" y="${y}" class="dg-m">${esc(text)}</text><path class="dg-arrow" d="M${x + 38} ${y - 4}h14m-4-3.5 4 3.5-4 3.5"/>`;
 
 /* ---- thermal: a thermistor string finds where groundwater gets in ---- */
 function thermal(t) {
-  const L = t.labels;
-  const beads = Array.from({ length: 15 }, (_, k) => 86 + k * 22);
+  const L = t.labels, p = "ltt";
+  const G = 52, TABLE = 104, CROWN = 140, INV = 176, SOIL = 224;
+  const SA = [58, 86], SB = [394, 422]; // the two shafts (inside faces)
+  const beads = Array.from({ length: 12 }, (_, k) => 100 + k * 22);
   const at = 242; // the defective joint
   const temp = (x) => 262 + 32 * Math.exp(-(((x - at) / 30) ** 2));
   const hot = beads.filter((x) => temp(x) - 262 > 5);
+  const bead = (x, y) => `${hot.includes(x) ? `<circle class="dg-bead-g" cx="${x}" cy="${y}" r="3.2"/>` : ""}<circle class="dg-bead${hot.includes(x) ? " hot" : ""}" cx="${x}" cy="${y}" r="3.2"/>`;
   const body = `
-  <rect x="0" y="52" width="480" height="172" fill="url(#dg-soil-t)"/>
-  <rect x="0" y="104" width="480" height="120" class="dg-ground-water"/>
-  <path class="dg-table" d="M0 104H480"/>
+  <rect x="0" y="${G}" width="480" height="${SOIL - G}" fill="url(#${p}-soil)"/>
+  <rect x="0" y="${TABLE}" width="480" height="${SOIL - TABLE}" fill="url(#${p}-gw)"/>
+  <rect class="ef-road" x="0" y="${G - 5}" width="480" height="5"/>
+  <path class="dg-table" d="M0 ${TABLE}H480"/>
   <path class="dg-table-mark" d="M122 96h10l-5 7z"/>
-  ${label(138, 99, L.groundwater, { cls: "dg-m" })}
-  <path class="dg-surface" d="M0 52H480"/>
-  <g class="dg-shaft"><rect x="58" y="52" width="28" height="104"/><rect x="394" y="52" width="28" height="104"/></g>
-  <rect x="44" y="140" width="392" height="36" class="dg-pipe-in"/>
-  <path class="dg-pipe" d="M44 140H58M86 140H394M422 140H436M44 176H436"/>
-  <g class="dg-joint">${[104, 150, 196, 288, 334, 380].map((x) => `<path d="M${x} 136v8M${x} 172v8"/>`).join("")}</g>
-  <rect x="44" y="160" width="392" height="16" class="dg-sewage"/>
-  <path class="dg-sewage-top" d="M44 160H436"/>
-  <path class="dg-flow" d="M100 168H360"/>
-  <path class="dg-crack" d="M236 134l5 4-3 3 6 4 4-4M248 133v14"/>
-  <g class="dg-seep"><path d="M214 114q14 8 22 20"/><path d="M272 114q-14 8-22 20"/></g>
-  <g class="dg-drips">${[0, 1, 2].map((n) => `<ellipse cx="${240 + n * 3}" cy="146" rx="1.6" ry="2.4" style="--d:${n * 0.6}s"/>`).join("")}</g>
-  ${label(262, 124, L.defect, { cls: "dg-b" })}${leader("M258 120L247 135")}
-  <path class="dg-cable" d="M38 44H64V172H400V156"/>
-  ${beads.map((x) => `<circle class="dg-bead${hot.includes(x) ? " hot" : ""}" cx="${x}" cy="172" r="3.3"/>`).join("")}
-  ${label(98, 206, L.string, { cls: "dg-b" })}${leader("M108 194L108 178")}
-  <rect class="dg-box" x="16" y="30" width="22" height="22" rx="3"/>
-  ${label(16, 22, L.logger, { cls: "dg-b" })}
-  <rect class="dg-sensor" x="368" y="167" width="18" height="7" rx="2"/>
-  <path class="dg-cable" d="M386 171H416V44H442"/>
-  <rect class="dg-box" x="442" y="30" width="22" height="22" rx="3"/>
-  ${label(464, 22, L.meter, { a: "end", cls: "dg-b" })}
-  <g class="dg-guide">${hot.map((x) => `<path d="M${x} 180V${f1(temp(x)) - 5}"/>`).join("")}</g>
-  <path class="dg-axis" d="M44 326H436"/>
-  <path class="dg-trace" d="${smooth(sample(44, 436, 8, temp))}"/>
-  ${beads.map((x) => `<circle class="dg-bead${hot.includes(x) ? " hot" : ""}" cx="${x}" cy="${f1(temp(x))}" r="3.3"/>`).join("")}
-  ${label(44, 346, L.chart, { cls: "dg-b" })}
+  ${label(138, 100, L.groundwater, { cls: "dg-m dg-h" })}
+  ${ltPipe(p, 0, 480, CROWN, INV, { gaps: [[SA[0] - LW, SA[1] + LW], [SB[0] - LW, SB[1] + LW]] })}
+  ${ltShaft(p, SA[0], SA[1], G, CROWN, INV, { steps: "right" })}
+  ${ltShaft(p, SB[0], SB[1], G, CROWN, INV, { steps: "left" })}
+  ${ltWater(p, 0, 480, 160, INV)}
+  ${[104, 150, 196, 288, 334, 380].map((x) => `<path class="dg-joint" d="M${x} ${CROWN - LW}V${CROWN}M${x} ${INV}V${INV + LW}"/>`).join("")}
+  <path class="dg-crack" d="M238 ${CROWN - LW - 1}l4 4-2 3 5 3 3-4M248 ${CROWN - LW - 1}v8"/>
+  <g class="dg-seep"><path d="M216 112q12 8 22 22"/><path d="M270 112q-12 8-22 22"/></g>
+  <g class="dg-drips">${[0, 1, 2].map((n) => `<ellipse cx="${240 + n * 3}" cy="146" rx="1.5" ry="2.3" style="--d:${n * 0.6}s"/>`).join("")}</g>
+  ${label(262, 124, L.defect, { cls: "dg-b dg-h" })}${leader("M258 120L249 134")}
+  <path class="ef-cable" d="M70 86V173H346"/>
+  ${beads.map((x) => bead(x, 173)).join("")}
+  ${ltLogger(63, 58)}
+  ${ltAv(360, INV)}
+  <path class="ef-cable" d="M384 171H400V86"/>
+  ${ltLogger(401, 58)}
+  ${ltFlow(422, 156, L.flow || "Flow")}
+  ${label(100, 73, L.logger, { cls: "dg-b dg-h" })}${leader("M97 69L80 69")}
+  ${label(380, 73, L.meter, { a: "end", cls: "dg-b dg-h" })}${leader("M372 77V166")}
+  ${label(98, 208, L.string, { cls: "dg-b dg-h" })}${leader("M108 196V182")}
+  <g class="dg-guide">${hot.map((x) => `<path d="M${x} 182V${f1(temp(x)) - 5}"/>`).join("")}</g>
+  <path class="dg-grid" d="M92 262H388"/>
+  <path class="dg-band-cool" d="${smooth(sample(92, 388, 8, temp))}L388 262H92Z"/>
+  <path class="dg-axis" d="M92 326H388"/>
+  <path class="dg-trace" d="${smooth(sample(92, 388, 8, temp))}"/>
+  ${beads.map((x) => bead(x, f1(temp(x)))).join("")}
+  ${label(92, 346, L.chart, { cls: "dg-b" })}
   ${label(292, 290, L.change, { cls: "dg-m" })}${leader("M288 287L256 293")}`;
-  return svg(480, 354, body, soil("dg-soil-t"));
+  return svg(480, 354, body, `${efDefs(p)}${ltWaterGrad(p)}${ltGroundGrad(p)}`);
 }
 
 /* ---- wetwell: a pump station under watch ---- */
 function wetwell(t) {
-  const L = t.labels;
+  const L = t.labels, p = "ltw";
+  const G = 86, WL = 176, WR = 320, WW = 8, FLOOR = 352;
   const lv = { overflow: 132, surcharge: 174, start: 222, stop: 296 };
+  const radar = { cx: 196, y: 90 };
+  const beam = efBeam(p, "bm", [radar.cx, radar.y + 21, 0, 1], 5, { toY: lv.stop - 4, waves: 3 });
+  const pump = (x, n) => `
+  <g class="dg-pump">
+    <rect class="dg-pump-body" x="${x}" y="318" width="34" height="32" rx="5" fill="url(#${p}-steel)"/>
+    <rect class="dg-pump-cap" x="${x + 5}" y="312" width="24" height="8" rx="3"/>
+    <path class="dg-cab-seam" d="M${x + 6} 334h22M${x + 6} 340h22"/>
+    <rect class="dg-inst-base" x="${x - 2}" y="350" width="38" height="2.4" rx="1"/>
+    <circle class="dg-run" cx="${x + 17}" cy="327" r="3.4" style="--d:${n * 0.25}s"/>
+  </g>`;
   const body = `
-  <rect x="0" y="86" width="480" height="294" fill="url(#dg-soil-w)"/>
-  <path class="dg-surface" d="M0 86H480"/>
-  <rect class="dg-concrete" x="168" y="86" width="160" height="274"/>
-  <rect class="dg-pipe-in" x="176" y="86" width="144" height="266"/>
-  <rect class="dg-concrete" x="160" y="80" width="176" height="7" rx="1"/>
-  <rect class="dg-pipe-in" x="0" y="150" width="176" height="24"/>
-  <path class="dg-pipe" d="M0 150H168M0 174H168"/>
-  <rect class="dg-sewage" x="0" y="162" width="176" height="12"/>
-  <path class="dg-flow" d="M14 168H150"/>
-  <path class="dg-fall" d="M176 170q8 2 10 22"/>
-  <g clip-path="url(#dg-well)"><g class="dg-water"><rect class="dg-sewage" x="176" y="${lv.start}" width="144" height="140"/><path class="dg-sewage-top" d="M176 ${lv.start}H320"/></g></g>
-  <g class="dg-level alarm"><path d="M176 ${lv.overflow}H336M176 ${lv.surcharge}H336"/></g>
-  <g class="dg-level"><path d="M176 ${lv.start}H336M176 ${lv.stop}H336"/></g>
-  ${label(342, lv.overflow + 4, L.overflow)}${label(342, lv.surcharge + 4, L.surcharge)}
+  <rect x="0" y="${G}" width="480" height="${372 - G}" fill="url(#${p}-soil)"/>
+  <rect class="ef-road" x="0" y="${G - 5}" width="480" height="5"/>
+  <rect x="${WL}" y="${G}" width="${WR - WL}" height="${FLOOR - G}" fill="url(#${p}-air)"/>
+  ${ltPipe(p, 0, WL, 150, 174, { w: 5 })}
+  ${ltWater(p, 0, WL - 2, 162, 174)}
+  <path class="dg-fall" d="M${WL - 1} 170q8 3 10 24"/>
+  <g clip-path="url(#${p}-well)"><g class="dg-water"><rect x="${WL}" y="${lv.start}" width="${WR - WL}" height="${FLOOR - lv.start + 80}" fill="url(#${p}-wg)"/><path class="ef-surf-g" d="M${WL} ${lv.start}H${WR}"/><path class="ef-surf" d="M${WL} ${lv.start}H${WR}"/></g></g>
+  <path fill="url(#${p}-cut)" d="M${WL - WW} ${G}H${WL}V145H${WL - WW}ZM${WL - WW} 179H${WL}V${FLOOR}H${WL - WW}ZM${WR} ${G}H${WR + WW}V${FLOOR}H${WR}ZM${WL - WW} ${FLOOR}H${WR + WW}V${FLOOR + WW}H${WL - WW}ZM156 ${G - 10}H340V${G}H156Z"/>
+  <path class="ef-edge" d="M${WL - WW} ${G}V145M${WL - WW} 179V${FLOOR + WW}H${WR + WW}V${G}M${WL} ${G}V150M${WL} 174V${FLOOR}H${WR}V${G}M156 ${G - 10}H340M156 ${G}H340"/>
+  <rect class="ef-frame" x="170" y="${G - 14}" width="52" height="3.4" rx="1"/>
+  <rect class="ef-lid" x="175" y="${G - 15.6}" width="42" height="3.2" rx="1"/>
+  ${[1, 2, 3].map((k) => `<path class="ef-step" d="M${WR} ${G + 18 * k}h-6v4h6"/>`).join("")}
+  <g class="dg-level alarm"><path d="M${WL} ${lv.overflow}H${WR + 16}M${WL} ${lv.surcharge}H${WR + 16}"/></g>
+  <g class="dg-level"><path d="M${WL} ${lv.start}H${WR + 16}M${WL} ${lv.stop}H${WR + 16}"/></g>
+  ${label(342, lv.overflow + 4, L.overflow, { cls: "dg-alarm" })}${label(342, lv.surcharge + 4, L.surcharge, { cls: "dg-alarm" })}
   ${label(342, lv.start + 4, L.start, { cls: "dg-b" })}${label(342, lv.stop + 4, L.stop, { cls: "dg-b" })}
   <path class="dg-main" d="M213 318V300H304V118H480M261 318V300"/>
+  <path class="dg-main-core" d="M213 318V300H304V118H480M261 318V300"/>
   <path class="dg-main-flow" d="M304 290V118H470"/>
-  ${[196, 244].map((x, n) => `<g class="dg-pump"><rect x="${x}" y="318" width="34" height="32" rx="6"/><rect x="${x + 6}" y="350" width="22" height="2"/><circle class="dg-run" cx="${x + 17}" cy="334" r="4" style="--d:${n * 0.25}s"/></g>`).join("")}
-  ${label(474, 106, L.main, { a: "end", cls: "dg-m" })}
-  <path class="dg-beam" d="M196 104L178 ${lv.stop - 6}H214Z"/>
-  <rect class="dg-radar" x="186" y="88" width="20" height="18" rx="3"/>
-  ${label(12, 108, L.radar, { cls: "dg-b" })}${leader("M150 104L184 98")}
-  ${label(12, 196, L.inlet, { cls: "dg-m" })}
-  ${label(12, 334, L.pumps, { cls: "dg-b" })}${leader("M140 330L194 334")}
-  <path class="dg-cable" d="M196 88V84H104V70M213 318V310H182V84"/>
-  <rect class="dg-cabinet" x="44" y="40" width="60" height="46" rx="3"/>
-  <path class="dg-cabinet-line" d="M74 40V86M50 52h18M50 60h12"/>
-  <path class="dg-cable" d="M60 40V24"/><circle class="dg-antenna" cx="60" cy="22" r="3"/>
-  <circle class="dg-ping" cx="60" cy="22" r="9"/>
+  ${pump(196, 0)}${pump(244, 1)}
+  ${label(474, 108, L.main, { a: "end", cls: "dg-m dg-h" })}
+  ${beam.draw}
+  ${ltRadar(p, radar.cx, radar.y)}
+  ${label(12, 108, L.radar, { cls: "dg-b dg-h" })}${leader("M136 104L183 98")}
+  ${label(12, 196, L.inlet, { cls: "dg-m dg-h" })}
+  ${label(12, 334, L.pumps, { cls: "dg-b dg-h" })}${leader("M138 330L192 334")}
+  <path class="ef-cable" d="M74 86V94H190V${radar.y}M213 318V310H184V94"/>
+  ${ltCabinet(p, 44, 40, 60, 46)}
+  ${ltAntenna(60, 40)}
   ${label(110, 64, L.manager, { cls: "dg-b" })}
-  <path class="dg-link" d="M72 22H240"/>
-  ${label(474, 26, L.data, { a: "end", cls: "dg-m" })}`;
-  const defs = `${soil("dg-soil-w")}<clipPath id="dg-well"><rect x="176" y="86" width="144" height="266"/></clipPath>`;
+  <path class="dg-link" d="M72 24H276"/>
+  ${label(474, 28, L.data, { a: "end", cls: "dg-m" })}`;
+  const defs = `${efDefs(p)}${ltWaterGrad(p)}${beam.defs}<clipPath id="${p}-well"><rect x="${WL}" y="${G}" width="${WR - WL}" height="${FLOOR - G}"/></clipPath>`;
   return svg(480, 372, body, defs);
 }
 
 /* ---- tradewaste: flow, sampling and quality at one discharge point ---- */
 function tradewaste(t) {
-  const L = t.labels;
+  const L = t.labels, p = "ltx";
+  const G = 118, CROWN = 214, INV = 234, PA = 228, PB = 288; // the pit, inside faces
   const body = `
-  <rect x="0" y="118" width="480" height="196" fill="url(#dg-soil-x)"/>
-  <path class="dg-surface" d="M0 118H480"/>
-  <path class="dg-building" d="M14 118V66l26-18v18l26-18v18l26-18v18l26-18v70z"/>
-  <g class="dg-window"><rect x="26" y="80" width="16" height="10" rx="1"/><rect x="54" y="80" width="16" height="10" rx="1"/><rect x="82" y="80" width="16" height="10" rx="1"/><rect x="58" y="100" width="14" height="18" rx="1"/></g>
-  ${label(70, 36, L.site, { a: "middle", cls: "dg-m" })}
-  <rect class="dg-pipe-in" x="100" y="118" width="14" height="106"/>
-  <rect class="dg-pipe-in" x="100" y="214" width="380" height="20"/>
-  <path class="dg-pipe" d="M100 118V234M114 118V214H228M288 214H480M100 234H480"/>
-  <rect class="dg-concrete" x="222" y="114" width="72" height="6" rx="1"/>
-  <rect class="dg-pit" x="228" y="120" width="60" height="114"/>
-  <rect class="dg-sewage" x="100" y="225" width="380" height="9"/>
-  <path class="dg-sewage-top" d="M100 225H480"/>
-  <path class="dg-flow" d="M124 230H470"/>
-  ${label(470, 206, L.sewer, { a: "end", cls: "dg-m" })}
-  <rect class="dg-sensor" x="238" y="227" width="16" height="6" rx="2"/>
-  <path class="dg-cable" d="M238 230H232V100H212"/>
-  <path class="dg-cable" d="M272 206V100"/><rect class="dg-probe" x="268" y="206" width="8" height="24" rx="3"/>
-  <rect class="dg-cabinet" x="180" y="82" width="32" height="36" rx="3"/>
-  <path class="dg-cable" d="M196 82V66"/><circle class="dg-antenna" cx="196" cy="64" r="3"/><circle class="dg-ping" cx="196" cy="64" r="9"/>
-  <rect class="dg-sampler" x="312" y="74" width="40" height="44" rx="5"/>
-  <rect class="dg-bottle" x="322" y="90" width="20" height="22" rx="3"/>
-  <path class="dg-cable" d="M312 84H300V100"/>
-  <path class="dg-hose" d="M300 100Q300 160 282 228"/>
-  <path class="dg-hose-flow" d="M282 228Q300 160 300 100"/>
-  ${label(196, 44, L.data, { a: "middle", cls: "dg-b" })}
-  ${label(332, 60, L.sampling, { a: "middle", cls: "dg-b" })}
-  ${label(312, 186, L.quality, { cls: "dg-b" })}${leader("M308 182L278 200")}
-  ${label(176, 284, L.flow, { cls: "dg-b" })}${leader("M206 272L242 236")}`;
-  return svg(480, 300, body, soil("dg-soil-x"));
+  <rect x="0" y="${G}" width="480" height="${300 - G}" fill="url(#${p}-soil)"/>
+  <rect class="ef-road" x="0" y="${G - 5}" width="480" height="5"/>
+  <g class="dg-building">
+    <path class="dg-wall" d="M14 ${G}V66h120V${G}z"/>
+    <path class="dg-roof" d="M14 66V46l30-14v14l30-14v14l30-14v14l30-14v34z"/>
+    <path class="dg-glazing" d="M14 66V46l30-14v34zM74 66V46l30-14v34z"/>
+    <rect class="dg-stack" x="118" y="30" width="9" height="36" rx="1"/>
+    <path class="dg-wall-line" d="M14 66h120"/>
+    <g class="dg-window"><rect x="26" y="80" width="16" height="11" rx="1"/><rect x="54" y="80" width="16" height="11" rx="1"/><rect x="82" y="80" width="16" height="11" rx="1"/><rect x="110" y="80" width="16" height="11" rx="1"/></g>
+    <rect class="dg-door" x="56" y="98" width="14" height="20" rx="1"/>
+  </g>
+  ${label(76, 24, L.site, { a: "middle", cls: "dg-m" })}
+  <rect x="100" y="${G}" width="14" height="${CROWN - G}" fill="url(#${p}-air)"/>
+  <path fill="url(#${p}-cut)" d="M96 ${G}H100V${CROWN}H96ZM114 ${G}H118V${CROWN - 4}H114Z"/>
+  <path class="ef-edge" d="M96 ${G}V${CROWN}M100 ${G}V${CROWN}M114 ${G}V${CROWN - 4}M118 ${G}V${CROWN - 4}"/>
+  ${ltPipe(p, 96, 480, CROWN, INV, { gaps: [[96, 118], [PA - LW, PB + LW]], w: 4 })}
+  <rect x="${PA}" y="120" width="${PB - PA}" height="${INV - 120}" fill="url(#${p}-air)"/>
+  <path fill="url(#${p}-cut)" d="M${PA - LW} 120H${PA}V${CROWN - 4}H${PA - LW}ZM${PB} 120H${PB + LW}V${CROWN - 4}H${PB}Z"/>
+  <path class="ef-edge" d="M${PA - LW} 120V${CROWN - 4}M${PA} 120V${CROWN}M${PB} 120V${CROWN}M${PB + LW} 120V${CROWN - 4}"/>
+  <rect class="ef-frame" x="${PA - LW - 4}" y="${G - 7}" width="${PB - PA + 2 * LW + 8}" height="3.4" rx="1"/>
+  <rect class="ef-lid" x="${PA - 1}" y="${G - 8.6}" width="${PB - PA + 2}" height="3.2" rx="1"/>
+  ${ltWater(p, 100, 480, 225, INV)}
+  ${label(470, 206, L.sewer, { a: "end", cls: "dg-m dg-h" })}
+  ${ltAv(246, INV)}
+  <path class="ef-cable" d="M195 118V126H236V228H246"/>
+  <path class="ef-cable" d="M236 132H274V206"/>
+  <rect class="dg-probe" x="270" y="206" width="8" height="24" rx="3"/>
+  <path class="dg-probe-tip" d="M272 230h4"/>
+  ${ltCabinet(p, 178, 82, 34, 36)}
+  ${ltAntenna(195, 82)}
+  ${ltSampler(312, 72)}
+  <path class="dg-hose" d="M320 118C318 160 302 192 284 228"/>
+  <path class="dg-hose-flow" d="M284 228C302 192 318 160 320 118"/>
+  ${label(195, 48, L.data, { a: "middle", cls: "dg-b" })}
+  ${label(332, 62, L.sampling, { a: "middle", cls: "dg-b" })}
+  ${label(314, 186, L.quality, { cls: "dg-b dg-h" })}${leader("M310 182L281 202")}
+  ${label(176, 284, L.flow, { cls: "dg-b dg-h" })}${leader("M208 272L250 238")}`;
+  return svg(480, 300, body, `${efDefs(p)}${ltWaterGrad(p)}`);
 }
 
 /* ---- scatter: a shift in the depth to velocity relationship ---- */
@@ -155,16 +255,22 @@ function scatter(t) {
   let seed = 7;
   const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
   const X = (v) => 64 + v * 380, Y = (d) => 262 - d * 230;
-  const usual = Array.from({ length: 70 }, () => { const v = 0.08 + rnd() * 0.84; return [X(v + (rnd() - 0.5) * 0.03), Y(0.06 + 0.82 * v ** 1.6 + (rnd() - 0.5) * 0.04)]; });
+  const fit = (v) => 0.06 + 0.82 * v ** 1.6;
+  const usual = Array.from({ length: 70 }, () => { const v = 0.08 + rnd() * 0.84; return [X(v + (rnd() - 0.5) * 0.03), Y(fit(v) + (rnd() - 0.5) * 0.04)]; });
   const shifted = Array.from({ length: 22 }, () => { const v = 0.12 + rnd() * 0.4; return [X(v + (rnd() - 0.5) * 0.03), Y(0.3 + 0.95 * v ** 1.2 + (rnd() - 0.5) * 0.05)]; });
+  const vs = sample(0.06, 0.94, 0.04, (v) => v).map(([v]) => v);
+  const band = `${smooth(vs.map((v) => [X(v), Y(fit(v) + 0.045)]))}L${vs.slice().reverse().map((v) => `${f1(X(v))} ${f1(Y(fit(v) - 0.045))}`).join("L")}Z`;
   const body = `
-  <path class="dg-grid" d="${[0.25, 0.5, 0.75, 1].map((d) => `M64 ${Y(d)}H444`).join("")}"/>
+  <path class="dg-grid" d="${[0.25, 0.5, 0.75, 1].map((d) => `M64 ${Y(d)}H444`).join("")}${[0.25, 0.5, 0.75, 1].map((v) => `M${X(v)} 24V262`).join("")}"/>
   <path class="dg-axis" d="M64 24V262H444"/>
+  <path class="dg-axis-arrow" d="M64 18l-4 8h8zM450 262l-8-4v8z"/>
   ${label(64, 284, L.velocity, { cls: "dg-m" })}
   ${label(54, 24, L.depth, { a: "end", cls: "dg-m" })}
-  <path class="dg-fit" d="${smooth(sample(0.06, 0.94, 0.04, (v) => v).map(([v]) => [X(v), Y(0.06 + 0.82 * v ** 1.6)]))}"/>
-  ${usual.map(([x, y]) => `<circle class="dg-pt" cx="${f1(x)}" cy="${f1(y)}" r="3.4"/>`).join("")}
-  ${shifted.map(([x, y]) => `<circle class="dg-pt shift" cx="${f1(x)}" cy="${f1(y)}" r="3.4"/>`).join("")}
+  <path class="dg-fit-band" d="${band}"/>
+  <path class="dg-fit" d="${smooth(vs.map((v) => [X(v), Y(fit(v))]))}"/>
+  ${usual.map(([x, y]) => `<circle class="dg-pt" cx="${f1(x)}" cy="${f1(y)}" r="3.2"/>`).join("")}
+  ${shifted.map(([x, y]) => `<circle class="dg-pt-g" cx="${f1(x)}" cy="${f1(y)}" r="3.2"/>`).join("")}
+  ${shifted.map(([x, y]) => `<circle class="dg-pt shift" cx="${f1(x)}" cy="${f1(y)}" r="3.2"/>`).join("")}
   ${label(258, 238, L.usual, { cls: "dg-m" })}${leader("M292 225L302 166")}
   ${label(84, 52, L.shift, { cls: "dg-b" })}${leader("M120 84L146 136")}`;
   return svg(480, 296, body);
@@ -583,24 +689,29 @@ const hx = (t) => 8 + t * 284;
 const dwf = (t) => 0.45 + 0.17 * Math.sin(2 * Math.PI * (2 * t) - 1.9);
 // a storm's response: a gamma curve that rises over `k` and peaks at 1
 const pulse = (t, t0, k) => { const u = (t - t0) / k; return u <= 0 ? 0 : u * u * Math.exp(2 * (1 - u)); };
-const rainBars = () => [5, 13, 24, 32, 21, 11, 5].map((h, n) => `<rect x="${f1(hx(0.29) + n * 9)}" y="8" width="6" height="${h}" rx="1"/>`).join("");
+const rainBars = () => [5, 13, 24, 32, 21, 11, 5].map((h, n) => `<rect x="${f1(hx(0.29) + n * 9)}" y="8" width="6" height="${h}" rx="1.5"/>`).join("");
+// time along the foot of a chart: small ticks, with their hours
+const ticks = (y, list) => `<path class="dg-tick-mark" d="${list.map(([t]) => `M${f1(hx(t))} ${y}v4`).join("")}"/>${list.map(([t, s], i) => `<text class="dg-tick" x="${f1(hx(t))}" y="${y + 15}" text-anchor="${i === 0 ? "start" : i === list.length - 1 ? "end" : "middle"}">${s}</text>`).join("")}`;
 function hydro(a, b) {
   const q = (t) => dwf(t) + a * pulse(t, 0.3, 0.06) + b * pulse(t, 0.3, 0.17);
-  const y = (v) => 158 - v * 60;
+  const y = (v) => 150 - v * 56;
   const ts = sample(0, 1, 0.01, (t) => t);
   const meas = ts.map(([t]) => [hx(t), y(q(t))]), base = ts.map(([t]) => [hx(t), y(dwf(t))]);
   const band = `${smooth(meas)}L${base.slice().reverse().map(([x, yy]) => `${f1(x)} ${f1(yy)}`).join("L")}Z`;
-  return svg(300, 170, `
+  return svg(300, 172, `
+  <path class="dg-grid" d="${[0.5, 1, 1.5].map((v) => `M8 ${f1(y(v))}H292`).join("")}"/>
   <g class="dg-rain">${rainBars()}</g>
-  <path class="dg-axis" d="M8 160H292"/>
+  <path class="dg-axis" d="M8 152H292"/>
+  ${ticks(152, [[0, "0 h"], [0.5, "24 h"], [1, "48 h"]])}
   <path class="dg-band" d="${band}"/>
   <path class="dg-dwf" d="${smooth(base)}"/>
+  <path class="dg-meas-g" d="${smooth(meas)}"/>
   <path class="dg-meas" d="${smooth(meas)}"/>`);
 }
 // One day of flow, sampled by time or by volume.
 function sampling(mode) {
   const q = (t) => 0.32 + 0.12 * Math.sin(2 * Math.PI * t - 1.9) + 0.75 * pulse(t, 0.53, 0.075);
-  const y = (v) => 146 - v * 92;
+  const y = (v) => 140 - v * 88;
   const ts = sample(0, 1, 0.01, (t) => t);
   const line = ts.map(([t]) => [hx(t), y(q(t))]);
   const n = 12;
@@ -612,11 +723,14 @@ function sampling(mode) {
     at = Array.from({ length: n }, (_, i) => { const v = ((i + 0.5) / n) * total; const j = cum.findIndex((c) => c >= v); return ts[Math.max(0, j)][0]; });
   }
   return svg(300, 172, `
-  <path class="dg-area" d="${smooth(line)}L292 150L8 150Z"/>
-  <path class="dg-axis" d="M8 150H292"/>
-  <g class="dg-guide">${at.map((t) => `<path d="M${f1(hx(t))} 150V${f1(y(q(t)) + 4)}"/>`).join("")}</g>
+  <path class="dg-grid" d="${[0.5, 1].map((v) => `M8 ${f1(y(v))}H292`).join("")}"/>
+  <path class="dg-area" d="${smooth(line)}L292 144L8 144Z"/>
+  <path class="dg-axis" d="M8 144H292"/>
+  <g class="dg-guide">${at.map((t) => `<path d="M${f1(hx(t))} 144V${f1(y(q(t)) + 4)}"/>`).join("")}</g>
+  <path class="dg-meas-g" d="${smooth(line)}"/>
   <path class="dg-meas" d="${smooth(line)}"/>
-  ${at.map((t, i) => `<rect class="dg-sample" x="${f1(hx(t) - 3)}" y="156" width="6" height="10" rx="1.5" style="--d:${i * 0.12}s"/>`).join("")}`);
+  ${at.map((t, i) => `<rect class="dg-sample" x="${f1(hx(t) - 3)}" y="150" width="6" height="10" rx="1.5" style="--d:${i * 0.12}s"/>`).join("")}
+  ${ticks(160, [[0, "00:00"], [0.25, "06:00"], [0.5, "12:00"], [0.75, "18:00"], [1, "24:00"]])}`, `<linearGradient id="dg-sa-${mode}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5fb4a6" stop-opacity=".26"/><stop offset="1" stop-color="#5fb4a6" stop-opacity=".02"/></linearGradient>`).replace('class="dg-area"', `class="dg-area" fill="url(#dg-sa-${mode})"`);
 }
 const KEYS = {
   rain: `<svg viewBox="0 0 16 10"><rect x="3" y="0" width="4" height="10" rx="1" class="dg-rain-key"/><rect x="9" y="3" width="4" height="7" rx="1" class="dg-rain-key"/></svg>`,

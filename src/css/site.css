@@ -184,6 +184,8 @@ ul { margin: 0; padding: 0; list-style: none; }
 
 /* ---------- icons (Lucide, stroke 2) ---------- */
 .icon { width: 1em; height: 1em; flex: none; stroke-width: 2; overflow: visible; }
+/* the large display icons sit with the light Helvetica at a lighter stroke */
+.card > .card-icon .icon, .bento-lead > .card-icon .icon, .way-head > .card-icon .icon, .range-tile .card-icon .icon, .paper-top .card-icon .icon, .fs-std .card-icon .icon, .hero-icon .icon { stroke-width: 1.5; }
 
 /* ---------- buttons ---------- */
 .btn {
@@ -1402,7 +1404,7 @@ a.card.bento-wide:hover > .card-icon { color: #c9fff5; }
 .lab-pause:active { scale: .95; }
 .lab-pause .icon { width: 18px; height: 18px; }
 .lab-pause[aria-pressed="true"] { background: var(--aqua-soft); border-color: rgba(95, 180, 166, .5); color: var(--aqua); }
-.lab.paused .lab-arrows line { animation-play-state: paused; }
+.lab.paused #lab-pipe * { animation-play-state: paused; }
 .lab button, .lab input { touch-action: manipulation; }
 .range { display: grid; gap: 8px; font-size: .82rem; color: var(--on-dark-soft); font-weight: 550; }
 .range > span { display: flex; justify-content: space-between; gap: 10px; }
@@ -1425,8 +1427,19 @@ input[type="range"]:active::-moz-range-thumb { cursor: grabbing; box-shadow: 0 0
 .readout-ii[data-up] b { color: #7dd3fc; }
 .readout-ii[data-up] { border-color: rgba(56, 189, 248, .3); }
 
-#lab-pipe { width: 100%; max-width: 260px; margin: 4px auto 0; }
-#lab-pipe text { font: 500 9px var(--font-body); letter-spacing: .03em; }
+/* the flow meter's pipe: the kit's cross-section on the deep teal (build.mjs:
+   labPipe), the water a translated block, the beam and arrows set by lab.js */
+#lab-pipe { display: block; width: 100%; max-width: 300px; height: auto; margin: 4px auto 0; border-radius: 8px; box-shadow: 0 0 0 1px rgba(127, 209, 196, .14); }
+#lab-pipe text { font: 500 11px var(--font-body); }
+.lab-level { fill: none; stroke-width: 1.2; stroke-dasharray: 4 3; }
+.lab-level.h { stroke: #f6a04d; stroke-opacity: .8; }
+.lab-level.hh { stroke: #f87171; stroke-opacity: .8; }
+.lab-tag rect { fill: rgba(4, 33, 31, .78); }
+#lab-pipe .lab-tag.h text { fill: #f6a04d; }
+#lab-pipe .lab-tag.hh text { fill: #f87171; }
+.lab-base { stroke: #0f1716; stroke-width: .5; }
+.lab-sensor { fill: #e9e4d8; stroke: #8f8872; stroke-width: .6; }
+.lab-foot { fill: none; stroke: #8fdcff; stroke-width: 2.6; stroke-linecap: round; }
 .lab-pipe-cap { margin-top: 8px; text-align: center; font-size: .8rem; color: var(--on-dark-faint); text-wrap: balance; }
 .state { display: flex; align-items: center; gap: 12px; margin-top: 16px; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--line-dark); font-weight: 500; color: #fff; font-size: .92rem; transition: border-color .3s var(--ease), background-color .3s var(--ease); }
 .state > div { min-width: 0; transition: filter .15s var(--ease), opacity .15s var(--ease); }
@@ -1440,17 +1453,49 @@ input[type="range"]:active::-moz-range-thumb { cursor: grabbing; box-shadow: 0 0
 .state small { display: block; font-weight: 400; color: var(--on-dark-faint); font-size: .78rem; }
 .state b span { font-variant-numeric: tabular-nums; }
 
-.lab-arrows line { stroke: rgba(255, 255, 255, .7); stroke-width: 2; stroke-linecap: round; stroke-dasharray: 10 14; animation: lab-flow var(--dur, 1.2s) linear infinite; }
-.lab-arrows line:nth-child(2) { animation-delay: -.4s; opacity: .6; }
-.lab-arrows line:nth-child(3) { animation-delay: -.8s; opacity: .45; }
+/* the velocity through the depth: the kit's profile arrows, their shafts
+   dashed and flowing at the pace lab.js sets, fading towards the bed */
+.lab-arrows path { fill: none; stroke: #fff; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.lab-arrow { stroke-dasharray: 7 5; animation: lab-flow var(--dur, 1.2s) linear infinite; }
 @keyframes lab-flow { to { stroke-dashoffset: -24; } }
 /* the water level moves as one translated group (compositor only) */
 #lab-water-g { transition: transform .25s linear; }
-#lab-beam { stroke: rgba(255, 255, 255, .55); stroke-width: 1.2; stroke-dasharray: 2 3; }
+/* LIDoTT Alarm demo: the kit's manhole section on the deep teal (build.mjs:
+   lidottDemo). The alarm is drawn in its own red with the kit's label strip;
+   its LED and glow follow the level the widget sets on the svg. The pill
+   tags and the range dimension grow a step on a phone, where the drawing is
+   about two thirds size. */
 #lidott-svg { cursor: ns-resize; user-select: none; }
-#lidott-svg text { font-family: var(--font-body); }
-#lidott-svg[data-level="1"] .lid-led { fill: var(--amber); }
-#lidott-svg[data-level="2"] .lid-led { fill: var(--red); }
+#lidott-svg text { font: 400 11px var(--font-body); fill: rgba(255, 255, 255, .66); }
+#lidott-svg .lid-flow-l { fill: #fff; }
+.lid-arrow { fill: none; stroke: #fff; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.lid-bench { fill-opacity: .55; }
+.lid-bench-edge { fill: none; stroke: #2f6b64; stroke-width: 1; stroke-dasharray: 2 3; }
+.lid-rail { stroke: #5c6b69; stroke-width: .6; }
+.lid-clamp { fill: #1b2423; stroke: #4e5d5a; stroke-width: .8; }
+.lid-strap { fill: #1b2423; }
+.lid-body { stroke: #5a1812; stroke-width: .8; }
+.lid-face { stroke: #9fc7c0; stroke-width: .6; }
+.lid-led { fill: #4ade80; transition: fill .3s var(--ease); }
+.lid-led-g { fill: #4ade80; fill-opacity: .28; transition: fill .3s var(--ease); }
+#lidott-svg[data-level="1"] .lid-led, #lidott-svg[data-level="1"] .lid-led-g { fill: #f6a04d; }
+#lidott-svg[data-level="2"] .lid-led, #lidott-svg[data-level="2"] .lid-led-g { fill: #f87171; }
+.lid-level { fill: none; stroke-width: 1.2; stroke-dasharray: 5 4; }
+.lid-level.h { stroke: #f6a04d; stroke-opacity: .8; }
+.lid-level.hh { stroke: #f87171; stroke-opacity: .8; }
+.lid-tag { transform-box: fill-box; transform-origin: 100% 50%; }
+.lid-tag rect { fill: rgba(4, 33, 31, .78); }
+#lidott-svg .lid-tag text { font-size: 11.5px; font-weight: 500; }
+.lid-tag.h circle, #lidott-svg .lid-tag.h text { fill: #f6a04d; }
+.lid-tag.hh circle, #lidott-svg .lid-tag.hh text { fill: #f87171; }
+.lid-ext { fill: none; stroke: #f6a04d; stroke-opacity: .55; stroke-width: .9; stroke-dasharray: 3 3; }
+.lid-dim { fill: none; stroke: #ffc58a; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+#lidott-svg .lid-dim-t { font: 500 11.5px var(--font-mono); fill: #ffc58a; transform-box: fill-box; transform-origin: 100% 50%; }
+#lidott-svg .lid-dim-l { font: 400 10.5px var(--font-body); fill: rgba(255, 255, 255, .62); }
+@media (max-width: 700px) {
+  #lidott-svg text { font-size: 15px; }
+  #lidott-svg .lid-tag, #lidott-svg .lid-dim-t { transform: scale(1.3); }
+}
 
 /* ---------- FlowSense band ---------- */
 .fs-band { background: var(--grain), var(--brand-gradient); color: rgba(255, 255, 255, .88); overflow: hidden; }
@@ -1474,18 +1519,29 @@ input[type="range"]:active::-moz-range-thumb { cursor: grabbing; box-shadow: 0 0
 .fs-view-title { margin: 0; font-family: var(--font-display); font-size: .9rem; font-weight: 650; letter-spacing: -.01em; line-height: 1.2; color: var(--ink); display: flex; justify-content: space-between; align-items: center; }
 .fs-view-title small { font: 500 .75rem var(--font-body); color: var(--muted); }
 .fs-view svg { flex: 1 1 0; min-height: 0; width: 100%; height: auto; background: #fff; border-radius: 12px; border: 1px solid var(--border); }
+.fs-view svg text { font-family: var(--font-body); }
+.fs-view svg .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 .fs-dash { animation: dash-flow 1.1s linear infinite; }
 .fs-view.active .fs-draw { stroke-dasharray: 100; animation: fs-draw 2.4s var(--ease-out) both; }
 @keyframes fs-draw { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }
+/* The wet well: the water scales about its floor between pump start and
+   stop, while its surface line and the ultrasonic cone follow it. All three
+   share one timing, so they stay together. */
 .fs-well { animation: fs-well 5s var(--ease) infinite; transform-box: fill-box; transform-origin: 50% 100%; }
 @keyframes fs-well { 0%, 100% { scale: 1 1; } 50% { scale: 1 .45; } }
-.fs-fan { animation: ic-spin 1.4s linear infinite; transform-box: fill-box; transform-origin: center; }
+.fs-surf { animation: fs-surf 5s var(--ease) infinite; }
+@keyframes fs-surf { 0%, 100% { translate: 0 0; } 50% { translate: 0 62.7px; } }
+.fs-cone { animation: fs-cone 5s var(--ease) infinite; transform-box: fill-box; transform-origin: 50% 0; }
+@keyframes fs-cone { 0%, 100% { scale: 1 1; } 50% { scale: 1 1.825; } }
+.fs-run { animation: fs-run 1.8s ease-in-out infinite; }
+@keyframes fs-run { 0%, 100% { stroke-opacity: .3; } 50% { stroke-opacity: .85; } }
 .fs-view.active .fs-toast { animation: sms-in .6s var(--ease-spring) both; animation-delay: calc(var(--i) * .18s + .1s); transform-box: fill-box; }
 .fs-caption { position: absolute; left: 14px; bottom: 12px; font-size: .75rem; color: var(--muted); background: rgba(255, 255, 255, .85); padding: 3px 8px; border-radius: 6px; }
 /* On a phone the screen takes a squarer frame so the drawings fill it, and
    their finest labels give way, as the city's do (an alarm's title then
-   centres on its dot). */
-@media (max-width: 600px) { .fs-view svg .fine { display: none; } .fs-toast text:not(.fine) { translate: 0 9px; } }
+   centres on its dot), while the few labels that carry each screen's story
+   grow a step. */
+@media (max-width: 600px) { .fs-view svg .fine { display: none; } .fs-view svg .fs-lbl { font-size: 15px; } .fs-toast text:not(.fine) { translate: 0 9px; } }
 @media (max-width: 560px) { .fs-screen { aspect-ratio: 5 / 4; } .fs-view { padding: 12px; } }
 
 /* ---------- products rail ---------- */
@@ -1557,7 +1613,10 @@ input[type="range"]:active::-moz-range-thumb { cursor: grabbing; box-shadow: 0 0
 /* ---------- offices map ---------- */
 .aus { display: grid; grid-template-columns: 1.25fr 1fr; gap: clamp(24px, 4vw, 64px); align-items: center; }
 #ausmap { width: 100%; height: auto; overflow: visible; }
-#ausmap .land { fill: rgba(95, 180, 166, .4); }
+#ausmap .land { fill: rgba(95, 180, 166, .36); }
+#ausmap .land.coast { fill: rgba(159, 231, 218, .6); }
+#ausmap .pin .halo { fill: var(--aqua); fill-opacity: .1; transition: fill-opacity .3s var(--ease); }
+#ausmap .pin.active .halo { fill-opacity: .2; }
 #ausmap .arc { fill: none; stroke: var(--aqua); stroke-width: 1.2; stroke-dasharray: 3 6; opacity: .55; animation: dash-flow 1.4s linear infinite; }
 #ausmap .pin { cursor: pointer; }
 #ausmap .pin circle.core { fill: var(--aqua); stroke: var(--on-aqua); stroke-width: 2; transition: r .25s var(--ease-spring); }
@@ -1815,7 +1874,7 @@ main:has(> .alt:last-child) + .footer { background: var(--bg); }
 
 /* LIDoTT demo + EAS gauge */
 .demo { display: grid; grid-template-columns: minmax(0, 1fr) minmax(260px, .8fr); gap: 18px; align-items: stretch; }
-#lidott-svg { width: 100%; max-width: 360px; margin-inline: auto; touch-action: none; }
+#lidott-svg { display: block; width: 100%; max-width: 560px; height: auto; margin-inline: auto; touch-action: none; border-radius: 12px; }
 .demo .panel { display: flex; flex-direction: column; }
 .demo .sms { flex: 1; }
 /* E-Flow 3 changeover demo: the kit's drawing on the deep teal, read like
@@ -1908,7 +1967,31 @@ main:has(> .alt:last-child) + .footer { background: var(--bg); }
 .sms div { padding: 10px 13px; border-radius: 14px 14px 14px 4px; background: rgba(255, 255, 255, .08); border: 1px solid var(--line-dark); font-size: .85rem; color: #fff; animation: sms-in .45s var(--ease-spring); }
 .sms div small { display: block; color: var(--on-dark-faint); font-size: .72rem; }
 @keyframes sms-in { from { opacity: 0; translate: 0 10px; scale: .96; } }
-#eas-svg { width: 100%; max-width: 420px; margin-inline: auto; }
+/* EDS Asset Score: a gauge on an instrument screen, in the E-Flow 3 family.
+   widgets.js turns #eas-needle and plots #eas-spark. */
+#eas-svg { display: block; width: 100%; max-width: 420px; margin-inline: auto; border-radius: 14px; box-shadow: 0 18px 40px -26px rgba(4, 33, 31, .7), 0 0 0 1px rgba(127, 209, 196, .2); }
+#eas-svg text { font: 400 11px var(--font-body); fill: rgba(255, 255, 255, .66); }
+#eas-svg .eas-mono { font-family: var(--font-mono); font-weight: 500; font-variant-numeric: tabular-nums; }
+#eas-svg .eas-scale { fill: rgba(255, 255, 255, .62); }
+#eas-svg .eas-small { font-size: 9.5px; fill: rgba(255, 255, 255, .42); }
+#eas-svg .eas-sub-h { font-size: 10.5px; fill: rgba(255, 255, 255, .6); }
+#eas-svg .eas-of { font-size: 12px; fill: rgba(255, 255, 255, .45); }
+#eas-svg #eas-num { font: 600 46px var(--font-display); fill: #fff; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+#eas-svg .eas-bezel { fill: none; stroke: rgba(255, 255, 255, .1); stroke-width: 1; }
+#eas-svg .eas-track { fill: none; stroke: rgba(255, 255, 255, .08); stroke-width: 4; }
+#eas-svg .eas-zone { fill: none; stroke-linecap: butt; }
+#eas-svg .eas-tick { fill: none; stroke: rgba(255, 255, 255, .26); stroke-width: 1; }
+#eas-svg .eas-tick.major { stroke: rgba(255, 255, 255, .85); stroke-width: 1.6; }
+#eas-needle { transition: transform .25s linear; }
+#eas-svg .eas-needle { fill: #fff; }
+#eas-svg .eas-needle-g { fill: none; stroke: #fff; stroke-opacity: .14; stroke-width: 7; stroke-linejoin: round; }
+#eas-svg .eas-hub { fill: #fff; } #eas-svg .eas-hub-core { fill: var(--eds); } #eas-svg .eas-hub-ring { fill: none; stroke: rgba(255, 255, 255, .16); stroke-width: 1; }
+#eas-svg .eas-sub { fill: rgba(4, 33, 31, .5); stroke: rgba(127, 209, 196, .18); stroke-width: 1; }
+#eas-svg .eas-sub-grid { fill: none; stroke: rgba(127, 209, 196, .12); stroke-width: 1; }
+#eas-svg .eas-live { fill: #4ade80; animation: eas-live 2.4s ease-in-out infinite; }
+@keyframes eas-live { 0%, 100% { fill-opacity: 1; } 50% { fill-opacity: .3; } }
+/* on a phone the drawing is near half size, so its words are set larger */
+@media (max-width: 700px) { #eas-svg text { font-size: 13px; } #eas-svg .eas-small { font-size: 11.5px; } #eas-svg .eas-sub-h { font-size: 12.5px; } #eas-svg #eas-num { font-size: 50px; } }
 .btn-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
 .btn-sm { padding: .6em 1em; font-size: .85rem; }
 
@@ -2499,18 +2582,11 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: 6
 .diagram text { font-family: "EDS Text", "Helvetica Neue", Arial, sans-serif; font-size: 12.5px; font-weight: 400; fill: var(--ink-2); }
 .diagram .dg-b { font-weight: 600; fill: var(--ink); }
 .diagram .dg-m { fill: var(--muted); }
-@container (max-width: 440px) { .diagram text { font-size: 15.5px; } }
+@container (max-width: 440px) { .diagram text { font-size: 15.5px; } .diagram .dg-tick { font-size: 13px; } }
 .dg-surface { stroke: #9fb3b0; stroke-width: 2; fill: none; }
 .dg-ground-water { fill: var(--water); fill-opacity: .07; }
 .dg-table { stroke: #2b9bd0; stroke-width: 1.2; stroke-dasharray: 6 5; fill: none; }
 .dg-table-mark { fill: #2b9bd0; }
-.dg-shaft rect, .dg-pipe-in, .dg-pit { fill: #fbfdfc; }
-.dg-shaft rect, .dg-pit { stroke: #b6c6c3; stroke-width: 3; }
-.dg-pipe { stroke: #a9bbb8; stroke-width: 5; fill: none; stroke-linecap: square; }
-.dg-concrete { fill: #e3eae8; stroke: #b6c6c3; stroke-width: 1.5; }
-.dg-joint path { stroke: #a9bbb8; stroke-width: 2; }
-.dg-sewage { fill: var(--aqua); fill-opacity: .32; }
-.dg-sewage-top { stroke: var(--eds); stroke-width: 1.4; fill: none; }
 .dg-flow, .dg-main-flow { fill: none; stroke: var(--brand-dark); stroke-width: 1.6; stroke-linecap: round; stroke-dasharray: 2 12; animation: dg-flow 1.4s linear infinite; }
 .dg-fall { fill: none; stroke: var(--eds); stroke-width: 2; stroke-linecap: round; stroke-dasharray: 3 6; animation: dg-flow 1s linear infinite; }
 @keyframes dg-flow { to { stroke-dashoffset: -14; } }
@@ -2521,10 +2597,6 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: 6
 .dg-cable { fill: none; stroke: #3f5654; stroke-width: 1.4; stroke-linejoin: round; }
 .dg-bead { fill: var(--brand-dark); stroke: #fff; stroke-width: 1.2; }
 .dg-bead.hot { fill: #2b9bd0; }
-.dg-box, .dg-cabinet, .dg-sampler { fill: #eef6f4; stroke: var(--brand-dark); stroke-width: 1.6; }
-.dg-cabinet-line { fill: none; stroke: var(--brand-dark); stroke-width: 1.2; }
-.dg-sensor, .dg-probe { fill: var(--brand-dark); }
-.dg-bottle { fill: #fff; stroke: var(--eds); stroke-width: 1.4; }
 .dg-antenna { fill: var(--brand-dark); }
 .dg-ping { fill: none; stroke: var(--eds); stroke-width: 1.4; stroke-opacity: 0; animation: dg-ping 2.6s ease-out infinite; transform-box: fill-box; transform-origin: center; }
 @keyframes dg-ping { 0% { scale: .4; stroke-opacity: .9; } 100% { scale: 1.6; stroke-opacity: 0; } }
@@ -2541,19 +2613,50 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: 6
 @keyframes dg-cycle { 0% { translate: 0 74px; } 74% { translate: 0 0; } 100% { translate: 0 74px; } }
 .dg-main { fill: none; stroke: #8fa5a2; stroke-width: 6; stroke-linejoin: round; }
 .dg-main-flow { stroke: #fff; stroke-width: 1.8; animation: dg-flow .9s linear infinite, dg-pumping 14s step-end infinite; }
-.dg-pump rect { fill: #c9d5d3; stroke: #6f8481; stroke-width: 1.4; }
 .dg-run { fill: var(--green); fill-opacity: .18; animation: dg-run 14s step-end infinite; }
 @keyframes dg-pumping { 0% { stroke-opacity: 0; } 74% { stroke-opacity: 1; } 100% { stroke-opacity: 0; } }
 @keyframes dg-run { 0% { fill-opacity: .18; } 74% { fill-opacity: 1; } 100% { fill-opacity: .18; } }
-.dg-beam { fill: #f08c2b; fill-opacity: .08; stroke: #f08c2b; stroke-opacity: .35; stroke-width: 1; stroke-dasharray: 3 4; }
-.dg-radar { fill: #f08c2b; stroke: #a6550e; stroke-width: 1.2; }
-.dg-building { fill: #eef3f2; stroke: #9fb3b0; stroke-width: 1.6; stroke-linejoin: round; }
 .dg-window rect { fill: #dfe9e7; }
 .dg-hose { fill: none; stroke: #6f8481; stroke-width: 3; stroke-linecap: round; }
 .dg-hose-flow { fill: none; stroke: #fff; stroke-width: 1.2; stroke-dasharray: 2 9; animation: dg-flow 1.6s linear infinite; }
 .dg-fit { fill: none; stroke: var(--eds); stroke-width: 1.6; stroke-dasharray: 5 4; }
 .dg-pt { fill: var(--brand-dark); fill-opacity: .55; }
 .dg-pt.shift { fill: #c27803; fill-opacity: .85; }
+/* the light kit (diagrams.mjs): the E-Flow materials on a white plate,
+   so the service figures and the instrument screens read as one family */
+.diagram:not(.dg-screen) .ef-g0.r { stop-opacity: .34; }
+.diagram:not(.dg-screen) .ef-beam.r { stroke-opacity: .45; }
+.diagram:not(.dg-screen) .ef-surf-g { stroke-opacity: .32; }
+.dg-gw0 { stop-color: #2b9bd0; stop-opacity: .03; } .dg-gw1 { stop-color: #2b9bd0; stop-opacity: .12; }
+.dg-joint { fill: none; stroke: #b7c4c1; stroke-width: 1.4; }
+.dg-inst { fill: #ece8df; stroke: #7d8a88; stroke-width: .9; stroke-linejoin: round; }
+.dg-inst-base { fill: #2f3b39; }
+.dg-inst-print { fill: none; stroke: #a9b3b1; stroke-width: .8; stroke-linecap: round; }
+.dg-cab { stroke: #6f7e7c; stroke-width: 1; }
+.dg-cab-seam { fill: none; stroke: #8f9c9a; stroke-width: .9; stroke-linecap: round; }
+.dg-cab-handle { fill: #4e5957; }
+.dg-cab-foot { fill: #3e4846; }
+.dg-lamp { fill: var(--green); stroke: #fff; stroke-width: .8; }
+.dg-led-ok { fill: var(--green); }
+.dg-pump-body { stroke: #6f8481; stroke-width: 1; }
+.dg-pump-cap { fill: #5d6866; }
+.dg-main-core { fill: none; stroke: #d6e0de; stroke-width: 2.4; stroke-linejoin: round; }
+.dg-sampler { fill: #d9e0e6; stroke: #6f7e8a; stroke-width: 1; }
+.dg-sampler-top { fill: #8f9faa; }
+.dg-sampler-win { fill: #fff; stroke: #9aa8b3; stroke-width: .8; }
+.dg-bottle { fill: #e6f1f7; stroke: #6f7e8a; stroke-width: .8; }
+.dg-probe { fill: #2f3b39; }
+.dg-probe-tip { fill: none; stroke: var(--eds); stroke-width: 2; stroke-linecap: round; }
+.dg-bead-g { fill: none; stroke: #2b9bd0; stroke-opacity: .25; stroke-width: 6; }
+.dg-band-cool { fill: #2b9bd0; fill-opacity: .1; }
+.dg-arrow { fill: none; stroke: var(--brand-dark); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.diagram .dg-alarm { fill: #b45309; }
+.dg-building .dg-wall { fill: #e9eeed; stroke: #9fb3b0; stroke-width: 1.2; stroke-linejoin: round; }
+.dg-building .dg-roof { fill: #d9e1df; stroke: #9fb3b0; stroke-width: 1.2; stroke-linejoin: round; }
+.dg-building .dg-glazing { fill: #cfe3ea; }
+.dg-building .dg-stack { fill: #c3cecb; stroke: #9fb3b0; stroke-width: 1; }
+.dg-building .dg-wall-line { fill: none; stroke: #9fb3b0; stroke-width: 1; }
+.dg-building .dg-door { fill: #b9c6c3; }
 /* two panels side by side, one above the other on a phone, with a key */
 .dg-panels { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px 20px; }
 .dg-panel-h { display: grid; gap: 2px; margin: 0 0 6px; font-size: .86rem; line-height: 1.35; color: var(--muted); }
@@ -2566,6 +2669,14 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: 6
 .dg-dwf { fill: none; stroke: #7b8f8d; stroke-width: 1.4; stroke-dasharray: 4 3; }
 .dg-meas { fill: none; stroke: var(--brand-dark); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
 .dg-area { fill: var(--aqua); fill-opacity: .14; }
+.dg-area[fill] { fill-opacity: 1; }
+.dg-meas-g { fill: none; stroke: var(--eds); stroke-opacity: .16; stroke-width: 7; stroke-linejoin: round; stroke-linecap: round; }
+.dg-fit-band { fill: var(--eds); fill-opacity: .09; }
+.dg-pt { stroke: #fff; stroke-width: .8; }
+.dg-pt-g { fill: none; stroke: #c27803; stroke-opacity: .22; stroke-width: 6; }
+.dg-axis-arrow { fill: #c9d4d2; }
+.dg-tick-mark { fill: none; stroke: #c9d4d2; stroke-width: 1; }
+.diagram .dg-tick { font-size: 10.5px; fill: var(--muted); }
 .dg-sample { fill: var(--eds); }
 /* E-Flow 3: drawn as an engineering section (diagrams.mjs, the E-Flow 3
    kit): concrete cut and hatched, the sensor shaded after its photograph,
@@ -3767,6 +3878,11 @@ body.is-touring { overscroll-behavior-y: contain; }
 .fs-trace figcaption { margin-top: 12px; font-size: .88rem; line-height: 1.5; color: var(--muted); }
 .fs-trace figcaption b { color: var(--ink); font-weight: 620; }
 .fs-trace .draw { stroke-dasharray: 100; animation: fs-trace 9s linear infinite; }
+.fst-band { fill: #5fb4a6; fill-opacity: .05; }
+.fst-grid { fill: none; stroke: #eef2f1; stroke-width: 1; }
+.fst-axis { fill: none; stroke: #dfe5ec; stroke-width: 1; }
+.fst-glow { fill: none; stroke: #5fb4a6; stroke-opacity: .18; stroke-width: 8; stroke-linejoin: round; stroke-linecap: round; }
+.fst-runs rect { fill: var(--brand); fill-opacity: .55; }
 @keyframes fs-trace { 0% { stroke-dashoffset: 100; } 72% { stroke-dashoffset: 0; } 100% { stroke-dashoffset: 0; } }
 .fs-psm .fs-points { grid-template-columns: 1fr; gap: 14px; }
 .fs-psm .fs-points li { border-top-color: rgba(255, 255, 255, .22); }
