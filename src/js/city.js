@@ -127,6 +127,7 @@
   function apply() {
     const id = state.active;
     cls("has-active", !!id);
+    sc.traffic?.occlude(id);
     cls("is-underground", state.under);
     cls("is-expanded", state.expanded);
     cls("is-exploded", state.view === "district" || !!(state.tour && state.tour.k > 0));
@@ -464,12 +465,17 @@
     cancelAnimationFrame(driveRaf);
     const pts = route.map(([x, y]) => CityScene.P(x, y)), lens = pts.slice(1).map((p, i) => Math.hypot(p[0] - pts[i][0], p[1] - pts[i][1])), total = lens.reduce((a, b) => a + b, 0);
     const van = sc.dispatch.use, t0 = performance.now();
+    let shownRoad = "";
+    sc.dispatch.g.removeAttribute("clip-path");
     sc.dispatch.g.classList.add("on");
     const step = (now) => {
       const t = Math.min(1, (now - t0) / ms), e = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
       let d = e * total, i = 0;
       while (i < lens.length - 1 && d > lens[i]) d -= lens[i++];
       const u = lens[i] ? d / lens[i] : 1, a = pts[i], b = pts[i + 1], dx = route[i + 1][0] - route[i][0], dy = route[i + 1][1] - route[i][1];
+      // on the roads it passes behind what stands in front of them, as the traffic does
+      const road = !dx && route[i][0] === 7.45 ? "x7" : !dy && route[i][1] === 4.79 ? "main" : "";
+      if (road !== shownRoad) { shownRoad = road; road ? sc.dispatch.g.setAttribute("clip-path", `url(#clip-${road})`) : sc.dispatch.g.removeAttribute("clip-path"); }
       van.setAttribute("href", `#van-${Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "e" : "w") : dy > 0 ? "s" : "n"}`);
       van.setAttribute("transform", `translate(${(a[0] + (b[0] - a[0]) * u).toFixed(1)} ${(a[1] + (b[1] - a[1]) * u).toFixed(1)})`);
       if (t < 1) driveRaf = requestAnimationFrame(step);
@@ -1048,7 +1054,6 @@
     { id: "E", from: [-0.9, 4.79], to: [15.9, 4.79], dir: "e" }, { id: "W", from: [15.9, 5.21], to: [-0.9, 5.21], dir: "w" },
     { id: "S5", from: [5.15, -0.9], to: [5.15, 10.9], dir: "s" }, { id: "N10", from: [9.85, 10.9], to: [9.85, -0.9], dir: "n" },
   ];
-  const trafficLayer = $(".traffic", sc.fx);
   let stunting = false, stuntTimer = 0;
   const svgEl = (tag, attrs) => { const n = document.createElementNS(SVGNS, tag); for (const k in attrs) n.setAttribute(k, attrs[k]); return n; };
   function stunt() {
@@ -1071,7 +1076,8 @@
     const [ax, ay] = at(0), [bx, by] = at(1), ux = bx - ax, uy = by - ay, ul = Math.hypot(ux, uy), dxu = ux / ul, dyu = uy / ul;
     const live = [];
     let lastPuff = 0, nextPuff = 0;
-    trafficLayer.appendChild(g);
+    g.setAttribute("clip-path", `url(#clip-${traffic.lanes[lane.id].road})`);
+    (traffic.lanes[lane.id].near || traffic.lanes[lane.id].far).appendChild(g);
     // The roll: the car turns once about its long axis while its path circles
     // the line of travel, R px high at the side and 2R at the top, and `swing`
     // tiles out to the side along the lane's perpendicular on the ground.

@@ -55,10 +55,33 @@
   const CARS = ["#d9453b", "#f2f4f1", "#5b8fd6", "#e9b63b", "#2f3c42", "#8ac1c9", "#c9c9c7", "#7a4f9e"], LIDS = ["#c62828", "#e0b020", "#2e7d32"], PARAS = ["#f4f1e8", "#d9453b", "#2f8d84", "#f2c14e"];
   const turns = { car: 0, bin: 0, para: 0 };
 
+  // The overlay paints over the still city, so a vehicle would show through
+  // anything standing between it and the viewer. While the city is being
+  // built, whatever stands tall adds its outline on screen to `solids`, with
+  // its far corner in tiles, and roadClips() cuts what stands in front of each
+  // road out of the clip that road's traffic is drawn through.
+  let solids = null;
+  const boxOf = (a) => { let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity; for (const [x, y] of a) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; } return [x0, y0, x1, y1]; };
+  const solid = (x, y, pts) => { if (solids) solids.push({ x, y, pts, box: boxOf(pts) }); };
+  // the same for the symbols that stand tall: each a list of convex outlines
+  // around its foot. A tree is its crown and trunk, a pole its pole and head.
+  const crown = (trunk, ...blobs) => [[[-0.7, 0], [0.7, 0], [0.7, trunk], [-0.7, trunk]], blobs.flatMap(([cx, cy, rx, ry]) => Array.from({ length: 10 }, (_, i) => [cx + Math.cos(i * Math.PI / 5) * rx, cy + Math.sin(i * Math.PI / 5) * ry]))];
+  const OUTLINES = {
+    "tree-gum": crown(-13, [-3.1, -14.6, 3.8, 2.6], [3.3, -15.6, 3.6, 2.5], [0.4, -18.6, 4.3, 3], [2.6, -13.3, 2.4, 1.7]),
+    "tree-jac": crown(-6, [0, -9, 7.6, 4.6], [-1, -11, 5.4, 3.4]),
+    lamp: [[[-0.5, 0], [0.5, 0], [0.5, -15.5], [-0.5, -15.5]], [[-0.5, -15], [4.4, -15], [4.4, -17.1], [-0.5, -17.1]]],
+    sign: [[[-0.5, 0], [0.5, 0], [0.5, -10], [-0.5, -10]], [[-2.5, -10], [2.5, -10], [2.5, -14], [-2.5, -14]]],
+    flag: [[[-0.5, 0], [0.5, 0], [0.5, -22], [-0.5, -22]], [[0, -22], [7, -19.5], [0, -17]]],
+    antenna: [[[-0.5, 0], [0.5, 0], [0.5, -11], [-0.5, -11]], [[-3, -8.5], [3, -8.5], [3, -9.5], [-3, -9.5]]],
+  };
+  for (const k of "abcd") OUTLINES[`ctr-${k}`] = [[P(0, 0), P(0.36, 0), P(0.36, 0.15), P(0, 0.15), P(0, 0, 5.5), P(0.36, 0, 5.5), P(0.36, 0.15, 5.5), P(0, 0.15, 5.5)]];
+  for (const [k, s] of [["s", 0.72], ["m", 1], ["l", 1.3]]) OUTLINES[`tree-${k}`] = crown(-6 * s, [0, -9 * s, 7 * s, 7 * s], [-1.5, -13 * s, 5 * s, 5 * s]);
+
   /* ---- solids ---- */
   function box(x, y, w, d, h, o = {}) {
     const z = o.z || 0, c = o.cls ? ` ${o.cls}` : "", nodes = [];
     if (cast && !z && h >= 4) cast.push(castOf([[x, y], [x + w, y], [x + w, y + d], [x, y + d]], h + (o.rh || 0)));
+    solid(x, y, [z, z + h].flatMap((zz) => [P(x, y, zz), P(x + w, y, zz), P(x + w, y + d, zz), P(x, y + d, zz)]).concat(o.ridge || []));
     const L = [P(x, y + d, z), P(x + w, y + d, z), P(x + w, y + d, z + h), P(x, y + d, z + h)];
     const R = [P(x + w, y, z), P(x + w, y + d, z), P(x + w, y + d, z + h), P(x + w, y, z + h)];
     nodes.push(poly("fl" + c, L), poly("fr" + c, R));
@@ -102,13 +125,14 @@
     ];
   }
   function house(x, y, w, d, h, rh, o = {}) {
-    const b = box(x, y, w, d, h, { ...o, noTop: true, rh });
+    const b = box(x, y, w, d, h, { ...o, noTop: true, rh, ridge: [P(x + w / 2, y + d / 2, (o.z || 0) + h + rh)] });
     b.nodes.push(...roof(x, y, w, d, (o.z || 0) + h, rh, o.roof));
     return b;
   }
   // a gabled block: ridge along x or y, with the gable end that faces the viewer
   function prism(x, y, w, d, h, rh, o = {}) {
-    const z = o.z || 0, t = z + h, b = box(x, y, w, d, h, { ...o, noTop: true, rh }), c = o.roof ? ` ${o.roof}` : "", wall = o.cls ? ` ${o.cls}` : "";
+    const z = o.z || 0, t = z + h, ridge = o.gable === "y" ? [P(x + w / 2, y, t + rh), P(x + w / 2, y + d, t + rh)] : [P(x, y + d / 2, t + rh), P(x + w, y + d / 2, t + rh)];
+    const b = box(x, y, w, d, h, { ...o, noTop: true, rh, ridge }), c = o.roof ? ` ${o.roof}` : "", wall = o.cls ? ` ${o.cls}` : "";
     if (o.gable === "y") {
       const r0 = P(x + w / 2, y, t + rh), r1 = P(x + w / 2, y + d, t + rh);
       b.nodes.push(
@@ -199,6 +223,7 @@
     const z = o.z || 0, rx = r * TW / Math.SQRT2, ry = r * TH / Math.SQRT2, c = o.cls ? ` ${o.cls}` : "";
     const [bx, by] = P(cx, cy, z), [, ty] = P(cx, cy, z + h);
     if (cast && !z && h >= 4) cast.push(castOf(round(cx, cy, r), h));
+    solid(cx - r, cy - r, round(cx, cy, r, 16).flatMap(([x, y]) => [P(x, y, z), P(x, y, z + h + (o.rail ? 3 : 0))]).concat(o.dome ? [-0.97, -0.85, -0.7, -0.4, 0, 0.4, 0.7, 0.85, 0.97].map((k) => [bx + rx * k, ty - rx * 0.55 * Math.sqrt(1 - k * k)]) : o.cap ? [[bx, ty - rx * 0.7]] : []));
     const nodes = [
       el("path", { class: "fr" + c, d: `M${f(bx - rx)} ${f(ty)}L${f(bx - rx)} ${f(by)}A${f(rx)} ${f(ry)} 0 0 0 ${f(bx + rx)} ${f(by)}L${f(bx + rx)} ${f(ty)}Z` }),
       el("path", { class: "fl" + c, d: `M${f(bx - rx)} ${f(ty)}L${f(bx - rx)} ${f(by)}A${f(rx)} ${f(ry)} 0 0 0 ${f(bx)} ${f(by + ry)}L${f(bx)} ${f(ty + ry)}A${f(rx)} ${f(ry)} 0 0 1 ${f(bx - rx)} ${f(ty)}Z` }),
@@ -230,6 +255,7 @@
   // else lifts with the structures. Symbols placed on a roof lift too.
   const use = (sym, x, y, z = 0, o = {}) => {
     const [px, py] = P(x, y, z);
+    if (solids) OUTLINES[sym]?.forEach((a) => solid(x, y, a.map(([ax, ay]) => [px + ax, py + ay])));
     let style = o.style;
     if (!style && sym.startsWith("car-")) style = `--car:${CARS[turns.car++ % CARS.length]}`;
     if (!style && sym === "bin") style = `--lid:${LIDS[turns.bin++ % LIDS.length]}`;
@@ -655,16 +681,41 @@
   // main road the cars keep to the kerb side and the trams to their track
   // centres, so a car and a tram stopped side by side at a light stay apart.
   const LANES = {
-    E: { from: [-0.9, 4.79], to: [15.9, 4.79], stops: [[4.55, "A", "main"], [9.55, "B", "main"]] },
-    W: { from: [15.9, 5.21], to: [-0.9, 5.21], stops: [[10.45, "B", "main"], [5.45, "A", "main"]] },
-    S5: { from: [5.15, -0.9], to: [5.15, 10.9], stops: [[4.55, "A", "side"]] },
-    N5: { from: [4.85, 10.9], to: [4.85, -0.9], stops: [[5.45, "A", "side"]] },
-    S10: { from: [10.15, -0.9], to: [10.15, 10.9], stops: [[4.55, "B", "side"]] },
-    N10: { from: [9.85, 10.9], to: [9.85, -0.9], stops: [[5.45, "B", "side"]] },
-    S7: { from: [7.6, 5.45], to: [7.6, 10.9], stops: [] },
-    TE: { from: [-1.6, 4.94], to: [16.6, 4.94], stops: [[4.55, "A", "main"], [9.55, "B", "main"]] },
-    TW: { from: [16.6, 5.06], to: [-1.6, 5.06], stops: [[10.45, "B", "main"], [5.45, "A", "main"]] },
+    E: { road: "main", from: [-0.9, 4.79], to: [15.9, 4.79], stops: [[4.55, "A", "main"], [9.55, "B", "main"]] },
+    W: { road: "main", from: [15.9, 5.21], to: [-0.9, 5.21], stops: [[10.45, "B", "main"], [5.45, "A", "main"]] },
+    S5: { road: "x5", from: [5.15, -0.9], to: [5.15, 10.9], stops: [[4.55, "A", "side"]] },
+    N5: { road: "x5", from: [4.85, 10.9], to: [4.85, -0.9], stops: [[5.45, "A", "side"]] },
+    S10: { road: "x10", from: [10.15, -0.9], to: [10.15, 10.9], stops: [[4.55, "B", "side"]] },
+    N10: { road: "x10", from: [9.85, 10.9], to: [9.85, -0.9], stops: [[5.45, "B", "side"]] },
+    S7: { road: "x7", from: [7.6, 5.45], to: [7.6, 10.9], stops: [] },
+    TE: { road: "main", from: [-1.6, 4.94], to: [16.6, 4.94], stops: [[4.55, "A", "main"], [9.55, "B", "main"]] },
+    TW: { road: "main", from: [16.6, 5.06], to: [-1.6, 5.06], stops: [[10.45, "B", "main"], [5.45, "A", "main"]] },
   };
+  // Traffic is drawn through clips that cut away what stands in front of its
+  // road. `rect` is the strip the road's traffic drives in, in tiles, and `near`
+  // the line on the viewer's side of it: a block wholly beyond that line stands
+  // in front of the road, and a block that is not can never cover it, since the
+  // two then sit apart on screen.
+  //
+  // A clip with holes slows the painting of every raster tile it reaches, so
+  // one clip the size of the city nearly doubled the overlay's frame time (3.3
+  // to 5.8 ms at 2x). Each road is therefore cut into stretches `SPAN` tiles
+  // long, and a vehicle goes through the clip of the stretch it is on, which is
+  // no bigger than that stretch: 3.6 ms. The road's whole clip is left for what
+  // cannot be placed on a stretch: the people walking on their own timelines,
+  // and the stunt and the dispatch van, each out only now and then.
+  const THROUGH = {
+    main: { rect: [S[0], 4.55, S[2], 5.45], axis: 1, near: 5.3 },
+    x5: { rect: [4.55, S[1], 5.45, S[3]], axis: 0, near: 5.3 },
+    x7: { rect: [7.3, 5.3, 7.9, S[3]], axis: 0, near: 7.9 },
+    x10: { rect: [9.55, S[1], 10.45, S[3]], axis: 0, near: 10.3 },
+  };
+  const SPAN = 1.5;
+  for (const r of Object.values(THROUGH)) { const a = 1 - r.axis; r.from = r.rect[a]; r.to = r.rect[a + 2]; r.n = Math.ceil((r.to - r.from) / SPAN); }
+  // The street's own poles: the lamps on the near side of the main road and
+  // the signal heads, only as far up as they show. Above that they are behind
+  // the plinth of the district across the road, so there is nothing to see.
+  const STREET_POLES = [[1.6, 5.38, 11.5], [13.0, 5.38, 11.5], ...HEADS.map(([x, y]) => [x, y, 13.5])].map(([x, y, h]) => { const [px, py] = P(x, y); const pts = [[px - 0.6, py], [px + 0.6, py], [px + 0.6, py - h], [px - 0.6, py - h]]; return { x, y, pts, box: boxOf(pts) }; });
   let traffic = null;
   function base(svg, fx) {
     const g = el("g", { class: "base" }, svg);
@@ -724,13 +775,23 @@
     // behind the one ahead and stopping at the signals. `at` places each
     // along its lane in tiles; the pace is in tiles a second.
     const t = el("g", { class: "traffic" }, fx);
-    // walkers behind the traffic go first, so the vehicles pass in front of them
-    const behind = el("g", { class: "walkers" }, t);
+    // Painted back to front. Beyond the main road a side road's traffic goes
+    // under the main road's and on this side of it over, so city-traffic.js
+    // moves a vehicle across as it passes the middle of the junction. On the
+    // main road the lanes go in order from the far kerb to the near one, and
+    // walkers on the far footpaths first, so the vehicles pass in front of them.
+    const [far5, far10, main, near5, near10, x7] = Array.from({ length: 6 }, () => el("g", {}, t));
+    const behind = el("g", { class: "walkers", "clip-path": "url(#clip-main)" }, main), behind5 = el("g", { class: "walkers", "clip-path": "url(#clip-x5)" }, far5);
+    for (const id of ["E", "TE", "TW", "W"]) LANES[id].far = el("g", {}, main);
+    for (const id of ["S5", "N5"]) Object.assign(LANES[id], { far: far5, near: near5 });
+    for (const id of ["S10", "N10"]) Object.assign(LANES[id], { far: far10, near: near10 });
+    LANES.S7.far = x7;
     const vehicles = [], LEN = { car: 0.3, van: 0.4, truck: 0.5, tram: 1.1 }, PACE = { car: 1.0, van: 0.95, truck: 0.55, tram: 0.6 };
     const vehicle = (sym, lane, at, cls, pace) => {
-      const kind = sym.split("-")[0], v = el("g", { class: `veh${kind === "van" ? " eds" : ""}${cls ? ` ${cls}` : ""}` }, t);
+      // a clip goes on a still wrapper: on the vehicle itself it would move with the vehicle
+      const kind = sym.split("-")[0], slot = el("g", { class: "veh-slot" }, LANES[lane].far), v = el("g", { class: `veh${kind === "van" ? " eds" : ""}${cls ? ` ${cls}` : ""}` }, slot);
       el("use", { href: `#${sym}`, style: kind === "car" ? `--car:${CARS[turns.car++ % CARS.length]}` : undefined }, v);
-      vehicles.push({ el: v, lane, s: at, len: LEN[kind], speed: pace || PACE[kind], tram: kind === "tram", patrol: cls === "patrol" });
+      vehicles.push({ el: v, slot, lane, s: at, len: LEN[kind], speed: pace || PACE[kind], tram: kind === "tram", patrol: cls === "patrol" });
     };
     vehicle("van-e", "E", 0.4); vehicle("car-e", "E", 3.6); vehicle("van-e", "E", 8.9); vehicle("car-e", "E", 13.0);
     vehicle("car-w", "W", 2.7); vehicle("car-w", "W", 7.5); vehicle("car-w", "W", 13.4);
@@ -753,8 +814,8 @@
     walk([P(15.4, 10.14), P(-0.4, 10.14)], 130, -90, "#ef4444");
     walk([P(15.14, 10.4), P(15.14, -0.4)], 95, -20, "#8a78c0");
     walk([P(15.14, -0.4), P(15.14, 10.4)], 105, -60, "#5fb4a6");
-    walk([P(4.65, -0.4), ...bridge(0, 1), P(4.65, 10.4)], 85, -40, "#fda4af", behind);
-    walk([P(4.65, 10.4), ...bridge(1, 0), P(4.65, -0.4)], 90, -5, "#e7fff9", behind);
+    walk([P(4.65, -0.4), ...bridge(0, 1), P(4.65, 10.4)], 85, -40, "#fda4af", behind5);
+    walk([P(4.65, 10.4), ...bridge(1, 0), P(4.65, -0.4)], 90, -5, "#e7fff9", behind5);
     // in a storm more of the EDS fleet is on the road, and moving faster
     vehicle("van-e", "E", 3.0, "patrol", 1.8); vehicle("van-s", "S10", 7.4, "patrol", 1.8); vehicle("van-n", "N5", 1.5, "patrol", 1.8); vehicle("van-w", "W", 10.1, "patrol", 1.8);
     // the lit lamps of each signal head: city-traffic.js sets data-state as the signals cycle
@@ -764,7 +825,7 @@
       [["r", -18.8], ["a", -17.2], ["g", -15.6]].forEach(([k, cy]) => el("circle", { class: `lamp lamp-${k}`, cx: 0, cy, r: 0.85 }, h));
       return h;
     });
-    traffic = { lanes: LANES, vehicles, heads, layer: t };
+    traffic = { lanes: LANES, vehicles, heads, roads: THROUGH, span: SPAN };
     return g;
   }
 
@@ -1091,7 +1152,7 @@
           // cooling tower, gate kiosk, weighbridge, gantry and fence
           box(14.3, 9.2, 0.5, 0.5, 14, { cls: "concrete" }), item(14.3 + 0.5 + 9.2 + 0.5 + 0.001, ...[3, 6, 9].map((z) => seg("det fine", P(14.3, 9.7, z), P(14.8, 9.7, z)))),
           slab(10.5, 6.6, 0.4, 0.75, "track"), box(10.5, 6.9, 0.25, 0.25, 7, { top: "lit", cls: "white" }),
-          box(13.55, 5.6, 0.08, 0.08, 20, { cls: "yellow" }), box(14.55, 5.6, 0.08, 0.08, 20, { bias: 0.001, cls: "yellow" }), item(20.4, seg("crane", P(13.59, 5.64, 20), P(14.59, 5.64, 20))),
+          box(13.55, 5.6, 0.08, 0.08, 20, { cls: "yellow" }), box(14.55, 5.6, 0.08, 0.08, 20, { bias: 0.001, cls: "yellow" }), (solid(13.59, 5.64, [P(13.59, 5.64, 18.8), P(14.59, 5.64, 18.8), P(14.59, 5.64, 21.2), P(13.59, 5.64, 21.2)]), item(20.4, seg("crane", P(13.59, 5.64, 20), P(14.59, 5.64, 20)))),
           rail([[10.45, 5.45], [14.95, 5.45]], 5, { posts: 0.6, cls: "fence fine", d: 11 }), rail([[14.95, 5.45], [14.95, 9.95]], 5, { posts: 0.6, cls: "fence fine", d: 25 }),
           // the trade-waste discharge point: inspection chamber, sampling kiosk, meter cabinet
           manhole(10.85, 7.8), box(10.45, 7.45, 0.3, 0.3, 12, { top: "lit", cls: "white" }), box(11.5, 7.85, 0.2, 0.2, 7, { cls: "zinc" }),
@@ -1702,6 +1763,121 @@
     return { svg, root, parts, apply };
   }
 
+  /* ---- what stands in front of the traffic ---- */
+  const overlap = (a, b) => ![a, b].some((s) => s.some((p, i) => {
+    const q = s[(i + 1) % s.length], nx = p[1] - q[1], ny = q[0] - p[0], dot = (t) => t[0] * nx + t[1] * ny;
+    const A = a.map(dot), B = b.map(dot);
+    return Math.max(...A) < Math.min(...B) || Math.max(...B) < Math.min(...A);
+  }));
+  // A box with a set of convex outlines cut out of it, as one even-odd path (a
+  // clip of one path is by far the cheapest to paint, in Safari above all). The
+  // outlines overlap, which even-odd would read as holes in the holes, so they
+  // are cut into vertical slices in which no two edges cross. In a slice each
+  // outline is a span between two edges, spans that overlap merge, and a span
+  // carries on into the next slice for as long as its two edges do.
+  function cutOut(polys, [bx0, by0, bx1, by1] = [-500, -300, 1000, 800]) {
+    const edges = [];
+    polys.forEach((a, i) => a.forEach((p, k) => { const q = a[(k + 1) % a.length]; if (p[0] !== q[0]) edges.push(p[0] < q[0] ? [p, q, i] : [q, p, i]); }));
+    edges.sort((a, b) => a[0][0] - b[0][0]);
+    edges.forEach((e, i) => { e[3] = i; });
+    const xs = polys.flat().map((p) => p[0]);
+    edges.forEach((a, i) => { for (let j = i + 1; j < edges.length && edges[j][0][0] < a[1][0]; j++) {
+      const b = edges[j];
+      if (a[2] === b[2]) continue;
+      const adx = a[1][0] - a[0][0], ady = a[1][1] - a[0][1], bdx = b[1][0] - b[0][0], bdy = b[1][1] - b[0][1], den = adx * bdy - ady * bdx;
+      if (!den) continue;
+      const t = ((b[0][0] - a[0][0]) * bdy - (b[0][1] - a[0][1]) * bdx) / den, u = ((b[0][0] - a[0][0]) * ady - (b[0][1] - a[0][1]) * adx) / den;
+      if (t > 0 && t < 1 && u > 0 && u < 1) xs.push(a[0][0] + t * adx);
+    } });
+    const cuts = xs.filter((x) => x > bx0 && x < bx1).concat(bx0, bx1).sort((a, b) => a - b);
+    const at = (e, x) => Math.max(by0, Math.min(by1, e[0][1] + (e[1][1] - e[0][1]) * (x - e[0][0]) / (e[1][0] - e[0][0])));
+    const quads = [];
+    let open = new Map(), live = [], entered = 0;
+    for (let k = 0; k < cuts.length - 1; k++) {
+      const x0 = cuts[k], x1 = cuts[k + 1], mid = (x0 + x1) / 2;
+      if (x1 - x0 < 1e-3) continue;
+      const each = new Map();
+      while (entered < edges.length && edges[entered][0][0] <= mid) live.push(edges[entered++]);
+      live = live.filter((e) => e[1][0] > mid);
+      for (const e of live) {
+        const y = at(e, mid), s = each.get(e[2]);
+        if (!s) each.set(e[2], { lo: e, ly: y });
+        else if (y < s.ly) Object.assign(s, { hi: s.lo, hy: s.ly, lo: e, ly: y });
+        else Object.assign(s, { hi: e, hy: y });
+      }
+      const spans = [...each.values()].filter((s) => s.hi).sort((a, b) => a.ly - b.ly), next = new Map();
+      for (let i = 0; i < spans.length; i++) {
+        const s = { ...spans[i] };
+        while (i + 1 < spans.length && spans[i + 1].ly <= s.hy) { i++; if (spans[i].hy > s.hy) { s.hi = spans[i].hi; s.hy = spans[i].hy; } }
+        const key = s.lo[3] + ":" + s.hi[3];
+        let q = open.get(key);
+        if (q) q.x1 = x1; else quads.push(q = { x0, x1, lo: s.lo, hi: s.hi });
+        next.set(key, q);
+      }
+      open = next;
+    }
+    return `M${f(bx0)} ${f(by0)}H${f(bx1)}V${f(by1)}H${f(bx0)}Z` + quads.map((q) => `M${f(q.x0)} ${f(at(q.lo, q.x0))}L${f(q.x1)} ${f(at(q.lo, q.x1))}L${f(q.x1)} ${f(at(q.hi, q.x1))}L${f(q.x0)} ${f(at(q.hi, q.x0))}Z`).join("");
+  }
+  // The clips: a road's, and one for each stretch of it, which reaches past its
+  // ends far enough for the longest vehicle on either side of the line (a tram,
+  // 0.55 tiles, and a headlight's beam). `top` is how high they need to reach.
+  // A picked district rises and grows (site.css: raised 14, scaled 1.07 about
+  // its centre) and covers the road behind it with its ground and walls as well,
+  // so a clip has a version for each district that stands in front of its road,
+  // made the first time it is needed.
+  function roadClips(D, base, byZone) {
+    const clips = [], made = {}, extent = {}, clip = (id, road, a, b, top, tight) => clips.push({ id, road, a, b, top, tight, path: el("path", { "clip-rule": "evenodd", "fill-rule": "evenodd" }, el("clipPath", { id: `clip-${id}` }, D)) });
+    for (const [id, r] of Object.entries(THROUGH)) {
+      clip(id, r, r.from, r.to, 36, false);
+      for (let k = 0; k < r.n; k++) clip(`${id}-${k}`, r, r.from + k * SPAN - 0.7, r.from + (k + 1) * SPAN + 0.7, 18, true);
+    }
+    const raised = (id) => {
+      const [x0, y0, x1, y1] = ZONES[id].rect, [ox, oy] = P((x0 + x1) / 2, (y0 + y1) / 2);
+      return ([x, y]) => [ox + (x - ox) * 1.07, oy + (y - oy) * 1.07 - 14];
+    };
+    // Does this stretch come anywhere near a district when it is raised? Only
+    // those need a version for it. (A whole road's clip keeps its plain version:
+    // what goes through it is out only now and then, and a road is long to remake.)
+    const reaches = ({ road, a, b, top, tight }, id) => {
+      if (!tight) return false;
+      const [x0, y0, x1, y1] = road.axis ? [a, road.rect[1], b, road.rect[3]] : [road.rect[0], a, road.rect[2], b];
+      const [sx0, sy0, sx1, sy1] = boxOf([0, top].flatMap((z) => [P(x0, y0, z), P(x1, y0, z), P(x1, y1, z), P(x0, y1, z)])), lift = raised(id);
+      const [zx0, zy0, zx1, zy1] = extent[id] ||= (() => { const boxes = byZone[id].map((s) => s.box), [a0, b0, c0, d0] = ZONES[id].rect; const all = boxes.flatMap(([p, q, r, s]) => [[p, q], [r, s]]).concat([P(a0, b0), P(c0, b0), P(c0, d0, -10), P(a0, d0, -10)]); return boxOf(all.map(lift)); })();
+      return zx1 + 2 >= sx0 && zx0 - 2 <= sx1 && zy1 + 2 >= sy0 && zy0 - 2 <= sy1;
+    };
+    const make = ({ road, a, b, top, tight }, up) => {
+      const [x0, y0, x1, y1] = road.axis ? [a, road.rect[1], b, road.rect[3]] : [road.rect[0], a, road.rect[2], b];
+      const strip = hull([0, top].flatMap((z) => [P(x0, y0, z), P(x1, y0, z), P(x1, y1, z), P(x0, y1, z)])), [sx0, sy0, sx1, sy1] = boxOf(strip);
+      const near = [], add = (poly) => { if (overlap(poly, strip)) near.push(poly); };
+      const front = (s) => (road.axis ? s.y : s.x) >= road.near;
+      const hits = ([a, b, c, d]) => c >= sx0 && a <= sx1 && d >= sy0 && b <= sy1;
+      const outline = (s) => (s.poly ||= hull(s.pts));
+      for (const s of base) if (front(s) && hits(s.box)) add(outline(s));
+      for (const [id, list] of Object.entries(byZone)) {
+        const lift = id === up ? raised(id) : null;
+        for (const s of list) {
+          if (!front(s) || !hits(lift ? [...lift([s.box[0], s.box[1]]), ...lift([s.box[2], s.box[3]])] : s.box)) continue;
+          add(lift ? outline(s).map(lift) : outline(s));
+        }
+      }
+      if (up) {
+        const [a, b, c, d] = ZONES[up].rect;
+        add(hull([P(a, b), P(c, b), P(c, d), P(a, d), P(a, d, -10), P(c, d, -10), P(c, b, -10)].flatMap(([x, y]) => [[x - 1, y], [x + 1, y], [x, y - 1], [x, y + 1]])).map(raised(up)));
+      }
+      return cutOut(near, tight ? [sx0 - 8, sy0 - 8, sx1 + 8, sy1 + 8] : undefined);
+    };
+    let shown;
+    return (active) => {
+      if (active === shown) return;
+      shown = active;
+      for (const c of clips) {
+        const up = active && ZONES[active].rect[c.road.axis] >= c.road.near && reaches(c, active) ? active : "", key = `${c.id}:${up}`;
+        const d = (made[key] ||= make(c, up));
+        if (c.path.getAttribute("d") !== d) c.path.setAttribute("d", d);
+      }
+    };
+  }
+
   /* ---- assemble ---- */
   // Two SVGs share one viewBox: the still city (districts, slab, pipes) and,
   // over it, everything that moves (traffic, pings, flows, packets, labels).
@@ -1724,7 +1900,7 @@
     const baseLayer = base(svg, fx); BASE_DETAIL(baseLayer); const underLayer = under(svg, fx);
     const shadowLayer = el("g", { class: "shadows" }, svg), zoneLayer = el("g", { class: "zones" }, svg);
     const zoneFxLayer = el("g", { class: "zones-fx" }, fx), linkLayer = el("g", { class: "links" }, fx), packetLayer = el("g", { class: "packets" }, fx), labelLayer = el("g", { class: "labels" }, fx);
-    const zones = {}, zoneFx = {}, labels = {}, links = {}, shadows = {}, anchors = {}, slots = {};
+    const zones = {}, zoneFx = {}, labels = {}, links = {}, shadows = {}, anchors = {}, slots = {}, zoneSolids = {};
     Object.entries(ZONES)
       .sort((a, b) => a[1].rect[2] + a[1].rect[3] - (b[1].rect[2] + b[1].rect[3]))
       .forEach(([id, z], order) => {
@@ -1739,7 +1915,7 @@
           poly("g", [P(x0, y0), P(x1, y0), P(x1, y1), P(x0, y1)])
         );
         const sensors = (zd.sensors || []).map((s, i) => sensor(s, i, ui));
-        cast = [];
+        cast = []; solids = [];
         const parts = z.build(sensors);
         parts.vol.push(...(DETAIL[id] ? DETAIL[id]() : []));
         const fine = FINE[id]?.() || {};
@@ -1747,7 +1923,7 @@
         parts.decals.push(...(fine.decals || []));
         // every block's shadow on the ground, as one path under the district
         if (cast.length) parts.decals.push(lo(item(0, shapes("cast", cast))));
-        cast = null;
+        cast = null; zoneSolids[id] = solids; solids = null;
         const dec = el("g", { class: "decals" }, g), vol = el("g", { class: "vol" }, g), cut = el("g", { class: "cut" }, g);
         // the ground's grain: grass in the green districts, paving in the built ones
         dec.append(poly("tex", [P(x0, y0), P(x1, y0), P(x1, y1), P(x0, y1)], { style: `fill:url(#${TEXTURE[id] || "pave"})` }));
@@ -1815,6 +1991,9 @@
     const handMotion = el("animateMotion", { dur: ".8s", begin: "indefinite", fill: "freeze", calcMode: "spline", keySplines: ".2 .8 .3 1", keyTimes: "0;1", path: links.river.getAttribute("d") }, hand);
     const sms = el("rect", { class: "pkt-sms", width: 9, height: 6, rx: 2, x: -4.5, y: -3 }, packetLayer);
     const smsMotion = el("animateMotion", { dur: "1.1s", begin: "indefinite", fill: "freeze", path: links.sewer.getAttribute("d") }, sms);
+
+    traffic.occlude = roadClips(D, STREET_POLES, zoneSolids);
+    traffic.occlude(null);
 
     // a district's kit for taking it apart is made the first time it is asked for
     const kits = {};

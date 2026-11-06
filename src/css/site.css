@@ -534,6 +534,9 @@ ul { margin: 0; padding: 0; list-style: none; }
 .city-fx .under-fx { clip-path: url(#clip-roads); }
 /* traffic (trams are long) drives in and out at the edge of the ground */
 .city-fx .traffic { clip-path: url(#clip-slab); }
+/* the traffic passes behind what stands in front of its road (city-scene.js),
+   unless those blocks have faded back to show the sewer or a district taken apart */
+.city-fx:is(.is-underground, .is-exploded) :is(.veh-slot, .walkers, .stunt, .dispatch) { clip-path: none; }
 .city-fx.is-underground .under-fx { clip-path: none; }
 .city-svg .zone.hover > .g { stroke: rgba(95, 180, 166, .55); stroke-width: 1.4; }
 .city-svg .zlabel.hover { opacity: 1; }

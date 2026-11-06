@@ -15,7 +15,7 @@
 (() => {
   window.CityTraffic = (sc) => {
     if (!sc.traffic) return null;
-    const { lanes, vehicles, heads } = sc.traffic, P = CityScene.P;
+    const { lanes, vehicles, heads, roads, span } = sc.traffic, P = CityScene.P;
     // the signal cycle at each intersection, in seconds: the main road's
     // green, amber and all-red, then the side road's. The second intersection
     // runs the same cycle offset, so the two never change in step.
@@ -33,7 +33,7 @@
     const L = {};
     for (const [id, l] of Object.entries(lanes)) {
       const ax = l.from[0] === l.to[0] ? 1 : 0, sign = Math.sign(l.to[ax] - l.from[ax]), len = Math.abs(l.to[ax] - l.from[ax]);
-      L[id] = { from: l.from, ax, sign, len, stops: l.stops.map(([c, node, axis]) => ({ s: (c - l.from[ax]) * sign, node, axis })), cars: [] };
+      L[id] = { from: l.from, ax, sign, len, far: l.far, near: l.near, road: l.road, stops: l.stops.map(([c, node, axis]) => ({ s: (c - l.from[ax]) * sign, node, axis })), cars: [] };
     }
     for (const v of vehicles) { L[v.lane].cars.push(v); v.v = v.speed; v.pass = null; v.braking = null; }
     // The stunt (city.js) puts its car and, once it lands, its roadster into
@@ -45,15 +45,34 @@
       const l = L[laneId], own = typeof what === "string";
       if (!o.force && !clear(laneId, s, o.margin ?? 0.9)) return null;
       let el = what;
-      if (own) { el = document.createElementNS("http://www.w3.org/2000/svg", "g"); el.setAttribute("class", "veh"); const u = document.createElementNS("http://www.w3.org/2000/svg", "use"); u.setAttribute("href", what); el.appendChild(u); sc.traffic.layer.appendChild(el); }
-      const v = { el, own, lane: laneId, s, len: o.len ?? 0.3, speed: o.speed ?? 1.0, v: o.speed ?? 1.0, pass: null, braking: null, once: true, done: false };
-      const [px, py] = place(l, s);
-      el.setAttribute("transform", `translate(${px.toFixed(1)} ${py.toFixed(1)})`);
+      const ns = "http://www.w3.org/2000/svg";
+      let slot = null;
+      if (own) {
+        slot = document.createElementNS(ns, "g"); slot.setAttribute("class", "veh-slot"); l.far.appendChild(slot);
+        el = document.createElementNS(ns, "g"); el.setAttribute("class", "veh"); slot.appendChild(el);
+        const u = document.createElementNS(ns, "use"); u.setAttribute("href", what); el.appendChild(u);
+      }
+      const v = { el, slot, lane: laneId, s, len: o.len ?? 0.3, speed: o.speed ?? 1.0, v: o.speed ?? 1.0, pass: null, braking: null, once: true, done: false };
+      put(l, v);
       l.cars.push(v);
       return v;
     };
-    const despawn = (v) => { const l = L[v.lane], i = l.cars.indexOf(v); if (i >= 0) l.cars.splice(i, 1); if (v.own) v.el.remove(); };
-    const place = (l, s) => { const p = [l.from[0], l.from[1]]; p[l.ax] += l.sign * s; return P(p[0], p[1]); };
+    const despawn = (v) => { const l = L[v.lane], i = l.cars.indexOf(v); if (i >= 0) l.cars.splice(i, 1); (v.slot || v.el).remove(); };
+    // Each frame: where it is on screen, and when these change, which stretch of
+    // road's clip it goes through and, on a side road, which side of the main
+    // road's traffic it paints: it crosses to the group over that traffic as it
+    // passes the middle of the junction, and back when it comes round. (The stunt's
+    // roadster has no slot: it stays in the stunt's group, with the road's clip.)
+    const put = (l, v) => {
+      const p = [l.from[0], l.from[1]];
+      p[l.ax] += l.sign * v.s;
+      const [px, py] = P(p[0], p[1]);
+      v.el.setAttribute("transform", `translate(${px.toFixed(1)} ${py.toFixed(1)})`);
+      if (!v.slot) return;
+      const r = roads[l.road], k = Math.max(0, Math.min(r.n - 1, Math.floor((p[l.ax] - r.from) / span)));
+      if (v.k !== k) { v.k = k; v.slot.setAttribute("clip-path", `url(#clip-${l.road}-${k})`); }
+      if (l.near) { const near = p[1] > 5; if (v.near !== near) { v.near = near; (near ? l.near : l.far).appendChild(v.slot); } }
+    };
     // in tiles a second: how hard a vehicle pulls away and eases off, and
     // the speed from which a distance is enough to stop in comfortably
     const ACC = 0.9, TRAM_ACC = 0.4, BRAKE = 0.75, EASE = 1.8, GAP = 0.14;
@@ -102,14 +121,13 @@
           else v.v = Math.max(target, v.v - EASE * dt);
           v.s += v.v * dt;
           if (v.s > l.len) { if (v.once) v.done = true; else { v.s -= l.len; v.pass = null; v.braking = null; } }
-          const [px, py] = place(l, v.s);
-          v.el.setAttribute("transform", `translate(${px.toFixed(1)} ${py.toFixed(1)})`);
+          put(l, v);
         }
       }
       raf = requestAnimationFrame(frame);
     }
     // everything in place before the first frame, so nothing is seen to jump
-    for (const l of Object.values(L)) for (const v of l.cars) { const [px, py] = place(l, v.s); v.el.setAttribute("transform", `translate(${px.toFixed(1)} ${py.toFixed(1)})`); }
+    for (const l of Object.values(L)) for (const v of l.cars) put(l, v);
     const run = (on) => {
       running = on;
       if (on && !raf) { last = performance.now(); raf = requestAnimationFrame(frame); }
