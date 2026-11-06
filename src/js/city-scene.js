@@ -370,16 +370,17 @@
     // the EDS vans, a little larger than the cars to carry the logo
     vehicle("van-e", 0.4, 0.19, 5.6, VAN, "e", { eds: true }); vehicle("van-w", 0.4, 0.19, 5.6, VAN, "w", { eds: true }); vehicle("van-s", 0.19, 0.4, 5.6, VAN, "s", { eds: true }); vehicle("van-n", 0.19, 0.4, 5.6, VAN, "n", { eds: true });
     vehicle("van-x", 0.4, 0.19, 5.6, VAN, "", { eds: true }); vehicle("van-y", 0.19, 0.4, 5.6, VAN, "", { eds: true });
-    // light rail: a two-car tram with a dark window band and a pantograph
+    // light rail: a two-car tram with a dark window band and a pantograph,
+    // narrow enough to pass the other tram and the cars in the lanes beside it
     for (const dir of ["e", "w"]) sym(`tram-${dir}`, (g) => {
-      const b = box(-0.55, -0.1, 1.1, 0.2, 8);
+      const b = box(-0.55, -0.065, 1.1, 0.13, 8);
       b.nodes[0].style.fill = "#c9dbd7"; b.nodes[1].style.fill = "#dfeae8"; b.nodes[2].style.fill = "#eef6f4";
-      g.append(...b.nodes, poly("", [P(-0.55, 0.1, 4.2), P(0.55, 0.1, 4.2), P(0.55, 0.1, 6.6), P(-0.55, 0.1, 6.6)], { style: F("#123b37") }), seg("", P(0, 0.1, 0.6), P(0, 0.1, 7.6), { style: "stroke:#8aa7a2;stroke-width:1" }));
+      g.append(...b.nodes, poly("", [P(-0.55, 0.065, 4.2), P(0.55, 0.065, 4.2), P(0.55, 0.065, 6.6), P(-0.55, 0.065, 6.6)], { style: F("#123b37") }), seg("", P(0, 0.065, 0.6), P(0, 0.065, 7.6), { style: "stroke:#8aa7a2;stroke-width:1" }));
       g.append(pl("", [P(-0.08, 0, 8), P(0.02, 0, 12.5), P(0.12, 0, 8)], { style: "fill:none;stroke:rgba(255,255,255,.6);stroke-width:.9" }));
       // pillars between the panes, two doors on each car, glass across the end
-      g.append(strokes("", [-0.44, -0.33, -0.22, -0.11, 0.11, 0.22, 0.33, 0.44].map((k) => [P(k, 0.1, 4.2), P(k, 0.1, 6.6)]), { style: "fill:none;stroke:#c9dbd7;stroke-width:.5" }));
-      g.append(strokes("", [-0.36, -0.2, 0.2, 0.36].map((k) => [P(k - 0.04, 0.1, 0.6), P(k - 0.04, 0.1, 6.6), P(k + 0.04, 0.1, 6.6), P(k + 0.04, 0.1, 0.6)]), { style: "fill:none;stroke:#8aa7a2;stroke-width:.5" }));
-      g.append(poly("", onR(0.55, -0.1, 0.03, 0.17, 4.2, 7), { style: F("#123b37") }));
+      g.append(strokes("", [-0.44, -0.33, -0.22, -0.11, 0.11, 0.22, 0.33, 0.44].map((k) => [P(k, 0.065, 4.2), P(k, 0.065, 6.6)]), { style: "fill:none;stroke:#c9dbd7;stroke-width:.5" }));
+      g.append(strokes("", [-0.36, -0.2, 0.2, 0.36].map((k) => [P(k - 0.04, 0.065, 0.6), P(k - 0.04, 0.065, 6.6), P(k + 0.04, 0.065, 6.6), P(k + 0.04, 0.065, 0.6)]), { style: "fill:none;stroke:#8aa7a2;stroke-width:.5" }));
+      g.append(poly("", onR(0.55, -0.065, 0.015, 0.115, 4.2, 7), { style: F("#123b37") }));
       const [lx, ly] = P(dir === "e" ? 0.55 : -0.55, 0, 3); el("circle", { cx: f(lx), cy: f(ly), r: 1.1, style: F("#fff7d6") }, g);
     });
     // trucks: a box body and, ahead of it, a lower cab with a windscreen
@@ -631,17 +632,19 @@
   const HEADS = [[4.55, 4.55, "A", "main"], [5.45, 5.45, "A", "main"], [5.45, 4.55, "A", "side"], [4.55, 5.45, "A", "side"], [9.55, 4.55, "B", "main"], [10.45, 5.45, "B", "main"], [10.45, 4.55, "B", "side"], [9.55, 5.45, "B", "side"]];
   // The lanes the traffic runs: straight, from `from` to `to` in tiles; a
   // stop is where a lane's traffic halts (the front of a vehicle at the stop
-  // line) and which signal it waits on. city-traffic.js drives it.
+  // line) and which signal it waits on. city-traffic.js drives it. On the
+  // main road the cars keep to the kerb side and the trams to their track
+  // centres, so a car and a tram stopped side by side at a light stay apart.
   const LANES = {
-    E: { from: [-0.9, 4.85], to: [15.9, 4.85], stops: [[4.55, "A", "main"], [9.55, "B", "main"]] },
-    W: { from: [15.9, 5.15], to: [-0.9, 5.15], stops: [[10.45, "B", "main"], [5.45, "A", "main"]] },
+    E: { from: [-0.9, 4.79], to: [15.9, 4.79], stops: [[4.55, "A", "main"], [9.55, "B", "main"]] },
+    W: { from: [15.9, 5.21], to: [-0.9, 5.21], stops: [[10.45, "B", "main"], [5.45, "A", "main"]] },
     S5: { from: [5.15, -0.9], to: [5.15, 10.9], stops: [[4.55, "A", "side"]] },
     N5: { from: [4.85, 10.9], to: [4.85, -0.9], stops: [[5.45, "A", "side"]] },
     S10: { from: [10.15, -0.9], to: [10.15, 10.9], stops: [[4.55, "B", "side"]] },
     N10: { from: [9.85, 10.9], to: [9.85, -0.9], stops: [[5.45, "B", "side"]] },
-    S7: { from: [7.6, 5.0], to: [7.6, 10.9], stops: [] },
-    TE: { from: [-1.6, 4.97], to: [16.6, 4.97], stops: [[4.55, "A", "main"], [9.55, "B", "main"]] },
-    TW: { from: [16.6, 5.03], to: [-1.6, 5.03], stops: [[10.45, "B", "main"], [5.45, "A", "main"]] },
+    S7: { from: [7.6, 5.45], to: [7.6, 10.9], stops: [] },
+    TE: { from: [-1.6, 4.94], to: [16.6, 4.94], stops: [[4.55, "A", "main"], [9.55, "B", "main"]] },
+    TW: { from: [16.6, 5.06], to: [-1.6, 5.06], stops: [[10.45, "B", "main"], [5.45, "A", "main"]] },
   };
   let traffic = null;
   function base(svg, fx) {
@@ -740,7 +743,7 @@
       [["r", -18.8], ["a", -17.2], ["g", -15.6]].forEach(([k, cy]) => el("circle", { class: `lamp lamp-${k}`, cx: 0, cy, r: 0.85 }, h));
       return h;
     });
-    traffic = { lanes: LANES, vehicles, heads };
+    traffic = { lanes: LANES, vehicles, heads, layer: t };
     return g;
   }
 
@@ -1745,7 +1748,7 @@
     }
     // the van FlowSense sends from the operations yard to MH 14 when the
     // alarm goes out, driven along the roads (on the left) by city.js
-    const dispatch = { g: el("g", { class: "dispatch" }, fx.querySelector(".traffic")), route: [[9.1, 9.4], [9.1, 9.12], [7.45, 9.12], [7.45, 4.85], [8.13, 4.85], [8.13, 3.4]] };
+    const dispatch = { g: el("g", { class: "dispatch" }, fx.querySelector(".traffic")), route: [[9.1, 9.4], [9.1, 9.12], [7.45, 9.12], [7.45, 4.79], [8.13, 4.79], [8.13, 3.4]] };
     dispatch.use = el("use", { href: "#van-w" }, dispatch.g);
 
     // data links: every district reports to the operations centre mast, and
