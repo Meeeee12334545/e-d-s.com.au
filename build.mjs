@@ -2659,7 +2659,6 @@ function searchIndex() {
 /* ------------------------------------------------------------------ */
 /* write                                                               */
 /* ------------------------------------------------------------------ */
-icon("fan"); // fsScreen() reuses the fan glyph, so make sure it is cached
 await rm(DIST, { recursive: true, force: true });
 await mkdir(path.join(DIST, "assets/fonts"), { recursive: true });
 // The stylesheet ships without its comments (about a fifth of its weight);
