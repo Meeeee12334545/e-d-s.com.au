@@ -120,7 +120,7 @@
   // the cloud is painted at the stage's own pixels a unit, up to this many
   const RMAX = 3;
 
-  window.CityWeather = (sc, { clock, script }) => {
+  window.CityWeather = (sc, { clock, script, sound }) => {
     const canvas = document.createElement("canvas");
     canvas.className = "city-weather";
     canvas.setAttribute("aria-hidden", "true");
@@ -454,6 +454,8 @@
     // the city itself lights up with a strike: two pulses, never more than
     // two a second, softer for visitors who ask for reduced motion
     const pulse = (frames, ms) => { try { sc.svg.animate(frames, { duration: ms }); } catch {} };
+    // the thunder follows the flash, from that side of the stage (city-sound.js)
+    const thunder = (kind, x) => sound?.flash(kind, ((x - VX) / VW) * 2 - 1);
     function strike() {
       const t = !struck && tips.length ? tips[0] : rnd() < 0.35 && tips.length ? tips[(rnd() * Math.min(4, tips.length)) | 0] : null;
       struck = true;
@@ -463,6 +465,7 @@
       channel(x0, y0, x1, y1, 8, 0.5, 1, 0, 3, paths);
       bolts.push({ paths, t0: tw, x1, y1 });
       glows.push({ x: x0, y: y0, r: 170, t0: tw, bolt: true });
+      thunder("bolt", x1);
       const soft = calm.matches, b1 = soft ? 0.95 : 1.4, b2 = soft ? 0.9 : 1.25;
       pulse([{ offset: 0.06, filter: `brightness(${b1}) saturate(.6)` }, { offset: 0.16, filter: "brightness(.84) saturate(.68)" }, { offset: 0.22, filter: `brightness(${b2}) saturate(.6)` }, { offset: 0.5, filter: "brightness(.95) saturate(.66)" }], 520);
     }
@@ -473,10 +476,11 @@
       channel(x0, y0, x1, y1, 7, 0.3, 0.8, 0, 7, paths);
       crawlers.push({ paths, t0: tw, dur });
       glows.push({ x: (x0 + x1) / 2, y: (y0 + y1) / 2, r: 210, t0: tw, crawl: true, dur });
+      thunder("crawl", (x0 + x1) / 2);
       pulse([{ offset: 0.2, filter: `brightness(${calm.matches ? 1.06 : 1.12}) saturate(.64)` }, { offset: 0.6, filter: "brightness(.9) saturate(.68)" }], 480);
     }
     // lightning inside the cloud, with no channel to see
-    const sheetFlash = () => { const x = range(VX + 60, VX + VW - 60); glows.push({ x, y: Math.max(VY + 4, baseAt(x) - range(10, 40)), r: range(120, 190), t0: tw, pk: range(0.4, 0.75) }); };
+    const sheetFlash = () => { const x = range(VX + 60, VX + VW - 60); glows.push({ x, y: Math.max(VY + 4, baseAt(x) - range(10, 40)), r: range(120, 190), t0: tw, pk: range(0.4, 0.75) }); thunder("sheet", x); };
 
     /* ---- the canvas, fitted to the stage ---- */
     let k = 0, ox = 0, oy = 0, cap = 0;
@@ -506,6 +510,7 @@
       const clouded = t != null && t < dryAt + 1.5 ? 1 : 0;
       cloud = ease(cloud, clouded, dt, clouded > cloud ? 1.1 : quick ? 0.5 : 1.6);
       wetness = rain > 0.04 ? Math.min(1, wetness + dt * 0.45 * rain) : Math.max(0, wetness - dt / (quick ? 2.5 : 6));
+      sound?.weather(rain, gust(tw), cloud, wetness);
       // drops: the first `want` of them are in the air, more in a squall
       const want = Math.min(MAX, Math.round(cap * rain * gust(tw)));
       flying = 0;

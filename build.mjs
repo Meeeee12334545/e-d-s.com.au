@@ -1224,7 +1224,7 @@ add({
   title: "Environmental Data Services | Water & Wastewater Monitoring",
   description: "Environmental Data Services (EDS): flow meters, samplers, trained field crews and FlowSense data for water and wastewater. Australian owned since 1991.",
   current: "home",
-  scripts: ["city-scene.js", "city-traffic.js", "city-weather.js", "city.js"],
+  scripts: ["city-scene.js", "city-traffic.js", "city-sound.js", "city-weather.js", "city.js"],
   body: (r) => {
     const words = ["Every", "drop,", "measured."];
     // The page tells one story in ten bands. Dark bands run on a schedule:
@@ -1316,6 +1316,7 @@ add({
         <div class="city-toolbar" role="toolbar" aria-label="${esc(C.cityUi.toolbarLabel)}">
           <button type="button" class="btn btn-primary city-btn" data-act="tour">${icon("route")}<span>${esc(C.cityUi.toolbar.tour)}</span></button>
           <button type="button" class="btn btn-ghost city-btn" data-act="storm" data-pressed="false" aria-describedby="city-note">${icon("cloud-rain")}<span>${esc(C.cityUi.toolbar.storm)}</span></button>
+          <button type="button" class="btn btn-ghost city-btn" data-act="sound" data-pressed="false" aria-label="${esc(C.cityUi.toolbar.mute)}">${icon("volume-2", false)}${icon("volume-x", false)}</button>
           <button type="button" class="btn btn-ghost city-btn" data-act="explode" data-pressed="false">${icon("unfold-vertical")}${icon("fold-vertical", false)}<span>${esc(C.cityUi.explode.take)}</span></button>
           <button type="button" class="btn btn-ghost city-btn" data-act="under" data-pressed="false">${icon("layers")}<span>${esc(C.cityUi.toolbar.under)}</span></button>
           <button type="button" class="btn btn-ghost city-btn" data-act="expand" data-pressed="false">${icon("maximize-2")}${icon("minimize-2", false)}<span>${esc(C.cityUi.toolbar.expand)}</span></button>
