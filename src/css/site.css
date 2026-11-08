@@ -536,7 +536,7 @@ ul { margin: 0; padding: 0; list-style: none; }
 .city-fx .traffic { clip-path: url(#clip-slab); }
 /* the traffic passes behind what stands in front of its road (city-scene.js),
    unless those blocks have faded back to show the sewer or a district taken apart */
-.city-fx:is(.is-underground, .is-exploded) :is(.veh-slot, .walkers, .stunt, .dispatch) { clip-path: none; }
+.city-fx:is(.is-underground, .is-exploded) :is(.veh-slot, .walkers, .stunt, .dispatch, .pullover) { clip-path: none; }
 .city-fx.is-underground .under-fx { clip-path: none; }
 .city-svg .zone.hover > .g { stroke: rgba(95, 180, 166, .55); stroke-width: 1.4; }
 .city-svg .zlabel.hover { opacity: 1; }
@@ -713,6 +713,25 @@ ul { margin: 0; padding: 0; list-style: none; }
 @keyframes vb-flash { 0%, 49% { --vb: #f59e0b; } 50%, 100% { --vb: #4a3208; } }
 .city-fx.is-storm .veh.eds, .city-fx.is-storm .yard-van, .city-fx .crew use, .city-fx .dispatch use { animation: vb-flash .7s steps(1) infinite; }
 .city-svg .patrol { opacity: 0; transition: opacity 1.2s var(--ease); }
+/* the police (city-traffic.js): the light bar's red half flashes twice, then
+   the blue half twice, with a glow round each; off, the halves sit dark */
+@property --lbr { syntax: "<color>"; inherits: true; initial-value: #5a1f24; }
+@property --lbb { syntax: "<color>"; inherits: true; initial-value: #1f2c5a; }
+@property --lgr { syntax: "<color>"; inherits: true; initial-value: rgba(255, 59, 74, 0); }
+@property --lgb { syntax: "<color>"; inherits: true; initial-value: rgba(90, 162, 255, 0); }
+@keyframes cop-lights {
+  0%, 24% { --lbr: #ff3b4a; --lgr: rgba(255, 59, 74, .5); --lbb: #1f2c5a; --lgb: rgba(90, 162, 255, 0); }
+  12%, 36% { --lbr: #5a1f24; --lgr: rgba(255, 59, 74, 0); --lbb: #1f2c5a; --lgb: rgba(90, 162, 255, 0); }
+  50%, 74% { --lbr: #5a1f24; --lgr: rgba(255, 59, 74, 0); --lbb: #5aa2ff; --lgb: rgba(90, 162, 255, .55); }
+  62%, 86%, 100% { --lbr: #5a1f24; --lgr: rgba(255, 59, 74, 0); --lbb: #1f2c5a; --lgb: rgba(90, 162, 255, 0); }
+}
+.city-fx .veh.cop.lit { animation: cop-lights .9s steps(1, end) infinite; }
+/* the officers and the kids step as they walk; the radio call and the cuffs' glint */
+.city-fx .pullover :is(.kids, .cops) .stepping use { animation: walk-bob .38s ease-in-out infinite alternate; }
+.city-fx .pullover .radio path { fill: none; stroke: #e9f6ff; stroke-width: .7; stroke-linecap: round; }
+.city-fx .pullover .glint { fill: #ffffff; }
+.city-fx .pullover { transition: opacity .3s var(--ease); }
+.city-fx.is-exploded .pullover { opacity: 0; }
 .city-svg.is-storm .patrol { opacity: 1; }
 .city-svg .crew { opacity: 0; translate: 0 4px; transition: opacity .6s var(--ease), translate .6s var(--ease-out); pointer-events: none; }
 .city-svg.crew-mh14 .crew-mh14, .city-svg.crew-pump .crew-pump, .city-svg.crew-plant .crew-plant, .city-svg.crew-river .crew-river { opacity: 1; translate: 0 0; }
