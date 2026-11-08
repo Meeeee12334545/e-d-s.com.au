@@ -233,9 +233,11 @@
     // over onto the far footpath (KERB). An officer walks up to the kids and
     // radios in; a second car comes towing a trailer and pulls in ahead of
     // them. The kids get off, the officers wheel the bikes up the ramp onto
-    // the trailer, and it drives off with them. Then the kids are handcuffed,
-    // walked back to the first car and driven away, lights still going, and
-    // the helicopter flies off.
+    // the trailer, and it drives off with them. Once it is on its way the
+    // kids are handcuffed and walked back to the first car, and get in the
+    // back (they can be seen through its side windows). The helicopter hovers
+    // over it all, and when the police pull out and drive the kids away,
+    // lights still going, it follows them a moment and then flies off.
     //
     // The story is written as generators, one per thing going on at once,
     // stepped each frame with the time since the last (so it pauses with the
@@ -382,6 +384,14 @@
       while (t < sec) { t += yield; const k = Math.floor(t / 0.22) % 3; a.style.visibility = k ? "" : "hidden"; b.style.visibility = k > 1 ? "" : "hidden"; }
       g.remove();
     }
+    // Someone aboard a police car, seen through its side windows: a kid in
+    // the back, in their own --helmet or --hair, or an officer in front, in
+    // the cap. `u` is how far along the car from its middle, in tiles.
+    const aboard = (v, u, style) => {
+      const g = mk("g", { class: "aboard", style }, v.el), [px, py] = P(u, 0.045, 3.25), cap = !style;
+      mk("circle", { cx: px.toFixed(2), cy: py.toFixed(2), r: 0.75, style: cap ? "fill:var(--skin, #ffe3b3)" : "fill:var(--helmet, var(--skin, #ffe3b3))" }, g);
+      mk("path", { d: `M${(px - 0.75).toFixed(2)} ${(py - 0.05).toFixed(2)}a.75 .75 0 0 1 1.5 0z`, style: cap ? "fill:#1c2b4a" : "fill:var(--hair, transparent)" }, g);
+    };
     // the click of the cuffs: a glint at the kid's wrists
     function* glint(o) {
       const [px, py] = P(o.x, o.y), s = mk("path", { class: "glint", d: "M0 -1.7L.4 -.4 1.7 0 .4 .4 0 1.7 -.4 .4 -1.7 0 -.4 -.4Z", transform: `translate(${(px + 1.8).toFixed(1)} ${(py - 2.9).toFixed(1)})` }, gCops);
@@ -456,10 +466,11 @@
       // the bikes go off on the trailer
       walkTo(o2, K.at.p2 + 0.12, K.y.cop);
       yield* until(() => there(o2));
-      gone(o2);
+      gone(o2); aboard(p2, TRAILER.car + 0.01);
       yield* wait(0.4);
-      go(away(p2));
-      // the kids are cuffed, one at a time, and walked back to the car
+      const towed = go(away(p2)), from = p2.s;
+      // once the trailer is on its way, the kids are cuffed, one at a time
+      for (let t = 0; !towed.done && p2.s < from + 1.2 && t < 6; t += yield);
       for (const { kid } of off) {
         walkTo(o1, kid.x + 0.06, K.y.cop); yield* until(() => there(o1));
         yield* wait(0.5);
@@ -471,13 +482,18 @@
       yield* wait(0.3);
       walkTo(o1, K.at.p1 + 0.08, K.y.cop, 0.22);
       yield* until(() => off.every(({ kid }) => there(kid)));
-      for (const { kid } of off) { gone(kid); yield* wait(0.35); }
-      h.leaving = true;
+      // into the back of the car, the officer in front, the helicopter overhead
+      for (const [i, { kid }] of off.entries()) { gone(kid); aboard(p1, off.length === 2 ? -0.085 + i * 0.03 : -0.07, kid.g.getAttribute("style")); yield* wait(0.35); }
+      h.follow = () => pos(l, p1);
       yield* until(() => there(o1));
-      gone(o1);
-      yield* wait(0.6);
-      // and away, lights going
-      yield* away(p1);
+      gone(o1); aboard(p1, 0.01);
+      yield* wait(0.8);
+      // and away with them, lights going; the helicopter sees them off, then goes
+      const taken = go(away(p1));
+      yield* until(() => taken.done || !p1.aside);
+      yield* wait(2.5);
+      h.leaving = true;
+      yield* until(() => taken.done);
       done?.();
     }
     let busy = null;
