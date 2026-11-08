@@ -53,7 +53,18 @@
   const round = (cx, cy, r, n = 10) => Array.from({ length: n }, (_, i) => { const t = i / n * Math.PI * 2; return [cx + Math.cos(t) * r, cy + Math.sin(t) * r]; });
   // the cars, the bin lids and the cafe parasols take their colours in turn
   const CARS = ["#d9453b", "#f2f4f1", "#5b8fd6", "#e9b63b", "#2f3c42", "#8ac1c9", "#c9c9c7", "#7a4f9e"], LIDS = ["#c62828", "#e0b020", "#2e7d32"], PARAS = ["#f4f1e8", "#d9453b", "#2f8d84", "#f2c14e"];
-  const turns = { car: 0, bin: 0, para: 0 };
+  // the kids on the e-bikes: the bike's plastics, a hoodie, trackies, skin,
+  // and either hair or a helmet with its visor, a different kid each time
+  const KIDS = [
+    "--bike:#e8ecec;--shirt:#1f2328;--legs:#3a4652;--hair:#3b2a1e;--skin:#f1c27d",
+    "--bike:#ff7a1a;--shirt:#7a8a99;--legs:#1d2730;--helmet:#1b1f22;--visor:#4fc3f7",
+    "--bike:#4caf50;--shirt:#e9edf0;--legs:#22303a;--hair:#d9b26f;--skin:#ffe3b3",
+    "--bike:#3d7be0;--shirt:#c0392b;--legs:#2b3a4a;--hair:#1a1a1a;--skin:#8d5524",
+    "--bike:#2d3436;--shirt:#f2c14e;--legs:#2b3a4a;--helmet:#f4f6f6;--visor:#222b30",
+    "--bike:#e84393;--shirt:#2f8d84;--legs:#1d2730;--hair:#5a3825;--skin:#c68642",
+    "--bike:#f1f2f2;--shirt:#5b4b8a;--legs:#2b3a4a;--hair:#2b1d14;--skin:#e0ac69",
+  ];
+  const turns = { car: 0, bin: 0, para: 0, kid: 0 };
 
   // The overlay paints over the still city, so a vehicle would show through
   // anything standing between it and the viewer. While the city is being
@@ -489,6 +500,110 @@
       line(at(0, 1, 2.7), at(0.06, 1, 2.7), "#ff3b4a", 0.9);
     });
     for (const dir of ["e", "w", "n", "s"]) roadster(dir);
+    // Kids on electric trail bikes (November 2026), drawn after the light
+    // ones kids ride, unbadged: a slim black frame with the battery in it, a
+    // long flat seat, gold forks, knobby wheels, and the plastics (the front
+    // guard, the number board, the side panel and the tail) in the bike's own
+    // colour, --bike. The bike and its rider are separate symbols, so a rider
+    // can get off and the bike can go on a trailer. `at(u, v, z)` places a
+    // point by length (units of screen length, + toward the nose), across (+
+    // toward the viewer) and height, so one drawing serves all four directions.
+    const along = (dir) => {
+      const ew = dir === "e" || dir === "w", fwd = dir === "e" || dir === "s";
+      return (u, v, z) => { const a = (fwd ? u : -u) / 31.3, b = v / 31.3; return ew ? P(a, b, z) : P(b, a, z); };
+    };
+    const stroke = (c, w, extra = "") => `fill:none;stroke:${c};stroke-width:${w};stroke-linecap:round;stroke-linejoin:round;${extra}`;
+    for (const dir of ["e", "w", "n", "s"]) sym(`bike-${dir}`, (g) => {
+      const at = along(dir), ew = dir === "e" || dir === "w", fwd = dir === "e" || dir === "s";
+      const foot = ew ? [[-0.12, -0.025], [0.12, -0.025], [0.12, 0.025], [-0.12, 0.025]] : [[-0.025, -0.12], [0.025, -0.12], [0.025, 0.12], [-0.025, 0.12]];
+      g.append(poly("", castOf(foot, 7), { style: F("rgba(3,12,18,.3)") }));
+      g.append(poly("beam", [at(3.6, -0.5, 2.2), at(3.6, 0.5, 2.2), at(13, 3, 0), at(13, -3, 0)], { style: F(dir === "e" || dir === "n" ? "url(#beam)" : "url(#beam-r)") }));
+      // one path for each colour, so a bike costs few nodes for its detail
+      const ring = (u0, z0, r, n = 14) => Array.from({ length: n }, (_, i) => { const a = i / n * Math.PI * 2; return at(u0 + Math.cos(a) * r, 0, z0 + Math.sin(a) * r); });
+      g.append(shapes("", [ring(-2.45, 1.25, 1.25), ring(2.45, 1.25, 1.25)], { style: F("#14181a") }), shapes("", [ring(-2.45, 1.25, 0.55, 8), ring(2.45, 1.25, 0.55, 8)], { style: F("#59646b") }));
+      g.append(strokes("", [[at(-2.45, 0, 1.25), at(-0.3, 0, 1.9)], [at(1.45, -1.5, 5.3), at(1.45, 1.5, 5.3)]], { style: stroke("#1a1f22", 0.6) }));
+      g.append(shapes("", [[at(1.45, 0, 4.3), at(1.1, 0, 2.0), at(0.3, 0, 1.3), at(-0.9, 0, 1.5), at(-1.1, 0, 3.3), at(0.4, 0, 3.5)], [at(-2.55, 0, 4.3), at(0.4, 0, 4.15), at(0.35, 0, 3.4), at(-2.45, 0, 3.55)]], { style: F("#1c2226") }));
+      g.append(strokes("", [[at(-0.7, 0, 3.2), at(-1.6, 0, 1.6)], [at(2.45, 0, 1.25), at(1.6, 0, 4.6)]], { style: stroke("#d4a537", 0.55) }));
+      g.append(shapes("", [
+        [at(-1.0, 0, 3.4), at(0.5, 0, 3.55), at(0.25, 0, 2.5), at(-0.95, 0, 2.4)],
+        [at(-1.0, 0, 3.3), at(-2.5, 0, 3.5), at(-3.7, 0, 3.95), at(-3.75, 0, 3.6), at(-1.0, 0, 2.9)],
+        [at(1.5, 0, 2.75), at(2.6, 0, 2.95), at(3.7, 0, 2.55), at(3.6, 0, 2.35), at(2.55, 0, 2.7), at(1.55, 0, 2.5)],
+        [at(1.75, 0, 3.7), at(2.15, 0, 3.85), at(2.0, 0, 4.9), at(1.6, 0, 4.7)],
+      ], { style: F("var(--bike, #e8ecec)") }));
+      const [lx, ly] = fwd ? at(2.1, 0, 4.25) : at(-3.65, 0, 3.95);
+      el("circle", { cx: f(lx), cy: f(ly), r: fwd ? 0.45 : 0.5, style: F(fwd ? "#fff6d0" : "var(--red)") }, g);
+    });
+    // the rider: a kid in a hoodie (--shirt) and trackies (--legs), with a
+    // helmet (--helmet, its visor --visor) or without one (--hair)
+    const headOf = (g, cx, cy, r, visor) => {
+      el("circle", { cx: f(cx), cy: f(cy), r, style: F("var(--helmet, var(--skin, #ffe3b3))") }, g);
+      el("path", { d: `M${f(cx - r)} ${f(cy - 0.1)}a${r} ${r} 0 0 1 ${f(2 * r)} 0z`, style: F("var(--hair, transparent)") }, g);
+      if (visor) el("ellipse", { cx: f(cx + visor[0]), cy: f(cy + visor[1]), rx: 0.75, ry: 0.5, style: F("var(--visor, transparent)") }, g);
+    };
+    for (const dir of ["e", "w", "n", "s"]) sym(`rider-${dir}`, (g) => {
+      const at = along(dir), fwd = dir === "e" || dir === "s";
+      const leg = (v) => [at(-0.6, v, 3.9), at(0.9, v * 1.1, 3.5), at(0.3, v * 1.1, 1.7)], arm = (v) => [at(0.2, v, 6.2), at(1.45, v * 1.55, 5.3)];
+      g.append(strokes("", [leg(-0.7), leg(0.7)], { style: stroke("var(--legs, #2b3a4a)", 1) }), strokes("", [arm(-0.9), arm(0.9)], { style: stroke("var(--shirt, #f2c14e)", 0.8) }), seg("", at(-0.7, 0, 4.3), at(0.15, 0, 6.3), { style: stroke("var(--shirt, #f2c14e)", 2.3) }));
+      const [hx, hy] = at(0.45, 0, 7.9), [nx, ny] = at(1.25, 0, 7.8);
+      headOf(g, hx, hy, 1.35, fwd ? [nx - hx, ny - hy] : null);
+    });
+    // a kid standing, and the same kid with their hands cuffed behind them
+    for (const cuffed of [false, true]) sym(cuffed ? "kid-cuffed" : "kid", (g) => {
+      el("ellipse", { cx: 0.7, cy: 0.2, rx: 1.9, ry: 0.7, style: SHADE }, g);
+      g.append(shapes("", [[[-1.05, 0], [-0.2, 0], [-0.2, -2.5], [-1.05, -2.5]], [[0.2, 0], [1.05, 0], [1.05, -2.5], [0.2, -2.5]]], { style: F("var(--legs, #2b3a4a)") }));
+      el("rect", { x: -1.25, y: -5.6, width: 2.5, height: 3.4, rx: 1, style: F("var(--shirt, #f2c14e)") }, g);
+      if (cuffed) el("rect", { x: -1.45, y: -3.2, width: 2.9, height: 0.6, rx: 0.3, style: F("#dfe7ea") }, g);
+      headOf(g, 0, -6.95, 1.4);
+    });
+    // a police officer: navy trousers, a pale blue shirt with a dark belt, a navy cap
+    sym("officer", (g) => {
+      el("ellipse", { cx: 0.8, cy: 0.2, rx: 2.2, ry: 0.8, style: SHADE }, g);
+      g.append(shapes("", [[[-1.2, 0], [-0.2, 0], [-0.2, -2.8], [-1.2, -2.8]], [[0.2, 0], [1.2, 0], [1.2, -2.8], [0.2, -2.8]]], { style: F("#1c2b4a") }));
+      el("rect", { x: -1.4, y: -6.2, width: 2.8, height: 3.8, rx: 1.1, style: F("#9cc3ea") }, g);
+      el("rect", { x: -1.4, y: -3.1, width: 2.8, height: 0.6, style: F("#16191c") }, g);
+      el("circle", { cx: 0, cy: -7.7, r: 1.6, style: F("var(--skin, #ffe3b3)") }, g);
+      el("path", { d: "M-1.75 -8.2h3.5v-1.2a1.75 .95 0 0 0 -3.5 0zM1.6 -8.3h1.3v.5h-1.3z", style: F("#1c2b4a") }, g);
+      el("rect", { x: -1.75, y: -8.75, width: 3.5, height: 0.45, style: F("#e9eef2") }, g);
+    });
+    // The police, heading east: a white sedan with a blue and white chequered
+    // band along its side and a light bar on the roof, whose two halves flash
+    // red and blue while the car is .lit (site.css runs --lbr and --lbb, and
+    // the glow round them, --lgr and --lgb).
+    const paintOn = (g, b, cols) => { b.nodes.forEach((n, i) => { if (cols[i]) n.style.fill = cols[i]; }); g.append(...b.nodes); };
+    sym("police-e", (g) => {
+      const len = 0.3, wid = 0.16, h = 4.2, bh = h * 0.62, x = -len / 2, y = -wid / 2, paint = (b, cols) => paintOn(g, b, cols);
+      g.append(poly("", castOf([[x, y], [x + len, y], [x + len, y + wid], [x, y + wid]], h), { style: F("rgba(3,12,18,.3)") }));
+      g.append(poly("beam", [P(x + len, y, 2), P(x + len, y + wid, 2), P(x + len + 0.42, y + wid + 0.1, 0), P(x + len + 0.42, y - 0.1, 0)], { style: F("url(#beam)") }));
+      paint(box(x, y, len, wid, bh), ["#c9d2d1", "#e3e9e8", "#f6f9f8"]);
+      // the chequers: two rows along the side, blue on the white body, and a blue band across the front
+      const n = 8, cells = [];
+      for (let r = 0; r < 2; r++) for (let i = 0; i < n; i++) if ((i + r) % 2 === 0) cells.push(onL(x, y + wid, len * i / n, len * (i + 1) / n, 0.75 + r * 0.6, 1.35 + r * 0.6));
+      g.append(shapes("", cells, { style: F("#1d4fa8") }), poly("", onR(x + len, y, 0.01, wid - 0.01, 0.75, 1.95), { style: F("#2a5fbf") }));
+      const t0 = 0.14, i = 0.012;
+      paint(box(x + len * t0, y + i, len * 0.5, wid - 2 * i, h - bh, { z: bh }), ["#101d24", "#1a2c35", "#f6f9f8"]);
+      g.append(seg("", P(x + len * (t0 + 0.25), y + wid - i, bh), P(x + len * (t0 + 0.25), y + wid - i, h), { style: "stroke:#f6f9f8;stroke-width:.5" }));
+      // the light bar across the roof: its glow, then the red half and the blue half
+      const bx = x + len * (t0 + 0.25) - 0.018, half = (wid - 2 * i - 0.02) / 2, by = y + i + 0.01;
+      for (const [k, glow] of [[0, "--lgr"], [1, "--lgb"]]) { const [gx, gy] = P(bx + 0.018, by + half * (k + 0.5), h + 0.5); for (const [r, o] of [[4.6, 0.45], [2.6, 1]]) el("circle", { cx: f(gx), cy: f(gy), r, style: `${F(`var(${glow}, transparent)`)};fill-opacity:${o}` }, g); }
+      paint(box(bx, by, 0.036, half, 0.75, { z: h }), ["color-mix(in oklab, var(--lbr, #5a1f24), #000 30%)", "color-mix(in oklab, var(--lbr, #5a1f24), #000 15%)", "var(--lbr, #5a1f24)"]);
+      paint(box(bx, by + half, 0.036, half, 0.75, { z: h }), ["color-mix(in oklab, var(--lbb, #1f2c5a), #000 30%)", "color-mix(in oklab, var(--lbb, #1f2c5a), #000 15%)", "var(--lbb, #1f2c5a)"]);
+      for (const [tx, ty] of [[x, y + wid * 0.25], [x, y + wid * 0.75]]) { const [a, c] = P(tx, ty, bh * 0.5); el("circle", { cx: f(a), cy: f(c), r: 0.9, style: F("var(--red)") }, g); }
+    });
+    // the backup's trailer, for the bikes: a flat bed on one axle with a ramp
+    // down from the back and a drawbar forward to the car's towbar. It is
+    // drawn about the middle of the car and trailer together (city-traffic.js
+    // puts the car 0.17 tiles ahead of that, and the bikes on the bed between).
+    sym("trailer-e", (g) => {
+      const tx = -0.32, tl = 0.3, tw = 0.13, ty = -tw / 2, paint = (b, cols) => paintOn(g, b, cols);
+      g.append(poly("", castOf([[tx, ty], [tx + tl, ty], [tx + tl, ty + tw], [tx, ty + tw]], 2), { style: F("rgba(3,12,18,.3)") }));
+      g.append(poly("", [P(tx, ty + 0.01, 1.6), P(tx, ty + tw - 0.01, 1.6), P(tx - 0.09, ty + tw - 0.01, 0), P(tx - 0.09, ty + 0.01, 0)], { style: F("#4a5459") }));
+      g.append(strokes("", [0.25, 0.5, 0.75].map((k) => [P(tx - 0.09 * k, ty + 0.015, 1.6 * (1 - k)), P(tx - 0.09 * k, ty + tw - 0.015, 1.6 * (1 - k))]), { style: stroke("rgba(255,255,255,.18)", 0.4) }));
+      paint(box(tx, ty, tl, tw, 0.6, { z: 1.0 }), ["#2e363a", "#3c464b", "#59656b"]);
+      g.append(strokes("", [0.1, 0.2].map((k) => [P(tx + k, ty, 1.6), P(tx + k, ty + tw, 1.6)]), { style: stroke("rgba(0,0,0,.25)", 0.4) }));
+      g.append(seg("", P(tx + tl, 0, 1.3), P(0.02, 0, 1.3), { style: stroke("#262c2f", 0.7) }));
+      const [wx, wy] = P(tx + tl / 2, ty + tw + 0.004, 1.0);
+      el("circle", { cx: f(wx), cy: f(wy), r: 1.05, style: F("#121517") }, g); el("circle", { cx: f(wx), cy: f(wy), r: 0.4, style: F("#8a969b") }, g);
+    });
     sym("cone", (g) => { g.append(poly("", [[-2.2, 0], [2.2, 0], [0, -6]], { style: F("var(--amber)") }), seg("", [-3, 0.5], [3, 0.5], { style: "stroke:#06201e;stroke-width:1.2" })); });
     // people: legs, a top in --shirt (set on each one), a head, a small shadow
     sym("person", (g) => {
@@ -786,11 +901,19 @@
     for (const id of ["S5", "N5"]) Object.assign(LANES[id], { far: far5, near: near5 });
     for (const id of ["S10", "N10"]) Object.assign(LANES[id], { far: far10, near: near10 });
     LANES.S7.far = x7;
-    const vehicles = [], LEN = { car: 0.3, van: 0.4, truck: 0.5, tram: 1.1 }, PACE = { car: 1.0, van: 0.95, truck: 0.55, tram: 0.6 };
+    // Where the police pull the kids over (city-traffic.js): on the far
+    // footpath of the main road, west of the first lights, where nothing
+    // stands in front of it. The people there walk in a group of their own
+    // under the eastbound traffic: the kids who have got off, the officers,
+    // then the bikes they wheel to the trailer.
+    const scene = el("g", { class: "pullover", "clip-path": "url(#clip-main)" }, LANES.E.far);
+    const KERB = { lane: "E", y: { car: 4.63, bike: 4.65, kid: 4.585, cop: 4.6 }, at: { p1: 2.53, kids: [3.15, 2.87], p2: 4.12 }, kids: KIDS, groups: ["kids", "cops", "bikes"].map((c) => el("g", { class: c }, scene)) };
+    const vehicles = [], LEN = { car: 0.3, van: 0.4, truck: 0.5, tram: 1.1, bike: 0.24 }, PACE = { car: 1.0, van: 0.95, truck: 0.55, tram: 0.6, bike: 1.2 };
     const vehicle = (sym, lane, at, cls, pace) => {
       // a clip goes on a still wrapper: on the vehicle itself it would move with the vehicle
-      const kind = sym.split("-")[0], slot = el("g", { class: "veh-slot" }, LANES[lane].far), v = el("g", { class: `veh${kind === "van" ? " eds" : ""}${cls ? ` ${cls}` : ""}` }, slot);
+      const kind = sym.split("-")[0], slot = el("g", { class: "veh-slot" }, LANES[lane].far), v = el("g", { class: `veh${kind === "van" ? " eds" : ""}${cls ? ` ${cls}` : ""}`, style: kind === "bike" ? KIDS[turns.kid++ % KIDS.length] : undefined }, slot);
       el("use", { href: `#${sym}`, style: kind === "car" ? `--car:${CARS[turns.car++ % CARS.length]}` : undefined }, v);
+      if (kind === "bike") el("use", { href: `#rider-${sym.split("-")[1]}` }, v);
       vehicles.push({ el: v, slot, lane, s: at, len: LEN[kind], speed: pace || PACE[kind], tram: kind === "tram", patrol: cls === "patrol" });
     };
     vehicle("van-e", "E", 0.4); vehicle("car-e", "E", 3.6); vehicle("van-e", "E", 8.9); vehicle("car-e", "E", 13.0);
@@ -800,6 +923,8 @@
     vehicle("van-n", "N10", 6.9); vehicle("truck-n", "N10", 0.5); vehicle("car-s", "S10", 4.7); vehicle("car-s", "S10", 9.6); vehicle("car-s", "S7", 1.3);
     // light rail along the main road, one tram each way
     vehicle("tram-e", "TE", 4.3); vehicle("tram-w", "TW", 13.4);
+    // kids on e-bikes: two riding together along the main road, and one on each side road
+    vehicle("bike-w", "W", 5.0); vehicle("bike-w", "W", 5.4); vehicle("bike-s", "S10", 1.6); vehicle("bike-n", "N5", 5.0); vehicle("bike-s", "S7", 3.6);
     // people on the footpaths, along the front of the city, the main road
     // and the river road, at a walking pace
     const walk = (route, dur, begin, shirt, parent = t) => {
@@ -825,7 +950,7 @@
       [["r", -18.8], ["a", -17.2], ["g", -15.6]].forEach(([k, cy]) => el("circle", { class: `lamp lamp-${k}`, cx: 0, cy, r: 0.85 }, h));
       return h;
     });
-    traffic = { lanes: LANES, vehicles, heads, roads: THROUGH, span: SPAN };
+    traffic = { lanes: LANES, vehicles, heads, roads: THROUGH, span: SPAN, kerb: KERB };
     return g;
   }
 

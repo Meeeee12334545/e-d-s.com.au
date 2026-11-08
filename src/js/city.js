@@ -1144,6 +1144,24 @@
   // a hook for checking it without waiting: svg.dispatchEvent(new Event("citystunt"))
   svg.addEventListener("citystunt", stunt);
 
+  /* ---- now and then, the police pull over kids on e-bikes ---- */
+  // Ambient too (city-traffic.js tells it): soon after the city first comes
+  // on screen, then every minute or so once the last one is over, while the
+  // whole city is on show and no storm is on. It waits for the start of the
+  // main road to be clear, trying again every second and a half.
+  let copTimer = 0;
+  const nextCops = () => schedulePolice(40000 + Math.random() * 30000);
+  function schedulePolice(ms) {
+    clearTimeout(copTimer);
+    copTimer = setTimeout(() => {
+      if (state.inView && !document.hidden && state.view === "city" && !state.storm && traffic?.pullOver?.(nextCops)) return;
+      schedulePolice(1500);
+    }, ms);
+  }
+  schedulePolice(6000 + Math.random() * 4000);
+  // a hook for checking it without waiting: svg.dispatchEvent(new Event("citypolice"))
+  svg.addEventListener("citypolice", () => traffic?.pullOver?.(nextCops));
+
   /* ---- zooming in: pinch, drag and the buttons in the frame's corner ---- */
   // On a touch screen the city zooms inside its own frame: the frame and the
   // page around it stay exactly where they are. Two fingers zoom about the
