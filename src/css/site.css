@@ -732,6 +732,13 @@ ul { margin: 0; padding: 0; list-style: none; }
 .city-fx .pullover .glint { fill: #ffffff; }
 .city-fx .pullover { transition: opacity .3s var(--ease); }
 .city-fx.is-exploded .pullover { opacity: 0; }
+/* the police helicopter: its shadow and searchlight on the ground, the shaft of light, the spinning rotor */
+.city-fx .heli { pointer-events: none; }
+.city-fx .heli-shadow { fill: rgba(3, 12, 18, .26); }
+.city-fx .heli-spot { fill: url(#heli-spot); }
+.city-fx .heli-beam { fill: url(#heli-beam); }
+.city-fx .heli-disc { fill: rgba(220, 235, 240, .1); stroke: rgba(255, 255, 255, .16); stroke-width: .4; }
+.city-fx .heli-blades { fill: none; stroke: rgba(24, 32, 36, .7); stroke-width: .9; stroke-linecap: round; }
 .city-svg.is-storm .patrol { opacity: 1; }
 .city-svg .crew { opacity: 0; translate: 0 4px; transition: opacity .6s var(--ease), translate .6s var(--ease-out); pointer-events: none; }
 .city-svg.crew-mh14 .crew-mh14, .city-svg.crew-pump .crew-pump, .city-svg.crew-plant .crew-plant, .city-svg.crew-river .crew-river { opacity: 1; translate: 0 0; }
