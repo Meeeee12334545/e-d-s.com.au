@@ -565,29 +565,58 @@
       el("path", { d: "M-1.75 -8.2h3.5v-1.2a1.75 .95 0 0 0 -3.5 0zM1.6 -8.3h1.3v.5h-1.3z", style: F("#1c2b4a") }, g);
       el("rect", { x: -1.75, y: -8.75, width: 3.5, height: 0.45, style: F("#e9eef2") }, g);
     });
-    // The police, heading east: a white sedan with a blue and white chequered
-    // band along its side and a light bar on the roof, whose two halves flash
-    // red and blue while the car is .lit (site.css runs --lbr and --lbb, and
-    // the glow round them, --lgr and --lgb).
+    // The police: a white sedan with a blue and white chequered band along
+    // its side and a light bar across the roof, whose two halves flash red
+    // and blue while the car is .lit (site.css runs --lbr and --lbb, and the
+    // glow round them, --lgr and --lgb). One symbol for each direction, so
+    // it can chase the kids round corners.
     const paintOn = (g, b, cols) => { b.nodes.forEach((n, i) => { if (cols[i]) n.style.fill = cols[i]; }); g.append(...b.nodes); };
-    sym("police-e", (g) => {
-      const len = 0.3, wid = 0.16, h = 4.2, bh = h * 0.62, x = -len / 2, y = -wid / 2, paint = (b, cols) => paintOn(g, b, cols);
-      g.append(poly("", castOf([[x, y], [x + len, y], [x + len, y + wid], [x, y + wid]], h), { style: F("rgba(3,12,18,.3)") }));
-      g.append(poly("beam", [P(x + len, y, 2), P(x + len, y + wid, 2), P(x + len + 0.42, y + wid + 0.1, 0), P(x + len + 0.42, y - 0.1, 0)], { style: F("url(#beam)") }));
-      paint(box(x, y, len, wid, bh), ["#c9d2d1", "#e3e9e8", "#f6f9f8"]);
-      // the chequers: two rows along the side, blue on the white body, and a blue band across the front
+    for (const dir of ["e", "w", "n", "s"]) sym(`police-${dir}`, (g) => {
+      const ew = dir === "e" || dir === "w", len = 0.3, wid = 0.16, w = ew ? len : wid, d = ew ? wid : len, x = -w / 2, y = -d / 2, h = 4.2, bh = h * 0.62, paint = (b, cols) => paintOn(g, b, cols);
+      g.append(poly("", castOf([[x, y], [x + w, y], [x + w, y + d], [x, y + d]], h), { style: F("rgba(3,12,18,.3)") }));
+      const beam = { e: [P(x + w, y, 2), P(x + w, y + d, 2), P(x + w + 0.42, y + d + 0.1, 0), P(x + w + 0.42, y - 0.1, 0), "url(#beam)"],
+        w: [P(x, y, 2), P(x, y + d, 2), P(x - 0.42, y + d + 0.1, 0), P(x - 0.42, y - 0.1, 0), "url(#beam-r)"],
+        s: [P(x, y + d, 2), P(x + w, y + d, 2), P(x + w + 0.1, y + d + 0.42, 0), P(x - 0.1, y + d + 0.42, 0), "url(#beam-r)"],
+        n: [P(x, y, 2), P(x + w, y, 2), P(x + w + 0.1, y - 0.42, 0), P(x - 0.1, y - 0.42, 0), "url(#beam)"] }[dir];
+      g.append(poly("beam", beam.slice(0, 4), { style: F(beam[4]) }));
+      paint(box(x, y, w, d, bh), ["#c9d2d1", "#e3e9e8", "#f6f9f8"]);
+      // the chequers: two rows along the side the viewer sees, and a blue band across the end they see
       const n = 8, cells = [];
-      for (let r = 0; r < 2; r++) for (let i = 0; i < n; i++) if ((i + r) % 2 === 0) cells.push(onL(x, y + wid, len * i / n, len * (i + 1) / n, 0.75 + r * 0.6, 1.35 + r * 0.6));
-      g.append(shapes("", cells, { style: F("#1d4fa8") }), poly("", onR(x + len, y, 0.01, wid - 0.01, 0.75, 1.95), { style: F("#2a5fbf") }));
-      const t0 = 0.14, i = 0.012;
-      paint(box(x + len * t0, y + i, len * 0.5, wid - 2 * i, h - bh, { z: bh }), ["#101d24", "#1a2c35", "#f6f9f8"]);
-      g.append(seg("", P(x + len * (t0 + 0.25), y + wid - i, bh), P(x + len * (t0 + 0.25), y + wid - i, h), { style: "stroke:#f6f9f8;stroke-width:.5" }));
+      for (let r = 0; r < 2; r++) for (let i = 0; i < n; i++) if ((i + r) % 2 === 0) cells.push(ew ? onL(x, y + d, len * i / n, len * (i + 1) / n, 0.75 + r * 0.6, 1.35 + r * 0.6) : onR(x + w, y, len * i / n, len * (i + 1) / n, 0.75 + r * 0.6, 1.35 + r * 0.6));
+      g.append(shapes("", cells, { style: F("#1d4fa8") }), poly("", ew ? onR(x + w, y, 0.01, wid - 0.01, 0.75, 1.95) : onL(x, y + d, 0.01, wid - 0.01, 0.75, 1.95), { style: F("#2a5fbf") }));
+      // the glasshouse, set back from the bonnet
+      const t0 = { e: 0.14, s: 0.14, w: 0.36, n: 0.36 }[dir], i = 0.012;
+      paint(ew ? box(x + len * t0, y + i, len * 0.5, d - 2 * i, h - bh, { z: bh }) : box(x + i, y + len * t0, w - 2 * i, len * 0.5, h - bh, { z: bh }), ["#101d24", "#1a2c35", "#f6f9f8"]);
+      g.append(ew ? seg("", P(x + len * (t0 + 0.25), y + d - i, bh), P(x + len * (t0 + 0.25), y + d - i, h), { style: "stroke:#f6f9f8;stroke-width:.5" }) : seg("", P(x + w - i, y + len * (t0 + 0.25), bh), P(x + w - i, y + len * (t0 + 0.25), h), { style: "stroke:#f6f9f8;stroke-width:.5" }));
       // the light bar across the roof: its glow, then the red half and the blue half
-      const bx = x + len * (t0 + 0.25) - 0.018, half = (wid - 2 * i - 0.02) / 2, by = y + i + 0.01;
-      for (const [k, glow] of [[0, "--lgr"], [1, "--lgb"]]) { const [gx, gy] = P(bx + 0.018, by + half * (k + 0.5), h + 0.5); for (const [r, o] of [[4.6, 0.45], [2.6, 1]]) el("circle", { cx: f(gx), cy: f(gy), r, style: `${F(`var(${glow}, transparent)`)};fill-opacity:${o}` }, g); }
-      paint(box(bx, by, 0.036, half, 0.75, { z: h }), ["color-mix(in oklab, var(--lbr, #5a1f24), #000 30%)", "color-mix(in oklab, var(--lbr, #5a1f24), #000 15%)", "var(--lbr, #5a1f24)"]);
-      paint(box(bx, by + half, 0.036, half, 0.75, { z: h }), ["color-mix(in oklab, var(--lbb, #1f2c5a), #000 30%)", "color-mix(in oklab, var(--lbb, #1f2c5a), #000 15%)", "var(--lbb, #1f2c5a)"]);
-      for (const [tx, ty] of [[x, y + wid * 0.25], [x, y + wid * 0.75]]) { const [a, c] = P(tx, ty, bh * 0.5); el("circle", { cx: f(a), cy: f(c), r: 0.9, style: F("var(--red)") }, g); }
+      const mid = len * (t0 + 0.25) - 0.018, half = (wid - 2 * i - 0.02) / 2, across = (ew ? y : x) + i + 0.01;
+      const bar = (k) => (ew ? box(x + mid, across + half * k, 0.036, half, 0.75, { z: h }) : box(across + half * k, y + mid, half, 0.036, 0.75, { z: h }));
+      for (const [k, glow] of [[0, "--lgr"], [1, "--lgb"]]) {
+        const [gx, gy] = ew ? P(x + mid + 0.018, across + half * (k + 0.5), h + 0.5) : P(across + half * (k + 0.5), y + mid + 0.018, h + 0.5);
+        for (const [r, o] of [[4.6, 0.45], [2.6, 1]]) el("circle", { cx: f(gx), cy: f(gy), r, style: `${F(`var(${glow}, transparent)`)};fill-opacity:${o}` }, g);
+      }
+      paint(bar(0), ["color-mix(in oklab, var(--lbr, #5a1f24), #000 30%)", "color-mix(in oklab, var(--lbr, #5a1f24), #000 15%)", "var(--lbr, #5a1f24)"]);
+      paint(bar(1), ["color-mix(in oklab, var(--lbb, #1f2c5a), #000 30%)", "color-mix(in oklab, var(--lbb, #1f2c5a), #000 15%)", "var(--lbb, #1f2c5a)"]);
+      const tail = { e: [[x, y + d * 0.25], [x, y + d * 0.75]], w: [[x + w, y + d * 0.25], [x + w, y + d * 0.75]], s: [[x + w * 0.25, y], [x + w * 0.75, y]], n: [[x + w * 0.25, y + d], [x + w * 0.75, y + d]] }[dir];
+      for (const [tx, ty] of tail) { const [a, c] = P(tx, ty, bh * 0.5); el("circle", { cx: f(a), cy: f(c), r: 0.9, style: F("var(--red)") }, g); }
+    });
+    // The police helicopter, seen side on with its nose to the right
+    // (city-traffic.js flips it to fly left, tilts it into its turns and
+    // spins the main rotor, drawn there): a white cabin with a blue band of
+    // chequers, a tail boom and fin with the tail rotor, skids, and a
+    // searchlight under the nose.
+    sym("heli", (g) => {
+      g.append(seg("", [-3, -1.2], [-15, -3.2], { style: stroke("#e9eef0", 1.7) }));
+      g.append(poly("", [[-14.2, -3.4], [-17.6, -8.8], [-15.6, -9], [-12.6, -3.3]], { style: F("#e9eef0") }), poly("", [[-15.2, -5.2], [-16.6, -7.4], [-15.9, -7.5], [-14.4, -5.2]], { style: F("#1d4fa8") }));
+      el("circle", { cx: -16.6, cy: -4.4, r: 2.4, style: "fill:rgba(220,235,240,.22);stroke:rgba(255,255,255,.55);stroke-width:.4" }, g);
+      g.append(strokes("", [[[-5.6, 5.4], [6, 5.4]], [[-3, 2.6], [-3.6, 5.4]], [[2.6, 2.7], [3.2, 5.4]]], { style: stroke("#8a969b", 0.7) }));
+      el("path", { d: "M-6 0C-6.4-4.6-2.4-6.6 1.6-6.4C5.6-6.2 8.4-3.4 8.6-.6C8.8 1.8 6.6 3 3.6 3.1L-3.4 3C-5.2 2.9-5.9 1.6-6 0Z", style: F("#f4f7f6") }, g);
+      el("path", { d: "M-5.9 .5L8.6 .1C8.5 1.9 6.6 3 3.6 3.1L-3.4 3C-5 2.9-5.7 1.9-5.9 .5Z", style: F("#1d4fa8") }, g);
+      g.append(shapes("", [-4.6, -2.2, 0.2, 2.6, 5].map((u) => [[u, 0.4], [u + 1.2, 0.4], [u + 1.2, 1.6], [u, 1.6]]).concat([-3.4, -1, 1.4, 3.8].map((u) => [[u, 1.6], [u + 1.2, 1.6], [u + 1.2, 2.8], [u, 2.8]])), { style: F("#f4f7f6") }));
+      el("path", { d: "M2.6-5.6C5.6-5.2 7.8-3.4 8.3-1L4.2-1.2C3.9-3 3.4-4.4 2.6-5.6ZM-2.6-4.8H1.6V-1.4H-3.2Z", style: F("#13222b") }, g);
+      el("circle", { cx: 5.4, cy: 3.4, r: 1, style: F("#fff6d0") }, g);
+      el("circle", { cx: -1, cy: -6.7, r: 0.65, style: F("var(--red)") }, g);
+      g.append(seg("", [0, -6.4], [0, -8.8], { style: stroke("#59646b", 1) }));
     });
     // the backup's trailer, for the bikes: a flat bed on one axle with a ramp
     // down from the back and a drawbar forward to the car's towbar. It is
@@ -766,6 +795,9 @@
     grad("slab-grad", "radialGradient", [[0, "#1b3733"], [1, "#0e2421"]], { cx: 0.5, cy: 0.4, r: 0.7 });
     grad("beam", "linearGradient", [[0, "rgba(255,255,255,.34)"], [1, "rgba(255,255,255,0)"]]);
     grad("beam-r", "linearGradient", [[0, "rgba(255,255,255,0)"], [1, "rgba(255,255,255,.34)"]]);
+    // the helicopter's searchlight: the shaft, and the pool it throws on the ground
+    grad("heli-beam", "linearGradient", [[0, "rgba(255,248,220,.34)"], [1, "rgba(255,248,220,.08)"]], { x1: 0, y1: 0, x2: 0, y2: 1 });
+    grad("heli-spot", "radialGradient", [[0, "rgba(255,250,228,.62)"], [0.6, "rgba(255,248,220,.3)"], [1, "rgba(255,248,220,0)"]]);
     grad("lift-shadow", "radialGradient", [[0, "rgba(0,0,0,.55)"], [1, "rgba(0,0,0,0)"]]);
     grad("hub-glow", "radialGradient", [[0, "rgba(95,180,166,.55)"], [1, "rgba(95,180,166,0)"]]);
     grad("water-sheen", "linearGradient", [[0, "rgba(255,255,255,.2)"], [1, "rgba(255,255,255,0)"]], { x1: 0, y1: 0, x2: 0, y2: 1 });
@@ -895,6 +927,8 @@
     // moves a vehicle across as it passes the middle of the junction. On the
     // main road the lanes go in order from the far kerb to the near one, and
     // walkers on the far footpaths first, so the vehicles pass in front of them.
+    // first, under all of it, the helicopter's shadow and the pool of its searchlight
+    const heliGround = el("g", { class: "heli-ground" }, t);
     const [far5, far10, main, near5, near10, x7] = Array.from({ length: 6 }, () => el("g", {}, t));
     const behind = el("g", { class: "walkers", "clip-path": "url(#clip-main)" }, main), behind5 = el("g", { class: "walkers", "clip-path": "url(#clip-x5)" }, far5);
     for (const id of ["E", "TE", "TW", "W"]) LANES[id].far = el("g", {}, main);
@@ -950,7 +984,12 @@
       [["r", -18.8], ["a", -17.2], ["g", -15.6]].forEach(([k, cy]) => el("circle", { class: `lamp lamp-${k}`, cx: 0, cy, r: 0.85 }, h));
       return h;
     });
-    traffic = { lanes: LANES, vehicles, heads, roads: THROUGH, span: SPAN, kerb: KERB };
+    // The chase (city-traffic.js): the lanes the kids lead the police along,
+    // in order. From one to the next is a left turn at a junction or, where
+    // the next runs back the other way, a U-turn beyond the edge of the city.
+    // It ends heading east on the main road, where they are caught (KERB).
+    const CHASE = ["N10", "W", "S5", "N5", "W", "E"];
+    traffic = { lanes: LANES, vehicles, heads, roads: THROUGH, span: SPAN, kerb: KERB, chase: CHASE, heli: { ground: heliGround } };
     return g;
   }
 
@@ -2024,7 +2063,9 @@
     el("clipPath", { id: "clip-roads" }, D).append(...ROADS.map(([x0, y0, x1, y1]) => poly("", [P(x0, y0), P(x1, y0), P(x1, y1), P(x0, y1)])));
     const baseLayer = base(svg, fx); BASE_DETAIL(baseLayer); const underLayer = under(svg, fx);
     const shadowLayer = el("g", { class: "shadows" }, svg), zoneLayer = el("g", { class: "zones" }, svg);
-    const zoneFxLayer = el("g", { class: "zones-fx" }, fx), linkLayer = el("g", { class: "links" }, fx), packetLayer = el("g", { class: "packets" }, fx), labelLayer = el("g", { class: "labels" }, fx);
+    const zoneFxLayer = el("g", { class: "zones-fx" }, fx), linkLayer = el("g", { class: "links" }, fx), packetLayer = el("g", { class: "packets" }, fx), heliLayer = el("g", { class: "heli" }, fx), labelLayer = el("g", { class: "labels" }, fx);
+    // the police helicopter flies over everything but the labels
+    traffic.heli.air = heliLayer;
     const zones = {}, zoneFx = {}, labels = {}, links = {}, shadows = {}, anchors = {}, slots = {}, zoneSolids = {};
     Object.entries(ZONES)
       .sort((a, b) => a[1].rect[2] + a[1].rect[3] - (b[1].rect[2] + b[1].rect[3]))

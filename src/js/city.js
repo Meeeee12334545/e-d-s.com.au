@@ -1144,11 +1144,11 @@
   // a hook for checking it without waiting: svg.dispatchEvent(new Event("citystunt"))
   svg.addEventListener("citystunt", stunt);
 
-  /* ---- now and then, the police pull over kids on e-bikes ---- */
+  /* ---- now and then, the police chase kids on e-bikes and catch them ---- */
   // Ambient too (city-traffic.js tells it): soon after the city first comes
-  // on screen, then every minute or so once the last one is over, while the
+  // on screen, then a minute or so after the last one is over, while the
   // whole city is on show and no storm is on. It waits for the start of the
-  // main road to be clear, trying again every second and a half.
+  // road the chase comes in on to be clear, trying every second and a half.
   let copTimer = 0;
   const nextCops = () => schedulePolice(40000 + Math.random() * 30000);
   function schedulePolice(ms) {
