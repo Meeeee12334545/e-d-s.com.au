@@ -144,13 +144,18 @@
             while (n++ < cars.length && cars[j] !== v && by(cars[j])) j = (j + 1) % cars.length;
             const lead = cars[j];
             // (one on a route leaves at the end of the lane, so nothing round the end is ahead of it)
-            if (lead !== v && !by(lead) && !(v.route && j <= i)) {
+            if (lead !== v && !by(lead) && !(v.route && j <= i) && lead !== v.follows) {
               let gap = lead.s - v.s;
               if (j <= i) gap += l.len;
               target = Math.min(target, reach(gap - lead.len / 2 - v.len / 2 - GAP));
             }
             if (v.hold != null) target = Math.min(target, reach(v.hold - v.s));
-            if (v.follows) target = Math.min(target, reach(v.follows.dist - v.dist - v.follows.len / 2 - v.len / 2 - GAP));
+            // A chase keeps close together at speed: one that follows another
+            // matches its speed, a little faster while the gap is wide and slower
+            // as it closes, and one on a `tether` gets no more than `lead` ahead
+            // of the one it is tied to, in the same way.
+            if (v.follows) { const f = v.follows, gap = f.dist - v.dist - f.len / 2 - v.len / 2; target = Math.min(target, gap < 0.02 ? 0 : Math.max(0, f.v + 2 * (gap - GAP))); }
+            if (v.tether) { const t = v.tether.v; target = Math.min(target, Math.max(0, t.v + 2 * (v.tether.lead - (v.dist - t.dist)))); }
             // the signals ahead
             const nose = v.s + v.len / 2;
             for (const st of l.stops) {
@@ -171,7 +176,8 @@
           v.s += v.v * dt;
           if (v.dist != null) v.dist += v.v * dt;
           if (v.route) { onward.push([l, v]); put(l, v); continue; }
-          if (v.s > l.len) { if (v.once) v.done = true; else { v.s -= l.len; v.pass = null; v.braking = null; } }
+          // (out of sight beyond the end, what would come round onto a lane a chase is about to come back on waits)
+          if (v.s > l.len) { if (v.once) v.done = true; else if (l.reserved) { v.s = l.len; v.v = 0; } else { v.s -= l.len; v.pass = null; v.braking = null; } }
           put(l, v);
         }
       }
@@ -205,7 +211,7 @@
       else {
         if (v.s < l.len) return;
         // (clear at the start, and nothing about to come round the end of that lane onto it)
-        if (!clear(b.id, 0, 0.55) || b.cars.some((c) => !c.patrol && c.s > b.len - 0.6)) { v.hold = l.len; return; }
+        if (!clear(b.id, 0, 0.55) || (!b.reserved && b.cars.some((c) => !c.patrol && c.s > b.len - 0.6))) { v.hold = l.len; return; }
         v.hold = null; s = 0;
       }
       l.cars.splice(l.cars.indexOf(v), 1); b.cars.push(v);
@@ -271,15 +277,20 @@
     });
     const stop = (t) => { const i = threads.indexOf(t); if (i >= 0) threads.splice(i, 1); t.done = true; };
     // Each frame while a chase is on: the junctions it is near hold their
-    // traffic back, and anything in its lane not far ahead of it pulls over to
-    // the kerb (giveWay) until it has gone by.
+    // traffic back, anything in its lane not far ahead of it pulls over to the
+    // kerb (giveWay) until it has gone by, and the start of a lane it is about
+    // to come back on is kept clear (`reserved`).
     hooks.push(() => {
       yieldAt.A = yieldAt.B = false;
+      for (const ln of Object.values(L)) ln.reserved = false;
       for (const ln of Object.values(L)) for (const v of ln.cars) {
         if (!v.chase) continue;
+        // coming up to the edge of the city, to turn round onto another lane: keep that lane's start free for the whole chase
+        const leg = v.route?.[v.leg];
+        if (leg && !leg.arc && ln.len - v.s < 3.5) L[leg.next].reserved = true;
         const [x, y] = pos(ln, v);
         for (const [node, [cx, cy]] of Object.entries(NODES)) if (Math.max(Math.abs(x - cx), Math.abs(y - cy)) < 2.4) yieldAt[node] = true;
-        for (const c of ln.cars) if (!c.chase && !c.yielding && !c.aside && !c.tram && !c.patrol && c.slot && c.s > v.s && c.s - v.s < 1.5 && canYield(ln, c)) go(giveWay(ln, c));
+        for (const c of ln.cars) if (!c.chase && !c.caught && !c.yielding && !c.aside && !c.tram && !c.patrol && c.slot && c.s > v.s && c.s - v.s < 1.5 && canYield(ln, c)) go(giveWay(ln, c));
       }
     });
     // Not in a junction, and not on its way into one: what is driving into a
@@ -306,18 +317,22 @@
           if (near) { c.slot.classList.add("kerb-near"); g.appendChild(c.slot); } else g.insertBefore(c.slot, g.querySelector(":scope > .veh-slot"));
         }
       }
-      yield* wait(0.5);
-      yield* until(() => ln.cars.every((o) => !o.chase || o.s > c.s + 0.6));
+      // (all of it: what comes round a corner behind the rest is a moment later)
+      for (;;) {
+        yield* until(() => ln.cars.every((o) => !o.chase || o.s > c.s + 0.6));
+        yield* wait(1.2);
+        if (ln.cars.every((o) => !o.chase || o.s > c.s + 0.6)) break;
+      }
       yield* until(() => ln.cars.every((o) => o === c || o.aside || o.s > c.s + 0.45 || o.s < c.s - 1.2));
       c.aside = false; c.hold = null;
       if (near) { c.slot.classList.remove("kerb-near"); seat(c.slot, c.slot.parentNode); }
       for (let t = 0, s0 = c.side; c.side > 0;) { t += yield; c.side = Math.max(0, s0 * (1 - t / 0.7)); }
       c.yielding = false;
     }
-    // The helicopter flies in from beyond the right of the city and hovers a
-    // little behind and north-west of whatever it is following (`follow`, a
-    // point in tiles), easing after it, with its searchlight on it once it is
-    // close. `leaving` sends it off the way it came. ALT is its height.
+    // The helicopter flies in from beyond the right of the city and hovers
+    // just about over whatever it is following (`follow`, a point in tiles),
+    // easing after it, with its searchlight on it once it is close.
+    // `leaving` sends it off the way it came. ALT is its height.
     const H = sc.traffic.heli, ALT = 64;
     function* fly(h) {
       const shadow = mk("ellipse", { class: "heli-shadow", rx: 10, ry: 4.4 }, H.ground), spot = mk("ellipse", { class: "heli-spot", rx: 10, ry: 5, "fill-opacity": 0 }, H.ground);
@@ -328,7 +343,7 @@
         const dt = yield;
         // it stays over the city: while what it follows is off the edge, it waits at the edge with its light off
         if (!h.leaving) { const [fx, fy] = h.follow(); h.over = fx > -0.5 && fx < 15.5 && fy > -0.5 && fy < 10.5; h.last = [Math.max(-0.4, Math.min(15.4, fx)), Math.max(-0.4, Math.min(10.4, fy))]; }
-        const [tx, ty] = h.last, [wx, wy] = h.leaving ? [19, -7] : [tx - 0.5, ty - 0.7], dx = wx - h.x, dy = wy - h.y;
+        const [tx, ty] = h.last, [wx, wy] = h.leaving ? [19, -7] : [tx - 0.15, ty - 0.3], dx = wx - h.x, dy = wy - h.y;
         h.vx += (dx * 2.2 - h.vx * 2.4) * dt; h.vy += (dy * 2.2 - h.vy * 2.4) * dt;
         const sp = Math.hypot(h.vx, h.vy), max = h.leaving ? 4 : 3.2;
         if (sp > max) { h.vx *= max / sp; h.vy *= max / sp; }
@@ -516,7 +531,8 @@
       const p1 = spawn(start.id, `#police-${d0}`, -0.4 * n - 0.05, { len: 0.3, speed: 1.7, force: true });
       p1.el.classList.add("cop", "lit");
       const all = [...kids, p1];
-      all.forEach((v, i) => Object.assign(v, { route: ROUTE, leg: 0, chase: true, dist: v.s, follows: all[i - 1] || null }));
+      // the kids can't get away from the police: each keeps no more than a car or so ahead of it
+      all.forEach((v, i) => Object.assign(v, { route: ROUTE, leg: 0, chase: true, caught: true, dist: v.s, follows: all[i - 1] || null, tether: v === p1 ? null : { v: p1, lead: (n - i) * 0.45 + 0.55 } }));
       busy = go(story(kids, p1, done));
       return true;
     };
