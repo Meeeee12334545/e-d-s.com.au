@@ -190,20 +190,27 @@
   }
 
   /* ---- FlowSense tabs ---- */
+  // The four screens play in turn: the tool on show runs a thin line under
+  // its text (site.css: fs-progress) and the next screen comes up when the
+  // line is full, so the pace pauses with the page. Picking a tool, or
+  // pointing at one with a mouse, stops the play for good.
   const fsItems = $$(".fs-item");
   if (fsItems.length) {
-    let i = 0, auto = true;
+    const list = fsItems[0].parentElement, screen = $(".fs-screen");
+    let i = 0;
     const show = (n) => {
       i = n;
       fsItems.forEach((b, k) => b.setAttribute("aria-pressed", String(k === n)));
       $$(".fs-view").forEach((v, k) => v.classList.toggle("active", k === n));
+      if (screen) screen.dataset.view = String(n);
     };
+    const stop = () => list.removeAttribute("data-auto");
     fsItems.forEach((b, k) => {
-      b.addEventListener("click", () => { auto = false; show(k); });
-      b.addEventListener("focus", () => { auto = false; });
-      b.addEventListener("pointerenter", (e) => { if (e.pointerType === "mouse") { auto = false; show(k); } });
+      b.addEventListener("click", () => { stop(); show(k); });
+      b.addEventListener("focus", stop);
+      b.addEventListener("pointerenter", (e) => { if (e.pointerType === "mouse") { stop(); show(k); } });
     });
-    setInterval(() => { if (auto && !document.hidden) show((i + 1) % fsItems.length); }, 4200);
+    list.addEventListener("animationend", (e) => { if (e.animationName === "fs-progress" && list.hasAttribute("data-auto")) show((i + 1) % fsItems.length); });
   }
 
   /* ---- Pump Station Manager pins ---- */
@@ -618,7 +625,7 @@
   // as a page is open. Off screen they would
   // still be restyled and repainted on every frame, so they pause until
   // they are back in view (site.css: .offscreen).
-  const loops = $$(".fs-screen, #ausmap, #lab-pipe, #lidott-svg, .diagram, #ef-svg, #eas-svg, .ef-hero, .open-status, .live-tag");
+  const loops = $$(".fs-screen, .fs-list, #ausmap, #lab-pipe, #lidott-svg, .diagram, #ef-svg, #eas-svg, .ef-hero, .open-status, .live-tag");
   if (loops.length) {
     const io3 = new IntersectionObserver((entries) => entries.forEach((en) => en.target.classList.toggle("offscreen", !en.isIntersecting)), { rootMargin: "80px 0px" });
     loops.forEach((el) => io3.observe(el));
