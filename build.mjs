@@ -1295,6 +1295,10 @@ add({
   <div class="wrap wide">
     <div class="city-grid" id="city-grid">
       <button type="button" class="city-close" aria-label="${esc(C.cityUi.toolbar.close)}" hidden>${icon("x", false)}</button>
+      <div class="city-tabs" role="tablist" aria-label="${esc(C.cityUi.tabsLabel)}">
+        ${C.city.map((z, i) => `<button class="city-tab" role="tab" id="city-tab-${z.id}" aria-controls="city-card-${z.id}" data-zone="${z.id}" aria-selected="${i === 0}" tabindex="${i === 0 ? 0 : -1}">${icon(z.icon)}${z.name}</button>`).join("")}
+      </div>
+
       <div class="city-stage" data-reveal="scale">
         <div class="city-view">
         <div class="city-clip">
@@ -1333,13 +1337,9 @@ add({
         </ul>
       </div>
 
-      <div class="city-tabs" role="tablist" aria-label="${esc(C.cityUi.tabsLabel)}">
-        ${C.city.map((z, i) => `<button class="city-tab" role="tab" id="city-tab-${z.id}" aria-controls="city-card-${z.id}" data-zone="${z.id}" aria-selected="${i === 0}" tabindex="${i === 0 ? 0 : -1}">${icon(z.icon)}${z.name}</button>`).join("")}
-      </div>
-
       <div class="city-panel">
         ${C.city.map((z, i) => `
-        <article class="city-card${i === 0 ? " active" : ""}" id="city-card-${z.id}" role="tabpanel" aria-labelledby="city-tab-${z.id}" data-zone="${z.id}" data-name="${esc(z.name)}">
+        <div class="city-card${i === 0 ? " active" : ""}" id="city-card-${z.id}" role="tabpanel" aria-labelledby="city-tab-${z.id}" data-zone="${z.id}" data-name="${esc(z.name)}">
           <div class="city-card-head" style="--i:0"><span class="city-badge holder">${icon(z.icon)}</span><h3>${z.name}</h3></div>
           <p style="--i:1">${z.blurb}</p>
           <button type="button" class="city-inside" style="--i:1" data-asset="${z.asset.id}" data-zone="${z.id}">${icon("scan-eye")}<span>${esc(z.asset.button)}</span>${icon("arrow-right", false)}</button>
@@ -1350,7 +1350,7 @@ add({
             <p class="note">${esc(C.cityUi.readingsNote)}</p></div>
           ${C.cityStorm.steps.filter((s) => s.zone === z.id).map((s) => `<p class="city-why" data-step="${s.n}" hidden style="--i:5">${esc(s.why)} <a href="${cityHref(r, s.link)}">${cityLabel(s.link)}${icon("arrow-right")}</a></p>`).join("")}
           ${z.id === "ops" ? `<div class="sms city-log" style="--i:5" aria-label="${esc(C.cityUi.logLabel)}"><div><small>${esc(C.cityUi.logStamp)}</small>${esc(C.cityUi.heartbeat)}</div></div>` : ""}
-        </article>`).join("")}
+        </div>`).join("")}
       </div>
     </div>
   </div>
