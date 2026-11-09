@@ -891,153 +891,367 @@ function easDemo() {
 </div>`;
 }
 
-// Four drawings of FlowSense screens, one to a tab: an I/I heat map over a
-// street basemap, the Blockage Watch chart, the Pump Station Manager's wet
-// well in section and the alarm list. Illustrations in the platform's own
-// light theme, labelled as such; the `fine` text goes at phone widths and
-// the `fs-lbl` text grows there (site.css).
+// Four drawings of FlowSense screens, one to a tab, drawn from the real
+// screens in src/assets/img/flowsense: the I/I heat map over a suburb's
+// streets, Blockage Watch's verdict and evidence, the Pump Station
+// Manager's wet well in section, and an alarm finding the person on call.
+// They sit in the platform's own frame (top bar, side rail, status bar)
+// in its light theme, labelled as illustrations in the status bar. The
+// `fine` text gives way at phone widths and the `fs-lbl` text grows there
+// (site.css), by `--lg` where a label has less room.
 function fsScreen() {
   // a Lucide glyph at s px, from the cache icon() fills
-  const glyph = (name, x, y, s, stroke) => { icon(name, false); return `<g transform="translate(${x} ${y}) scale(${(s / 24).toFixed(3)})" fill="none" stroke="${stroke}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${iconCache.get(name)}</g>`; };
-  const SEV = { low: "#3b82f6", mod: "#eab308", high: "#f97316", severe: "#ef4444" };
+  const glyph = (name, x, y, s, stroke, sw = 2) => { icon(name, false); return `<g transform="translate(${x} ${y}) scale(${(s / 24).toFixed(3)})" fill="none" stroke="${stroke}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round">${iconCache.get(name)}</g>`; };
+  const f1 = (n) => Math.round(n * 10) / 10;
+  const rnd = (i) => { const x = Math.sin(i * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
   const INK = "#0f2b2a", INK2 = "#2e4543", MUTED = "#4e6361", LINE = "#d5dde5";
+  // a panel on the drawing with a soft shadow under it (no filters)
+  const card = (x, y, w, h, { r = 8, fill = "#fff", stroke = LINE, shadow = .08 } = {}) => `<rect x="${x}" y="${y + 1.5}" width="${w}" height="${h}" rx="${r}" fill="${INK}" fill-opacity="${shadow}"/><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}" fill="${fill}" stroke="${stroke}"/>`;
+  const halo = `stroke="#fff" stroke-width="3" stroke-linejoin="round" paint-order="stroke"`;
 
-  // 1. I/I heat map: a catchment's sewers along its streets, each pipe
-  // coloured by severity and flowing toward the trunk, one pipe hovered.
+  // 1. I/I heat map: a suburb's streets, houses, a reserve and a creek, and
+  // under them the sewers draining to a pump station. Each pipe takes its
+  // severity band's colour and its diameter's width; arrows point
+  // downstream and the dots along them run closer and faster the worse the
+  // I/I, as the platform's own legend says. Gauges carry their scores and
+  // one pipe is hovered.
   const heat = (() => {
-    const X = [50, 150, 250, 350, 450], Y = [50, 125, 200, 255];
-    const xs = [-40, ...X, 520], ys = [-40, ...Y, 310];
-    let blocks = "";
-    for (let i = 0; i < xs.length - 1; i++) for (let j = 0; j < ys.length - 1; j++) {
-      const park = i === 4 && j === 2;
-      blocks += `<rect x="${xs[i] + 6}" y="${ys[j] + 6}" width="${xs[i + 1] - xs[i] - 12}" height="${ys[j + 1] - ys[j] - 12}" rx="4" fill="${park ? "#dbe9d8" : "#e6ecf1"}"/>`;
-    }
-    // [path in the direction of flow, severity, width]
-    const pipes = [
-      ["M-10 200H50", "low"], ["M50 200H150", "low"], ["M150 200H250", "mod"], ["M250 200H350", "severe", 6.5], ["M350 200H450", "high", 6.5], ["M450 200H490", "mod", 6.5],
-      ["M150 50V125", "low"], ["M150 125V200", "mod"], ["M250 50V125", "low"], ["M250 125V200", "high"],
-      ["M350 50V125", "high"], ["M350 125V200", "severe", 5.5], ["M450 125V200", "mod"],
-      ["M50 125H150", "low"], ["M250 255V200", "low"], ["M350 255V200", "high"],
+    const MAIN = 4.6, LOCAL = 3.3;
+    const roads = [
+      [[[-130, 46], [74, 46], [178, 46], [292, 46], [398, 46], [610, 42]], LOCAL],
+      [[[-130, 95], [78, 90], [126, 95], [176, 100], [236, 98], [296, 96], [346, 98], [396, 100], [610, 91]], MAIN],
+      [[[-130, 193], [84, 198], [128, 199.5], [172, 201], [300, 202], [404, 205], [610, 203]], MAIN],
+      [[[66, -90], [74, 46], [78, 90], [84, 198]], LOCAL],
+      [[[182, -90], [178, 46], [176, 100], [172, 201], [166, 360]], LOCAL],
+      [[[288, -90], [292, 46], [296, 96], [300, 202]], LOCAL],
+      [[[402, -90], [398, 46], [396, 100], [404, 205]], LOCAL],
+      [[[236, 98], [233, 66]], LOCAL],
+      [[[128, 199.5], [126, 156]], LOCAL],
     ];
-    const mh = [[50, 200], [150, 200], [250, 200], [350, 200], [450, 200], [150, 50], [150, 125], [250, 50], [250, 125], [350, 50], [350, 125], [450, 125], [50, 125], [250, 255], [350, 255]];
-    return `<svg viewBox="0 0 480 270" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-    <rect width="480" height="270" fill="#f7f9fb"/>${blocks}
-    <path d="M350 125V200" fill="none" stroke="${SEV.severe}" stroke-opacity=".2" stroke-width="18" stroke-linecap="round"/>
-    <g fill="none" stroke="#fff" stroke-linecap="round">${pipes.map(([d, , w = 5]) => `<path d="${d}" stroke-width="${w + 3}"/>`).join("")}</g>
-    <g fill="none" stroke-linecap="round">${pipes.map(([d, s, w = 5]) => `<path d="${d}" stroke="${SEV[s]}" stroke-width="${w}"/>`).join("")}</g>
-    <g fill="none" stroke="#fff" stroke-width="1.5" stroke-dasharray="2 10" stroke-linecap="round" stroke-opacity=".9">${pipes.map(([d]) => `<path class="fs-dash" d="${d}"/>`).join("")}</g>
-    <g fill="#fff" stroke="#0c5f59" stroke-width="1.8">${mh.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="4"/>`).join("")}</g>
-    <circle cx="350" cy="162" r="5" fill="${SEV.severe}" stroke="#fff" stroke-width="2"/>
-    <g class="fine"><path d="M362 162l-7 -4.5v9z" fill="${INK}"/><rect x="361" y="140" width="94" height="44" rx="7" fill="${INK}"/><text x="372" y="157" font-size="10.5" font-weight="600" fill="#fff">SW-2214</text><text x="372" y="173" font-size="10" fill="rgba(255,255,255,.78)">Severe · 18.4 L/s</text></g>
-    <g class="fine"><rect x="14" y="14" width="130" height="50" rx="7" fill="#fff" stroke="${LINE}"/><text x="24" y="30" font-size="10" font-weight="600" fill="${INK}">I/I severity</text>
-      <g stroke-width="4" stroke-linecap="round" fill="none"><path d="M24 43h12" stroke="${SEV.low}"/><path d="M80 43h12" stroke="${SEV.mod}"/><path d="M24 56h12" stroke="${SEV.high}"/><path d="M80 56h12" stroke="${SEV.severe}"/></g>
-      <g font-size="10" fill="${INK2}"><text x="42" y="46.5">Low</text><text x="98" y="46.5">Moderate</text><text x="42" y="59.5">High</text><text x="98" y="59.5">Severe</text></g></g>
-    <g><rect x="446" y="12" width="22" height="44" rx="6" fill="#fff" stroke="${LINE}"/><path d="M446 34h22" stroke="${LINE}"/><path d="M452 23h10M457 18v10M452 45h10" fill="none" stroke="${INK2}" stroke-width="1.6" stroke-linecap="round"/></g>
-    <g class="fine" stroke="${INK2}" stroke-width="1.2" stroke-linecap="round"><path d="M404 254h56M404 250v8M460 250v8"/><text x="432" y="246" font-size="9" text-anchor="middle" fill="${INK2}" stroke="none">100 m</text></g>
+    const courts = [[233, 62], [126, 152]];
+    const line = (pts) => `M${pts.map(([x, y]) => `${x} ${y}`).join("L")}`;
+    const segs = roads.flatMap(([pts, hw]) => pts.slice(1).map((b, k) => [pts[k], b, hw]));
+    const dist = (px, py, [ax, ay], [bx, by]) => { const dx = bx - ax, dy = by - ay, t = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy))); return Math.hypot(px - ax - t * dx, py - ay - t * dy); };
+    const clear = (x, y, r) => segs.every(([a, b, hw]) => dist(x, y, a, b) > hw + r) && courts.every(([cx, cy]) => Math.hypot(x - cx, y - cy) > 8 + r);
+    const inPark = (x, y) => x > 298 && x < 406 && y > 94 && y < 207;
+    const inShops = (x, y) => x > 402 && y > 98 && y < 207;
+    // houses face every street, a little irregular, none on a road
+    let houses = "", n = 0;
+    for (const [[ax, ay], [bx, by], hw] of segs) {
+      const len = Math.hypot(bx - ax, by - ay), ux = (bx - ax) / len, uy = (by - ay) / len;
+      for (let s = 9; s < len - 6; s += 13) for (const side of [1, -1]) {
+        n++;
+        const w = 4.2 + rnd(n) * 1.4, d = 3.2 + rnd(n + 50) * 1.2, off = hw + 5 + d + rnd(n + 99) * 1.5;
+        const cx = ax + ux * s - uy * side * off, cy = ay + uy * s + ux * side * off;
+        if (cx < -60 || cx > 540 || cy < -50 || cy > 207 || inPark(cx, cy) || inShops(cx, cy) || !clear(cx, cy, Math.max(w, d) + 1.5)) continue;
+        const c = [[-w, -d], [w, -d], [w, d], [-w, d]].map(([p, q]) => [f1(cx + ux * p - uy * q), f1(cy + uy * p + ux * q)]);
+        houses += `M${c[0][0]} ${c[0][1]}l${c.slice(1).map(([x, y], k) => `${f1(x - c[k][0])} ${f1(y - c[k][1])}`).join(" ")}z`;
+      }
+    }
+    const trees = [];
+    for (let k = 0; k < 34; k++) {
+      const x = 310 + rnd(k + 400) * 82, y = 110 + rnd(k + 500) * 80;
+      if (Math.hypot((x - 362) / 25, (y - 170) / 15) < 1 || (y < 132 && x > 330 && x < 376)) continue;
+      trees.push([f1(x), f1(y), f1(2.6 + rnd(k + 600) * 2.6)]);
+    }
+    const bankTrees = [[-60, 260], [-24, 228], [24, 228], [40, 258], [66, 230], [150, 262], [214, 232], [262, 262], [330, 232], [392, 260], [470, 226], [520, 262], [560, 222], [90, 290], [230, 284], [380, 292], [500, 296], [-40, 300], [300, 306]].map(([x, y], k) => [x, y, 3 + rnd(k + 700) * 2]);
+    const creek = "M-130 236C-80 230 -44 252 -12 246C50 236 110 262 182 248S310 232 372 246S452 262 492 240S566 226 610 234";
+
+    // the sewers, upstream to downstream: [points, I/I score, width]
+    const pipes = [
+      [[[-130, 95], [78, 90]], 8, 3], [[[74, 46], [78, 90]], 10, 3], [[[78, 90], [84, 198]], 14, 3.6],
+      [[[126, 95], [176, 100]], 18, 3], [[[178, 46], [176, 100]], 30, 3], [[[176, 100], [172, 201]], 36, 3.6],
+      [[[126, 156], [128, 199.5]], 26, 3],
+      [[[233, 66], [236, 98]], 56, 3], [[[236, 98], [296, 96]], 74, 3.2], [[[292, 46], [296, 96]], 62, 3], [[[296, 96], [300, 202]], 78, 4.2],
+      [[[610, 91], [396, 100]], 16, 3], [[[346, 98], [396, 100]], 28, 3], [[[398, 46], [396, 100]], 40, 3], [[[396, 100], [404, 205]], 52, 3.8],
+      [[[-130, 193], [84, 198]], 12, 4.4], [[[84, 198], [128, 199.5]], 18, 4.4], [[[128, 199.5], [172, 201]], 22, 4.6],
+      [[[172, 201], [300, 202]], 48, 5], [[[300, 202], [404, 205]], 76, 5.4], [[[404, 205], [436, 226]], 70, 5.4],
+    ];
+    const COL = ["#3b82f6", "#eab308", "#f97316", "#ef4444"];
+    const band = (s) => (s < 20 ? 0 : s < 45 ? 1 : s < 70 ? 2 : 3);
+    const arrows = pipes.map(([pts, s, w]) => {
+      const [[ax, ay], [bx, by]] = pts, len = Math.hypot(bx - ax, by - ay);
+      if (len < 36) return "";
+      const t = len > 90 ? [0.32, 0.72] : [0.56];
+      const a = (Math.atan2(by - ay, bx - ax) * 180) / Math.PI, L = w + 5, hw = w / 2 + 2.7;
+      return t.map((k) => `<path transform="translate(${f1(ax + (bx - ax) * k)} ${f1(ay + (by - ay) * k)}) rotate(${f1(a)})" d="M${f1(L / 2)} 0L${f1(-L / 2)} ${f1(-hw)}L${f1(-L / 4)} 0L${f1(-L / 2)} ${f1(hw)}Z" fill="${COL[band(s)]}"/>`).join("");
+    }).join("");
+    const gauges = [[78, 90, 9], [172, 201, 24], [296, 96, 65], [396, 100, 41], [404, 205, 72]];
+    const isGauge = (x, y) => gauges.some(([gx, gy]) => gx === x && gy === y);
+    const nodes = [...new Map(pipes.flatMap(([pts]) => pts).filter(([x, y]) => x > 0 && x < 480 && y > 0 && y < 270 && !isGauge(x, y) && !(x === 436 && y === 226)).map((p) => [p.join(), p])).values()];
+
+    return `<svg class="fs-map" viewBox="0 0 480 270" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+    <defs><linearGradient id="fs-hm-g" x1="0" x2="1"><stop offset="0" stop-color="#2563eb"/><stop offset=".2" stop-color="#60a5fa"/><stop offset=".45" stop-color="#facc15"/><stop offset=".7" stop-color="#f97316"/><stop offset="1" stop-color="#dc2626"/></linearGradient></defs>
+    <rect x="-130" y="-90" width="740" height="450" fill="#f1f3ef"/><rect x="-130" y="250" width="740" height="110" fill="#dcebd3"/>
+    <path d="${creek}" fill="none" stroke="#dcebd3" stroke-width="44" stroke-linecap="round"/>
+    <g>${bankTrees.map(([x, y, r]) => `<circle cx="${x}" cy="${f1(y + 1.2)}" r="${f1(r)}" fill="#b6d3a8"/><circle cx="${x}" cy="${y}" r="${f1(r)}" fill="#c9e2bd"/>`).join("")}</g>
+    <path d="${creek}" fill="none" stroke="#a9d0e6" stroke-width="10" stroke-linecap="round"/><path d="${creek}" fill="none" stroke="#c4e3f3" stroke-width="7" stroke-linecap="round"/>
+    <path d="M304 104L392 106L399 197L304 196Z" fill="#d9ebd0"/>
+    <ellipse cx="362" cy="170" rx="19" ry="10" fill="#c4e3f3" stroke="#a9d0e6"/>
+    <path d="M304 132C326 126 346 142 366 136S390 122 398 120" fill="none" stroke="#f6f3e8" stroke-width="2.4" stroke-linecap="round"/>
+    <g>${trees.map(([x, y, r]) => `<circle cx="${x}" cy="${f1(y + 1.2)}" r="${r}" fill="#a9cd99"/><circle cx="${x}" cy="${y}" r="${r}" fill="#bfdcb1"/>`).join("")}</g>
+    <path d="${houses}" fill="#e2e6e5" stroke="#d0d7d6" stroke-width=".6"/>
+    <rect x="414" y="110" width="58" height="46" rx="2" fill="#e2e6e8" stroke="#ccd3d6" stroke-width=".8"/>
+    <path d="M422 118h10v6h-10zM440 118h10v6h-10zM458 118h8v6h-8z" fill="#d3d9dc"/>
+    <rect x="414" y="162" width="58" height="35" rx="2" fill="#e8ebec"/>
+    <path d="M420 166v8M427 166v8M434 166v8M441 166v8M448 166v8M455 166v8M462 166v8M420 185v8M427 185v8M434 185v8M441 185v8M448 185v8M455 185v8M462 185v8" stroke="#fff" stroke-width="1"/>
+    <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <g stroke="#d8dfe3">${roads.map(([pts, hw]) => `<path d="${line(pts)}" stroke-width="${hw * 2 + 2}"/>`).join("")}${courts.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="8.6" fill="#d8dfe3" stroke="none"/>`).join("")}</g>
+      <g stroke="#fff">${roads.map(([pts, hw]) => `<path d="${line(pts)}" stroke-width="${hw * 2}"/>`).join("")}${courts.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="7.6" fill="#fff" stroke="none"/>`).join("")}</g>
+      <path d="M162.6 238V258M175.4 236V256" stroke="#9fb0b0" stroke-width="1.4"/>
+    </g>
+    <path class="fs-hm-glow" d="M296 96L300 202" fill="none" stroke="#ef4444" stroke-width="16" stroke-linecap="round"/>
+    <path d="M436 226C452 231 468 236 492 236H610" fill="none" stroke="#6b7f7d" stroke-width="2" stroke-dasharray="4 3"/>
+    <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <g stroke="${INK}" stroke-opacity=".22">${pipes.map(([pts, , w]) => `<path d="${line(pts)}" stroke-width="${w + 2}"/>`).join("")}</g>
+      ${pipes.map(([pts, s, w]) => `<path d="${line(pts)}" stroke="${COL[band(s)]}" stroke-width="${w}"/>`).join("")}
+      ${pipes.map(([pts, s]) => `<path class="fs-hm-flow b${band(s)}" d="${line(pts)}"/>`).join("")}
+    </g>
+    <g stroke="#fff" stroke-width="1.1" stroke-linejoin="round" paint-order="stroke">${arrows}</g>
+    <g fill="#fff" stroke="${INK2}" stroke-width="1.1">${nodes.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="2.4"/>`).join("")}</g>
+    <circle class="fs-hm-ping" cx="404" cy="205" r="8.5" fill="none" stroke="${COL[3]}" stroke-width="2"/>
+    ${gauges.map(([x, y, s]) => `<circle cx="${x}" cy="${f1(y + 1.3)}" r="9" fill="${INK}" fill-opacity=".18"/><circle cx="${x}" cy="${y}" r="8.5" fill="${COL[band(s)]}" stroke="#fff" stroke-width="2"/><text class="fine" x="${x}" y="${f1(y + 3.1)}" font-size="8.4" font-weight="700" text-anchor="middle" fill="${band(s) === 1 ? INK : "#fff"}">${s}</text>`).join("")}
+    <rect x="429" y="219" width="14" height="14" rx="3.5" fill="#0c5f59" stroke="#fff" stroke-width="1.8"/><circle cx="436" cy="226" r="2.6" fill="none" stroke="#fff" stroke-width="1.3"/>
+    <circle cx="298" cy="149" r="4.6" fill="#fff" stroke="#ef4444" stroke-width="2.2"/>
+    <g class="fine" font-size="8.5" font-style="italic">
+      <text x="351" y="125" text-anchor="middle" fill="#4a7a43" ${halo}>Reserve</text>
+      <text x="236" y="262" text-anchor="middle" fill="#4b86a6" ${halo}>Creek</text>
+      <text x="436" y="248" text-anchor="middle" font-style="normal" font-weight="600" fill="${INK2}" ${halo}>Pump station</text>
+    </g>
+    <g class="fine">
+      <rect x="188" y="122" width="98" height="54" rx="8" fill="${INK}" fill-opacity=".14" transform="translate(0 2)"/>
+      <rect x="188" y="122" width="98" height="54" rx="8" fill="${INK}"/><path d="M285 143l7 6-7 6z" fill="${INK}"/>
+      <text x="198" y="139" font-size="10.5" font-weight="650" fill="#fff">SW-2214</text>
+      <circle cx="201" cy="151.5" r="3" fill="#ef4444"/><text x="208" y="155" font-size="9.5" fill="#fff" fill-opacity=".88">Severe · score 78</text>
+      <text class="mono" x="198" y="169" font-size="8.5" fill="#fff" fill-opacity=".62">225 mm · 189 m</text>
+    </g>
+    <g class="fine">
+      ${card(10, 10, 22, 44, { r: 6 })}<path d="M10 32h22" stroke="${LINE}"/><path d="M16 21h10M21 16v10M16 43h10" fill="none" stroke="${INK2}" stroke-width="1.6" stroke-linecap="round"/>
+      ${card(300, 10, 170, 32, { r: 7 })}<path d="M352 16v20M404 16v20" stroke="${LINE}"/>
+      <g text-anchor="middle"><text x="326" y="25" font-size="11.5" font-weight="650" fill="${INK}">5</text><text x="378" y="25" font-size="11.5" font-weight="650" fill="#dc2626">72</text><text x="437" y="25" font-size="11.5" font-weight="650" fill="${INK}">1.2 km</text>
+        <g font-size="7.4" fill="${MUTED}"><text x="326" y="36">gauges</text><text x="378" y="36">peak severity</text><text x="437" y="36">high or severe</text></g></g>
+      ${card(10, 206, 146, 56)}
+      <text x="20" y="220" font-size="9.5" font-weight="650" fill="${INK}">I/I severity</text>
+      <rect x="20" y="226" width="126" height="5.5" rx="2.75" fill="url(#fs-hm-g)"/>
+      <g class="mono" font-size="7.4" fill="${MUTED}"><text x="20" y="241">0</text><text x="45.2" y="241" text-anchor="middle">20</text><text x="76.7" y="241" text-anchor="middle">45</text><text x="108.2" y="241" text-anchor="middle">70</text><text x="146" y="241" text-anchor="end">100</text></g>
+      <path d="M20 252h16" stroke="#f97316" stroke-width="3" stroke-linecap="round"/><path d="M34 252l-6-3.8v7.6z" fill="#f97316" stroke="#fff" stroke-width=".9"/>
+      <text x="42" y="255" font-size="8.5" fill="${INK2}">Arrows run downstream</text>
+      <g stroke="${INK2}" stroke-width="1.2" stroke-linecap="round"><path d="M300 258h56M300 254v8M356 254v8"/></g><text x="328" y="251" font-size="8" text-anchor="middle" fill="${INK2}" ${halo}>100 m</text>
+      <circle cx="466" cy="256" r="8.5" fill="#fff" stroke="${LINE}"/><path d="M466 249.5l3 6.5h-6z" fill="${INK}"/><path d="M466 262.5l3-6.5h-6z" fill="#c3cdcc"/>
+    </g>
   </svg>`;
   })();
 
-  // 2. Blockage Watch: depth creeping up over a fortnight of dry days while
-  // the flow holds, the two wet days set aside, and the drift called.
+  // 2. Blockage Watch: the site's verdict and risk score on its bands, then
+  // the evidence: the overnight level on three weeks of nights, the rain
+  // nights shaded and set aside, a trend fitted to the dry ones climbing
+  // away from the baseline.
   const blockage = (() => {
-    const x0 = 46, x1 = 460, y0 = 44, y1 = 222, dw = (x1 - x0) / 14;
-    const cx = (i) => x0 + dw * i + dw / 2;
-    const mm = [104, 106, 109, null, 114, 118, 124, 131, 139, null, 154, 165, 177, 190];
-    const ls = [16.2, 15.8, 16.5, null, 16.0, 15.6, 16.3, 15.9, 16.1, null, 16.4, 15.7, 16.0, 16.2];
-    const yd = (v) => y1 - (v / 400) * (y1 - y0), yq = (v) => y1 - (v / 40) * (y1 - y0);
-    const line = (v, f) => v.map((d, i) => d == null ? "" : `${i === 0 || v[i - 1] == null ? "M" : "L"}${cx(i).toFixed(1)} ${f(d).toFixed(1)}`).join("");
-    const dots = (v, f, c) => v.map((d, i) => d == null ? "" : `<circle cx="${cx(i).toFixed(1)}" cy="${f(d).toFixed(1)}" r="2.2" fill="${c}"/>`).join("");
-    const days = "MTWTFSSMTWTFSS".split("");
-    const px = cx(10);
+    const N = 21, x0 = 44, x1 = 430, yT = 104, yB = 220;
+    const X = (i) => f1(x0 + ((x1 - x0) * i) / (N - 1));
+    const Y = (v) => f1(yB - ((v - 90) / 70) * (yB - yT));
+    const lvl = [103, 105, 102, 104, 106, 128, 146, 121, 110, 112, 113, 117, 119, 123, 141, 126, 131, 134, 139, 143, 148];
+    const rain = { 5: 8, 6: 22, 7: 4, 14: 15, 15: 6 };
+    const runs = [[0, 4], [8, 13], [16, 20]], gaps = [[4, 8], [13, 16]];
+    const path = ([a, b]) => Array.from({ length: b - a + 1 }, (_, k) => `${k ? "L" : "M"}${X(a + k)} ${Y(lvl[a + k])}`).join("");
+    const S = (s) => f1(12 + 4.56 * s);
+    const bands = [[0, 35, "#bbf7d0", "Normal"], [35, 55, "#fde68a", "Watch 35"], [55, 75, "#fed7aa", "Warning 55"], [75, 100, "#fecaca", "Critical 75"]];
     return `<svg viewBox="0 0 480 270" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
-    <rect x="${x0}" y="${y0}" width="${x1 - x0}" height="${y1 - y0}" fill="#0d7c72" fill-opacity=".045"/>
-    <g fill="#eef1f4">${[3, 9].map((i) => `<rect x="${(x0 + dw * i).toFixed(1)}" y="${y0}" width="${dw.toFixed(1)}" height="${y1 - y0}"/>`).join("")}</g>
-    <g class="fine">${[3, 9].map((i) => glyph("cloud-rain", cx(i) - 6, y1 - 19, 12, "#8a9a99")).join("")}</g>
-    <g fill="none" stroke="${LINE}" stroke-width="1">${[1, 2, 3, 4].map((k) => `<path d="M${x0} ${(y1 - (k / 4) * (y1 - y0)).toFixed(1)}H${x1}"/>`).join("")}</g>
-    <path d="M${x0} ${y0}V${y1}H${x1}" fill="none" stroke="#b7c3c1" stroke-width="1"/>
-    <g class="fine mono" font-size="9">${[0, 1, 2, 3, 4].map((k) => `<text x="${x0 - 6}" y="${(y1 - (k / 4) * (y1 - y0) + 3).toFixed(1)}" text-anchor="end" fill="#b91c1c" fill-opacity=".75">${k * 100}</text><text x="${x1 + 5}" y="${(y1 - (k / 4) * (y1 - y0) + 3).toFixed(1)}" fill="#095f57" fill-opacity=".8">${k * 10}</text>`).join("")}
-      <text x="${x0 - 6}" y="${y0 - 8}" text-anchor="end" fill="#b91c1c" fill-opacity=".75">mm</text><text x="${x1 + 5}" y="${y0 - 8}" fill="#095f57" fill-opacity=".8">L/s</text>
-      ${days.map((d, i) => `<text x="${cx(i).toFixed(1)}" y="${y1 + 14}" text-anchor="middle" fill="${MUTED}">${d}</text>`).join("")}</g>
-    <text class="fine" x="${x0 + 8}" y="${y0 + 15}" font-size="9.5" font-weight="600" fill="#0d7c72">Dry days only</text>
-    <path d="M${px.toFixed(1)} ${y0}V${y1}" fill="none" stroke="#dc2626" stroke-opacity=".55" stroke-width="1" stroke-dasharray="3 3"/>
-    <path class="fs-draw" pathLength="100" d="${line(ls, yq)}" fill="none" stroke="#0d7c72" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
-    <path class="fs-draw" pathLength="100" d="${line(mm, yd)}" fill="none" stroke="#dc2626" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
-    ${dots(ls, yq, "#0d7c72")}${dots(mm, yd, "#dc2626")}
-    <circle cx="${px.toFixed(1)}" cy="${yd(154).toFixed(1)}" r="5" fill="#fff" stroke="#dc2626" stroke-width="2.2"/>
-    <text class="fs-lbl" x="${(px - 9).toFixed(1)}" y="66" font-size="10.5" font-weight="600" fill="#b91c1c" text-anchor="end">Drift detected</text>
-    <text class="fine" x="${(px - 9).toFixed(1)}" y="80" font-size="9.5" fill="${MUTED}" text-anchor="end">+50 mm, flow unchanged</text>
-    <text class="fs-lbl" x="${x0 + 8}" y="196" font-size="11" font-weight="500" fill="#b91c1c">Depth, creeping upward</text>
-    <text class="fs-lbl" x="${x1 - 4}" y="178" font-size="11" font-weight="500" fill="#095f57" text-anchor="end">Flow, unchanged</text>
-    <g class="fine"><rect x="300" y="8" width="160" height="26" rx="13" fill="#fef2f2" stroke="#fecaca"/><circle cx="315" cy="21" r="4" fill="#dc2626"/><text x="325" y="25" font-size="10.5" font-weight="600" fill="#b91c1c">Likely obstruction building</text></g>
+    <defs><clipPath id="fs-bw-bar"><rect x="12" y="65" width="456" height="8" rx="4"/></clipPath></defs>
+    <g class="fine"><rect x="12" y="9" width="46" height="17" rx="8.5" fill="#fef3c7" stroke="#fbbf24"/><text x="35" y="21" font-size="9.5" font-weight="650" text-anchor="middle" fill="#92400e">Watch</text>
+      <text x="66" y="21.5" font-size="11" font-weight="650" fill="${INK}">Site 14 · Trunk sewer</text>
+      <text x="12" y="58" font-size="9.5" fill="${MUTED}">Overnight level up on dry nights, flow unchanged</text>
+      <text x="468" y="52" font-size="8.5" text-anchor="end" fill="${MUTED}">risk score of 100</text></g>
+    <text class="fs-lbl" x="12" y="44" font-size="12.5" font-weight="650" fill="#b45309">Likely obstruction building</text>
+    <text x="468" y="39" font-size="32" font-weight="650" letter-spacing="-.5" text-anchor="end" fill="#b45309">44</text>
+    <g clip-path="url(#fs-bw-bar)">${bands.map(([a, b, c]) => `<rect x="${S(a)}" y="65" width="${f1(S(b) - S(a))}" height="8" fill="${c}"/>`).join("")}</g>
+    <path d="M${S(35)} 65v8M${S(55)} 65v8M${S(75)} 65v8" stroke="#fff" stroke-width="1.5"/>
+    <g class="fine" font-size="8" fill="${MUTED}">${bands.map(([a, , , t]) => `<text x="${f1(S(a) + (a ? 3 : 0))}" y="86">${t}</text>`).join("")}</g>
+    <g class="fs-bw-mark"><circle cx="${S(44)}" cy="69" r="5.4" fill="#fff" stroke="#b45309" stroke-width="2.4"/></g>
+
+    ${[[4.5, 7.5], [13.5, 15.5]].map(([a, b]) => `<rect x="${X(a)}" y="${yT}" width="${f1(X(b) - X(a))}" height="${yB - yT}" fill="#eef2f5"/>`).join("")}
+    <g fill="#7cc6e0">${Object.entries(rain).map(([i, mm]) => `<rect x="${f1(X(+i) - 4.5)}" y="${yT}" width="9" height="${f1(mm * 1.5)}" rx="1.5"/>`).join("")}</g>
+    <g stroke="#e3e9ee" stroke-width="1">${[100, 120, 140, 160].map((v) => `<path d="M${x0} ${Y(v)}H${x1}"/>`).join("")}</g>
+    <path d="M${x0} ${yT}V${yB}H${x1}" fill="none" stroke="#b7c3c1"/>
+    <g class="fine mono" font-size="8.5" fill="${MUTED}">${[100, 120, 140, 160].map((v) => `<text x="${x0 - 6}" y="${f1(Y(v) + 3)}" text-anchor="end">${v}</text>`).join("")}
+      <text x="${x0}" y="${yB + 14}">3 wk ago</text><text x="${X(7)}" y="${yB + 14}" text-anchor="middle">2 wk</text><text x="${X(14)}" y="${yB + 14}" text-anchor="middle">1 wk</text><text x="${x1}" y="${yB + 14}" text-anchor="end">Last night</text></g>
+    <g class="fine" font-size="8.5"><text x="12" y="99" font-weight="600" fill="${INK2}">Overnight level, mm</text><text x="${X(6)}" y="99" text-anchor="middle" fill="#3b8fb0">Rain: set aside</text></g>
+    <path d="M${x0} ${Y(104)}H${x1}" fill="none" stroke="${INK2}" stroke-width="1.3" stroke-dasharray="5 4"/>
+    <path d="M${X(3)} ${Y(104)}Q${X(13)} ${Y(110)} ${X(20)} ${Y(150)}" fill="none" stroke="#dc2626" stroke-opacity=".55" stroke-width="1.6" stroke-dasharray="5 4"/>
+    <path d="${gaps.map(([a, b]) => `M${X(a)} ${Y(lvl[a])}L${X(b)} ${Y(lvl[b])}`).join("")}" fill="none" stroke="#dc2626" stroke-opacity=".4" stroke-width="1.4" stroke-dasharray="1 3.5" stroke-linecap="round"/>
+    <path class="fs-draw" pathLength="100" d="${runs.map(path).join("")}" fill="none" stroke="#dc2626" stroke-opacity=".16" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    <path class="fs-draw" pathLength="100" d="${runs.map(path).join("")}" fill="none" stroke="#dc2626" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+    ${lvl.map((v, i) => i === N - 1 ? "" : i in rain ? `<circle cx="${X(i)}" cy="${Y(v)}" r="2.4" fill="#fff" stroke="#9aa9a8" stroke-width="1.3"/>` : `<circle cx="${X(i)}" cy="${Y(v)}" r="2.5" fill="#dc2626" stroke="#fff" stroke-width="1.2"/>`).join("")}
+    <circle class="fs-bw-ping" cx="${X(20)}" cy="${Y(148)}" r="3.8" fill="none" stroke="#dc2626" stroke-width="1.6"/>
+    <circle cx="${X(20)}" cy="${Y(148)}" r="3.8" fill="#dc2626" stroke="#fff" stroke-width="1.5"/>
+    <path d="M444 ${Y(104)}h6M447 ${Y(104)}V${Y(150)}M444 ${Y(150)}h6" fill="none" stroke="#b91c1c" stroke-width="1.4"/>
+    <text class="fs-lbl" x="438" y="${f1(Y(127) + 4)}" font-size="11.5" font-weight="650" text-anchor="end" fill="#b91c1c">+46 mm</text>
+    <text class="fine" x="438" y="${f1(Y(104) - 5)}" font-size="8.5" text-anchor="end" fill="${INK2}">Baseline</text>
+    <g class="fine" font-size="8.5" fill="${INK2}">
+      <path d="M${x0} 251h14" stroke="#dc2626" stroke-width="2.4" stroke-linecap="round"/><text x="${x0 + 19}" y="254">Overnight level</text>
+      <path d="M140 251h14" stroke="#dc2626" stroke-opacity=".6" stroke-width="1.6" stroke-dasharray="5 4"/><text x="159" y="254">Trend</text>
+      <path d="M198 251h14" stroke="${INK2}" stroke-width="1.3" stroke-dasharray="5 4"/><text x="217" y="254">Baseline</text>
+      <rect x="268" y="246" width="9" height="9" rx="1.5" fill="#7cc6e0"/><text x="282" y="254">Rain, set aside</text>
+    </g>
   </svg>`;
   })();
 
-  // 3. Pump Station Manager: the wet well in section with its four levels,
-  // the level moving between pump start and stop, two submersibles with
-  // the duty one running, and the station's status beside it.
+  // 3. Pump Station Manager: the wet well in section against its depth
+  // scale, the incoming sewer falling in, two submersibles on the floor and
+  // the duty pump's riser to the rising main. The level climbs to pump
+  // start, the duty pump runs it down to pump stop and rests, on one
+  // timing (site.css: fs-psm-*). Each pump's start and stop are tagged, as
+  // in the platform, with the volume moved each cycle between them.
   const psm = (() => {
-    const L = 176, Rr = 326, top = 46, floor = 246, wall = 10;
-    const lv = [["Overflow", 68, "#dc2626"], ["Surcharge", 98, "#d97706"], ["Pump start", 132, "#0d7c72"], ["Pump stop", 194, "#6b7f7d"]];
-    const pump = (x, run) => `${run ? `<rect class="fs-run" x="${x - 15}" y="193" width="30" height="55" rx="9" fill="none" stroke="#4ade80" stroke-width="10"/>` : ""}
-      <rect x="${x - 17}" y="232" width="34" height="14" rx="3" fill="#44605c"/>
-      <rect x="${x - 11}" y="198" width="22" height="36" rx="4" fill="url(#fs-steel)" stroke="#7d8f8d" stroke-width="1"/>
-      <path d="M${x - 11} 207h22M${x - 11} 213h22M${x - 11} 219h22" stroke="#aebcba" stroke-width="1"/>
-      <rect x="${x - 7}" y="193" width="14" height="6" rx="2" fill="#2b3533"/>
-      <circle cx="${x}" cy="227" r="2.2" fill="${run ? "#22c55e" : "#aebcba"}"/>`;
-    const tiles = [["Pump 1", "Running", "#16a34a"], ["Pump 2", "Standby", "#aebcba"], ["Inflow", "42.6 L/s", "#0d7c72"]];
+    const F = 240, M = 62, yAt = (m) => f1(F - M * m);
+    const L = 172, R = 312, W = 10, G = 36, TOP = 46;
+    const lv = { high: yAt(2.6), start: yAt(2.35), stop: yAt(0.55) };
+    const P = [[222, 1, "#0d9488"], [276, 2, "#c026d3"]];
+    const badge = (x, y, n, c, r = 5.6) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${c}" stroke="#fff" stroke-width="1.3"/><text x="${x}" y="${f1(y + r * 0.5)}" font-size="${f1(r * 1.35)}" font-weight="700" text-anchor="middle" fill="#fff">${n}</text>`;
+    const pump = ([x, n, c]) => `
+      ${n === 1 ? `<rect class="fs-psm-run" x="${x - 16}" y="203" width="32" height="40" rx="10" fill="none" stroke="#4ade80" stroke-width="6"/>` : ""}
+      <path d="M${x - 14} 240V235H${x + 19}V240Z" fill="#44605c"/>
+      <rect x="${x - 11}" y="214" width="22" height="22" rx="4.5" fill="url(#psm-steel)" stroke="#7d8f8d"/>
+      <path d="M${x - 11} 220h22M${x - 11} 225h22" stroke="#aebcba"/>
+      <rect x="${x - 7}" y="208" width="14" height="7.5" rx="2.5" fill="#2b3533"/>
+      ${badge(x, 229, n, c, 4.6)}`;
+    const ticks = [0, 0.5, 1, 1.5, 2, 2.5];
+    return `<svg viewBox="0 0 480 270" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+    <defs>${efDefs("psm")}
+      <linearGradient id="psm-wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b2e3d9" stop-opacity=".9"/><stop offset=".2" stop-color="#7fc7b9" stop-opacity=".9"/><stop offset="1" stop-color="#2e8479" stop-opacity=".92"/></linearGradient>
+      <linearGradient id="psm-beam" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#38bdf8" stop-opacity=".34"/><stop offset="1" stop-color="#38bdf8" stop-opacity=".06"/></linearGradient>
+    </defs>
+    <path d="M0 ${G}H${L - W}M${R + W} ${G}H480" fill="none" stroke="#a9b8b6" stroke-width="1.2"/>
+    <path d="${[...Array(11)].map((_, k) => `M${8 + k * 14} ${G}l-4 5`).join("")}${[...Array(11)].map((_, k) => `M${334 + k * 14} ${G}l-4 5`).join("")}" fill="none" stroke="#c3cdcc"/>
+    <rect x="${L}" y="${TOP}" width="${R - L}" height="${F - TOP}" fill="url(#psm-air)"/>
+    <path class="fs-psm-cone" d="M196 55L192.6 ${lv.start}H199.4Z" fill="url(#psm-beam)" stroke="#38bdf8" stroke-opacity=".45" stroke-width="1" vector-effect="non-scaling-stroke"/>
+    <path class="fs-dash" d="M${L} 63q7 1.5 8 12V${lv.stop}" fill="none" stroke="#60a5fa" stroke-width="2.2" stroke-dasharray="3 6" stroke-linecap="round"/>
+    <rect class="fs-psm-water" x="${L}" y="${lv.start}" width="${R - L}" height="${f1(F - lv.start)}" fill="url(#psm-wg)"/>
+    <g class="fs-psm-surf" fill="none"><path d="M${L} ${lv.start}H${R}" stroke="#9fe7da" stroke-opacity=".5" stroke-width="6"/><path d="M${L} ${lv.start}H${R}" stroke="#2a8a7f" stroke-width="1.4"/></g>
+    <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M292 237V56" stroke="#a9b8b6" stroke-width="6"/><path d="M292 237V56" stroke="#dde5e3" stroke-width="3"/>
+      <path d="M238 237V56H480" stroke="#ea7a2a" stroke-width="6.5"/><path d="M238 237V56H480" stroke="#fdba74" stroke-width="3.2"/>
+      <path class="fs-psm-flow" d="M238 230V56H476" stroke="#fff" stroke-width="1.8"/>
+    </g>
+    <path d="M480 56l-7-4.5v9z" fill="#ea7a2a"/>
+    ${P.map(pump).join("")}
+    <path fill="url(#psm-cut)" d="M${L - W} ${G}H${L}V50H${L - W}ZM${L - W} 68H${L}V${F}H${R}V60H${R + W}V${F + W}H${L - W}ZM${R} ${G}H${R + W}V52H${R}ZM${L} ${G}H226V${TOP}H${L}ZM262 ${G}H${R}V${TOP}H262Z"/>
+    <path d="M${L - W} ${G}V50M${L - W} 68V${F + W}H${R + W}V60M${R + W} 52V${G}M${L} ${TOP}V50M${L} 68V${F}H${R}V60M${R} 52V${TOP}M${L - W} ${G}H226V${TOP}H${L}M262 ${TOP}V${G}H${R + W}M262 ${TOP}H${R}" fill="none" stroke="#8ea19e"/>
+    <rect x="221" y="31.5" width="46" height="4.5" rx="1.5" fill="#46605d"/>
+    <rect x="189" y="${TOP}" width="14" height="9" rx="2" fill="#2b3533"/><circle cx="196" cy="52" r="1.6" fill="#38bdf8"/>
+    <rect x="0" y="50" width="${L}" height="18" fill="#eef6fd" stroke="#93c5fd"/>
+    <rect x="0.5" y="60" width="${L - 0.5}" height="7.5" fill="#9fd0f2"/><path d="M0 60H${L}" stroke="#3b82f6" stroke-opacity=".6"/>
+    <path class="fs-dash" d="M6 64H${L - 6}" fill="none" stroke="#fff" stroke-width="1.6" stroke-dasharray="2 7" stroke-linecap="round"/>
+    <g fill="none" stroke-width="1.3" stroke-dasharray="5 4"><path d="M${L} ${lv.high}H340" stroke="#dc2626"/><path d="M${L} ${lv.start}H340" stroke="#0d7c72"/><path d="M${L} ${lv.stop}H340" stroke="#6b7f7d"/></g>
+    <g fill="none" stroke="${INK2}" stroke-width="1.1"><path d="M346 ${lv.start + 1}V${lv.stop - 1}"/><path d="M342.5 ${lv.start + 7}l3.5-6 3.5 6M342.5 ${lv.stop - 7}l3.5 6 3.5-6" stroke-linejoin="round"/></g>
+    <text class="fine" x="244" y="152" font-size="9" font-weight="650" fill="#0d7c72" ${halo}>Duty pump</text>
+    <g class="fine">
+      <text x="354" y="${f1(lv.high + 3.4)}" font-size="9.5" font-weight="600" fill="#b91c1c">High level</text>
+      ${[["start", "Pump start", "2.35 m"], ["stop", "Pump stop", "0.55 m"]].map(([k, t]) => `${badge(358, lv[k], 1, P[0][2])}${badge(371, lv[k], 2, P[1][2])}<text x="381" y="${f1(lv[k] + 3.4)}" font-size="9.5" font-weight="600" fill="${INK2}">${t}</text>`).join("")}
+      <g class="mono" font-size="9" text-anchor="end" fill="${INK}"><text x="472" y="${f1(lv.high + 3.4)}">2.60 m</text><text x="472" y="${f1(lv.start + 3.4)}">2.35 m</text><text x="472" y="${f1(lv.stop + 3.4)}">0.55 m</text></g>
+      <text x="354" y="164" font-size="9" fill="${MUTED}">per cycle</text>
+      <text x="354" y="176" class="mono" font-size="8" fill="${MUTED}">1.80 m × 12 m²</text>
+      <g class="mono" font-size="8" fill="${MUTED}" text-anchor="end">${ticks.map((m) => `<text x="150" y="${f1(yAt(m) + 2.8)}">${m.toFixed(1)}</text>`).join("")}<text x="150" y="${f1(yAt(2.5) - 9)}">m</text></g>
+      <path d="M155 ${yAt(2.5)}V${F}${ticks.map((m) => `M155 ${yAt(m)}h-3`).join("")}" fill="none" stroke="#9aa9a8"/>
+      <path d="M${L} 252v12M${R} 252v12M${L} 258H${R}" fill="none" stroke="#9aa9a8"/><rect x="221" y="252" width="42" height="12" fill="#fff"/><text x="242" y="261" class="mono" font-size="8.5" text-anchor="middle" fill="${INK2}">Ø 3.91 m</text>
+      <path d="M12 12h10" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round"/><text x="27" y="15" font-size="7.6" font-weight="650" letter-spacing=".06em" fill="${MUTED}">INCOMING SEWER</text>
+      <path d="M458 12h10" stroke="#ea7a2a" stroke-width="2.5" stroke-linecap="round"/><text x="453" y="15" font-size="7.6" font-weight="650" letter-spacing=".06em" text-anchor="end" fill="${MUTED}">RISING MAIN</text>
+      ${card(12, 82, 120, 28, { r: 7, shadow: .05 })}${badge(26, 96, 1, P[0][2])}<text x="37" y="99.5" font-size="9.5" font-weight="650" fill="${INK}">Pump 1</text>
+      <text class="fs-psm-on" x="124" y="99.5" font-size="9" font-weight="650" text-anchor="end" fill="#15803d">Running</text><text class="fs-psm-off" x="124" y="99.5" font-size="9" text-anchor="end" fill="${MUTED}">Idle</text>
+      ${card(12, 116, 120, 28, { r: 7, shadow: .05 })}${badge(26, 130, 2, P[1][2])}<text x="37" y="133.5" font-size="9.5" font-weight="650" fill="${INK}">Pump 2</text><text x="124" y="133.5" font-size="9" text-anchor="end" fill="${MUTED}">Standby</text>
+    </g>
+    <text class="fs-lbl" x="12" y="30" font-size="13" font-weight="650" fill="${INK}">8.5 L/s</text>
+    <text class="fs-lbl" x="468" y="30" font-size="13" font-weight="650" text-anchor="end" fill="${INK}">29.7 L/s</text>
+    <text class="fs-lbl" x="354" y="${f1((lv.start + lv.stop) / 2 - 3)}" font-size="12" font-weight="650" fill="${INK}">21.6 kL</text>
+    ${card(12, 150, 120, 92, { r: 7, shadow: .05 })}
+    <text class="fine" x="22" y="166" font-size="9" font-weight="650" fill="${INK2}">Pump 1 against rating</text>
+    ${(() => {
+      const cx = 72, cy = 223, r = 33, pt = (v, rr) => { const a = Math.PI - (Math.min(v, 120) / 120) * Math.PI; return [f1(cx + rr * Math.cos(a)), f1(cy - rr * Math.sin(a))]; };
+      const arc = (a, b, c, w) => { const [x0, y0] = pt(a, r), [x1, y1] = pt(b, r); return `<path d="M${x0} ${y0}A${r} ${r} 0 0 1 ${x1} ${y1}" fill="none" stroke="${c}" stroke-width="${w}"/>`; };
+      const [nx, ny] = pt(100, r - 7);
+      return `${arc(0, 120, "#eef1f2", 7)}${arc(0, 70, "#fbd5d5", 7)}${arc(90, 112, "#22c55e", 7)}
+      <path d="${[0, 20, 40, 60, 80, 100, 120].map((v) => { const [a, b] = pt(v, r - 5.5), [c, d] = pt(v, r - 9); return `M${a} ${b}L${c} ${d}`; }).join("")}" stroke="#9aa9a8" stroke-width="1"/>
+      <path d="M${cx} ${cy}L${nx} ${ny}" stroke="${INK}" stroke-width="2.2" stroke-linecap="round"/><circle cx="${cx}" cy="${cy}" r="3.6" fill="${INK}"/>
+      <text class="mono" x="${cx}" y="239.5" font-size="10" font-weight="650" text-anchor="middle" fill="${INK}">100%</text>
+      <text class="fine" x="106" y="239.5" font-size="7.6" fill="${MUTED}">of rated</text>`;
+    })()}
+  </svg>`;
+  })();
+
+  // 4. Alarms that reach people: the alarm, this week's roster with today's
+  // duty officer picked out, and their phone as the SMS and the email land.
+  const alarms = (() => {
+    const days = "MTWTFSS".split(""), who = [0, 0, 1, 1, 1, 2, 2], today = 2;
+    const P = [["SL", "#8b5cf6"], ["RK", "#0d7c72"], ["JP", "#d97706"]];
+    const dx = (k) => f1(190 + k * 16);
+    const note = (y, i, bg, ic, app, title, body) => `
+      <g class="fs-al-n" style="--i:${i}">
+        <rect x="350" y="${y}" width="104" height="48" rx="11" fill="#fff" fill-opacity=".94"/>
+        <rect x="357" y="${y + 7}" width="13" height="13" rx="3.5" fill="${bg}"/>${glyph(ic, 359.5, y + 9.5, 8, "#fff", 2.4)}
+        <text class="fine" x="375" y="${y + 16.5}" font-size="7.6" font-weight="600" fill="${MUTED}">${app}</text><text class="fine" x="447" y="${y + 16.5}" font-size="7" text-anchor="end" fill="${MUTED}">now</text>
+        <text class="fs-lbl" style="--lg:11.5px" x="357" y="${y + 31}" font-size="9.5" font-weight="650" fill="${INK}">${title}</text>
+        <text class="fine" x="357" y="${y + 42}" font-size="8" fill="${INK2}">${body}</text>
+      </g>`;
     return `<svg viewBox="0 0 480 270" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
     <defs>
-      <pattern id="fs-cut" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="#e6ebea"/><path d="M0 0V6" stroke="#b4c2c0" stroke-width="1.1"/></pattern>
-      <linearGradient id="fs-air" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eaf1ef"/><stop offset="1" stop-color="#fbfdfc"/></linearGradient>
-      <linearGradient id="fs-wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b2e3d9" stop-opacity=".88"/><stop offset=".18" stop-color="#7fc7b9" stop-opacity=".88"/><stop offset="1" stop-color="#2e8479" stop-opacity=".88"/></linearGradient>
-      <linearGradient id="fs-steel" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#c3cdcc"/><stop offset=".35" stop-color="#f2f5f5"/><stop offset="1" stop-color="#8a9997"/></linearGradient>
+      <linearGradient id="al-body" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3a4644"/><stop offset=".12" stop-color="#1a2221"/><stop offset=".88" stop-color="#1a2221"/><stop offset="1" stop-color="#3a4644"/></linearGradient>
+      <linearGradient id="al-wall" x1="0" y1="0" x2=".4" y2="1"><stop offset="0" stop-color="#0a3532"/><stop offset=".55" stop-color="#145a54"/><stop offset="1" stop-color="#3d9991"/></linearGradient>
+      <linearGradient id="al-av" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1c9a8e"/><stop offset="1" stop-color="#0b6b62"/></linearGradient>
     </defs>
-    <rect x="${L}" y="${top}" width="${Rr - L}" height="${floor - top}" fill="url(#fs-air)"/>
-    <path class="fs-cone" d="M206 56L180 132H232Z" fill="#38bdf8" fill-opacity=".12" stroke="#38bdf8" stroke-opacity=".4" stroke-width="1" vector-effect="non-scaling-stroke"/>
-    ${pump(214, true)}${pump(290, false)}
-    <g fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M307 239H318V56H242" stroke="#b3c0be" stroke-width="6"/><path d="M231 239H242V56H150" stroke="#8fa5a2" stroke-width="6"/><path class="fs-dash" d="M231 239H242V56H150" stroke="#fff" stroke-width="1.8" stroke-dasharray="2 12"/></g>
-    <path d="M150 56l-7 -4v8z" fill="#8fa5a2"/>
-    <rect class="fs-well" x="${L}" y="132" width="${Rr - L}" height="${floor - 132}" fill="url(#fs-wg)"/>
-    <g class="fs-surf" fill="none"><path d="M${L} 132H${Rr}" stroke="#2a8a7f" stroke-opacity=".22" stroke-width="6"/><path d="M${L} 132H${Rr}" stroke="#2a8a7f" stroke-width="1.4"/></g>
-    <g fill="none" stroke-width="1.3" stroke-dasharray="5 4">${lv.map(([, y, c]) => `<path d="M${L} ${y}H${Rr}" stroke="${c}"/>`).join("")}</g>
-    <path fill="url(#fs-cut)" d="M${L - wall} 36H${L}V${floor}H${Rr}V36H${Rr + wall}V${floor + wall}H${L - wall}ZM${L - wall} 36H228V${top}H${L - wall}ZM274 36H${Rr + wall}V${top}H274Z"/>
-    <path d="M${L - wall} 36V${floor + wall}H${Rr + wall}V36M${L} ${top}V${floor}H${Rr}V${top}M${L - wall} ${top}H${L}M228 36V${top}H${L}M274 36V${top}H${Rr}M${Rr} ${top}H${Rr + wall}" fill="none" stroke="#a9b8b6" stroke-width="1"/>
-    <rect x="224" y="33" width="54" height="5" rx="1.5" fill="#46605d"/>
-    <path d="M110 36H${L - wall}M${Rr + wall} 36H420" fill="none" stroke="#a9b8b6" stroke-width="1.2"/>
-    <path d="M118 36l-4 5M134 36l-4 5M150 36l-4 5M350 36l-4 5M366 36l-4 5M382 36l-4 5M398 36l-4 5M414 36l-4 5" fill="none" stroke="#c3cdcc" stroke-width="1"/>
-    <rect x="199" y="${top}" width="14" height="10" rx="2" fill="#2b3533"/><circle cx="206" cy="51" r="1.6" fill="#38bdf8"/>
-    <rect x="140" y="110" width="${L - 140}" height="14" fill="#c9d3d2" stroke="#8fa5a2" stroke-width="1"/><path class="fs-dash" d="M142 117H${L + 2}" fill="none" stroke="#0d7c72" stroke-width="1.8" stroke-dasharray="2 10" stroke-linecap="round"/>
-    <g class="fine" font-size="10.5" fill="${INK2}">${lv.map(([t, y, c]) => `<path d="M${Rr + wall} ${y}h5" stroke="${c}" stroke-width="1.3"/><text x="${Rr + wall + 10}" y="${y + 3.5}">${t}</text>`).join("")}</g>
-    <g class="fine" font-size="10.5">${tiles.map(([k, v, c], i) => { const y = 60 + i * 42; return `<rect x="14" y="${y}" width="120" height="34" rx="7" fill="#f7f9fa" stroke="#dfe5ec"/><circle cx="28" cy="${y + 17}" r="4" fill="${c}"/><text x="38" y="${y + 21}" fill="${INK2}" font-weight="600">${k}</text><text class="mono" x="126" y="${y + 21}" text-anchor="end" fill="${INK}">${v}</text>`; }).join("")}</g>
+    ${card(12, 70, 138, 126, { r: 10, stroke: "#f3c5c5" })}
+    <circle class="fs-al-ping" cx="34" cy="94" r="12" fill="none" stroke="#dc2626" stroke-width="2"/>
+    <circle cx="34" cy="94" r="12" fill="#dc2626"/>${glyph("triangle-alert", 27, 86.5, 14, "#fff", 2.2)}
+    <g class="fine"><text x="53" y="91" font-size="7.6" font-weight="700" letter-spacing=".08em" fill="#b91c1c">ALARM</text><text x="53" y="103" font-size="9" fill="${MUTED}">Site 07 · Wet well</text>
+      <text class="mono" x="140" y="91" font-size="8.5" text-anchor="end" fill="${MUTED}">14:02</text>
+      <text x="22" y="180" font-size="8.5" fill="${MUTED}">Above 2.40 m for 2 min</text></g>
+    <text class="fs-lbl" style="--lg:13.5px" x="22" y="130" font-size="12" font-weight="650" fill="${INK}">High-high level</text>
+    <text class="mono" x="22" y="161" font-size="16" font-weight="650" fill="#b91c1c">2.43 m</text>
+
+    ${card(172, 34, 128, 202, { r: 10 })}
+    <g class="fine"><text x="184" y="53" font-size="9" font-weight="650" fill="${INK2}">On call this week</text>${glyph("calendar", 278, 44, 11, MUTED, 2)}</g>
+    <rect x="${f1(dx(today) - 8)}" y="60" width="16" height="36" rx="5" fill="#e6f4f1" stroke="#0d7c72" stroke-opacity=".5"/>
+    <g class="fine" font-size="8" text-anchor="middle">${days.map((d, k) => `<text x="${dx(k)}" y="71" fill="${k === today ? "#0d7c72" : MUTED}" font-weight="${k === today ? 700 : 400}">${d}</text>`).join("")}</g>
+    ${who.map((p, k) => `<circle cx="${dx(k)}" cy="84" r="5.6" fill="${P[p][1]}" fill-opacity="${k === today ? 1 : .55}"/>`).join("")}
+    <path d="M184 106H288" stroke="${LINE}"/>
+    <circle class="fs-al-ping" cx="236" cy="138" r="19" fill="none" stroke="#0d7c72" stroke-width="2" style="--d:.6s"/>
+    <circle cx="236" cy="138" r="19" fill="url(#al-av)"/><text x="236" y="142.5" font-size="12.5" font-weight="700" text-anchor="middle" fill="#fff">RK</text>
+    <text class="fs-lbl" style="--lg:13px" x="236" y="175" font-size="11.5" font-weight="650" text-anchor="middle" fill="${INK}">Duty officer</text>
+    <text class="fine" x="236" y="188" font-size="8.5" text-anchor="middle" fill="${MUTED}">On call today</text>
+    ${[[184, "message-square", "SMS"], [240, "mail", "Email"]].map(([x, ic, t]) => `<rect x="${x}" y="201" width="48" height="20" rx="10" fill="#f1f6f5" stroke="#d2e2de"/>${glyph(ic, x + 7, 205.5, 11, "#0d7c72", 2.2)}<text class="fine" x="${x + 22}" y="214.5" font-size="8.5" font-weight="600" fill="${INK2}">${t}</text>`).join("")}
+
+    <g fill="none" stroke="#0d7c72" stroke-width="2" stroke-linecap="round"><path class="fs-dash" d="M152 133H166" stroke-dasharray="3 6"/><path class="fs-dash" d="M302 140H330" stroke-dasharray="3 6"/></g>
+    <g fill="#0d7c72"><path d="M171 133l-6-4v8z"/><path d="M337 140l-6-4v8z"/></g>
+
+    <rect x="338" y="62" width="2.5" height="16" rx="1" fill="#2b3533"/><rect x="338" y="84" width="2.5" height="26" rx="1" fill="#2b3533"/><rect x="463.5" y="90" width="2.5" height="34" rx="1" fill="#2b3533"/>
+    <rect x="340" y="6" width="124" height="258" rx="22" fill="url(#al-body)"/>
+    <rect x="345" y="11" width="114" height="248" rx="18" fill="url(#al-wall)"/>
+    <path d="M345 196C374 182 402 206 430 192S459 184 459 184V241Q459 259 441 259H363Q345 259 345 241Z" fill="#fff" fill-opacity=".06"/>
+    <path d="M345 214C372 202 404 224 432 210S459 204 459 204V241Q459 259 441 259H363Q345 259 345 241Z" fill="#fff" fill-opacity=".05"/>
+    <rect x="384" y="17" width="36" height="10" rx="5" fill="#050807"/>
+    <text class="fine" x="402" y="44" font-size="7.6" text-anchor="middle" fill="#fff" fill-opacity=".8">Wednesday 11 November</text>
+    <text x="402" y="77" font-size="29" font-weight="300" letter-spacing="-.5" text-anchor="middle" fill="#fff">14:02</text>
+    ${note(92, 0, "#22c55e", "message-circle", "Messages", "High-high level", "Site 07 · 2.43 m")}
+    ${note(146, 1, "#3b82f6", "mail", "Mail", "Alarm: Site 07", "High-high level, 2.43 m")}
+    <circle cx="368" cy="234" r="9.5" fill="#fff" fill-opacity=".14"/><circle cx="436" cy="234" r="9.5" fill="#fff" fill-opacity=".14"/>
+    <g class="fine">${glyph("flashlight", 363.5, 229.5, 9, "#fff", 2)}${glyph("camera", 431.5, 229.5, 9, "#fff", 2)}</g>
+    <rect x="382" y="250" width="40" height="3" rx="1.5" fill="#fff" fill-opacity=".75"/>
   </svg>`;
   })();
 
-  // 4. Alarms: three notifications, each with its severity glyph, time and
-  // an acknowledge control.
-  const alarms = (() => {
-    const list = [
-      ["#dc2626", "#fef2f2", "triangle-alert", "High-high level", "Site 07 · SMS and email to the duty officer", "14:02", "Acknowledge"],
-      ["#d97706", "#fffbeb", "trending-up", "Blockage Watch: depth drifting", "Site 14 · dry days only · ranked 1 of 38", "13:40", "Acknowledge"],
-      ["#16a34a", "#f0fdf4", "check", "Returned to normal", "Site 22 · acknowledged by the duty officer", "11:15", "Acknowledged"],
-    ];
-    return `<svg viewBox="0 0 480 270" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
-    ${list.map(([c, bg, ic, t, s, time, ack], i) => { const y = 20 + i * 80, done = ack === "Acknowledged"; return `<g class="fs-toast" style="--i:${i}">
-      <rect x="20" y="${y}" width="440" height="66" rx="12" fill="${bg}" stroke="${c}" stroke-opacity=".35"/>
-      <circle cx="54" cy="${y + 33}" r="15" fill="${c}"/>${glyph(ic, 45, y + 24, 18, "#fff")}
-      <text class="fs-lbl" x="82" y="${y + 28}" font-size="13" font-weight="650" fill="${INK}">${t}</text>
-      <text class="fine" x="82" y="${y + 46}" font-size="10.5" fill="${MUTED}">${s}</text>
-      <text class="fine mono" x="446" y="${y + 27}" font-size="10" text-anchor="end" fill="${MUTED}">${time}</text>
-      <g class="fine"><rect x="${done ? 352 : 358}" y="${y + 36}" width="${done ? 94 : 88}" height="20" rx="10" fill="${done ? "#f1f4f3" : "#fff"}" stroke="${done ? "#d5dde5" : c}" stroke-opacity="${done ? 1 : .55}"/>${done ? glyph("check", 360, y + 41, 10, MUTED) : ""}<text x="${done ? 405 : 402}" y="${y + 49.5}" font-size="9.5" font-weight="600" text-anchor="middle" fill="${done ? MUTED : c}">${ack}</text></g>
-    </g>`; }).join("")}
-  </svg>`;
-  })();
-
-  const views = [["I/I heat map", "Severity by pipe", heat], ["Blockage Watch", "Dry days only", blockage], ["Pump Station Manager", "Wet well, to scale", psm], ["Alarms", "Sent to people, not addresses", alarms]];
+  // [title, note beside it, status bar note, drawing]
+  const views = [
+    ["I/I heat map", "Severity by pipe", "Arrows run downstream, faster where I/I is worse", heat],
+    ["Blockage Watch", "Dry nights only", "Rain set aside, judged on the overnight trough", blockage],
+    ["Pump Station Manager", "Wet well, to scale", "Live level and pump runs", psm],
+    ["Alarms", "Sent to people, not addresses", "Sent to whoever is on call today", alarms],
+  ];
+  const rail = ["layout-grid", "flame", "chart-spline", "fan", "bell-ring", "file-text"];
   return `
-  <div class="fs-screen" data-reveal="right">
-    <div class="fs-chrome"><img src="${site.logoWhite}" alt=""><span>FlowSense</span><span class="dot">Demo</span></div>
-    ${views.map(([t, s, svg], i) => `<div class="fs-view${i === 0 ? " active" : ""}"><p class="fs-view-title">${t}<small>${s}</small></p>${svg}</div>`).join("")}
-    <span class="fs-caption">Illustration</span>
+  <div class="fs-screen" data-reveal="right" data-view="0">
+    <div class="fs-chrome"><img src="${site.logoWhite}" alt=""><span>FlowSense</span><span class="dot">Demo</span><span class="fs-bell">${icon("bell", false)}<b>3</b></span></div>
+    <div class="fs-rail" aria-hidden="true">${rail.map((ic, k) => `<i${k >= 1 && k <= 4 ? ` data-v="${k - 1}"` : ""}>${icon(ic, false)}</i>`).join("")}</div>
+    ${views.map(([t, s, , svg], i) => `<div class="fs-view${i === 0 ? " active" : ""}"><p class="fs-view-title">${t}<small>${s}</small></p>${svg}</div>`).join("")}
+    <div class="fs-status"><span class="fs-caption">Illustration</span>${views.map(([, , note], i) => `<span data-v="${i}">${note}</span>`).join("")}</div>
   </div>`;
 }
 
@@ -1377,8 +1591,8 @@ ${waysSection(r)}
     <div>
       <h2 class="h-lg" data-reveal>The platform behind every reading.</h2>
       <p class="lede" data-reveal style="--i:1">EDS FlowSense, built and supported in Australia: live operations, infiltration and inflow, pump stations and calibrated models, for every site we measure.</p>
-      <div class="fs-list" role="group" aria-label="FlowSense tools" data-reveal style="--i:2">
-        ${[["flame", "I/I heat map", "One colour per severity band, with arrows showing which way the water runs."], ["siren", "Blockage Watch", "Early warning before a dry weather spill."], ["fan", "Pump Station Manager", "The wet well drawn to scale, with its live level."], ["bell-ring", "Alarms that reach people", "Sent to the email and mobile your team holds that day."]]
+      <div class="fs-list" role="group" aria-label="FlowSense tools" data-auto data-reveal style="--i:2">
+        ${[["flame", "I/I heat map", "One colour per severity band, with arrows showing which way the water runs."], ["chart-spline", "Blockage Watch", "Early warning before a dry weather spill."], ["fan", "Pump Station Manager", "The wet well drawn to scale, with its live level."], ["bell-ring", "Alarms that reach people", "Sent to the email and mobile your team holds that day."]]
           .map(([ic, t, d], i) => `<button type="button" class="fs-item" aria-pressed="${i === 0}"><span class="card-icon">${icon(ic)}</span><span><b>${t}</b><span>${d}</span></span></button>`).join("")}
       </div>
       <div class="hero-actions">
