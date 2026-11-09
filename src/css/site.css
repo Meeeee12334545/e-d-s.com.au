@@ -341,16 +341,18 @@ ul { margin: 0; padding: 0; list-style: none; }
 .burger:hover { background: var(--eds-soft); }
 .burger.drawer-close { display: inline-flex; }
 
-.drawer { position: fixed; inset: 0; z-index: 120; visibility: hidden; }
-.drawer-scrim { position: absolute; inset: 0; background: rgba(var(--abyss-rgb), .38); opacity: 0; transition: opacity .3s var(--ease); }
+/* The drawer slides in over .4s and out a little quicker, staying visible
+   until it has gone, rather than vanishing the moment it is closed. */
+.drawer { position: fixed; inset: 0; z-index: 120; visibility: hidden; transition: visibility 0s .3s; }
+.drawer-scrim { position: absolute; inset: 0; background: rgba(var(--abyss-rgb), .38); opacity: 0; transition: opacity .25s var(--ease); }
 .drawer-panel {
   position: absolute; inset: 0 0 0 auto; width: min(420px, 100%); background: #fff; color: var(--ink); box-shadow: -30px 0 60px -20px rgba(6, 48, 44, .25);
-  padding: 18px var(--gutter) 32px; overflow-y: auto; translate: 100% 0; transition: translate .4s cubic-bezier(.32, .72, 0, 1);
+  padding: 18px var(--gutter) 32px; overflow-y: auto; translate: 100% 0; transition: translate .3s cubic-bezier(.32, .72, 0, 1);
   display: flex; flex-direction: column; gap: 6px;
 }
-.drawer.open { visibility: visible; }
-.drawer.open .drawer-scrim { opacity: 1; }
-.drawer.open .drawer-panel { translate: 0 0; }
+.drawer.open { visibility: visible; transition-delay: 0s; }
+.drawer.open .drawer-scrim { opacity: 1; transition-duration: .3s; }
+.drawer.open .drawer-panel { translate: 0 0; transition-duration: .4s; }
 .drawer-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
 .drawer details { border-bottom: 1px solid var(--border); }
 .drawer summary, .drawer-link { display: flex; align-items: center; justify-content: space-between; padding: 15px 4px; font-family: var(--font-display); font-size: 1.25rem; font-weight: 600; cursor: pointer; list-style: none; }
@@ -449,7 +451,7 @@ ul { margin: 0; padding: 0; list-style: none; }
 .hero .lede { margin-top: 26px; max-width: 32em; }
 .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 34px; }
 
-/* the flow meter card beside the headline (wide screens only) */
+/* the flow meter card beside the headline (down to tablets; phones leave it out) */
 .hero-main { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: clamp(32px, 5vw, 80px); align-items: center; }
 /* a white instrument face over the water, with a deep teal-tinted shadow */
 .live {
@@ -496,7 +498,13 @@ ul { margin: 0; padding: 0; list-style: none; }
 .city-section { padding-block: clamp(40px, 6vw, 80px) clamp(56px, 6vw, 88px); overflow: hidden; }
 .wrap.wide { max-width: calc(1520px + var(--gutter) * 2); }
 .city-section .section-head { margin-bottom: clamp(24px, 3vw, 36px); }
-.city-grid { display: grid; grid-template-columns: minmax(0, 1fr) 360px; grid-template-areas: "stage panel" "bar panel" "tabs tabs"; gap: 12px clamp(16px, 2vw, 32px); align-items: center; }
+/* The district tabs lead the city, straight under "Pick a district", with the
+   stage and the card below them and the controls under the stage. The city
+   and its card run wider than the text column; the tabs and the controls keep
+   to it, so they start on the heading's edge. A grid item's percentage
+   padding is of its own area: the tabs span the grid, the bar only the stage's
+   column, which is the grid less the card and the gap between them. */
+.city-grid { --city-gap: clamp(16px, 2vw, 32px); display: grid; grid-template-columns: minmax(0, 1fr) 360px; grid-template-areas: "tabs tabs" "stage panel" "bar panel"; gap: 12px var(--city-gap); align-items: center; }
 .city-stage { grid-area: stage; position: relative; margin-inline: calc(var(--gutter) * -0.5); touch-action: pan-y; user-select: none; perspective: 1600px; }
 .city-view { position: relative; }
 /* The glow under the city brightens on hover. It is a soft gradient that
@@ -984,7 +992,7 @@ ul { margin: 0; padding: 0; list-style: none; }
 
 
 .city-tabs { grid-area: tabs; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
-.city-tab { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line-dark); font-size: .85rem; font-weight: 500; color: var(--on-dark-soft); transition: all .2s var(--ease); }
+.city-tab { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line-dark); font-size: .85rem; font-weight: 500; color: var(--on-dark-soft); transition: background-color .2s var(--ease), border-color .2s var(--ease), color .2s var(--ease); }
 .city-tab:hover { border-color: var(--line-dark-strong); color: #fff; }
 .city-tab[aria-selected="true"] { background: var(--aqua); border-color: var(--aqua); color: var(--on-aqua); }
 /* between the phone row and the full row, the seven tabs drop their icons
@@ -1028,7 +1036,9 @@ ul { margin: 0; padding: 0; list-style: none; }
    still while a storm grows the card. The buttons wrap rather than run under
    the card. */
 @media (min-width: 981px) {
-  .city-grid { grid-template-rows: auto minmax(0, 1fr) auto; }
+  .city-grid { grid-template-rows: auto auto minmax(0, 1fr); }
+  .city-tabs { justify-content: flex-start; padding-inline-start: calc((100% - min(100%, var(--wrap))) / 2); margin-bottom: 6px; }
+  .city-bar { padding-inline-start: calc((100% + 360px + var(--city-gap) - min(100% + 360px + var(--city-gap), var(--wrap))) / 2); }
   .city-toolbar { flex-wrap: wrap; min-width: 0; }
 }
 .city-hud { grid-area: hud; display: flex; flex-wrap: wrap; gap: 8px; min-width: 0; }
@@ -1077,7 +1087,7 @@ body.city-lock { overflow: hidden; }
 .city-section.is-expanded .city-btn[data-act="expand"] .icon:first-child { display: none; }
 .city-section.is-expanded .city-btn[data-act="expand"] .icon + .icon { display: block; }
 .city-section.is-expanded .city-panel { overflow: auto; min-height: 0; }
-.city-section.is-expanded .city-tabs { align-self: end; }
+.city-section.is-expanded .city-tabs { align-self: end; justify-content: center; padding-inline-start: 0; margin-bottom: 0; }
 /* narrower windows: the city on top at full width, the card below */
 @media (max-width: 1100px) {
   .city-section.is-expanded .city-grid { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto auto auto; grid-template-areas: "bar" "stage" "tabs" "panel"; padding-right: 24px; align-items: start; }
@@ -1586,8 +1596,10 @@ input[type="range"]:active::-moz-range-thumb { cursor: grabbing; box-shadow: 0 0
 .fs-chrome img { height: 11px; }
 .fs-chrome .dot { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; font-weight: 500; opacity: .9; }
 .fs-chrome .dot::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #7dffb0; box-shadow: 0 0 0 2px rgba(125, 255, 176, .3); }
-.fs-view { position: absolute; inset: 38px 0 0 0; padding: 14px; opacity: 0; visibility: hidden; transition: opacity .35s var(--ease), visibility 0s .35s; display: flex; flex-direction: column; gap: 10px; }
-.fs-view.active { opacity: 1; visibility: visible; transition-delay: 0s; }
+/* The screen that leaves fades quickly and the next comes in just behind it,
+   so the two titles never sit half over each other mid-change. */
+.fs-view { position: absolute; inset: 38px 0 0 0; padding: 14px; opacity: 0; visibility: hidden; transition: opacity .16s var(--ease), visibility 0s .16s; display: flex; flex-direction: column; gap: 10px; }
+.fs-view.active { opacity: 1; visibility: visible; transition: opacity .34s var(--ease-out) .1s, visibility 0s; }
 .fs-view-title { margin: 0; font-family: var(--font-display); font-size: .9rem; font-weight: 650; letter-spacing: -.01em; line-height: 1.2; color: var(--ink); display: flex; justify-content: space-between; align-items: center; }
 .fs-view-title small { font: 500 .75rem var(--font-body); color: var(--muted); }
 .fs-view svg { flex: 1 1 0; min-height: 0; width: 100%; height: auto; background: #fff; border-radius: 12px; border: 1px solid var(--border); }
@@ -2620,6 +2632,10 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: 6
 .dark .photo figcaption::before { background: var(--aqua); }
 /* home: the site photo above the client's words */
 .about-side { display: grid; gap: 18px; align-content: start; }
+/* on a tablet the site photo and the client's words sit side by side under the timeline */
+@media (max-width: 980px) and (min-width: 701px) {
+  .about-side { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; align-items: center; }
+}
 .about-side .photo { margin: 0; }
 /* about: photos from the field, one large and four beside it, in tiles of
    a set height rather than the 3:2 frame */
@@ -3492,8 +3508,24 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: 6
      teal and the FlowSense band's */
   #ways { padding-bottom: 80px; }
 }
+/* On a tablet each way runs across its card: what it is and the buttons on
+   the left, what is included beside them behind a rule, so the three are
+   not three tall stacks of short lines. */
+@media (max-width: 980px) and (min-width: 701px) {
+  .way { grid-row: auto; grid-template-rows: none; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); grid-template-areas: "head points" "text points" "actions points"; column-gap: 36px; row-gap: 14px; align-content: start; }
+  .way-head { grid-area: head; }
+  .way > p { grid-area: text; }
+  .way-points { grid-area: points; align-self: center; padding: 4px 0 4px 32px; border-top: 0; border-left: 1px solid var(--border); }
+  .way-feature .way-points { border-left-color: rgba(255, 255, 255, .18); }
+  .way-actions { grid-area: actions; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 12px 22px; padding-top: 4px; }
+}
 @media (max-width: 700px) {
   .results, .process { grid-template-columns: 1fr; }
+  /* one result to a row: the figure sits beside what it measured, like a
+     line on a scoreboard, with the story and the client under both */
+  .results .result:not(.more) { grid-row: auto; grid-template-rows: none; grid-template-columns: 5.6rem minmax(0, 1fr); column-gap: 14px; row-gap: 12px; align-items: center; padding: 22px 22px 20px; }
+  .result-stat { font-size: 2.3rem; }
+  .result:not(.more) > p, .result figcaption { grid-column: 1 / -1; }
   /* the action bar's Enquire button carries the count on a phone */
   .header-quote { display: none; }
   .quote-toast { bottom: calc(86px + env(safe-area-inset-bottom)); }
@@ -3575,7 +3607,15 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: 6
   .proof-row { grid-template-columns: 1fr; }
   .proof-row > div, .proof-row > div + div { padding: 18px 0 0; border-left: 0; margin-top: 0; }
 }
-@media (max-width: 420px) { .range-grid { grid-template-columns: 1fr; } }
+/* one to a row on a narrow phone: the eight ranges become one list on a
+   white plate, ruled between rows, rather than eight boxes */
+@media (max-width: 420px) {
+  .range-grid { grid-template-columns: 1fr; gap: 0; border: 1px solid var(--border); border-radius: 16px; background: #fff; overflow: hidden; }
+  .range-link { border: 0; border-radius: 0; padding-block: 13px; }
+  .range-link + .range-link { border-top: 1px solid var(--border); }
+  .range-link:hover { translate: none; box-shadow: none; background: var(--foam); }
+  .range-link:focus-visible { outline-offset: -3px; }
+}
 
 /* Home: offices and industries folded into the about band. */
 .about-more { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(36px, 5vw, 72px); margin-top: clamp(56px, 7vw, 96px); padding-top: clamp(40px, 5vw, 64px); background: linear-gradient(var(--border), var(--border)) var(--gutter) 0 / calc(100% - var(--gutter) * 2) 1px no-repeat; }
@@ -3763,9 +3803,35 @@ html:has(.secbar) .band[id] { scroll-margin-top: calc(16px - var(--band-pad)); }
 @media (max-width: 980px) and (min-width: 761px) {
   .related-grid.n3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
-@media (max-width: 860px) {
-  .hero-main { grid-template-columns: 1fr; gap: 36px; }
-  /* stacked under the buttons it would push the client logos out of the first screen */
+/* On a tablet the meter card stays beside the words, a size smaller, rather
+   than leaving half the hero empty */
+@media (max-width: 860px) and (min-width: 701px) {
+  .hero-main { grid-template-columns: minmax(0, 1fr) 280px; gap: 24px; }
+  .live { width: 280px; padding: 16px 14px 14px; }
+  .live-site { gap: 6px; font-size: .78rem; }
+  .live-tag { gap: 6px; padding: 3px 8px 3px 7px; font-size: .62rem; letter-spacing: .05em; }
+  .live-value b { font-size: 2.3rem; }
+  .live-read div { padding: 8px 9px; }
+  .live-read span { letter-spacing: .04em; }
+}
+/* On a phone the whole card under the buttons would push the client logos out
+   of the first screen, so the meter becomes a slim strip: the site, the
+   reading with its last day beside it, and the illustration note. On a short
+   phone even the strip would, so there it goes. */
+@media (max-width: 700px) {
+  .hero-main { grid-template-columns: 1fr; gap: 24px; }
+  .hero-body { padding-bottom: 36px; }
+  .hero .live { width: 100%; display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "head head" "value chart" "label foot"; column-gap: 20px; padding: 13px 16px 12px; border-radius: 18px; box-shadow: 0 26px 50px -28px rgba(6, 48, 44, .4), 0 6px 16px -10px rgba(6, 48, 44, .14), inset 0 1px 0 #fff; }
+  .live-head { grid-area: head; }
+  .live-value { grid-area: value; margin-top: 10px; }
+  .live-value b { font-size: 2rem; }
+  .live-label { grid-area: label; margin-top: 3px; font-size: .74rem; }
+  .live-chart { grid-area: chart; align-self: end; margin-top: 10px; }
+  .live-read { display: none; }
+  .live-foot { grid-area: foot; justify-content: flex-end; margin-top: 3px; font-size: .72rem; }
+  .live-foot > :last-child { display: none; }
+}
+@media (max-width: 700px) and (max-height: 699px) {
   .hero .live { display: none; }
 }
 @media (max-width: 700px) {
@@ -4063,6 +4129,19 @@ body.is-touring { overscroll-behavior-y: contain; }
   .footer li a { display: inline-block; padding-block: 8px; margin-block: -8px; }
   .crumbs a { padding-block: 10px; margin-block: -10px; }
 }
+/* A tap leaves :hover set until the next tap elsewhere, so on a touch screen
+   a card would still be lifted and lit when the visitor comes back to the
+   page. The lift and the glow that follows the pointer are for a mouse; under
+   a finger a link card presses in a little instead, as the buttons do. */
+@media (hover: none) {
+  a.card:hover, .range-link:hover, .range-tile:hover, .result.more:hover { translate: none; box-shadow: none; }
+  .card:hover::before, .card:hover::after { opacity: 0; }
+  a.card:hover > .card-icon .icon, a.card:hover .go .icon, .range-link:hover .go .icon, .range-tile:hover .go .icon { translate: none; }
+  .inst:hover .inst-shot img { translate: none; filter: drop-shadow(0 26px 22px rgba(6, 48, 44, .18)); }
+  .bento-lead:hover .bento-shot img { scale: none; rotate: none; }
+  a.card, .range-link, .range-tile, .inst { transition: border-color .25s var(--ease), box-shadow .3s var(--ease), background-color .2s var(--ease), scale .16s var(--ease-out); }
+  a.card:active, .range-link:active, .range-tile:active, .inst:active { scale: .985; }
+}
 @media (max-width: 700px) {
   html { scroll-padding-bottom: calc(84px + env(safe-area-inset-bottom)); }
   /* on a phone a balanced lede leaves a ragged gap on the right; let it run */
@@ -4087,7 +4166,16 @@ body.is-touring { overscroll-behavior-y: contain; }
   .city-hud { display: grid; grid-template-columns: 1fr 1fr; overflow: visible; margin-inline: 0; padding-inline: 0; }
   .city-hud .city-tile-spark { grid-column: 1 / -1; min-width: 0; }
   .mini-grid { grid-template-columns: 1fr 1fr; gap: 0 16px; }
-  .shelf { padding: 24px 20px; }
+  /* The four flagship instruments become a row to swipe through, each on a
+     white plate of its own with the next one showing at the edge, rather
+     than one plate four screens tall. The plate's shadow needs the row's
+     padding, since a row that scrolls sideways clips what falls outside it. */
+  .shelf { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: min(80%, 310px); gap: 14px; align-items: stretch; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scroll-padding-inline: var(--gutter); scrollbar-width: none; margin-inline: calc(var(--gutter) * -1); padding: 6px var(--gutter) 30px; border: 0; border-radius: 0; background: none; box-shadow: none; }
+  .shelf::-webkit-scrollbar { display: none; }
+  .shelf::before { display: none; }
+  .inst { scroll-snap-align: start; grid-template-rows: 180px auto; gap: 14px; padding: 22px 20px 20px; border-radius: 20px; background: #fff; border: 1px solid var(--border); box-shadow: 0 18px 36px -24px rgba(6, 48, 44, .32), 0 1px 3px rgba(6, 48, 44, .05); }
+  .inst-body { padding-top: 14px; }
+  .shelf + .range-grid { margin-top: 2px; }
 }
 @media (max-width: 560px) {
   /* the industries list goes to one column; the offices stay two across */
