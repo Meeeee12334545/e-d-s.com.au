@@ -319,7 +319,7 @@
     const w = Math.round(s.name.length * 5.6 + 20) + (s.alarm ? 46 : 0);
     const c = el("g", { class: `callout${s.major ? "" : " minor"}` }, g);
     c.append(seg("callout-line", [cx, cy - 4], [cx, cy - 15]));
-    el("rect", { x: f(cx - w / 2), y: f(cy - 33), width: w, height: 18, rx: 9 }, c);
+    el("rect", { x: f(cx - w / 2), y: f(cy - 33), width: w, height: 18, rx: 1.5 }, c);
     const t = el("text", { x: f(cx), y: f(cy - 20.5), "text-anchor": "middle" }, c);
     el("tspan", { class: "cs-name" }, t).textContent = s.name;
     if (s.alarm) el("tspan", { class: "cs-state" }, t).textContent = ` · ${ui.states.normal}`;
@@ -2117,7 +2117,7 @@
         // in the expanded view the labels of the other districts drop onto their own tiles
         const lg = el("g", { class: "zlabel", "data-zone": id, style: `--drop:${f(top - 14)}px` }, labelLayer);
         el("line", { x1: f(a[0]), y1: f(a[1] + 9), x2: f(a[0]), y2: f(a[1] + 20) }, lg);
-        el("rect", { x: f(a[0] - wpx / 2), y: f(a[1] - 11), width: f(wpx), height: 21, rx: 10.5 }, lg);
+        el("rect", { x: f(a[0] - wpx / 2), y: f(a[1] - 11), width: f(wpx), height: 21, rx: 1.5 }, lg);
         el("text", { x: f(a[0]), y: f(a[1] + 3.5), "text-anchor": "middle" }, lg).textContent = text;
         labels[id] = lg;
       });
