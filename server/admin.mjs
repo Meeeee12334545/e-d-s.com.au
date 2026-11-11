@@ -187,7 +187,7 @@ function readForm(req) {
 // Each row's action in plain words, for the spreadsheet's "action" column.
 const ACTIONS = {
   link: "Clicked a link", button: "Clicked a button", tab: "Picked a tab", download: "Downloaded a document",
-  outbound: "Went to another site", search: "Searched", choice: "Chose an option", form: "Sent a form",
+  outbound: "Went to another site", search: "Searched", choice: "Chose an option", form: "Sent a form", form_failure: "Form not sent",
 };
 const describe = (r) =>
   r.type === "pageview" ? (r.status === 404 ? "Page not found" : "Viewed a page")

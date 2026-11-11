@@ -468,6 +468,8 @@
           : { tag: "Email", cls: "t-goal", icon: "mail", what: ["Clicked the email address ", b(contact(st.target))], where: [area] };
       case "form":
         return { tag: "Form sent", cls: "t-goal", icon: "send", what: ["Sent the form ", q(st.label)], where: [area] };
+      case "form_failure":
+        return { tag: "Not sent", cls: "t-warn", icon: "triangle-alert", what: ["Could not send the form ", q(st.label)], where: [area] };
       case "outbound":
         return { tag: "Left the site", cls: "t-leave", icon: "external-link", what: ["Followed a link to another site: ", b(site(st.target))], where: [st.label && `the link ${quoted(st.label)}`, area] };
       case "search":
