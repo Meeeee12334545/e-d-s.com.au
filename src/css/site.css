@@ -3999,6 +3999,17 @@ body.is-touring { overscroll-behavior-y: contain; }
 /* Three products in one: the card family, with the purchase each replaces. */
 .fs-layers .card small { display: block; margin-top: auto; padding-top: 14px; font-size: .82rem; font-weight: 500; color: var(--brand-dark); }
 
+/* The video tour, sent on request: one toned strip with the ask on the left
+   and its button on the right, stacking on a phone. */
+.fs-ask { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 18px clamp(18px, 2.4vw, 28px); padding: clamp(22px, 3vw, 32px) clamp(20px, 3vw, 36px); border-radius: var(--radius); background: var(--bg-alt); }
+.fs-ask > .icon { width: 40px; height: 40px; stroke-width: 1.5; color: var(--brand); }
+.fs-ask h2 { font-size: clamp(1.3rem, 2vw, 1.6rem); letter-spacing: -.015em; line-height: 1.15; }
+.fs-ask p { margin-top: 8px; max-width: 76ch; line-height: 1.55; color: var(--ink-2); text-wrap: pretty; }
+@media (max-width: 700px) {
+  .fs-ask { grid-template-columns: 1fr; justify-items: start; }
+  .fs-ask > .icon { width: 32px; height: 32px; }
+}
+
 /* A stop on the tour: copy beside the screen, swapping sides stop by stop.
    Whichever side it is on, the screen takes the wider column. */
 .fs-stop-in { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: clamp(32px, 5vw, 72px); align-items: center; }

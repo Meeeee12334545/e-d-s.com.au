@@ -2557,6 +2557,15 @@ export const flowsense = {
     ["8", "", "blockage signatures, six of them from a level reading alone"],
     ["16", "", "engineering tools on one GIS canvas, by project and scenario"],
   ],
+  // The narrated video tour is sent on request, not shown on the site (EDS,
+  // 11 November 2026: it tells competitors too much). `request` is what the
+  // enquiry arrives naming, so EDS knows the visitor is asking for the video.
+  video: {
+    heading: "Take the video tour.",
+    lede: "A 13-minute narrated tour of every screen. Tell us who you are and we'll send it to you.",
+    action: "Request the video",
+    request: "FlowSense video tour",
+  },
   // Three products in one, and the purchase each one takes the place of.
   layers: {
     heading: "Three products in one, and one record underneath them.",

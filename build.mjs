@@ -2357,11 +2357,23 @@ function fsStop(s, n) {
   if (s.layout === "wide") return `<section class="section band fs-stop wide${tone}" id="${s.id}"><div class="wrap">${copy}${media}</div></section>`;
   return `<section class="section band fs-stop${n % 2 ? " rev" : ""}${tone}${s.layout === "tall" ? " tall" : ""}" id="${s.id}"><div class="wrap fs-stop-in">${copy}${media}</div></section>`;
 }
+// The video tour is not on the site and not in this repository: a visitor
+// asks for it, and EDS sends it once it knows who is asking. The button opens
+// the enquiry form with the FlowSense topic picked and the video named as
+// what the enquiry is about (the form's "Enquiring about" line).
+const fsVideo = (r, v) => `
+<section class="section band" id="video"><div class="wrap">
+  <div class="fs-ask" data-reveal>
+    ${icon("circle-play")}
+    <div><h2>${esc(v.heading)}</h2><p>${esc(v.lede)}</p></div>
+    <a class="btn btn-primary btn-lg" href="${contactHref(r, { topic: "EDS FlowSense", product: v.request })}">${esc(v.action)}</a>
+  </div>
+</div></section>`;
 // The section bar for this page: the same bar as the service pages, with
 // the walkthrough as its action.
 const fsBar = (r) => `
 <nav class="secbar" aria-label="On this page"><div class="wrap secbar-in">
-  <ol>${[["platform", "Platform"], ["monitor", "Monitor"], ["blockage-watch", "Blockage Watch"], ["psm", "Pump stations"], ["analyse", "Analyse"], ["engineer", "Engineer"], ["reports", "Reports"], ["connect", "Connect"], ["standards", "Standards"], ["questions", "Questions"], ["documents", "Documents"]].map(([id, label]) => `<li><a href="#${id}">${label}</a></li>`).join("")}</ol>
+  <ol>${[["video", "Video"], ["platform", "Platform"], ["monitor", "Monitor"], ["blockage-watch", "Blockage Watch"], ["psm", "Pump stations"], ["analyse", "Analyse"], ["engineer", "Engineer"], ["reports", "Reports"], ["connect", "Connect"], ["standards", "Standards"], ["questions", "Questions"], ["documents", "Documents"]].map(([id, label]) => `<li><a href="#${id}">${label}</a></li>`).join("")}</ol>
   <a class="btn btn-brand secbar-cta" href="${contactHref(r, { topic: "EDS FlowSense" })}">Request a walkthrough</a>
 </div></nav>`;
 // The wet well trace beside the Pump Station Manager: five hours of level
@@ -2415,6 +2427,7 @@ ${pageHero(r, { cls: "fs-hero", crumbs: [["FlowSense"]], eyebrow: "Sewer network
   </div>
 </section>
 ${fsBar(r)}
+${fsVideo(r, FS.video)}
 <section class="section band alt" id="platform"><div class="wrap">
   <div class="band-head"><h2 class="h-lg" data-reveal>${esc(FS.layers.heading)}</h2><p class="lede" data-reveal style="--i:1">${esc(FS.layers.lede)}</p></div>
   <div class="grid c3 fs-layers">
