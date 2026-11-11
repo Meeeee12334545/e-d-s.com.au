@@ -17,6 +17,8 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Optional, Callable, Any
 from enum import Enum
+import base64
+import re
 import asyncio
 
 __all__ = [
@@ -88,7 +90,7 @@ class Sandbox:
     # Event handlers
     on_state_change: Optional[Callable[[SandboxState], None]] = None
 
-    async def execute_command(self, command: str) -> dict[str, Any]:
+    async def execute_command(self, command: str | list[str]) -> dict[str, Any]:
         """Execute a command in the sandbox.
 
         Use when: running shell commands (git, build tools, tests)
@@ -96,6 +98,9 @@ class Sandbox:
 
         Returns:
             dict with keys "stdout", "stderr", "exit_code".
+
+        Pass an argument list for commands containing untrusted values; the
+        infrastructure adapter must execute argument lists without a shell.
         """
         # Implementation depends on infrastructure
         pass
@@ -175,15 +180,26 @@ class ImageBuilder:
         Use when: the current image is stale or no image exists yet.
         Runs clone, dependency install, build, and cache warming.
         """
+        if not re.fullmatch(r"[A-Za-z0-9-]+/[A-Za-z0-9._-]+", repo_url):
+            raise ValueError("Repository must be specified as owner/name")
+
         print(f"Building image for {repo_url}...")
 
-        # Get fresh token for clone
         token = self.token_provider()
+        authorization = base64.b64encode(
+            f"x-access-token:{token}".encode()
+        ).decode()
+        credential_environment = {
+            "GIT_CONFIG_COUNT": "1",
+            "GIT_CONFIG_KEY_0": "http.https://github.com/.extraheader",
+            "GIT_CONFIG_VALUE_0": f"AUTHORIZATION: basic {authorization}",
+        }
+        clone_url = f"https://github.com/{repo_url}.git"
 
         # These operations run in build environment
-        build_steps: list[str] = [
+        build_steps: list[str | list[str]] = [
             # Clone repository
-            f"git clone https://x-access-token:{token}@github.com/{repo_url} /workspace",
+            ["git", "clone", clone_url, "/workspace"],
 
             # Install dependencies
             "cd /workspace && npm install",
@@ -199,7 +215,12 @@ class ImageBuilder:
 
         # Execute build steps (infrastructure-specific)
         for step in build_steps:
-            await self._execute_build_step(step)
+            environment = credential_environment if isinstance(step, list) else None
+            await self._execute_build_step(step, environment=environment)
+
+        await self._execute_build_step(
+            ["git", "-C", "/workspace", "remote", "set-url", "origin", clone_url]
+        )
 
         # Get current commit
         commit_sha: str = await self._get_commit_sha()
@@ -219,8 +240,10 @@ class ImageBuilder:
         """Get the most recent image for a repository."""
         return self.images.get(repo_url)
 
-    async def _execute_build_step(self, command: str) -> None:
-        """Execute a build step (infrastructure-specific)."""
+    async def _execute_build_step(
+        self, command: str | list[str], environment: Optional[dict[str, str]] = None
+    ) -> None:
+        """Execute argv directly and pass its temporary environment only to the child."""
         pass
 
     async def _get_commit_sha(self) -> str:
@@ -463,10 +486,10 @@ class SandboxManager:
 
         # Set git identity
         await sandbox.execute_command(
-            f'git config user.name "{user.name}"'
+            ["git", "config", "user.name", user.name]
         )
         await sandbox.execute_command(
-            f'git config user.email "{user.email}"'
+            ["git", "config", "user.email", user.email]
         )
 
     async def _wait_for_sync(self, warm: WarmSandbox) -> None:

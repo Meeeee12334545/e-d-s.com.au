@@ -213,11 +213,6 @@ This skill connects to:
 
 ## References
 
-Internal references:
-- `researcher/README.md` - Read when implementing the repo-native research-to-skill operating system
-- `researcher/rubrics/harness-change.md` - Read when evaluating changes to an agent harness
-- `researcher/runbooks/autonomous-research-loop.md` - Read when running a source-to-skill loop
-
 External resources:
 - Karpathy `autoresearch` - Constrained autonomous experiment loop with locked evaluation
 - Prime Intellect autonomous nanoGPT speedrun - Durable scratchpads, handoffs, monitoring, and autonomy failure modes
