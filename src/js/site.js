@@ -185,6 +185,44 @@
     list.addEventListener("animationend", (e) => { if (e.animationName === "fs-progress" && list.hasAttribute("data-auto")) show((i + 1) % fsItems.length); });
   }
 
+  /* ---- FlowSense tour film ---- */
+  // None of the film loads until it is played. A plate over the title card
+  // starts it, and from then on the browser's own controls run it. Each
+  // chapter in the list jumps to its place, and the list marks the chapter
+  // on screen and keeps it in view (scrolling the list only, never the page).
+  const film = $(".fs-film");
+  if (film) {
+    const video = $("video", film), plate = $(".fs-film-play", film), list = $(".fs-film-chapters ol", film);
+    const marks = $$("button", list), times = marks.map((b) => Number(b.dataset.t));
+    let on = -1;
+    const start = () => { film.classList.add("started"); video.controls = true; };
+    const play = () => { start(); video.play().catch(() => {}); };
+    const mark = () => {
+      let i = -1;
+      while (i + 1 < times.length && times[i + 1] <= video.currentTime + 0.2) i++;
+      if (i === on) return;
+      on = i;
+      marks.forEach((b, n) => { b.classList.toggle("on", n === i); if (n === i) b.setAttribute("aria-current", "true"); else b.removeAttribute("aria-current"); });
+      const row = marks[i]?.parentElement;
+      if (!row) return;
+      const top = row.offsetTop, bottom = top + row.offsetHeight;
+      if (top < list.scrollTop || bottom > list.scrollTop + list.clientHeight) list.scrollTo({ top: top - (list.clientHeight - row.offsetHeight) / 2, behavior: "smooth" });
+    };
+    video.controls = false;
+    plate.hidden = false;
+    plate.addEventListener("click", play);
+    video.addEventListener("play", start);
+    video.addEventListener("timeupdate", mark);
+    video.addEventListener("seeking", mark);
+    marks.forEach((b, n) => b.addEventListener("click", () => {
+      // Before the film has loaded there is nowhere to seek to yet, so the
+      // jump waits for the film's details to arrive.
+      if (video.readyState) video.currentTime = times[n];
+      else video.addEventListener("loadedmetadata", () => { video.currentTime = times[n]; }, { once: true });
+      play();
+    }));
+  }
+
   /* ---- Pump Station Manager pins ---- */
   // On the FlowSense page the PSM screen carries four numbered pins and a
   // key beside it. Pointing at a line in the key lights its pin, and the

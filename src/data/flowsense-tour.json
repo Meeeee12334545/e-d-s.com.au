@@ -1,0 +1,123 @@
+{
+  "duration": 785,
+  "width": 1920,
+  "height": 1080,
+  "chapters": [
+    {
+      "t": 0.0,
+      "title": "Signing in"
+    },
+    {
+      "t": 39.27,
+      "title": "Finding your way around"
+    },
+    {
+      "t": 80.12,
+      "title": "Network Overview"
+    },
+    {
+      "t": 155.66,
+      "title": "Sites and the site page"
+    },
+    {
+      "t": 209.75,
+      "title": "Fleet Health"
+    },
+    {
+      "t": 232.77,
+      "title": "Alarms"
+    },
+    {
+      "t": 259.85,
+      "title": "Blockage Watch"
+    },
+    {
+      "t": 307.32,
+      "title": "PSM, Pump Station Manager"
+    },
+    {
+      "t": 365.44,
+      "title": "Trade Waste"
+    },
+    {
+      "t": 390.62,
+      "title": "Assets"
+    },
+    {
+      "t": 424.09,
+      "title": "Flow Analytics"
+    },
+    {
+      "t": 476.07,
+      "title": "Engineering"
+    },
+    {
+      "t": 484.34,
+      "title": "Engineering: GIS Check"
+    },
+    {
+      "t": 500.74,
+      "title": "Engineering: Asset Register"
+    },
+    {
+      "t": 513.9,
+      "title": "Engineering: Hydraulic Modelling"
+    },
+    {
+      "t": 578.9,
+      "title": "Engineering: I/I Heat Map"
+    },
+    {
+      "t": 600.97,
+      "title": "Engineering: Data Scrubbing"
+    },
+    {
+      "t": 609.32,
+      "title": "Reports"
+    },
+    {
+      "t": 629.71,
+      "title": "Data Export"
+    },
+    {
+      "t": 641.05,
+      "title": "How it is calculated"
+    },
+    {
+      "t": 668.08,
+      "title": "Data assurance"
+    },
+    {
+      "t": 678.19,
+      "title": "User guide"
+    },
+    {
+      "t": 685.24,
+      "title": "Admin"
+    },
+    {
+      "t": 699.22,
+      "title": "Admin: Add Site"
+    },
+    {
+      "t": 711.39,
+      "title": "Admin: Alarm rules"
+    },
+    {
+      "t": 715.25,
+      "title": "Admin: Channel setup"
+    },
+    {
+      "t": 722.12,
+      "title": "Admin: Branding and connections"
+    },
+    {
+      "t": 729.96,
+      "title": "Field Mode"
+    },
+    {
+      "t": 750.73,
+      "title": "Where to go next"
+    }
+  ]
+}
