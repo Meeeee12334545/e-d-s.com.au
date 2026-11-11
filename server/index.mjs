@@ -3,7 +3,6 @@
 //   npm run build && npm start   -> http://localhost:4173
 // Settings are environment variables (see .env.example and the README).
 import http from "node:http";
-import { createReadStream } from "node:fs";
 import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -26,7 +25,6 @@ const TYPES = {
   ".html": "text/html; charset=utf-8", ".css": "text/css", ".js": "text/javascript", ".svg": "image/svg+xml", ".woff2": "font/woff2",
   ".json": "application/json", ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".gif": "image/gif", ".webp": "image/webp",
   ".ico": "image/x-icon", ".txt": "text/plain; charset=utf-8", ".xml": "application/xml", ".pdf": "application/pdf", ".zip": "application/zip",
-  ".mp4": "video/mp4", ".vtt": "text/vtt; charset=utf-8",
 };
 
 async function serveStatic(req, res, pathname) {
@@ -38,18 +36,6 @@ async function serveStatic(req, res, pathname) {
     const modified = info.mtime.toUTCString();
     const headers = { "Content-Type": TYPES[path.extname(file)] || "application/octet-stream", "Last-Modified": modified, "Cache-Control": "no-cache" };
     if (req.headers["if-modified-since"] === modified) { res.writeHead(304, headers); return res.end(); }
-    // A browser asks for a film a piece at a time, and can only jump ahead
-    // in it (the chapters on the FlowSense page) if the server sends pieces.
-    headers["Accept-Ranges"] = "bytes";
-    const range = /^bytes=(\d*)-(\d*)$/.exec(req.headers.range || "");
-    if (range && (range[1] || range[2])) {
-      const start = range[1] ? Number(range[1]) : Math.max(0, info.size - Number(range[2]));
-      const end = range[1] && range[2] ? Math.min(Number(range[2]), info.size - 1) : info.size - 1;
-      if (start > end || start >= info.size) { res.writeHead(416, { "Content-Range": `bytes */${info.size}` }); return res.end(); }
-      res.writeHead(206, { ...headers, "Content-Range": `bytes ${start}-${end}/${info.size}`, "Content-Length": end - start + 1 });
-      if (req.method === "HEAD") return res.end();
-      return createReadStream(file, { start, end }).pipe(res);
-    }
     res.writeHead(200, headers);
     res.end(req.method === "HEAD" ? undefined : await readFile(file));
   } catch {

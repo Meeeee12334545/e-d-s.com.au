@@ -3999,38 +3999,6 @@ body.is-touring { overscroll-behavior-y: contain; }
 /* Three products in one: the card family, with the purchase each replaces. */
 .fs-layers .card small { display: block; margin-top: auto; padding-top: 14px; font-size: .82rem; font-weight: 500; color: var(--brand-dark); }
 
-/* The narrated tour: the film beside its chapters, in one ruled frame. The
-   chapter list is as tall as the film and scrolls inside itself; from 980 px
-   down it sits under the film, a few rows high. The play plate (site.js)
-   covers the title card until the film starts, then the browser's own
-   controls take over. */
-.fs-film { display: grid; grid-template-columns: minmax(0, 1fr) 304px; border: 1px solid var(--border-strong); border-radius: var(--radius); background: #fff; overflow: hidden; }
-.fs-film-player { position: relative; aspect-ratio: 16 / 9; background: var(--deep); }
-.fs-film video { display: block; width: 100%; height: 100%; object-fit: contain; }
-/* The plate sits under the title card's own words, on their left edge (both
-   offsets are shares of the film's width, so they hold at any size). */
-.fs-film-play { position: absolute; inset: 0; width: 100%; display: grid; place-items: start; padding: 35.5% 0 0 5.3%; border: 0; background: none; cursor: pointer; }
-.fs-film-play > span { display: inline-flex; align-items: center; gap: .6em; padding: 1em 1.4em; border-radius: var(--radius); background: #fff; color: var(--brand-dark); font-size: 1.02rem; font-weight: 500; line-height: 1; transition: background-color .2s var(--ease), color .2s var(--ease); }
-.fs-film-play .icon { width: 1.05em; height: 1.05em; fill: currentColor; }
-.fs-film-play small { padding-left: .7em; border-left: 1px solid var(--border-strong); font-size: .9em; font-weight: 400; color: var(--muted); }
-.fs-film-play:hover > span { background: var(--ink); color: #fff; }
-.fs-film-play:hover small { color: var(--on-dark-soft); border-color: var(--line-dark-strong); }
-.fs-film-play:focus-visible { outline: none; }
-.fs-film-play:focus-visible > span { outline: 2px solid #fff; outline-offset: 3px; }
-.fs-film.started .fs-film-play { display: none; }
-.fs-film-side { position: relative; border-left: 1px solid var(--border-strong); }
-.fs-film-chapters { position: absolute; inset: 0; display: grid; grid-template-rows: auto minmax(0, 1fr); }
-.fs-film-chapters h3 { margin: 0; padding: 13px 18px 12px; border-bottom: 1px solid var(--border-strong); font: 600 .84rem var(--font-display); color: var(--ink); }
-.fs-film-chapters ol { position: relative; margin: 0; padding: 0; list-style: none; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
-.fs-film-chapters button { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 12px; align-items: baseline; width: 100%; padding: 10px 18px 10px 16px; border: 0; border-left: 2px solid transparent; border-bottom: 1px solid var(--border); background: #fff; color: var(--ink-2); font: inherit; font-size: .9rem; line-height: 1.35; text-align: left; cursor: pointer; transition: background-color .2s var(--ease), color .2s var(--ease); }
-.fs-film-chapters li:last-child button { border-bottom: 0; }
-.fs-film-chapters button.sub > span:last-child { padding-left: 14px; }
-.fs-film-chapters .t { font: 500 .76rem var(--font-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
-.fs-film-chapters button:hover { background: var(--foam); color: var(--ink); }
-.fs-film-chapters button:focus-visible { outline: 2px solid var(--brand); outline-offset: -2px; }
-.fs-film-chapters button.on { border-left-color: var(--brand); background: var(--bg-alt); color: var(--ink); font-weight: 550; }
-.fs-film-chapters button.on .t { color: var(--brand-dark); }
-
 /* A stop on the tour: copy beside the screen, swapping sides stop by stop.
    Whichever side it is on, the screen takes the wider column. */
 .fs-stop-in { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: clamp(32px, 5vw, 72px); align-items: center; }
@@ -4142,13 +4110,8 @@ body.is-touring { overscroll-behavior-y: contain; }
   .fs-facts li:nth-child(n + 3) { padding-top: 20px; }
   .fs-std, .fs-assure { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .fs-key { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .fs-film { grid-template-columns: 1fr; }
-  .fs-film-side { border-left: 0; border-top: 1px solid var(--border-strong); }
-  .fs-film-chapters { position: static; }
-  .fs-film-chapters ol { max-height: 246px; }
 }
 @media (max-width: 700px) {
-  .fs-film-play > span { font-size: .95rem; padding: .9em 1.2em; }
   .fs-points, .fs-key, .fs-std, .fs-assure { grid-template-columns: 1fr; }
   .fs-media.beside { grid-template-columns: 1fr; align-items: start; }
   .fs-media.stack { padding: 0; display: grid; gap: 12px; }
