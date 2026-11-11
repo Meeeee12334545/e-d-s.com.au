@@ -2126,7 +2126,7 @@ main:has(> .alt:last-child) + .footer { background: var(--bg); }
 .contact-cards { display: grid; gap: 12px; align-content: start; }
 /* the ways to reach us stay beside the form as it scrolls past */
 @media (min-width: 981px) {
-  .contact-cards { position: sticky; top: calc(var(--header-h) + 20px); }
+  .contact-cards.fits { position: sticky; top: calc(var(--header-h) + 20px); }
 }
 /* above the form on a tablet: two to a row, the phone number across the top */
 @media (min-width: 701px) and (max-width: 980px) {
