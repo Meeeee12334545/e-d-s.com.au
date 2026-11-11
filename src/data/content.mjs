@@ -2557,6 +2557,17 @@ export const flowsense = {
     ["8", "", "blockage signatures, six of them from a level reading alone"],
     ["16", "", "engineering tools on one GIS canvas, by project and scenario"],
   ],
+  // The narrated tour, first band under the section bar. The film, its
+  // captions, its poster and its chapters are written by
+  // tools/flowsense_video.py; `date` is the day this cut went on the site,
+  // which search engines ask for.
+  video: {
+    heading: "Watch the tour.",
+    lede: "A narrated walk through every screen, from signing in to Field Mode. Pick a chapter to jump to it.",
+    name: "FlowSense: a tour of the platform",
+    description: "A narrated tour of EDS FlowSense, screen by screen: the Network Overview, alarms, Blockage Watch, the Pump Station Manager, Flow Analytics, the engineering tools, reports and Field Mode.",
+    date: "2026-11-11",
+  },
   // Three products in one, and the purchase each one takes the place of.
   layers: {
     heading: "Three products in one, and one record underneath them.",

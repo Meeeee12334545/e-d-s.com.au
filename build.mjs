@@ -2357,11 +2357,56 @@ function fsStop(s, n) {
   if (s.layout === "wide") return `<section class="section band fs-stop wide${tone}" id="${s.id}"><div class="wrap">${copy}${media}</div></section>`;
   return `<section class="section band fs-stop${n % 2 ? " rev" : ""}${tone}${s.layout === "tall" ? " tall" : ""}" id="${s.id}"><div class="wrap fs-stop-in">${copy}${media}</div></section>`;
 }
+// The narrated tour: the film beside its chapters. tools/flowsense_video.py
+// writes the film, its captions and its poster to src/assets/video, and the
+// chapters to src/data/flowsense-tour.json. The page loads none of the film
+// until it is played (`preload="none"`); site.js lays the play plate over the
+// title card and makes each chapter jump to its place. A chapter named
+// "Engineering: GIS Check" is listed as "GIS Check", set in under Engineering.
+const FS_FILM = JSON.parse(readFileSync(path.join(ROOT, "src/data/flowsense-tour.json"), "utf8"));
+const FS_FILM_SRC = "@root/assets/video/flowsense-tour";
+const clock = (t) => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, "0")}`;
+const fsFilm = (v) => {
+  const { duration, width, height, chapters } = FS_FILM;
+  const mins = Math.round(duration / 60);
+  const mb = Math.round(statSync(path.join(ROOT, "src/assets/video/flowsense-tour.mp4")).size / 1048576);
+  const heads = new Set(chapters.map((c) => c.title));
+  const rows = chapters.map(({ t, title }) => {
+    const [head, ...rest] = title.split(": ");
+    const sub = rest.length && heads.has(head);
+    return `<li><button type="button" data-t="${t}"${sub ? ' class="sub"' : ""}><span class="t">${clock(t)}</span><span>${esc(sub ? rest.join(": ") : title)}</span></button></li>`;
+  }).join("");
+  const ld = {
+    "@context": "https://schema.org", "@type": "VideoObject", name: v.name, description: v.description,
+    thumbnailUrl: absolute(`${FS_FILM_SRC}-poster.jpg`), contentUrl: absolute(`${FS_FILM_SRC}.mp4`),
+    uploadDate: `${v.date}T09:00:00+10:00`, duration: `PT${Math.floor(duration / 60)}M${duration % 60}S`, inLanguage: "en-AU",
+    publisher: { "@type": "Organization", "@id": ORG_ID, name: site.name },
+  };
+  return `
+<section class="section band" id="video"><div class="wrap">
+  <div class="band-head"><h2 class="h-lg" data-reveal>${esc(v.heading)}</h2><p class="lede" data-reveal style="--i:1">${esc(v.lede)}</p></div>
+  <div class="fs-film" data-reveal style="--i:2">
+    <div class="fs-film-player">
+      <video controls playsinline preload="none" width="${width}" height="${height}" poster="${FS_FILM_SRC}-poster.jpg" aria-label="${esc(v.name)}">
+        <source src="${FS_FILM_SRC}.mp4" type="video/mp4">
+        <track kind="captions" src="${FS_FILM_SRC}.vtt" srclang="en" label="English">
+        <a href="${FS_FILM_SRC}.mp4">Download the tour (MP4, ${mb} MB)</a>
+      </video>
+      <button class="fs-film-play" type="button" hidden><span>${icon("play", false)}Play the tour<small>${mins} min</small></span></button>
+    </div>
+    <div class="fs-film-side"><div class="fs-film-chapters">
+      <h3 id="fs-film-chapters">Chapters</h3>
+      <ol aria-labelledby="fs-film-chapters">${rows}</ol>
+    </div></div>
+  </div>
+</div></section>
+<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, "\\u003c")}</script>`;
+};
 // The section bar for this page: the same bar as the service pages, with
 // the walkthrough as its action.
 const fsBar = (r) => `
 <nav class="secbar" aria-label="On this page"><div class="wrap secbar-in">
-  <ol>${[["platform", "Platform"], ["monitor", "Monitor"], ["blockage-watch", "Blockage Watch"], ["psm", "Pump stations"], ["analyse", "Analyse"], ["engineer", "Engineer"], ["reports", "Reports"], ["connect", "Connect"], ["standards", "Standards"], ["questions", "Questions"], ["documents", "Documents"]].map(([id, label]) => `<li><a href="#${id}">${label}</a></li>`).join("")}</ol>
+  <ol>${[["video", "Video"], ["platform", "Platform"], ["monitor", "Monitor"], ["blockage-watch", "Blockage Watch"], ["psm", "Pump stations"], ["analyse", "Analyse"], ["engineer", "Engineer"], ["reports", "Reports"], ["connect", "Connect"], ["standards", "Standards"], ["questions", "Questions"], ["documents", "Documents"]].map(([id, label]) => `<li><a href="#${id}">${label}</a></li>`).join("")}</ol>
   <a class="btn btn-brand secbar-cta" href="${contactHref(r, { topic: "EDS FlowSense" })}">Request a walkthrough</a>
 </div></nav>`;
 // The wet well trace beside the Pump Station Manager: five hours of level
@@ -2415,6 +2460,7 @@ ${pageHero(r, { cls: "fs-hero", crumbs: [["FlowSense"]], eyebrow: "Sewer network
   </div>
 </section>
 ${fsBar(r)}
+${fsFilm(FS.video)}
 <section class="section band alt" id="platform"><div class="wrap">
   <div class="band-head"><h2 class="h-lg" data-reveal>${esc(FS.layers.heading)}</h2><p class="lede" data-reveal style="--i:1">${esc(FS.layers.lede)}</p></div>
   <div class="grid c3 fs-layers">
@@ -2886,6 +2932,7 @@ for (const f of readdirSync(path.join(ROOT, "src/css"))) await writeFile(path.jo
 await cp(path.join(ROOT, "src/js"), path.join(DIST, "assets/js"), { recursive: true });
 await cp(path.join(ROOT, "src/assets/img"), path.join(DIST, "assets/img"), { recursive: true });
 await cp(path.join(ROOT, "src/assets/docs"), path.join(DIST, "assets/docs"), { recursive: true });
+await cp(path.join(ROOT, "src/assets/video"), path.join(DIST, "assets/video"), { recursive: true });
 // Saira for headings, cut to its semi-expanded width by tools/fonts.py;
 // Aileron, which stands in for Helvetica Neue where a visitor has none; and
 // Geist Mono for readouts.
