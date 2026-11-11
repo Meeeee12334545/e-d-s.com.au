@@ -67,7 +67,7 @@ export function openStore(dir) {
       ts INTEGER NOT NULL,          -- unix ms
       day TEXT NOT NULL,            -- YYYY-MM-DD in the site's time zone
       hour INTEGER NOT NULL,
-      type TEXT NOT NULL,           -- pageview, or an action: link, button, toggle, tab, download, contact, outbound, search, choice, form
+      type TEXT NOT NULL,           -- pageview, or an action: link, button, toggle, tab, download, contact, outbound, search, choice, form, form-failed
       visitor TEXT NOT NULL,        -- hash of IP + browser + a salt that is thrown away daily
       session TEXT NOT NULL,
       entry INTEGER NOT NULL DEFAULT 0, -- 1 on the first page view of a visit
@@ -234,8 +234,8 @@ export function openStore(dir) {
       downloads: clicks("download", from, to),
       contacts: clicks("contact", from, to),
       outbound: clicks("outbound", from, to),
-      forms: st(`SELECT label name, count(*) count, ${ON_PAGE} FROM events WHERE type = 'form' AND day BETWEEN ? AND ?
-        GROUP BY label ORDER BY count DESC LIMIT 100`).all(from, to),
+      forms: st(`SELECT type, label name, count(*) count, ${ON_PAGE} FROM events WHERE type IN ('form', 'form-failed') AND day BETWEEN ? AND ?
+        GROUP BY type, label ORDER BY count DESC LIMIT 100`).all(from, to),
       // what people clicked: each control by its words, what it belonged to and where it was
       clicked: st(`SELECT type, label, item, area, max(target) target, count(*) count, count(DISTINCT visitor) visitors, ${ON_PAGE}
         FROM events WHERE ${CLICK} AND day BETWEEN ? AND ? GROUP BY type, label, item, area ORDER BY count DESC LIMIT 200`).all(from, to),

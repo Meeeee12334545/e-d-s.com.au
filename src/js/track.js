@@ -164,7 +164,7 @@
   // failed to send shows as such rather than as sent.
   document.addEventListener("eds:form", (e) => {
     const f = e.target, { sent, subject } = e.detail;
-    send({ type: "form", label: `${f.dataset.track || "Form"}${subject ? ` · ${subject}` : ""}${sent ? "" : " · NOT SENT"}`, area: areaOf(f) });
+    send({ type: sent ? "form" : "form-failed", label: `${f.dataset.track || "Form"}${subject ? ` · ${subject}` : ""}`, area: areaOf(f) });
   });
   window.addEventListener("pagehide", flushSearch);
 
