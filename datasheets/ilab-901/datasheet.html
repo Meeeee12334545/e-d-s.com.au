@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<title>EDS iLab 901 datasheet</title>
+<meta name="author" content="Environmental Data Services">
+<meta name="description" content="EDS iLab 901 multi-parameter water quality sonde and handheld: measurements, specifications and dimensions. ILAB DS 001 Rev A.">
+<!--
+  The iLab 901 datasheet: three A4 pages, printed to PDF by render.py.
+  Every figure comes from the sheet it replaces (iLab DS-21, 2022); the
+  wording follows the website. Colours and type follow the site and the
+  capability statement: the logo teal #3D9991 for rules and graphics, the
+  darker teals for words, one deep sea teal for the contact band; Saira for
+  headings, Helvetica Neue Light for text. Square and flat: 2 px corners at
+  most, ruled grids, no shadows or washes.
+-->
+<style>
+@font-face {
+  font-family: "EDS Display";
+  font-weight: 400 900;
+  src: url("assets/saira-semiexpanded-latin.woff2") format("woff2");
+}
+@page { size: A4; margin: 0; }
+
+:root {
+  --eds: #3d9991;
+  --brand: #0d7c72;
+  --brand-dark: #095f57;
+  --deep: #0a3532;
+  --aqua: #7fd1c4;
+  --ink: #0f2b2a;
+  --ink-2: #2e4543;
+  --muted: #4e6361;
+  --shallows: #eef6f4;
+  --foam: #f6fbfa;
+  --line: #d3dedc;
+  --line-strong: #a9bcb9;
+  --display: "EDS Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --text: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --side: 17mm;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body { font: 300 9.3pt/1.52 var(--text); color: var(--ink-2); background: #cfdad8; font-kerning: normal; }
+img { display: block; max-width: 100%; }
+b, strong { font-weight: 500; color: var(--ink); }
+
+/* ---------- the sheet ---------- */
+.page { position: relative; width: 210mm; height: 297mm; overflow: hidden; background: #fff; display: flex; flex-direction: column; padding: 0 var(--side); break-after: page; }
+.page:last-child { break-after: auto; }
+@media screen { .page { margin: 8mm auto; } }
+
+.head { flex: none; height: 21mm; display: flex; align-items: flex-end; justify-content: space-between; padding-bottom: 4.2mm; border-bottom: .3mm solid var(--ink); }
+.head img { width: 31mm; }
+.head p { font: 500 7.6pt/1 var(--display); letter-spacing: .02em; color: var(--muted); }
+.head p b { font-weight: 600; color: var(--ink); margin-left: 3mm; padding-left: 3mm; border-left: .25mm solid var(--line-strong); }
+
+.main { flex: 1; min-height: 0; padding-top: 9mm; display: flex; flex-direction: column; }
+
+/* the foot is a drawing's title block: ruled cells, one fact in each */
+.foot { flex: none; margin-bottom: 9mm; display: grid; grid-template-columns: 1fr auto auto auto auto; border: .25mm solid var(--line-strong); font: 500 6.9pt/1 var(--display); letter-spacing: .02em; color: var(--muted); }
+.foot span { padding: 2.3mm 3.4mm; border-left: .25mm solid var(--line-strong); white-space: nowrap; }
+.foot span:first-child { border-left: 0; color: var(--ink); }
+.foot span:last-child { color: var(--ink); font-variant-numeric: tabular-nums; }
+
+/* ---------- type ---------- */
+h1, h2, h3 { font-family: var(--display); color: var(--ink); text-wrap: balance; }
+h1 { font-size: 23.5pt; line-height: 1.12; font-weight: 600; letter-spacing: -.012em; }
+h2 { font-size: 12.6pt; line-height: 1.2; font-weight: 600; letter-spacing: -.004em; }
+h3 { font-size: 9.2pt; line-height: 1.25; font-weight: 600; }
+p { text-wrap: pretty; }
+.lede { font-size: 11.6pt; line-height: 1.46; color: var(--ink); }
+.note { font-size: 7.5pt; line-height: 1.45; color: var(--muted); }
+.tag { font: 500 7.2pt/1.2 var(--display); letter-spacing: .03em; color: var(--brand); }
+.sec { margin-top: 8mm; }
+.sec > h2 { padding-bottom: 2.6mm; }
+
+/* ---------- ruled sheets: the line colour shows through a hairline gap ---------- */
+.ruled { display: grid; gap: .25mm; background: var(--line-strong); border: .25mm solid var(--line-strong); }
+.ruled > * { background: #fff; padding: 3.4mm 4mm 3.7mm; }
+.c2 { grid-template-columns: repeat(2, 1fr); }
+.c3 { grid-template-columns: repeat(3, 1fr); }
+.c4 { grid-template-columns: repeat(4, 1fr); }
+.ruled h3 + p { margin-top: 1.2mm; }
+.ruled p { font-size: 8.5pt; line-height: 1.46; }
+
+/* ---------- page 1: the product ---------- */
+.hero { display: grid; grid-template-columns: 1fr 80mm; gap: 11mm; align-items: stretch; }
+.hero-txt { display: flex; flex-direction: column; padding-top: 3mm; }
+.hero h1 { font-size: 50pt; line-height: .96; letter-spacing: -.028em; margin-top: 3.4mm; }
+.hero .lede { margin-top: 6mm; font-size: 12.6pt; line-height: 1.4; }
+.hero .lede + p { margin-top: 4.2mm; }
+.hero p + p { margin-top: 2.6mm; }
+.plate { background: var(--shallows); border: .25mm solid var(--line); display: flex; flex-direction: column; }
+.plate .shot { flex: 1; display: flex; align-items: center; justify-content: center; padding: 6mm 7mm 4mm; }
+.plate .shot img { max-height: 84mm; width: auto; }
+.plate figcaption { border-top: .25mm solid var(--line); padding: 2.1mm 3.4mm; font-size: 7.4pt; line-height: 1.35; color: var(--muted); background: #fff; }
+
+.stats { margin-top: 8mm; display: grid; grid-template-columns: repeat(5, 1fr); border-top: .3mm solid var(--ink); border-bottom: .25mm solid var(--line-strong); }
+.stats div { padding: 3.6mm 3.6mm 3.4mm; border-left: .25mm solid var(--line-strong); }
+.stats div:first-child { border-left: 0; padding-left: 0; }
+.stats b { display: block; font: 600 17pt/1 var(--display); letter-spacing: -.015em; color: var(--ink); white-space: nowrap; }
+.stats b small { font-size: 8.4pt; font-weight: 500; letter-spacing: 0; color: var(--muted); margin-left: .6mm; }
+.stats span { display: block; margin-top: 2mm; font: 500 7.2pt/1.3 var(--display); letter-spacing: .02em; color: var(--brand); }
+
+.feat > div { display: grid; grid-template-columns: 6.4mm 1fr; column-gap: 1.6mm; }
+.feat i { font: 500 7.2pt/1.5 var(--display); font-style: normal; color: var(--eds); font-variant-numeric: tabular-nums; padding-top: .15mm; }
+
+/* ---------- page 2: measurements ---------- */
+.intro { display: grid; grid-template-columns: 1fr 64mm; gap: 11mm; align-items: end; }
+.intro .lede { margin-top: 3.4mm; font-size: 11pt; }
+.fam { border-top: .3mm solid var(--ink); }
+.fam div { display: grid; grid-template-columns: 1fr auto; gap: 3mm; padding: 1.55mm 0; border-bottom: .25mm solid var(--line); font-size: 8.5pt; line-height: 1.4; color: var(--ink); }
+.fam dt { display: flex; align-items: center; gap: 2mm; }
+.fam dt::before { content: ""; width: 2.2mm; height: 2.2mm; background: var(--k); flex: none; }
+.fam dd { font: 500 7.6pt/1.5 var(--display); color: var(--muted); font-variant-numeric: tabular-nums; }
+
+table { width: 100%; border-collapse: collapse; }
+.meas { margin-top: 7mm; border-top: .3mm solid var(--ink); }
+.meas th { font: 500 7.2pt/1.2 var(--display); letter-spacing: .02em; color: var(--brand); text-align: left; padding: 2.3mm 3mm 2.1mm 0; border-bottom: .25mm solid var(--line-strong); }
+.meas td { font-size: 8.3pt; line-height: 1.36; padding: 1.7mm 3mm 1.7mm 0; border-bottom: .25mm solid var(--line); vertical-align: top; }
+.meas td:first-child, .meas th:first-child { padding-left: 3mm; }
+.meas td:last-child, .meas th:last-child { padding-right: 0; }
+.meas .name { font: 600 8.5pt/1.32 var(--display); color: var(--ink); box-shadow: inset .8mm 0 0 var(--k); }
+.meas .name small { display: block; font: 300 7.4pt/1.3 var(--text); color: var(--muted); margin-top: .3mm; }
+.meas tr.grp td { padding: 1.5mm 3mm; background: var(--shallows); font: 500 7.2pt/1.2 var(--display); letter-spacing: .03em; color: var(--ink); border-bottom: .25mm solid var(--line-strong); box-shadow: inset .8mm 0 0 var(--k); }
+.meas tr:last-child td { border-bottom: .3mm solid var(--ink); }
+.meas td.num { font-variant-numeric: tabular-nums; color: var(--ink); }
+.meas td span { white-space: nowrap; }
+.meas td:nth-child(2) { white-space: nowrap; }
+.k1 { --k: #3d9991; } .k2 { --k: #0a3532; } .k3 { --k: #7fd1c4; } .k4 { --k: #a9bcb9; }
+.notes { margin-top: 6mm; }
+.notes p { font-size: 8pt; line-height: 1.45; }
+.notes h3 { font-size: 8.4pt; }
+
+/* ---------- page 3: sonde and handheld ---------- */
+.draw { margin-top: 6.5mm; border: .25mm solid var(--line); background: var(--foam); }
+.draw svg { display: block; width: 100%; height: auto; }
+.draw figcaption { border-top: .25mm solid var(--line); padding: 2.1mm 3.4mm; font-size: 7.4pt; line-height: 1.35; color: var(--muted); background: #fff; }
+.dw-line { fill: none; stroke: var(--ink); stroke-width: 1.15; stroke-linejoin: round; stroke-linecap: round; }
+.dw-thin { fill: none; stroke: var(--ink); stroke-width: .7; stroke-linecap: round; }
+.dw-body { fill: #fff; stroke: var(--ink); stroke-width: 1.15; stroke-linejoin: round; }
+.dw-dark { fill: #2e4543; stroke: var(--ink); stroke-width: 1.15; stroke-linejoin: round; }
+.dw-mid { fill: #d3dedc; stroke: var(--ink); stroke-width: 1.15; stroke-linejoin: round; }
+.dw-tint { fill: #e3efec; stroke: var(--ink); stroke-width: .8; }
+.dw-slot { fill: #0f2b2a; }
+.dw-key { fill: #fff; stroke: var(--ink); stroke-width: .7; }
+.dw-dim { fill: none; stroke: var(--brand); stroke-width: .7; }
+.dw-ext { fill: none; stroke: var(--brand); stroke-width: .5; stroke-dasharray: 2 1.6; }
+.dw-centre { fill: none; stroke: var(--line-strong); stroke-width: .6; stroke-dasharray: 9 2.5 1.5 2.5; }
+.dw-t { font: 600 12.5px/1 var(--display); fill: var(--brand-dark); }
+.dw-l { font: 500 9.6px/1 var(--display); fill: var(--muted); letter-spacing: .04em; }
+.dw-brand { font: italic 700 13px/1 var(--text); fill: #106ebe; }
+
+.specs { margin-top: 6.5mm; display: grid; grid-template-columns: 1fr 1fr; gap: 9mm; }
+.specs h3 { font-size: 10pt; padding-bottom: 2.2mm; border-bottom: .3mm solid var(--ink); display: flex; justify-content: space-between; align-items: baseline; }
+.specs h3 span { font: 500 7.2pt/1 var(--display); letter-spacing: .02em; color: var(--brand); }
+.specs th { width: 34mm; font: 500 7.4pt/1.4 var(--display); letter-spacing: .01em; color: var(--muted); text-align: left; vertical-align: top; padding: 1.35mm 3mm 1.35mm 0; border-bottom: .25mm solid var(--line); }
+.specs td { font-size: 8.5pt; line-height: 1.38; color: var(--ink); padding: 1.3mm 0; border-bottom: .25mm solid var(--line); vertical-align: top; }
+
+.band { margin-top: auto; margin-bottom: 8mm; background: var(--deep); color: #fff; display: grid; grid-template-columns: 47mm 1fr 53mm; }
+.band > * { padding: 6mm 6mm 5.8mm; border-left: .25mm solid rgba(255, 255, 255, .26); }
+.band > :first-child { border-left: 0; }
+.band-id { display: flex; flex-direction: column; justify-content: space-between; gap: 7mm; }
+.band-id img { width: 35mm; }
+.band-id p { font-size: 8pt; line-height: 1.45; color: rgba(255, 255, 255, .84); }
+.band h2 { color: #fff; font-size: 13.4pt; }
+.band-body > p { margin-top: 2mm; font-size: 8.9pt; line-height: 1.5; color: rgba(255, 255, 255, .88); }
+.band dl div { padding: 2.1mm 0; border-top: .25mm solid rgba(255, 255, 255, .26); }
+.band dl div:first-child { border-top: 0; padding-top: 0; }
+.band dl div:last-child { padding-bottom: 0; }
+.band dt { font: 500 6.9pt/1 var(--display); letter-spacing: .03em; color: var(--aqua); }
+.band dd { margin-top: 1.3mm; font-size: 8.7pt; line-height: 1.35; color: #fff; }
+.small { margin-top: 3.4mm; }
+</style>
+</head>
+<body>
+
+<!-- ============================ 1 ============================ -->
+<section class="page">
+  <header class="head"><img src="assets/eds-logo-colour.png" alt="EDS, Environmental Data Services"><p>iLab 901 <b>Product datasheet</b></p></header>
+  <div class="main">
+    <div class="hero">
+      <div class="hero-txt">
+        <p class="tag">Multi-parameter water quality sonde</p>
+        <h1>iLab 901</h1>
+        <p class="lede">Up to seven water quality parameters at once, from one rugged sonde and its handheld.</p>
+        <p>The iLab 901 is built for long-term water quality monitoring. Fit it with up to seven sensors, chosen from thirteen measurements, and it cleans them itself so the data stays accurate for longer.</p>
+        <p>The handheld shows each reading on a 3.5&nbsp;inch colour screen and stores more than 100,000 of them, with a GPS receiver and USB built in.</p>
+      </div>
+      <figure class="plate">
+        <div class="shot"><img src="assets/ilab-901.png" alt="The iLab 901 sonde, its sensors exposed, with the sensor guard beside it"></div>
+        <figcaption>iLab 901 sonde with its sensor guard removed</figcaption>
+      </figure>
+    </div>
+
+    <div class="stats">
+      <div><b>7</b><span>Parameters at once</span></div>
+      <div><b>13</b><span>Measurements to choose from</span></div>
+      <div><b>100,000+</b><span>Readings stored</span></div>
+      <div><b>IP68</b><span>Sonde, to 30&nbsp;m deep</span></div>
+      <div><b>RS485</b><span>Modbus output</span></div>
+    </div>
+
+    <div class="sec">
+      <h2>What you get</h2>
+      <div class="ruled c3 feat">
+        <div><i>01</i><div><h3>Seven at once</h3><p>One sonde carries physical, electrochemical, optical and ion-selective sensors, picked for the job.</p></div></div>
+        <div><i>02</i><div><h3>Cleans itself</h3><p>A self-cleaning system keeps the sensors clear, so the iLab holds accurate data for longer.</p></div></div>
+        <div><i>03</i><div><h3>Long deployments</h3><p>Set the sampling interval to suit, and stretch the time the sonde runs on its own lithium cells.</p></div></div>
+        <div><i>04</i><div><h3>Readings in your hand</h3><p>A 3.5 inch colour screen with an adjustable backlight shows results live, with fast processing on board.</p></div></div>
+        <div><i>05</i><div><h3>Built for the field</h3><p>An IP68 sonde and an IP67 handheld with high-impact rubber gaskets and a shape that is easy to hold.</p></div></div>
+        <div><i>06</i><div><h3>Located and connected</h3><p>GPS and USB are built in and Bluetooth is optional. The sonde speaks Modbus over RS485.</p></div></div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <h2>Where it works</h2>
+      <div class="ruled c4">
+        <div><h3>Rivers, lakes and reservoirs</h3><p>Online multi-parameter water quality monitoring.</p></div>
+        <div><h3>Source water</h3><p>Drinking water sources, groundwater and sea water.</p></div>
+        <div><h3>Environmental monitoring</h3><p>Long-term water quality records.</p></div>
+        <div><h3>Agriculture</h3><p>Water quality monitoring for agriculture.</p></div>
+      </div>
+    </div>
+  </div>
+  <footer class="foot"><span>Environmental Data Services</span><span>www.e-d-s.com.au</span><span>1300 721 683</span><span>ILAB DS 001 Rev A</span><span>1 / 3</span></footer>
+</section>
+
+<!-- ============================ 2 ============================ -->
+<section class="page">
+  <header class="head"><img src="assets/eds-logo-colour.png" alt="EDS, Environmental Data Services"><p>iLab 901 <b>Measurements</b></p></header>
+  <div class="main">
+    <div class="intro">
+      <div>
+        <p class="tag">Measurements</p>
+        <h1 style="margin-top:2.6mm">Thirteen measurements. Fit up to seven.</h1>
+        <p class="lede">Each iLab 901 is fitted with the sensors your program needs. Conductivity also gives salinity and total dissolved solids.</p>
+      </div>
+      <dl class="fam">
+        <div class="k1"><dt>Physical</dt><dd>2</dd></div>
+        <div class="k2"><dt>Electrochemical</dt><dd>3</dd></div>
+        <div class="k3"><dt>Optical</dt><dd>4</dd></div>
+        <div class="k4"><dt>Ion-selective</dt><dd>4</dd></div>
+      </dl>
+    </div>
+
+    <table class="meas">
+      <colgroup><col style="width:35mm"><col style="width:35mm"><col style="width:47mm"><col style="width:28mm"><col></colgroup>
+      <thead><tr><th>Measurement</th><th>Method</th><th>Range</th><th>Resolution</th><th>Accuracy</th></tr></thead>
+      <tbody>
+        <tr class="grp k1"><td colspan="5">Physical</td></tr>
+        <tr class="k1"><td class="name">Temperature</td><td>Thermistor</td><td class="num">0 to 60 °C</td><td class="num">0.01 °C</td><td class="num">±0.5 °C</td></tr>
+        <tr class="k1"><td class="name">Depth</td><td>Pressure</td><td class="num">0 to 61 m</td><td class="num">2 cm</td><td class="num">±0.3%</td></tr>
+        <tr class="grp k2"><td colspan="5">Electrochemical</td></tr>
+        <tr class="k2"><td class="name">pH</td><td>Glass electrode</td><td class="num">0 to 14 pH</td><td class="num">0.01 pH</td><td class="num">±0.1 pH</td></tr>
+        <tr class="k2"><td class="name">ORP</td><td>Glass electrode</td><td class="num">−1000 to +1000 mV</td><td class="num">1 mV</td><td class="num">±5 mV</td></tr>
+        <tr class="k2"><td class="name">Conductivity<small>with salinity and TDS</small></td><td>Platinum gauze electrode pair</td><td class="num"><span>1 to 2000 µS/cm (K = 1)</span><br><span>100 µS/cm to 100 mS/cm (K = 10)</span></td><td class="num">0.1 µS/cm to 0.01 mS/cm, by range</td><td class="num">±3%</td></tr>
+        <tr class="grp k3"><td colspan="5">Optical</td></tr>
+        <tr class="k3"><td class="name">Dissolved oxygen</td><td>Fluorescence</td><td class="num">0 to 20 mg/L (0 to 20 ppm)<br>0 to 200%</td><td class="num">0.01 mg/L<br>0.1%</td><td class="num">±3% or ±0.3 mg/L, whichever is greater</td></tr>
+        <tr class="k3"><td class="name">Turbidity</td><td>Light scattering</td><td class="num">0 to 1000 NTU</td><td class="num">0.1 NTU</td><td class="num">±5% or 0.3 NTU, whichever is greater</td></tr>
+        <tr class="k3"><td class="name">Chlorophyll</td><td>Fluorescence</td><td class="num">0 to 500 µg/L</td><td class="num">0.01 to 0.1 µg/L, by range</td><td class="num">±5% of the signal level of 1 ppb rhodamine B dye</td></tr>
+        <tr class="k3"><td class="name">Blue-green algae</td><td>Fluorescence</td><td class="num">200 to 300,000 cells/mL</td><td class="num">20 cells/mL</td><td class="num">±10% of the signal level of 1 ppb rhodamine B dye</td></tr>
+        <tr class="grp k4"><td colspan="5">Ion-selective</td></tr>
+        <tr class="k4"><td class="name">Ammonia nitrogen</td><td>Ion-selective electrode</td><td class="num">0.1 to 1000 mg/L-N</td><td class="num">0.01 mg/L-N</td><td class="num">±5% or ±0.2 mg/L</td></tr>
+        <tr class="k4"><td class="name">Nitrate nitrogen</td><td>Ion-selective electrode</td><td class="num">0.5 to 1000 mg/L-N</td><td class="num">0.01 mg/L-N</td><td class="num">±10% or ±0.2 mg/L</td></tr>
+        <tr class="k4"><td class="name">Chloride</td><td>Ion-selective electrode</td><td class="num">3 to 1000 mg/L</td><td class="num">0.01 mg/L</td><td class="num">±10% or ±0.2 mg/L</td></tr>
+        <tr class="k4"><td class="name">Fluoride</td><td>Ion-selective electrode</td><td class="num">0.5 to 1000 mg/L</td><td class="num">0.01 mg/L</td><td class="num">±10% or ±0.2 mg/L</td></tr>
+      </tbody>
+    </table>
+
+    <div class="ruled c3 notes">
+      <div><h3>With an ion-selective sensor</h3><p>The pH working range is 5 to 10 pH, and the sonde is rated to a depth of 10 m.</p></div>
+      <div><h3>Depth</h3><p>The depth sensor reads to 61 m. The sonde itself is rated to 30 m.</p></div>
+      <div><h3>Temperature</h3><p>The sonde measures in water from 0 to 40 °C, non-freezing.</p></div>
+    </div>
+  </div>
+  <footer class="foot"><span>Environmental Data Services</span><span>www.e-d-s.com.au</span><span>1300 721 683</span><span>ILAB DS 001 Rev A</span><span>2 / 3</span></footer>
+</section>
+
+<!-- ============================ 3 ============================ -->
+<section class="page">
+  <header class="head"><img src="assets/eds-logo-colour.png" alt="EDS, Environmental Data Services"><p>iLab 901 <b>Specifications</b></p></header>
+  <div class="main">
+    <p class="tag">Specifications</p>
+    <h1 style="margin-top:2.6mm">Sonde and handheld.</h1>
+
+    <figure class="draw" id="dimensions">
+      <svg viewBox="0 0 880 282" role="img" aria-label="Outline drawing of the iLab handheld, 203 mm high and 100 mm wide, and the iLab 901 sonde, 640.5 mm long and 90 mm in diameter">
+        <!-- handheld, front: 0.95 units to the millimetre, as is the sonde -->
+        <g transform="translate(104 40)">
+          <rect class="dw-mid" x="-7" y="-5" width="14" height="6" rx="1"/>
+          <path class="dw-body" d="M-34 0H34C44 0 47.5 6 47.5 16V68C47.5 84 40 90 40 102C40 116 46 124 46 142V166C46 184 38 193 24 193H-24C-38 193-46 184-46 166V142C-46 124-40 116-40 102C-40 90-47.5 84-47.5 68V16C-47.5 6-44 0-34 0Z"/>
+          <rect class="dw-tint" x="-36" y="19" width="72" height="52" rx="1.5"/>
+          <path class="dw-thin" d="M-29 30H-6M-29 39H2M-29 48H-10M-29 57H-2M12 30H29M12 39H29M12 48H29M12 57H29" stroke-opacity=".3"/>
+          <text class="dw-brand" x="0" y="13.4" text-anchor="middle" style="font-size:9.5px">iLab</text>
+          <circle class="dw-key" cx="-27" cy="83" r="4.2"/><circle class="dw-key" cx="27" cy="83" r="4.2"/>
+          <circle class="dw-key" cx="0" cy="97" r="12.5"/><circle class="dw-key" cx="0" cy="97" r="4.6"/>
+          <path class="dw-slot" d="M0 87.2l2.6 3.6h-5.2zM0 106.8l2.6-3.6h-5.2zM-9.8 97l3.6-2.6v5.2zM9.8 97l-3.6-2.6v5.2z"/>
+          <rect class="dw-key" x="-33" y="103" width="13" height="7" rx="3.5"/><rect class="dw-key" x="20" y="103" width="13" height="7" rx="3.5"/>
+          <rect class="dw-key" x="-27.5" y="121" width="15" height="10" rx="2"/><rect class="dw-key" x="-7.5" y="121" width="15" height="10" rx="2"/><rect class="dw-key" x="12.5" y="121" width="15" height="10" rx="2"/><rect class="dw-key" x="-27.5" y="136" width="15" height="10" rx="2"/><rect class="dw-key" x="-7.5" y="136" width="15" height="10" rx="2"/><rect class="dw-key" x="12.5" y="136" width="15" height="10" rx="2"/><rect class="dw-key" x="-27.5" y="151" width="15" height="10" rx="2"/><rect class="dw-key" x="-7.5" y="151" width="15" height="10" rx="2"/><rect class="dw-key" x="12.5" y="151" width="15" height="10" rx="2"/><rect class="dw-key" x="-27.5" y="166" width="15" height="10" rx="2"/><rect class="dw-key" x="-7.5" y="166" width="15" height="10" rx="2"/><rect class="dw-key" x="12.5" y="166" width="15" height="10" rx="2"/>
+          <path class="dw-ext" d="M-51 0H-72M-49 193H-72M-47.5 197V218M47.5 197V218"/>
+          <path class="dw-dim" d="M-66 0V193M-68.5 5l2.5-5 2.5 5M-68.5 188l2.5 5 2.5-5M-47.5 212H47.5M-42.5 209.5l-5 2.5 5 2.5M42.5 209.5l5 2.5-5 2.5"/>
+          <text class="dw-t" x="-73" y="96.5" text-anchor="middle" transform="rotate(-90 -73 96.5)">203</text>
+          <text class="dw-t" x="0" y="230" text-anchor="middle">100</text>
+          <text class="dw-l" x="0" y="-15" text-anchor="middle">HANDHELD</text>
+        </g>
+        <!-- sonde, side on: 608 units long, 85.5 across -->
+        <g transform="translate(222 136.5)">
+          <path class="dw-centre" d="M-52 0H622"/>
+          <path class="dw-line" d="M-13 -9C-31 -9 -35 -22 -35 -40V-84" stroke-width="3.2"/>
+          <path class="dw-thin" d="M-41 -79l12 -6M-41 -84l12 -6"/>
+          <rect class="dw-dark" x="-14" y="-15" width="14" height="12" rx="1"/>
+          <path class="dw-line" d="M0 -27H-18a27 27 0 0 0 0 54H0" stroke-width="2.6"/>
+          <rect class="dw-dark" x="0" y="-42.75" width="30" height="85.5" rx="2"/>
+          <rect class="dw-body" x="30" y="-42.75" width="262" height="85.5"/>
+          <rect class="dw-tint" x="52" y="-27" width="218" height="54" rx="1.5"/>
+          <text class="dw-brand" x="70" y="7" style="font-size:21px">iLab</text>
+          <path class="dw-thin" d="M150 -8H250M150 2H236M150 12H250" stroke-opacity=".28"/>
+          <rect class="dw-mid" x="292" y="-42.75" width="20" height="85.5"/>
+          <rect class="dw-body" x="312" y="-42.75" width="40" height="85.5"/>
+          <path class="dw-thin" d="M332 -42.75V42.75"/>
+          <rect class="dw-body" x="352" y="-42.75" width="236" height="85.5"/>
+          <rect class="dw-slot" x="378" y="-27" width="84" height="15" rx="7.5"/><rect class="dw-slot" x="378" y="12" width="84" height="15" rx="7.5"/>
+          <rect class="dw-slot" x="486" y="-27" width="76" height="15" rx="7.5"/><rect class="dw-slot" x="486" y="12" width="76" height="15" rx="7.5"/>
+          <rect class="dw-mid" x="588" y="-42.75" width="20" height="85.5" rx="2"/>
+          <path class="dw-ext" d="M0 47V76M608 47V76M612 -42.75H638M612 42.75H638"/>
+          <path class="dw-dim" d="M0 70H608M5 67.5l-5 2.5 5 2.5M603 67.5l5 2.5-5 2.5M632 -42.75V42.75M629.5 -37.75l2.5-5 2.5 5M629.5 37.75l2.5 5 2.5-5"/>
+          <text class="dw-t" x="304" y="89" text-anchor="middle">640.5</text>
+          <text class="dw-t" x="646" y="0" text-anchor="middle" transform="rotate(-90 646 0)"><tspan style="font-family:var(--text);font-weight:500">Ø</tspan> 90</text>
+          <text class="dw-l" x="161" y="-52" text-anchor="middle">BODY</text>
+          <text class="dw-l" x="470" y="-52" text-anchor="middle">SENSOR GUARD</text>
+          <text class="dw-l" x="-24" y="-68">CABLE</text>
+        </g>
+      </svg>
+      <figcaption>Outline drawing, both at the same scale. Dimensions in mm. The handheld is 43 mm deep.</figcaption>
+    </figure>
+
+    <div class="specs">
+      <div>
+        <h3>Sonde <span>iLab 901</span></h3>
+        <table><tbody>
+          <tr><th>Sensors</th><td>Up to 7 at once</td></tr>
+          <tr><th>Communication</th><td>Modbus, RS485</td></tr>
+          <tr><th>Power supply</th><td>9 to 36 V DC</td></tr>
+          <tr><th>Power draw</th><td>3 W</td></tr>
+          <tr><th>Battery</th><td>8 × 3.6 V lithium cells</td></tr>
+          <tr><th>Protection</th><td>IP68</td></tr>
+          <tr><th>Depth rating</th><td>30 m (10 m with an ion-selective sensor)</td></tr>
+          <tr><th>Measuring temperature</th><td>0 to 40 °C, non-freezing</td></tr>
+          <tr><th>Storage temperature</th><td>0 to 50 °C, non-freezing</td></tr>
+          <tr><th>Size</th><td>90 mm diameter × 640.5 mm long</td></tr>
+          <tr><th>Weight</th><td>3 kg</td></tr>
+        </tbody></table>
+      </div>
+      <div>
+        <h3>Handheld <span>iLab communicator</span></h3>
+        <table><tbody>
+          <tr><th>Display</th><td>3.5 inch colour screen, adjustable backlight</td></tr>
+          <tr><th>Data storage</th><td>More than 100,000 readings</td></tr>
+          <tr><th>Positioning</th><td>GPS receiver, built in</td></tr>
+          <tr><th>Interfaces</th><td>USB; Bluetooth optional</td></tr>
+          <tr><th>Power supply</th><td>4 × 3.7 V rechargeable lithium, built in</td></tr>
+          <tr><th>Protection</th><td>IP67</td></tr>
+          <tr><th>Material</th><td>ABS and polycarbonate</td></tr>
+          <tr><th>Operating temperature</th><td>0 to 50 °C, non-freezing</td></tr>
+          <tr><th>Storage temperature</th><td>−15 to 60 °C</td></tr>
+          <tr><th>Size</th><td>203 × 100 × 43 mm</td></tr>
+          <tr><th>Weight</th><td>0.5 kg</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+    <p class="note small">Specifications are subject to change without notice.</p>
+
+    <div class="band">
+      <div class="band-id"><img src="assets/eds-logo-white.png" alt="EDS, Environmental Data Services"><p>Monitoring Australia's water, wastewater and environment since 1991.</p></div>
+      <div class="band-body">
+        <h2>Tell us what you need to measure.</h2>
+        <p>Give us the water, the parameters and how long the sonde will be out. We'll match the sensors to your site and come back with pricing.</p>
+      </div>
+      <dl>
+        <div><dt>Phone</dt><dd>1300 721 683</dd></div>
+        <div><dt>Email</dt><dd>sales@e-d-s.com.au</dd></div>
+        <div><dt>Head office</dt><dd>13/20–22 Ellerslie Road<br>Meadowbrook QLD 4131</dd></div>
+      </dl>
+    </div>
+  </div>
+  <footer class="foot"><span>Environmental Data Services</span><span>www.e-d-s.com.au</span><span>1300 721 683</span><span>ILAB DS 001 Rev A</span><span>3 / 3</span></footer>
+</section>
+
+</body>
+</html>

@@ -2137,6 +2137,15 @@ function terminalBand(t) {
   <ol class="tb-notes">${notes}</ol>
   ${t.caution ? `<p class="tb-caution" data-reveal>${icon("circle-alert")}<span>${esc(t.caution)}</span></p>` : ""}`;
 }
+// Every measurement a sonde can be fitted with (`measurements`): one table in
+// its sensor groups, then the conditions that go with it. On a phone each row
+// stands as its own block, with the column names beside the figures.
+const measureBand = (m) => `${bandHead(m)}
+  <div class="pm-wrap" data-reveal><table class="pm">
+    <thead><tr>${m.columns.map((c) => `<th scope="col">${esc(c)}</th>`).join("")}</tr></thead>
+    ${m.groups.map(([g, rows], k) => `<tbody class="k${k + 1}"><tr class="pm-group"><th scope="rowgroup" colspan="${m.columns.length}">${esc(g)}<small>${rows.length}</small></th></tr>${rows.map(([name, ...cells]) => `<tr><th scope="row">${esc(name)}</th>${cells.map((c, i) => `<td data-l="${esc(m.columns[i + 1])}"><span>${esc(c).replace(/\n/g, "<br>")}</span></td>`).join("")}</tr>`).join("")}</tbody>`).join("")}
+  </table></div>
+  <ul class="deliv n${m.notes.length} pm-notes">${m.notes.map(([t, d], n) => `<li data-reveal style="--i:${n}"><b>${esc(t)}</b><p>${esc(d)}</p></li>`).join("")}</ul>`;
 const applicationsBand = (a) => `<div class="section-head"><h2 class="h-lg" data-reveal>${esc(a.heading)}</h2></div>
   <div class="grid c4">${a.items.map(([ic, t, d], i) => `<div class="card holder" data-reveal style="--i:${i}"><span class="card-icon">${icon(ic)}</span><h3>${esc(t)}</h3><p>${esc(d)}</p></div>`).join("")}</div>`;
 
@@ -2271,6 +2280,7 @@ for (const pg of C.productPages) {
   // optional bands between the overview (white) and the specifications: the
   // light ones alternate grey and white, and the demo sits on the deep teal
   const extra = [
+    pg.measurements && ["measurements", pg.measurements.nav, measureBand(pg.measurements)],
     pg.modes && ["how-it-measures", pg.modes.nav, diagramBand(pg.modes)],
     pg.demo && ["changeover", pg.demo.nav, `<div class="section-head"><h2 class="h-lg" data-reveal>${esc(pg.demo.heading)}</h2><p class="lede" data-reveal style="--i:1">${esc(pg.demo.lede)}</p></div>${eflowDemo()}`, "dark"],
     pg.why && ["why-e-flow-3", pg.why.nav, whyBand(pg.why)],
