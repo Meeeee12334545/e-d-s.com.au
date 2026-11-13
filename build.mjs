@@ -564,7 +564,9 @@ ${scripts.map((s) => `<script src="${asset(r, `js/${s}`)}" defer></script>`).joi
 /* ------------------------------------------------------------------ */
 // `visual` fills the right of the hero on wide screens: a product photo on
 // brand pages, an "On this page" list on longer service pages.
-const pageHero = (r, { crumbs = [], iconName, eyebrow, title, lede, actions = "", after = "", visual = "", compact = false, cls = "" }) => {
+// `badge` is a short standing fact about the thing itself, set under the lede
+// in a ruled tag (Sensor Fort: its design is patent pending).
+const pageHero = (r, { crumbs = [], iconName, eyebrow, title, lede, badge, actions = "", after = "", visual = "", compact = false, cls = "" }) => {
   heroCrumbs = crumbs;
   const copy = `
     <nav class="crumbs" aria-label="Breadcrumb"><a href="${r || "./"}">Home</a>${crumbs.map(([label, href]) => `${icon("chevron-down", false)}${href ? `<a href="${r}${href}">${esc(label)}</a>` : `<span aria-current="page">${esc(label)}</span>`}`).join("")}</nav>
@@ -572,6 +574,7 @@ const pageHero = (r, { crumbs = [], iconName, eyebrow, title, lede, actions = ""
     ${eyebrow ? `<p class="eyebrow">${esc(eyebrow)}</p>` : ""}
     <h1 class="h-lg" data-reveal>${esc(title)}</h1>
     ${lede ? `<p class="lede" data-reveal style="--i:1">${esc(lede)}</p>` : ""}
+    ${badge ? `<p class="stamp" data-reveal style="--i:1">${icon("shield-check", false)}${esc(badge)}</p>` : ""}
     ${actions ? `<div class="hero-actions" data-reveal style="--i:2">${actions}</div>` : ""}
     ${after}`;
   return `
@@ -2205,6 +2208,7 @@ const problemBand = (p) => `${bandHead(p)}
       <p class="eyebrow">${esc(p.answer.eyebrow)}</p>
       <h3>${esc(p.answer.heading)}</h3>
       <p class="lede">${esc(p.answer.lede)}</p>
+      ${p.answer.badge ? `<p class="stamp">${icon("shield-check", false)}${esc(p.answer.badge)}</p>` : ""}
       <ul class="sf-points">${p.answer.points.map(([k, d]) => `<li>${icon("check", false)}<span><b>${esc(k)}</b>${esc(d)}</span></li>`).join("")}</ul>
     </div>
   </div>`;
@@ -2438,7 +2442,7 @@ for (const pg of C.productPages) {
     current: "products",
     scripts: pg.demo ? ["widgets.js"] : pg.works?.figure.flowing ? ["sensor-fort.js"] : [],
     body: (r) => `
-${pageHero(r, { crumbs: [["Products", "products/index.html"], [b.name, `products/${b.slug}.html`], [pg.name]], iconName: pg.icon, eyebrow: pg.tag, title: pg.name, lede: pg.lede, actions: `<a class="btn btn-primary btn-lg" href="${contactHref(r, pricing)}">Request pricing</a>${quoteBtn(quoteItem(products.find((p) => p.href === `products/${pg.slug}.html`)), "btn-lg")}<a class="btn btn-ghost btn-lg" href="${datasheet.href}" rel="noopener">${icon("download")} Datasheet</a>`, visual: pg.hero ? eflowHero(pg) : heroProduct(pg.image, pg.name, pg.heroCaption) })}
+${pageHero(r, { crumbs: [["Products", "products/index.html"], [b.name, `products/${b.slug}.html`], [pg.name]], iconName: pg.icon, eyebrow: pg.tag, title: pg.name, lede: pg.lede, badge: pg.badge, actions: `<a class="btn btn-primary btn-lg" href="${contactHref(r, pricing)}">Request pricing</a>${quoteBtn(quoteItem(products.find((p) => p.href === `products/${pg.slug}.html`)), "btn-lg")}<a class="btn btn-ghost btn-lg" href="${datasheet.href}" rel="noopener">${icon("download")} Datasheet</a>`, visual: pg.hero ? eflowHero(pg) : heroProduct(pg.image, pg.name, pg.heroCaption) })}
 <div class="secbar-scope">${bar(r)}
 <section class="section hl-band"><div class="wrap">
   <div class="hl-grid">${pg.highlights.map(([ic, t, d], i) => `<div class="hl holder" data-reveal style="--i:${i % 3}">${icon(ic)}<b>${esc(t)}</b><span>${esc(d)}</span></div>`).join("")}</div>

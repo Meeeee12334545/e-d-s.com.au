@@ -4499,3 +4499,8 @@ body.is-touring { overscroll-behavior-y: contain; }
 /* a wide render in the hero sits on a wider, shorter plate */
 .hero-product.wide { width: min(100%, 520px); }
 .hero-product.wide .hero-product-shot { aspect-ratio: 4 / 3; padding: 22px; }
+
+/* a standing fact about a product, as a badge: under a page hero's lede and
+   in the Sensor Fort idea panel (its design is patent pending) */
+.stamp { display: inline-flex; align-items: center; gap: 8px; width: fit-content; margin-top: 18px; padding: 8px 14px 8px 11px; border-radius: var(--radius); font-family: var(--font-display); font-size: .92rem; font-weight: 620; letter-spacing: .01em; line-height: 1.2; color: #fff; background: var(--brand-dark); }
+.stamp .icon { flex: none; font-size: 18px; stroke-width: 2; color: #c9fff5; }

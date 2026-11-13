@@ -1657,7 +1657,7 @@ export const brands = [
         items: [
           { name: "E-Flow 3", type: "flow", note: "Dual-mode sewer flow meter", image: img("e-flow-3.png"), href: "products/e-flow-3.html", docs: [{ label: "Datasheet", href: localDoc("eds-e-flow-3-datasheet.pdf") }, { label: "Brochure", href: localDoc("eds-e-flow-3-brochure.pdf") }] },
           { name: "iLab 901", type: "quality", note: "Multi-parameter water quality sonde", image: img("ilab-901.png"), href: "products/ilab-901.html", docs: [{ label: "Datasheet", href: localDoc("eds-ilab-901-datasheet.pdf") }] },
-          { name: "Sensor Fort", type: "quality", note: "Sensor mount for gravity sewers", image: img("sensor-fort.png"), href: "products/sensor-fort.html", docs: [{ label: "Datasheet", href: localDoc("eds-sensor-fort-datasheet.pdf") }, { label: "Brochure", href: localDoc("eds-sensor-fort-brochure.pdf") }] },
+          { name: "Sensor Fort", type: "quality", note: "Patent-pending sensor mount for gravity sewers", image: img("sensor-fort.png"), href: "products/sensor-fort.html", docs: [{ label: "Datasheet", href: localDoc("eds-sensor-fort-datasheet.pdf") }, { label: "Brochure", href: localDoc("eds-sensor-fort-brochure.pdf") }] },
           { name: "Ultrasonic Level", type: "level", note: "Level sensor", image: img("ultrasonic-level-sensor-image-2.png") },
           { name: "EC", type: "quality", note: "Electro-conductivity sensor", image: img("cos41.jpg") },
           { name: "pH", type: "quality", note: "pH sensor", image: img("eds-ph-sensor.jpg") },
@@ -2668,7 +2668,8 @@ export const productPages = [
     lede: "How to install pH, EC and other water quality sensors in a gravity sewer, and keep them working. The only mount that hides everything but the sensor tip.",
     description: "How to install pH, EC and other water quality sensors in a gravity sewer. Sensor Fort holds them on the invert with only their tips in the flow, clear of rag.",
     image: img("sensor-fort.png"),
-    heroCaption: "Sensor Fort in a 150 mm sewer, with the pipe cut away. Patent pending.",
+    badge: "Patent-pending design",
+    heroCaption: "Sensor Fort in a 150 mm sewer, with the pipe cut away. The design is patent pending.",
     figure: { src: img("sensor-fort-downstream.png"), alt: "Sensor Fort in a cut-away 150 mm sewer pipe, seen from downstream, with a sensor tip showing below the spill lip", caption: "From downstream: the sensor tips sit below the spill lip" },
     docs: [
       { label: "Datasheet", note: "Specifications, sensor fit, the range, dimensions and ordering.", href: localDoc("eds-sensor-fort-datasheet.pdf") },
@@ -2685,14 +2686,14 @@ export const productPages = [
     intro: [
       "Installing a pH, EC or dissolved oxygen sensor in a gravity sewer is hard, and the hard part isn't the sensor. It's how you hold it in the flow. Rag wraps around anything that divides the flow, grit buries whatever sits in slow water, fat coats whatever sits at the waterline, and low flows leave sensors dry.",
       "Sensor Fort is a low moulded saddle that sits on the bottom of the pipe (the invert) at a manhole. Two sensors lie inside it, pointing downstream. The flow rides up the saddle, spills over a lip and runs fast across their tips. Nothing else is exposed.",
-      "EDS designed Sensor Fort and builds it in Australia, drawing on more than 30 years of experience and knowledge of sewers, to solve that one problem. It needs nothing to run except your sensors: no power, no pump and no moving parts. It works with 99% of the sensors on the market, as tested by EDS, so you keep the ones your network already trusts. And it's designed to stay in the sewer for 12 months between visits.",
+      "EDS designed Sensor Fort and builds it in Australia, drawing on more than 30 years of experience and knowledge of sewers, to solve that one problem. It needs nothing to run except your sensors: no power, no pump and no moving parts. It works with 99% of the sensors on the market, as tested by EDS, so you keep the ones your network already trusts. And it's designed to stay in the sewer for 12 months between visits. The design is patent pending.",
     ],
     anatomy: {
       figure: "anatomy",
       heading: "One body. Two protected bays.",
       alt: "Sensor Fort seen from above and behind: a dark moulded saddle with a thin nose upstream, two raised shoulders with a valley between them, a cable hood on each shoulder, and two sensor tips showing at the downstream end",
       key: ["Feathered nose", "Cable hood", "Shoulder over a sensor bay", "Valley", "Cable clamp", "Spill lip", "Stern face", "Sensor tips"],
-      caption: "The sensors lie under the shoulders and show only their tips at the stern. Each cable leaves under a hood on its shoulder.",
+      caption: "The sensors lie under the shoulders and show only their tips at the stern. Each cable leaves under a hood on its shoulder. The design is patent pending.",
     },
     problem: {
       nav: "The problem",
@@ -2707,6 +2708,7 @@ export const productPages = [
       ],
       answer: {
         wins: "What does",
+        badge: "Patent-pending design",
         eyebrow: "The idea",
         heading: "Hide everything but the tip.",
         lede: "So we changed the mount, drawing on more than 30 years of working in sewers. Sensor Fort gives rag nothing to wrap around, keeps every cable out of the flow and leaves no sensor body to be buried. No other mount does all three, which makes it the only solution for analytical sensors in a gravity sewer network.",
@@ -2884,7 +2886,8 @@ export const productPages = [
         ["How often do sensors in a sewer need servicing?", "Sensor Fort is designed to stay in the sewer for 12 months between visits. The whole mount is then exchanged for a freshly loaded one. No mount can stop biofilm growing or a pH reference ageing, so we match the sensor type and the data checks to the service interval each site needs."],
         ["Does it need power or a pump?", "No. Sensor Fort needs nothing to run except your sensors. It is passive, with no moving parts, no electrical parts and no power. Sensors with 4 to 20 mA or Modbus outputs connect to any RTU, logger or SCADA host, or to an EDS Metalog 4G logger."],
         ["Can I measure flow at the same site?", "Yes. The spill lip is a hydraulic control, so the depth upstream rises predictably with flow. With Sensor Fort in the outlet pipe of a manhole, a level sensor above the chase measures that depth, and a rating curve for the mount turns it into flow."],
-        ["Who makes Sensor Fort?", "EDS (Environmental Data Services) designed Sensor Fort and builds it in Australia, drawing on more than 30 years of experience in sewer monitoring. It is patent pending."],
+        ["Who makes Sensor Fort?", "EDS (Environmental Data Services) designed Sensor Fort and builds it in Australia, drawing on more than 30 years of experience in sewer monitoring."],
+        ["Is Sensor Fort patented?", "The Sensor Fort design is patent pending. EDS designed it and builds it in Australia."],
       ],
     },
     drawing: {
@@ -2901,7 +2904,7 @@ export const productPages = [
         ["Pipe diameters", "150 mm to 1050 mm, with one model for each pipe diameter"],
         ["Pipe shape", "Circular pipe; U-shaped channels on request"],
         ["Operation", "Passive, with no moving parts, no electrical parts and no power"],
-        ["Protection", "Patent pending"],
+        ["Protection", "Patent pending on the design"],
       ]],
       ["Sensor bays", [
         ["Number", "Two bays; a blanking plug closes an unused bay"],
@@ -2980,13 +2983,13 @@ export const productPages = [
       ]],
     ],
     specNav: "Specs",
-    specNote: "Sensor Fort is patent pending. Hydraulic figures are calculated with the EDS hydraulic model. Specifications may change without notice.",
+    specNote: "The Sensor Fort design is patent pending. Hydraulic figures are calculated with the EDS hydraulic model. Specifications may change without notice.",
     worksWith: [
       ["products/metalog-4g.html", "Metalog 4G logger", "Logs 4 to 20 mA and Modbus sensors, and reports over 4G."],
       ["flowsense.html", "EDS FlowSense", "Flow and water quality from the site, on one record."],
       ["services/water-quality-monitoring.html", "Water Quality Monitoring", "pH, EC and more, from one sensor to a whole network."],
     ],
-    cta: { title: "Tell us about your sewer and your sensors.", lede: "Give us the pipe diameter and grade, the flows you expect and the sensors you want to use. We'll confirm the Sensor Fort model and the sleeves, and plan the installation with your network team." },
+    cta: { title: "Tell us about your sewer and your sensors.", lede: "Sensor Fort is an EDS design, patent pending. Give us the pipe diameter and grade, the flows you expect and the sensors you want to use. We'll confirm the Sensor Fort model and the sleeves, and plan the installation with your network team." },
   },
 ];
 
