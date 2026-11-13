@@ -11,6 +11,8 @@ P "$D/Flo-Dar Manhole.jpg" sewer-av-meter --widths 1400,800 --quality 76
 P "$D/20181120_110037.jpg" sewer-sensors-chamber --crop 0,0.15,1,0.82
 P "$D/1912450_DSCN0167.jpg" sewer-pipe-downstream --patch 0.6,0.84,0.97,0.93:0.28,0.84 --widths 1400,800 --quality 78
 P "$D/2642748_DSCN0464.jpg" sewer-manhole-bracket --widths 1400,800 --quality 78
+# from the newsletter pictures, cropped clear of the hire ute beside the crew
+P "$D/../../Pictures/Newsletters/IMG_2942 2.jpeg" crew-confined-space --crop 0.35,0.255,1,0.835 --widths 1400,800 --quality 68
 P "$D/2071872_DSCN0313.jpg" site-crew-manhole --patch 0.58,0.85,0.98,0.93:above --widths 1400,800 --quality 74
 P "$D/20190704_135352.jpg" telemetry-cabinet --crop 0.04,0,0.96,0.69 --widths 1100,700 --quality 78
 P "$D/Toowoomba North St.jpg" telemetry-pole-solar --crop 0,0,1,0.81 --widths 1100,700 --quality 76
