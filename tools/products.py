@@ -9,8 +9,9 @@ photos/ or flowsense/ folders, which have their own twins) that is over
 serves the twin when there is one, so run this after adding or replacing a
 product shot; a twin older than its source is rebuilt, and --force rebuilds
 them all. Client logos, the favicon and touch icon, the share card, the EDS
-logo and the Metalog dimension drawing are left alone: they are small, need
-their own format, or are line art that lossy WebP would blur.
+logo, the Metalog dimension drawing and the Sensor Fort renders are left
+alone: they are small, need their own format, are line art that lossy WebP
+would blur, or have sharper twins of their own (tools/sensor_fort.py).
 Needs Pillow (pip install pillow).
 """
 import glob, os, sys
@@ -18,7 +19,7 @@ from PIL import Image
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 IMG = os.path.join(ROOT, "src/assets/img")
-SKIP = ("client-", "favicon", "apple-touch", "og-card", "eds-logo", "metalog-4g-dimensions")
+SKIP = ("client-", "favicon", "apple-touch", "og-card", "eds-logo", "metalog-4g-dimensions", "sensor-fort")
 force = "--force" in sys.argv[1:]
 
 before = after = 0

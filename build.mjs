@@ -8,7 +8,7 @@ import { createHash } from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import * as C from "./src/data/content.mjs";
-import { diagram, efDefs, efSensor, efSection, efBeam } from "./diagrams.mjs";
+import { diagram, efDefs, efSensor, efSection, efBeam, sfMethod } from "./diagrams.mjs";
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const DIST = path.join(ROOT, "dist");
@@ -582,10 +582,10 @@ const pageHero = (r, { crumbs = [], iconName, eyebrow, title, lede, actions = ""
 };
 
 // A product photograph on a white plate, captioned with what it shows.
-const heroProduct = (src, name) => `
-<figure class="hero-product" data-reveal="scale" style="--i:2">
+const heroProduct = (src, name, caption) => `
+<figure class="hero-product${caption ? " wide" : ""}" data-reveal="scale" style="--i:2">
   <div class="hero-product-shot"><img src="${src}" alt="${esc(name)}" fetchpriority="high"></div>
-  <figcaption>Pictured: ${esc(name)}</figcaption>
+  <figcaption>${esc(caption || `Pictured: ${name}`)}</figcaption>
 </figure>`;
 
 // Jump links to the sections of a longer page. `sections` is [[id, label]],
@@ -2149,6 +2149,127 @@ const measureBand = (m) => `${bandHead(m)}
 const applicationsBand = (a) => `<div class="section-head"><h2 class="h-lg" data-reveal>${esc(a.heading)}</h2></div>
   <div class="grid c4">${a.items.map(([ic, t, d], i) => `<div class="card holder" data-reveal style="--i:${i}"><span class="card-icon">${icon(ic)}</span><h3>${esc(t)}</h3><p>${esc(d)}</p></div>`).join("")}</div>`;
 
+/* ---- Sensor Fort: the brochure's own figures, and the case for the mount ---- */
+// The figures are EDS's drawings from the Sensor Fort brochure and datasheet,
+// lifted as vectors by tools/sensor_fort.py (src/data/sensor-fort-figures.json):
+// the renders stay images, and every line, water surface, dimension and
+// numbered badge is SVG, so the numbers are text and the drawing is sharp at
+// any size. A figure names one with `name`; its `key` is the numbered list
+// under it, in the order of the badges.
+const SF_FIGS = JSON.parse(readFileSync(path.join(ROOT, "src/data/sensor-fort-figures.json"), "utf8"));
+const sfSvg = (name, alt, { flowing = false, says } = {}) => {
+  const f = SF_FIGS[name];
+  if (!f) throw new Error(`No Sensor Fort figure named "${name}" (tools/sensor_fort.py)`);
+  const body = f.svg.replace(/@img\/([\w.-]+)/g, (m, file) => C.img(file));
+  return flowing ? sfStage(f, body, alt, says) : `<svg viewBox="0 0 ${f.w} ${f.h}" role="img" aria-label="${esc(alt)}">${body}</svg>`;
+};
+// The section figure in motion (`flowing: true`): water moving through the
+// mount, drawn on a canvas between two layers of the figure (sensor-fort.js).
+// Behind it are the pipe and the render; in front, the sensor outline, the
+// dimensions, the leaders and the badges. The canvas is given the brochure's
+// own geometry: the calculated water surface, and the floor the water runs
+// over on the centre line (the thin skin, the ramp of the valley up to the
+// spill lip, the stern), which is the underside of the brochure's water fill.
+// Without the script the brochure's still water shows instead (.sf-still).
+function sfStage(f, body, alt, says) {
+  const fill = body.match(/<path d="M([^"]+)z" fill="#3d9991" fill-opacity="0\.26"\/>/), line = body.match(/<path d="M([^"]+)" fill="none" stroke="#3d9991" stroke-width="2\.4"\/>/);
+  if (!fill || !line) throw new Error("Sensor Fort section: no water to animate (tools/sensor_fort.py)");
+  const pts = (d) => d.split("L").map((p) => p.split(" ").map(Number));
+  const surf = pts(line[1]), poly = pts(fill[1]);
+  const corner = poly.findIndex(([x, y]) => x > f.w - 2 && y > surf.at(-1)[1] + 5);
+  const bed = poly.slice(corner).reverse().filter(([, y]) => y > surf[0][1] + 5);
+  const cut = body.indexOf(line[0]) + line[0].length;
+  const back = body.slice(0, cut).replace(fill[0], `<g class="sf-still">${fill[0]}`).replace(line[0], `${line[0]}</g>`);
+  const box = `viewBox="0 0 ${f.w} ${f.h}"`;
+  return `<div class="sf-stage" style="aspect-ratio:${f.w}/${f.h}" data-flow="${esc(JSON.stringify({ w: f.w, h: f.h, surf, bed }))}"><svg ${box} aria-hidden="true">${back}</svg><canvas aria-hidden="true"></canvas><svg class="sf-front" ${box} role="img" aria-label="${esc(alt)}">${body.slice(cut)}${(says || []).map(([x, y, anchor, t]) => `<text class="sf-say" x="${x}" y="${y}" text-anchor="${anchor}">${esc(t)}</text>`).join("")}</svg></div>`;
+}
+const sfKey = (key) => (key ? `<ol class="sf-key">${key.map((k, i) => `<li><span aria-hidden="true">${i + 1}</span>${esc(k)}</li>`).join("")}</ol>` : "");
+const sfFigure = (f, { wide = false } = {}) => `
+<figure class="diagram sf-fig sf-${f.name}${wide ? " wide" : ""}" data-reveal>
+  <div class="dg-plate"><div class="sf-scroll">${sfSvg(f.name, f.alt, f)}</div>${sfKey(f.key)}</div>
+  <figcaption>${esc(f.caption)}</figcaption>
+</figure>`;
+// The mount with its parts numbered, under the opening text (`anatomy` with a
+// `figure`; the E-Flow 3 page pins its photograph instead).
+const sfAnatomy = (a) => `
+<div class="sf-anat"><h2 class="anat-h" data-reveal>${esc(a.heading)}</h2>${sfFigure({ name: a.figure, alt: a.alt, key: a.key, caption: a.caption })}</div>`;
+// The problem (`problem`): the four usual ways to hold a sensor in a sewer,
+// each drawn with what goes wrong, then the idea that answers them.
+const problemBand = (p) => `${bandHead(p)}
+  <p class="sf-fails" data-reveal>${icon("x", false)}${esc(p.fails)}</p>
+  <ol class="sf-methods">${p.methods.map(([kind, verdict, name, why], i) => `<li data-reveal style="--i:${i}"><div class="sf-method-art diagram">${sfMethod(kind)}</div><p class="sf-verdict">${icon("x", false)}<span>${esc(verdict)}</span></p><h3>${esc(name)}</h3><p>${esc(why)}</p></li>`).join("")}</ol>
+  <p class="sf-wins" data-reveal>${icon("check", false)}${esc(p.answer.wins)}</p>
+  <div class="sf-answer" data-reveal>
+    <figure><div class="sf-answer-plate"><img src="${p.answer.image}" alt="${esc(p.answer.alt)}" width="700" height="700" loading="lazy" decoding="async"></div><figcaption>${esc(p.answer.caption)}</figcaption></figure>
+    <div>
+      <p class="eyebrow">${esc(p.answer.eyebrow)}</p>
+      <h3>${esc(p.answer.heading)}</h3>
+      <p class="lede">${esc(p.answer.lede)}</p>
+      <ul class="sf-points">${p.answer.points.map(([k, d]) => `<li>${icon("check", false)}<span><b>${esc(k)}</b>${esc(d)}</span></li>`).join("")}</ul>
+    </div>
+  </div>`;
+// How it works (`works`): the section with its calculated water surface, the
+// design rules, and what no mount can do.
+const worksBand = (w) => `${bandHead(w)}${sfFigure(w.figure, { wide: true })}
+  <h3 class="sf-sub" data-reveal>${esc(w.rulesHeading)}</h3>
+  <ol class="deliv n${w.rules.length} sf-rules">${w.rules.map(([t, d], n) => `<li data-reveal style="--i:${n % 3}"><b><small>Rule ${n + 1}</small>${esc(t)}</b><p>${esc(d)}</p></li>`).join("")}</ol>
+  <p class="sf-note" data-reveal><b>${esc(w.note[0])}</b> ${esc(w.note[1])}</p>`;
+// Flow from the same site (`flow`): the manhole figure, the calculated rating
+// as six bars, and what flow adds.
+const flowBand = (f) => {
+  const top = Math.max(...f.rating.points.map(([, d]) => d));
+  return `${bandHead(f)}${sfFigure(f.figure, { wide: true })}
+  <div class="sf-rating" data-reveal>
+    <h3>${esc(f.rating.heading)}</h3>
+    <p class="sf-rating-sub">${esc(f.rating.sub)}</p>
+    <ol>${f.rating.points.map(([q, d]) => `<li style="--v:${(d / top).toFixed(3)}"><b><span class="sr-only">${esc(f.rating.labels[1])} </span>${d}<small> mm</small></b><i aria-hidden="true"></i><span><span class="sr-only">${esc(f.rating.labels[0])} </span>${q} L/s</span></li>`).join("")}</ol>
+    <p class="note">${esc(f.rating.note)}</p>
+  </div>
+  <ul class="deliv n${f.items.length} sf-gap">${f.items.map(([t, d], n) => `<li data-reveal style="--i:${n}"><b>${esc(t)}</b><p>${esc(d)}</p></li>`).join("")}</ul>`;
+};
+// Sensor fit (`fit`): which sensors each model takes, with the share of the
+// surveyed models that fit as a bar, then the range in end view.
+const fitBand = (f) => `${bandHead(f)}
+  <div class="sf-table-wrap" data-reveal><table class="sf-table sf-fit">
+    <thead><tr>${f.columns.map((c) => `<th scope="col">${esc(c)}</th>`).join("")}</tr></thead>
+    <tbody>${f.rows.map(([model, ...cells]) => {
+      const n = cells.pop(), pct = Math.round((n / f.surveyed) * 100);
+      return `<tr><th scope="row">${esc(model)}</th>${cells.map((c, i) => `<td data-l="${esc(f.columns[i + 1])}">${esc(c)}</td>`).join("")}<td data-l="${esc(f.columns.at(-1))}" class="sf-share"><b>${pct}%</b><small>${n} of ${f.surveyed}</small><i aria-hidden="true" style="--p:${pct}%"></i></td></tr>`;
+    }).join("")}</tbody>
+  </table></div>
+  ${sfFigure(f.figure, { wide: true })}
+  <ul class="deliv n${f.notes.length} sf-gap">${f.notes.map(([t, d], n) => `<li data-reveal style="--i:${n}"><b>${esc(t)}</b><p>${esc(d)}</p></li>`).join("")}</ul>`;
+// Fastening (`fastening`): the open bay beside the steps its badges number.
+const fasteningBand = (f) => `${bandHead(f)}
+  <div class="sf-fasten">
+    ${sfFigure(f.figure)}
+    <ol class="sf-steps">${f.steps.map(([t, d], n) => `<li data-reveal style="--i:${n}"><span aria-hidden="true">${n + 1}</span><div><b>${esc(t)}</b><p>${esc(d)}</p></div></li>`).join("")}</ol>
+  </div>
+  <ul class="deliv n${f.items.length} sf-gap">${f.items.map(([t, d], n) => `<li data-reveal style="--i:${n}"><b>${esc(t)}</b><p>${esc(d)}</p></li>`).join("")}</ul>`;
+// Service (`service`): the yearly cycle in four steps, then how it is supplied.
+const serviceBand = (v) => `${bandHead(v)}
+  <ol class="sf-cycle">${v.steps.map(([t, d], n) => `<li data-reveal style="--i:${n}"><span aria-hidden="true">${n + 1}</span><b>${esc(t)}</b><p>${esc(d)}</p></li>`).join("")}</ol>
+  <h3 class="sf-sub" data-reveal>${esc(v.supplied.heading)}</h3>
+  <ul class="deliv n${v.supplied.items.length}">${v.supplied.items.map(([t, d], n) => `<li data-reveal style="--i:${n}"><b>${esc(t)}</b><p>${esc(d)}</p></li>`).join("")}</ul>`;
+// The range (`range`): every model with its hydraulic footprint, then what
+// to check before choosing a site. A blank cell prints as a dash.
+const rangeBand = (g) => `${bandHead(g)}
+  <div class="sf-table-wrap scroll" data-reveal tabindex="0" role="group" aria-label="${esc(g.heading)}"><table class="sf-table sf-models">
+    <thead><tr>${g.columns.map((c) => `<th scope="col" rowspan="2">${esc(c)}</th>`).join("")}<th scope="colgroup" colspan="${g.rise.length - 1}" class="sf-rise">${esc(g.rise[0])}</th></tr><tr>${g.rise.slice(1).map((c) => `<th scope="col">${esc(c)}</th>`).join("")}</tr></thead>
+    <tbody>${g.rows.map(([model, ...cells]) => `<tr><th scope="row">${esc(model)}</th>${cells.map((c) => `<td>${c ? esc(c) : '<span aria-hidden="true">–</span><span class="sr-only">Not calculated</span>'}</td>`).join("")}</tr>`).join("")}</tbody>
+  </table></div>
+  <p class="note sf-table-note" data-reveal>${esc(g.note)}</p>
+  <h3 class="sf-sub" data-reveal>${esc(g.check.heading)}</h3>
+  <ul class="deliv n${g.check.items.length}">${g.check.items.map(([t, d], n) => `<li data-reveal style="--i:${n % 3}"><b>${esc(t)}</b><p>${esc(d)}</p></li>`).join("")}</ul>`;
+// The dimension drawing over the specification tables (`drawing`).
+const drawingFigure = (d) => `
+<figure class="diagram sf-fig sf-dims" data-reveal>
+  <div class="dg-plate" role="img" aria-label="${esc(d.alt)}">${d.figures.map((name) => sfSvg(name, "").replace(' role="img" aria-label=""', ' aria-hidden="true"')).join("")}</div>
+  <figcaption>${esc(d.caption)}</figcaption>
+</figure>`;
+// Questions and answers (`faq`), marked up as an FAQ for search.
+const questionsBand = (q) => `<div class="split-band">${bandHead(q)}<div data-reveal>${faqHtml(q.items)}</div></div>`;
+
 /* ---- E-Flow 3: how a two-pair sensor shows itself ---- */
 // The product shot with its sensors numbered, and a key in their pairs
 // (`anatomy`): beside the opening text, under it.
@@ -2280,6 +2401,13 @@ for (const pg of C.productPages) {
   // optional bands between the overview (white) and the specifications: the
   // light ones alternate grey and white, and the demo sits on the deep teal
   const extra = [
+    pg.problem && ["the-problem", pg.problem.nav, problemBand(pg.problem)],
+    pg.works && ["how-it-works", pg.works.nav, worksBand(pg.works)],
+    pg.flow && ["flow", pg.flow.nav, flowBand(pg.flow)],
+    pg.fit && ["sensor-fit", pg.fit.nav, fitBand(pg.fit)],
+    pg.fastening && ["fastening", pg.fastening.nav, fasteningBand(pg.fastening)],
+    pg.service && ["service", pg.service.nav, serviceBand(pg.service)],
+    pg.range && ["range", pg.range.nav, rangeBand(pg.range)],
     pg.measurements && ["measurements", pg.measurements.nav, measureBand(pg.measurements)],
     pg.modes && ["how-it-measures", pg.modes.nav, diagramBand(pg.modes)],
     pg.demo && ["changeover", pg.demo.nav, `<div class="section-head"><h2 class="h-lg" data-reveal>${esc(pg.demo.heading)}</h2><p class="lede" data-reveal style="--i:1">${esc(pg.demo.lede)}</p></div>${eflowDemo()}`, "dark"],
@@ -2291,6 +2419,7 @@ for (const pg of C.productPages) {
     pg.terminals && ["connections", "", terminalBand(pg.terminals)],
     pg.applications && ["applications", pg.applications.nav || "", applicationsBand(pg.applications)],
     pg.system && ["system", pg.system.nav, systemBand(pg.system)],
+    pg.faq && ["questions", pg.faq.nav, questionsBand(pg.faq), "", "band-split"],
   ].filter(Boolean);
   let light = 0;
   const tones = extra.map(([, , , dark]) => (dark ? " dark" : light++ % 2 ? "" : " alt"));
@@ -2307,9 +2436,9 @@ for (const pg of C.productPages) {
     title: pg.title,
     description: pg.description,
     current: "products",
-    scripts: pg.demo ? ["widgets.js"] : [],
+    scripts: pg.demo ? ["widgets.js"] : pg.works?.figure.flowing ? ["sensor-fort.js"] : [],
     body: (r) => `
-${pageHero(r, { crumbs: [["Products", "products/index.html"], [b.name, `products/${b.slug}.html`], [pg.name]], iconName: pg.icon, eyebrow: pg.tag, title: pg.name, lede: pg.lede, actions: `<a class="btn btn-primary btn-lg" href="${contactHref(r, pricing)}">Request pricing</a>${quoteBtn(quoteItem(products.find((p) => p.href === `products/${pg.slug}.html`)), "btn-lg")}<a class="btn btn-ghost btn-lg" href="${datasheet.href}" rel="noopener">${icon("download")} Datasheet</a>`, visual: pg.hero ? eflowHero(pg) : heroProduct(pg.image, pg.name) })}
+${pageHero(r, { crumbs: [["Products", "products/index.html"], [b.name, `products/${b.slug}.html`], [pg.name]], iconName: pg.icon, eyebrow: pg.tag, title: pg.name, lede: pg.lede, actions: `<a class="btn btn-primary btn-lg" href="${contactHref(r, pricing)}">Request pricing</a>${quoteBtn(quoteItem(products.find((p) => p.href === `products/${pg.slug}.html`)), "btn-lg")}<a class="btn btn-ghost btn-lg" href="${datasheet.href}" rel="noopener">${icon("download")} Datasheet</a>`, visual: pg.hero ? eflowHero(pg) : heroProduct(pg.image, pg.name, pg.heroCaption) })}
 <div class="secbar-scope">${bar(r)}
 <section class="section hl-band"><div class="wrap">
   <div class="hl-grid">${pg.highlights.map(([ic, t, d], i) => `<div class="hl holder" data-reveal style="--i:${i % 3}">${icon(ic)}<b>${esc(t)}</b><span>${esc(d)}</span></div>`).join("")}</div>
@@ -2318,7 +2447,7 @@ ${pageHero(r, { crumbs: [["Products", "products/index.html"], [b.name, `products
   <div>
     <div class="prose" data-reveal>${pg.intro.map((p) => `<p>${esc(p)}</p>`).join("")}</div>
     ${pg.features ? `<div class="feature-list" style="margin-top:40px">${pg.features.map(([t, d]) => `<div class="feature holder" data-reveal><div><b>${esc(t)}</b><span>${esc(d)}</span></div></div>`).join("")}</div>` : ""}
-    ${pg.anatomy ? anatomyFigure(pg.anatomy, pg.image) : ""}
+    ${pg.anatomy ? (pg.anatomy.figure ? sfAnatomy(pg.anatomy) : anatomyFigure(pg.anatomy, pg.image)) : ""}
   </div>
   <aside class="aside">
     <figure class="aside-figure" data-reveal="right"><div class="aside-plate"><img src="${pg.figure.src}" alt="${esc(pg.figure.alt)}" loading="lazy"></div><figcaption>${esc(pg.figure.caption)}</figcaption></figure>
@@ -2326,11 +2455,12 @@ ${pageHero(r, { crumbs: [["Products", "products/index.html"], [b.name, `products
     <div class="aside-card" data-reveal="right"><h2>Works with</h2><ul class="aside-links docs">${pg.worksWith.map(([href, t, d]) => `<li><a href="${r}${href}"><span>${esc(t)}<small>${esc(d)}</small></span>${icon("arrow-right")}</a></li>`).join("")}</ul></div>
   </aside>
 </div></section>
-${extra.map(([id, , html], i) => `<section class="section band${tones[i]}" id="${id}"><div class="wrap">
+${extra.map(([id, , html, , cls], i) => `<section class="section band${tones[i]}${cls ? ` ${cls}` : ""}" id="${id}"><div class="wrap">
   ${html}
 </div></section>`).join("\n")}
 <section class="section band${specTone}" id="specifications"><div class="wrap">
   <div class="section-head"><p class="eyebrow">Specifications</p><h2 class="h-lg" data-reveal>${esc(pg.name)} in detail.</h2></div>
+  ${pg.drawing ? drawingFigure(pg.drawing) : ""}
   <div class="spec-groups">${pg.specs.map(([group, rows], i) => `<div class="aside-card" data-reveal style="--i:${i % 3}"><h3>${esc(group)}</h3><table class="specs"><tbody>${rows.map(([k, v]) => `<tr><th>${esc(k)}</th><td>${esc(v)}</td></tr>`).join("")}</tbody></table></div>`).join("")}</div>
   <p class="note spec-note" data-reveal>${esc(pg.specNote)} Full details are in the <a href="${datasheet.href}" rel="noopener">${esc(pg.name)} datasheet</a>.</p>
 </div></section></div>
@@ -2867,7 +2997,7 @@ function searchIndex() {
   for (const s of C.solutions) put("Solutions", s.title, s.summary, `solutions/${s.slug}.html`, { i: s.icon, b: text(s.intro, blockText(s.blocks)) });
   put("Products", "LIDoTT Alarm", `Detectronic · ${C.lidott.lede}`, "products/lidott-alarm.html", { img: plain(C.lidott.image), b: text("level radar alarm", C.lidott.description, C.lidott.sections, C.lidott.specs) });
   put("Products", "Alarm2", `Detectronic · ${C.alarm2.tag}`, "products/alarm2.html", { img: plain(C.alarm2.image), b: text("radar level alarm LoRaWAN 4G", C.alarm2.description, C.alarm2.sections, C.alarm2.highlights.map(([, t, d]) => [t, d]), C.alarm2.specs) });
-  for (const pg of C.productPages) put("Products", pg.name, `EDS · ${pg.tag}`, `products/${pg.slug}.html`, { img: plain(pg.image), b: text(pg.lede, pg.intro, pg.features, [pg.modes, pg.why, pg.accuracy, pg.upkeep, pg.install, pg.tough, pg.system].map((x) => x && [x.heading, x.lede, x.items]), pg.specs.map(([g, rows]) => [g, rows])) });
+  for (const pg of C.productPages) put("Products", pg.name, `EDS · ${pg.tag}`, `products/${pg.slug}.html`, { img: plain(pg.image), b: text(pg.lede, pg.intro, pg.features, [pg.modes, pg.why, pg.accuracy, pg.upkeep, pg.install, pg.tough, pg.system, pg.problem, pg.works, pg.flow, pg.fit, pg.fastening, pg.service, pg.range].map((x) => x && [x.heading, x.lede, x.items, x.methods, x.rules, x.steps, x.notes]), pg.faq?.items, pg.specs.map(([g, rows]) => [g, rows])) });
   for (const p of products) {
     if (p.href) continue; // has a page of its own, listed above
     put("Products", p.name, `${p.brand.name} · ${p.note || p.range || typeOf(p.type).label}`, `products/${p.brand.slug}.html#${p.id}`, { img: plain(p.image), b: text(typeOf(p.type).label, p.group) });

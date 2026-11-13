@@ -248,6 +248,73 @@ function tradewaste(t) {
   return svg(480, 300, body, `${efDefs(p)}${ltWaterGrad(p)}`);
 }
 
+/* ---- Sensor Fort: the four usual ways to hold a sensor in a sewer ---- */
+// One long section each, flow left to right, shown failing over a twelve
+// second loop: rag drifts in with the flow and catches, one piece after
+// another, and what else goes wrong follows (a ring of fat, silt in the lee,
+// a float grounded at low flow, a blocked intake). Each carries a red cross,
+// so the four read as what does not work before a word is read. The words
+// are page text under each drawing (build.mjs: problemBand); the motion is
+// CSS (site.css: .sfm-*), paused off screen with the other illustrations.
+const SM = { w: 320, h: 168, crown: 52, inv: 138, surf: 100 };
+const RAGS = ["q8 5 18 2t20 4", "q10-5 20 0t18-2", "q7 6 16 3t14 5", "q9-4 18 1t16-1"];
+// a strand of rag that arrives n-th (1 to 4) and stays where it is drawn
+const smRag = (x, y, n, k = n, dx = -170) => `<path class="dg-rag sfm-in n${n}" style="--dx:${dx}px" d="M${x} ${y}${RAGS[k % 4]}"/>`;
+const smScene = (p, inner, { shaft = null, water = null } = {}) => {
+  const { w, h, crown, inv, surf } = SM;
+  return svg(w, h, `
+  <rect width="${w}" height="${h}" fill="url(#${p}-soil)"/>
+  ${shaft ? `<rect x="${shaft[0]}" y="0" width="${shaft[1] - shaft[0]}" height="${crown}" fill="url(#${p}-air)"/>
+  <path fill="url(#${p}-cut)" d="M${shaft[0] - LW} 0H${shaft[0]}V${crown - LW}H${shaft[0] - LW}ZM${shaft[1]} 0H${shaft[1] + LW}V${crown - LW}H${shaft[1]}Z"/>
+  <path class="ef-edge" d="M${shaft[0] - LW} 0V${crown - LW}M${shaft[0]} 0V${crown}M${shaft[1]} 0V${crown}M${shaft[1] + LW} 0V${crown - LW}"/>
+  ${[14, 32].map((y) => `<path class="ef-step" d="M${shaft[1]} ${y}h-7v4h7"/>`).join("")}` : ""}
+  ${ltPipe(p, 0, w, crown, inv, { gaps: shaft ? [[shaft[0] - LW, shaft[1] + LW]] : [] })}
+  ${water || ltWater(p, 0, w, surf, inv)}
+  ${inner}
+  <path class="dg-arrow" d="M276 ${inv - 9}h22m-6-4 6 4-6 4"/>
+  <g class="sfm-x"><circle cx="${w - 22}" cy="22" r="12"/><path d="M${w - 27} 17l10 10m0-10l-10 10"/></g>`, `${efDefs(p)}${ltWaterGrad(p)}`);
+};
+const SF_METHODS = {
+  // a pole down the manhole with the sensor at its foot: rag where the pole
+  // pierces the surface and on the sensor, fat in a ring at the waterline
+  pole: (p) => smScene(p, `
+  <rect class="dg-pole" x="157" y="0" width="6" height="118" rx="1.5"/>
+  <path class="dg-inst-base" d="M154 30h12v5h-12zM154 70h12v5h-12z"/>
+  <rect class="dg-probe" x="149" y="112" width="22" height="18" rx="4"/><path class="dg-probe-tip" d="M171 124h4"/>
+  <ellipse class="dg-grease sfm-grow" cx="146" cy="${SM.surf}" rx="11" ry="2.6"/><ellipse class="dg-grease sfm-grow" cx="175" cy="${SM.surf}" rx="12" ry="2.8"/>
+  ${smRag(150, SM.surf + 3, 1)}${smRag(157, SM.surf + 9, 2)}${smRag(164, 116, 3)}${smRag(160, 126, 4)}`, { shaft: [128, 192] }),
+  // a sensor strapped to a band on the invert, its cable in the flow: rag on
+  // the body, the clamps and the cable, silt settling in its lee
+  band: (p) => smScene(p, `
+  <path class="dg-band-ring" d="M156 ${SM.crown + 1.5}h14M144 ${SM.inv - 1.5}h54"/>
+  <path class="dg-cable" d="M152 ${SM.inv - 8}C120 ${SM.inv - 3} 84 ${SM.inv - 11} 0 ${SM.inv - 6}"/>
+  <path class="dg-mound sfm-grow" d="M190 ${SM.inv}q5-11 17-12q13-5 23 4q12 0 15 8z"/>
+  <rect class="dg-probe" x="150" y="${SM.inv - 16}" width="40" height="14" rx="4"/><path class="dg-probe-tip" d="M190 ${SM.inv - 9}h4"/>
+  <path class="dg-clamp" d="M158 ${SM.inv - 18}h6v18h-6zM176 ${SM.inv - 18}h6v18h-6z"/>
+  ${smRag(146, SM.inv - 19, 1)}${smRag(156, SM.inv - 25, 2, 3)}${smRag(86, SM.inv - 10, 3, 1, -110)}${smRag(60, SM.inv - 15, 4, 0, -90)}`),
+  // a float on a tether, the sensor beneath it: rag on the tether and the
+  // float, and at low flow the float grounds and tips over
+  float: (p) => smScene(p, `
+  <path class="dg-cable sfm-tether" style="transform-origin:66px ${SM.crown}px" d="M66 ${SM.crown}L166 ${SM.surf - 4}"/>
+  <g class="sfm-sink">
+    <rect class="dg-probe" x="182" y="${SM.surf + 6}" width="9" height="15" rx="3"/><path class="dg-probe-tip" d="M184 ${SM.surf + 22}h5"/>
+    <path class="dg-inst" d="M166 ${SM.surf - 8}h42q5 0 5 5v6q0 5-5 5h-42q-5 0-5-5v-6q0-5 5-5z"/><path class="dg-inst-print" d="M172 ${SM.surf - 3}h22"/>
+    ${smRag(150, SM.surf - 1, 1, 0, -150)}${smRag(158, SM.surf + 8, 2, 2, -160)}${smRag(170, SM.surf + 14, 3, 3)}
+  </g>`, { water: `<g class="sfm-ebb" style="transform-origin:0 ${SM.inv}px">${ltWater(p, 0, SM.w, SM.surf, SM.inv, { flow: false })}</g><path class="dg-flow" d="M14 ${SM.inv - 6}H${SM.w - 14}"/>` }),
+  // a pump lifting a sample up a hose to a flow cell: the intake blocks, the
+  // flow stops and the cell fouls
+  bypass: (p) => smScene(p, `
+  <path class="dg-hose" d="M158 126V40Q158 22 176 22"/>
+  <path class="dg-hose-flow sfm-choke" d="M158 126V40Q158 22 176 22"/>
+  <rect class="dg-inst" x="174" y="10" width="26" height="25" rx="3"/><path class="dg-inst-print" d="M180 17h13M180 22h9"/><circle class="sfm-led" cx="193" cy="29" r="2"/>
+  <path class="dg-hose" d="M200 22h14"/><path class="dg-hose-flow sfm-choke" d="M200 22h14"/>
+  <rect class="dg-cell" x="214" y="11" width="34" height="22" rx="3"/><rect class="dg-foul sfm-grow" x="216" y="13" width="30" height="18" rx="2"/><rect class="dg-probe" x="227" y="3" width="8" height="20" rx="2.5"/>
+  <path class="dg-intake" d="M153 126h10v6h-10z"/>
+  ${lumps([[146, 128, 0, 0, "sfm-in n1"], [156, 133, 1, 0, "sfm-in n2"], [162, 126, 2, 0, "sfm-in n3"]])}
+  ${smRag(146, 124, 2, 1)}${smRag(150, 134, 4, 3)}`, { shaft: [128, 262] }),
+};
+export const sfMethod = (kind) => SF_METHODS[kind](`sfm-${kind}`);
+
 /* ---- scatter: a shift in the depth to velocity relationship ---- */
 function scatter(t) {
   const L = t.labels;
