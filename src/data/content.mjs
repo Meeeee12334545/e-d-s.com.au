@@ -2677,15 +2677,15 @@ export const productPages = [
     highlights: [
       ["shield", "Only the tips meet the flow", "Sensor bodies, clamps and cables stay inside the mount"],
       ["wind", "Nothing for rag to catch", "A smooth saddle that flow and rag can only pass over"],
-      ["plug", "Any maker's sensors", "From 12 mm electrodes to 80 mm sondes, each in a sleeve"],
+      ["plug", "Works with 99% of sensors", "On the market, as tested by EDS, from any maker"],
       ["ruler", "150 to 1050 mm sewers", "One Sensor Fort for each pipe diameter"],
-      ["zap-off", "Passive, for 12 months", "No power and no moving parts, between yearly visits by design"],
+      ["zap-off", "Runs on nothing but your sensors", "No power, no pump and no moving parts to look after"],
       ["waves", "Flow from the same site", "The spill lip is a hydraulic control, so depth gives flow"],
     ],
     intro: [
       "Installing a pH, EC or dissolved oxygen sensor in a gravity sewer is hard, and the hard part isn't the sensor. It's how you hold it in the flow. Rag wraps around anything that divides the flow, grit buries whatever sits in slow water, fat coats whatever sits at the waterline, and low flows leave sensors dry.",
       "Sensor Fort is a low moulded saddle that sits on the bottom of the pipe (the invert) at a manhole. Two sensors lie inside it, pointing downstream. The flow rides up the saddle, spills over a lip and runs fast across their tips. Nothing else is exposed.",
-      "EDS designed Sensor Fort and builds it in Australia, drawing on more than 30 years of experience and knowledge of sewers, to solve that one problem. It has no moving parts and needs no power. It takes the sensors your network already trusts. And it's designed to stay in the sewer for 12 months between visits.",
+      "EDS designed Sensor Fort and builds it in Australia, drawing on more than 30 years of experience and knowledge of sewers, to solve that one problem. It needs nothing to run except your sensors: no power, no pump and no moving parts. It works with 99% of the sensors on the market, as tested by EDS, so you keep the ones your network already trusts. And it's designed to stay in the sewer for 12 months between visits.",
     ],
     anatomy: {
       figure: "anatomy",
@@ -2714,7 +2714,7 @@ export const productPages = [
           ["Rag", "No leading edge. The saddle spans the invert, so flow and rag can only pass over it."],
           ["Grit", "The tips sit just below the spill lip, where fast water keeps grit moving."],
           ["Low flow", "Each sensor lies 15° tip down, so its tip is the last part to go dry."],
-          ["Upkeep", "No pump, no power and no moving parts. Designed for 12 months between visits."],
+          ["Upkeep", "It needs nothing to run except your sensors: no pump, no power and no moving parts. Designed for 12 months between visits."],
         ],
         image: img("sensor-fort-end.png"),
         alt: "Sensor Fort seen from downstream inside a pipe: two shoulders against the pipe wall, an open valley between them, and two sensor tips side by side at the bottom",
@@ -2771,7 +2771,7 @@ export const productPages = [
     fit: {
       nav: "Sensor fit",
       heading: "Your sensors. Your sewer.",
-      lede: "We surveyed 48 pH, conductivity and dissolved oxygen sensor models from 22 makers, and sized the sensor bays to suit them. The larger the sewer, the larger the sensor its Sensor Fort takes. A sleeve adapts each sensor to its bay, so you fit your own sensors, certified for your own zones.",
+      lede: "Sensor Fort works with 99% of the sensors on the market, as tested by EDS. We surveyed 48 pH, conductivity and dissolved oxygen sensor models from 22 makers, and sized the sensor bays to suit them. The larger the sewer, the larger the sensor its Sensor Fort takes. A sleeve adapts each sensor to its bay, so you fit your own sensors, certified for your own zones.",
       columns: ["Model", "Pipe diameter", "Largest sensor body", "Typical sensor formats", "Surveyed models that fit"],
       rows: [
         ["SF 150, SF 225", "150 and 225 mm", "28.5 mm by 190 mm", "12 mm electrodes in a sleeve, compact 22 mm sensors and 3/4 inch NPT bodies", 26],
@@ -2879,10 +2879,10 @@ export const productPages = [
       items: [
         ["How do you install a pH or EC sensor in a sewer?", "Mount it where rag can't catch it. Sensor Fort is a low saddle that sits on the invert of the pipe at a manhole, fixed on an expansion band with nothing drilled. The sensor lies inside it, 15° tip down, with only its tip in the flow. Each sensor is sleeved, calibrated and capped wet on the bench first, and the loaded mount then goes into the pipe."],
         ["Why do water quality sensors foul in a sewer?", "Usually because of the mount, not the sensor. Rag wraps around anything that divides the flow, grit buries whatever sits in slow water, fat coats whatever sits at the waterline, and low flows leave sensors dry. Poles, bands, floats and pumped bypasses each fail for one of those reasons."],
-        ["Which water quality sensors can be installed in a sewer with Sensor Fort?", "Any cylindrical sensor that measures at its tip, from any maker, including pH, ORP, conductivity (EC) and dissolved oxygen. A sleeve adapts each sensor to its bay, from 12 mm electrodes to 80 mm sondes in larger sewers. Each mount holds two sensors."],
+        ["Which water quality sensors can be installed in a sewer with Sensor Fort?", "Sensor Fort works with 99% of the sensors on the market, as tested by EDS. It takes any cylindrical sensor that measures at its tip, from any maker, including pH, ORP, conductivity (EC) and dissolved oxygen. A sleeve adapts each sensor to its bay, from 12 mm electrodes to 80 mm sondes in larger sewers. Each mount holds two sensors."],
         ["What size sewer does it suit?", "Gravity sewers from 150 mm to 1050 mm in diameter, with one Sensor Fort for each pipe diameter. It is made for circular pipe, with U-shaped channels on request. Choose a sewer with a continuous base flow, so the sensor tips stay wet."],
         ["How often do sensors in a sewer need servicing?", "Sensor Fort is designed to stay in the sewer for 12 months between visits. The whole mount is then exchanged for a freshly loaded one. No mount can stop biofilm growing or a pH reference ageing, so we match the sensor type and the data checks to the service interval each site needs."],
-        ["Does it need power or a pump?", "No. Sensor Fort is passive, with no moving parts, no electrical parts and no power. Sensors with 4 to 20 mA or Modbus outputs connect to any RTU, logger or SCADA host, or to an EDS Metalog 4G logger."],
+        ["Does it need power or a pump?", "No. Sensor Fort needs nothing to run except your sensors. It is passive, with no moving parts, no electrical parts and no power. Sensors with 4 to 20 mA or Modbus outputs connect to any RTU, logger or SCADA host, or to an EDS Metalog 4G logger."],
         ["Can I measure flow at the same site?", "Yes. The spill lip is a hydraulic control, so the depth upstream rises predictably with flow. With Sensor Fort in the outlet pipe of a manhole, a level sensor above the chase measures that depth, and a rating curve for the mount turns it into flow."],
         ["Who makes Sensor Fort?", "EDS (Environmental Data Services) designed Sensor Fort and builds it in Australia, drawing on more than 30 years of experience in sewer monitoring. It is patent pending."],
       ],
