@@ -137,7 +137,9 @@ const screenFigure = (f, { tall = false, sizes } = {}) => `
 // a roundel and a wordmark carry the same weight in the grid (--h, site.css).
 const pngSize = (file) => { const b = readFileSync(path.join(ROOT, "src", file)); return { w: b.readUInt32BE(16), h: b.readUInt32BE(20) }; };
 const logoHeight = (src) => { const { w, h } = pngSize(src.replace("@root/", "")); return Math.max(24, Math.min(46, Math.round(Math.sqrt(3400 / (w / h))))); };
-const logoGrid = () => `<ul class="logo-grid" aria-label="Clients">${C.clients.map((c, i) => `<li data-reveal style="--i:${i % 5};--h:${logoHeight(c.src)}px"><img src="${c.src}" alt="${esc(c.name)}" loading="lazy"></li>`).join("")}</ul>`;
+// `sheet`: the ruled sheet on the home page rises as one, since a cell still
+// waiting to appear would show as a block of the line colour.
+const logoGrid = ({ sheet = false } = {}) => `<ul class="logo-grid" aria-label="Clients"${sheet ? " data-reveal" : ""}>${C.clients.map((c, i) => `<li${sheet ? "" : " data-reveal"} style="--i:${i % 5};--h:${logoHeight(c.src)}px"><img src="${c.src}" alt="${esc(c.name)}" loading="lazy"></li>`).join("")}</ul>`;
 // Four statements at one weight: the home page's proof row (C.proof).
 const proofRow = () => `<div class="proof-row">${C.proof.map((p, i) => `<div data-reveal style="--i:${i}"><b>${esc(p.lead)}</b><span>${esc(p.text)}</span></div>`).join("")}</div>`;
 // Two photographs side by side, across the page.
@@ -1255,24 +1257,33 @@ function fsScreen() {
   </div>`;
 }
 
-// The home hero's flow meter reporting in. site.js draws the last day of
-// readings and moves it on every few seconds. Labelled as an illustration,
-// like the flow lab and the FlowSense screens.
-const liveCard = () => `
-<aside class="live" aria-label="Illustration of a flow meter reporting live" data-reveal="right" style="--i:5">
-  <div class="live-head"><span class="live-site">${icon("radio-tower", false)} Site 07, trunk sewer</span><span class="live-tag">Reporting</span></div>
-  <div class="live-value"><b data-live="q">41.8</b><span>L/s</span></div>
-  <p class="live-label">Flow over the last 24 hours</p>
-  <svg class="live-chart" viewBox="0 0 300 86" aria-hidden="true">
-    <defs><linearGradient id="live-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3d9991" stop-opacity=".26"/><stop offset="1" stop-color="#3d9991" stop-opacity="0"/></linearGradient></defs>
-    <path class="live-area" fill="url(#live-fill)"/><path class="live-dwf"/><path class="live-line"/><circle class="live-dot" r="3.5"/>
-  </svg>
-  <div class="live-read">
-    <div><span>Depth</span><b data-live="d">212</b><small>mm</small></div>
-    <div><span>Velocity</span><b data-live="v">0.76</b><small>m/s</small></div>
-    <div><span>Battery</span><b>94</b><small>%</small></div>
+// The home hero's flow tile: a compact instrument face under the headline,
+// showing the last day of flow at one sewer site as a chart recorder would
+// draw it. site.js draws the trace and moves it on. The two moving drawings
+// are svg elements of their own, so the browser slides them as layers and
+// repaints nothing between readings. The measured line ends at "now", where
+// its reading rides on a plate; the dry weather pattern runs on past it,
+// dashed. Labelled as an illustration, like the flow lab and the FlowSense
+// screens.
+const liveTile = () => `
+<aside class="live" aria-label="Illustration of a flow meter reporting live" data-reveal style="--i:5">
+  <div class="live-head"><span class="live-site">${icon("radio-tower", false)}Site 07, trunk sewer</span><span class="live-tag">Reporting</span><span class="live-note">Illustration</span></div>
+  <div class="trace-plot" aria-hidden="true">
+    <svg class="trace-svg trace-grid" focusable="false"></svg>
+    <svg class="trace-svg trace-move trace-dwf-svg" focusable="false"><path class="trace-dwf"/></svg>
+    <div class="trace-clip"><svg class="trace-svg trace-move trace-run" focusable="false">
+      <defs><linearGradient id="trace-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3d9991" stop-opacity=".2"/><stop offset="1" stop-color="#3d9991" stop-opacity="0"/></linearGradient></defs>
+      <path class="trace-area" fill="url(#trace-fill)"/><path class="trace-line"/>
+    </svg></div>
+    <span class="trace-title">Flow, last 24 hours</span>
+    <ol class="trace-axis"><li>24 h ago</li><li>12 h</li><li>Now</li></ol>
+    <span class="trace-now"><i></i><span><b data-live="q">26.7</b> L/s</span></span>
   </div>
-  <div class="live-foot"><span>Illustration</span><span>${icon("signal", false)} Sent over 4G</span></div>
+  <dl class="live-read">
+    <div><dt>Depth</dt><dd><b data-live="d">180</b> mm</dd></div>
+    <div><dt>Velocity</dt><dd><b data-live="v">0.60</b> m/s</dd></div>
+    <div><dt>Battery</dt><dd><b>94</b> %</dd></div>
+  </dl>
 </aside>`;
 
 // "Add to quote": collects products into one enquiry (quote.js). The item
@@ -1447,26 +1458,21 @@ add({
     // papers on Resources, and the office map on About and Contact.
     return `
 <section class="hero">
-  <canvas class="hero-canvas" data-flowfield="dense" aria-hidden="true"></canvas>
   <div class="wrap hero-body">
-    <div class="hero-main">
-      <div>
-        <h1 class="h-xl" aria-label="Every drop, measured.">${words.map((w, i) => `<span class="w" aria-hidden="true"><span style="--i:${i}">${w}</span></span>`).join(" ")}</h1>
-        <p class="lede" data-reveal style="--i:4">${esc(C.homeLede)}</p>
-        <div class="hero-actions" data-reveal style="--i:5">
-          <a class="btn btn-primary btn-lg" href="${r}services/index.html">Our services</a>
-          <a class="btn btn-ghost btn-lg" href="#city-explorer">Explore the city</a>
-        </div>
-      </div>
-      ${liveCard()}
+    <h1 class="h-xl" aria-label="Every drop, measured.">${words.map((w, i) => `<span class="w" aria-hidden="true"><span style="--i:${i}">${w}</span></span>`).join(" ")}</h1>
+    <p class="lede" data-reveal style="--i:4">${esc(C.homeLede)}</p>
+    <div class="hero-actions" data-reveal style="--i:5">
+      <a class="btn btn-primary btn-lg" href="${r}services/index.html">Our services</a>
+      <a class="btn btn-ghost btn-lg" href="#city-explorer">Explore the city</a>
     </div>
+    ${liveTile()}
   </div>
 </section>
 
 <section class="clients proof" aria-label="Clients and key figures">
-  <p>Trusted by government, utilities, councils and industry</p>
   <div class="wrap">
-    ${logoGrid()}
+    <p class="clients-label">Trusted by government, utilities, councils and industry</p>
+    ${logoGrid({ sheet: true })}
     ${proofRow()}
   </div>
 </section>

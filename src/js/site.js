@@ -255,44 +255,101 @@
     update();
   }
 
-  /* ---- home hero: an illustrative flow meter reporting in ---- */
-  // The last day of readings at half-hour steps, against the dry weather
-  // pattern, moved on by one reading every few seconds. Not live data.
+  /* ---- home hero: the flow tile of an illustrative meter reporting in ---- */
+  // The last day of flow at half-hour steps, against the dry weather pattern,
+  // drawn across the tile and moved on like a chart recorder: one reading
+  // every few seconds, the line sliding left at a steady pace so the newest
+  // reading is always at "now". Not live data. Everything is laid out in real
+  // pixels from the plot's own size, so the line is never stretched.
   const live = $(".live");
   if (live) {
-    const N = 48, W = 300, H = 86;
-    const bump = (h, c, w) => Math.exp(-(((h - c + 36) % 24 - 12) ** 2) / (2 * w * w));
-    const dwf = (h) => 26 + 20 * bump(h, 7.5, 1.6) + 15 * bump(h, 19, 2.1) + 6 * bump(h, 13, 2.5);
-    let t = 0, wobble = 0;
-    const next = () => {
-      const h = (t++ / 2) % 24, base = dwf(h);
-      wobble = wobble * 0.6 + (Math.random() - 0.5) * 2.4;
-      return { base, q: Math.max(4, base + wobble) };
-    };
-    const pts = Array.from({ length: N }, next);
-    const x = (i) => (i / (N - 1)) * W, y = (q) => H - 4 - (q / 64) * (H - 10);
-    const trace = (k) => pts.map((p, i) => `${i ? "L" : "M"}${x(i).toFixed(1)} ${y(p[k]).toFixed(1)}`).join("");
+    const plot = $(".trace-plot", live);
+    const lineEl = $(".trace-line", live), areaEl = $(".trace-area", live), dwfEl = $(".trace-dwf", live);
+    const run = $(".trace-run", live), clip = $(".trace-clip", live), grid = $(".trace-grid", live);
+    const axis = $(".trace-axis", live), now = $(".trace-now", live), dwfSvg = $(".trace-dwf-svg", live);
     const out = Object.fromEntries($$("[data-live]", live).map((el) => [el.dataset.live, el]));
-    const draw = () => {
-      const line = trace("q"), q = pts[N - 1].q;
-      $(".live-line", live).setAttribute("d", line);
-      $(".live-area", live).setAttribute("d", `${line}L${W} ${H}L0 ${H}Z`);
-      $(".live-dwf", live).setAttribute("d", trace("base"));
-      $(".live-dot", live).setAttribute("cx", W);
-      $(".live-dot", live).setAttribute("cy", y(q).toFixed(1));
-      out.q.textContent = q.toFixed(1);
-      out.d.textContent = Math.round(118 + q * 2.3);
-      out.v.textContent = (0.32 + q / 95).toFixed(2);
+    const DAY = 48, BEAT = 2000;
+    const bump = (h, c, w) => Math.exp(-(((h - c + 36) % 24 - 12) ** 2) / (2 * w * w));
+    const dwf = (t) => { const h = (t / 2) % 24; return 26 + 20 * bump(h, 7.5, 1.6) + 15 * bump(h, 19, 2.1) + 6 * bump(h, 13, 2.5); };
+    // readings by time step: the measured flow wanders about the pattern
+    const flow = [];
+    let wobble = 0;
+    const q = (t) => {
+      while (flow.length <= t) { wobble = wobble * 0.6 + (Math.random() - 0.5) * 2.4; flow.push(Math.max(4, dwf(flow.length) + wobble)); }
+      return flow[t];
     };
-    draw();
-    let seen = false;
-    new IntersectionObserver(([en]) => { seen = en.isIntersecting; }).observe(live);
-    setInterval(() => {
-      if (!seen || document.hidden) return;
-      pts.shift();
-      pts.push(next());
-      draw();
-    }, 2800);
+    // the time step at "now", far enough in to have a day of history behind it
+    let t = 400 + Math.floor(Math.random() * DAY);
+    let W = 0, H = 0, L = 0, X = 0, step = 1, lead = 0, dash = 0, drawn = false, moving = false, seen = true, timer = 0;
+    // the line keeps clear of the title along the top of the plot and the hour labels along its foot
+    const y = (v) => H - 27 - ((v - 17) / 36) * (H - 56);
+    const tx = (el, x, yy = 0, ms = 0) => { el.style.transition = ms ? `transform ${ms}ms linear` : "none"; el.style.transform = `translate(${x}px, ${yy}px)`; };
+    const measure = () => {
+      W = plot.clientWidth; H = plot.clientHeight; L = 0;
+      X = W - parseFloat(getComputedStyle(plot).getPropertyValue("--now-inset") || 96);
+      step = (X - L) / DAY;
+      lead = Math.ceil(L / step) + 1;
+      run.style.width = dwfSvg.style.width = `${Math.ceil(W + 2 * step)}px`;
+      axis.style.width = `${X - L}px`;
+      grid.innerHTML = [1, 2, 3, 4].map((k) => { const gx = Math.round(L + (k * (X - L)) / 4) + 0.5; return `<line x1="${gx}" x2="${gx}" y1="0" y2="${H}"/>`; }).join("");
+    };
+    // the paths at rest: the measured line runs one step past "now" (hidden
+    // by the clip until it slides in), the pattern runs on to the right edge
+    const paths = () => {
+      const pt = (i, v) => `${(X + i * step).toFixed(1)} ${y(v).toFixed(1)}`;
+      let d = "";
+      for (let i = -DAY - lead; i <= 1; i++) d += `${d ? "L" : "M"}${pt(i, q(t + i))}`;
+      lineEl.setAttribute("d", d);
+      areaEl.setAttribute("d", `${d}L${(X + step).toFixed(1)} ${H}L${(X - (DAY + lead) * step).toFixed(1)} ${H}Z`);
+      let e = "";
+      for (let i = -DAY - lead, end = Math.ceil((W - X) / step) + 2; i <= end; i++) e += `${e ? "L" : "M"}${pt(i, dwf(t + i))}`;
+      dwfEl.setAttribute("d", e);
+      dwfEl.style.strokeDashoffset = dash;
+    };
+    const read = () => {
+      const v = q(t);
+      out.q.textContent = v.toFixed(1);
+      out.d.textContent = Math.round(118 + v * 2.3);
+      out.v.textContent = (0.32 + v / 95).toFixed(2);
+    };
+    const rest = () => { tx(run, 0); tx(dwfSvg, 0); tx(now, X, y(q(t))); paths(); read(); };
+    // one beat: everything slides one step left while the dot rides to the next reading
+    const beat = () => {
+      clearTimeout(timer);
+      if (!drawn || !seen || document.hidden) { moving = false; return; }
+      moving = true;
+      rest();
+      void plot.offsetWidth;
+      tx(run, -step, 0, BEAT); tx(dwfSvg, -step, 0, BEAT); tx(now, X, y(q(t + 1)), BEAT);
+      timer = setTimeout(() => {
+        // the pattern's first segment leaves the path, so its dashes are held in place
+        dash = (dash + Math.hypot(step, y(dwf(t - DAY - lead + 1)) - y(dwf(t - DAY - lead)))) % 8;
+        t++;
+        beat();
+      }, BEAT);
+    };
+    const start = () => { if (!moving) beat(); };
+    // first paint: the line draws itself in from the left, then the reading appears and the chart moves on
+    const intro = () => {
+      measure(); rest();
+      const t0 = performance.now() + 450, ms = 1500;
+      const frame = (ts) => {
+        const k = Math.min(1, Math.max(0, (ts - t0) / ms)), e = 1 - (1 - k) ** 3;
+        clip.style.width = `${(X * e).toFixed(1)}px`;
+        if (k < 1) return requestAnimationFrame(frame);
+        drawn = true; live.classList.add("is-live"); start();
+      };
+      requestAnimationFrame(frame);
+    };
+    intro();
+    new ResizeObserver(() => {
+      if (Math.abs(plot.clientWidth - W) < 1 && Math.abs(plot.clientHeight - H) < 1) return;
+      clearTimeout(timer); moving = false;
+      measure(); rest();
+      if (drawn) { clip.style.width = `${X.toFixed(1)}px`; start(); }
+    }).observe(plot);
+    new IntersectionObserver(([en]) => { seen = en.isIntersecting; if (seen) start(); }).observe(live);
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) start(); });
   }
 
   /* ---- copying to the clipboard, shared with products.js ---- */

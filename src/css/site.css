@@ -436,16 +436,23 @@ ul { margin: 0; padding: 0; list-style: none; }
    FlowSense teal and a little water blue (site.js reads the three colours
    from --ff-1 to --ff-3). A veil of the ground behind the words keeps them
    clear of the currents. */
-.hero, .page-hero {
+.page-hero {
   background: linear-gradient(180deg, #f1f8f6 0%, var(--foam) 60%, #fff 100%);
 }
+/* The home hero is clear: white, the headline, and the flow tile. */
+.hero { background: #fff; }
 .hero-canvas, .page-hero canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -2; --ff-1: rgba(61, 153, 145, .5); --ff-2: rgba(14, 143, 132, .55); --ff-3: rgba(30, 150, 210, .42); }
-.hero::after {
-  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
-  background: radial-gradient(80% 70% at 16% 46%, rgba(246, 251, 250, .9) 0%, rgba(246, 251, 250, .55) 50%, rgba(246, 251, 250, 0) 100%),
-    linear-gradient(180deg, rgba(246, 251, 250, .5) 0%, rgba(246, 251, 250, 0) 26%, rgba(238, 246, 244, 0) 72%, var(--bg-alt) 100%);
-}
 .hero h1 { max-width: 14ch; }
+/* From tablet width the headline is one line across the measure. Under it
+   the intro and the buttons take the left and the flow tile the right, the
+   intro starting level with the tile's top. */
+@media (min-width: 701px) {
+  .hero h1 { grid-column: 1 / -1; max-width: none; white-space: nowrap; font-size: clamp(3.4rem, 6.6vw, 6rem); letter-spacing: -.025em; }
+  .hero-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 440px); grid-template-rows: auto auto 1fr; column-gap: clamp(28px, 6vw, 96px); }
+  .hero .lede { grid-column: 1; margin-top: clamp(24px, 3vw, 34px); }
+  .hero .hero-actions { grid-column: 1; align-self: start; }
+  .hero .live { grid-column: 2; grid-row: 2 / 4; align-self: start; margin-top: clamp(28px, 3.2vw, 40px); }
+}
 .hero h1 .w { display: inline-block; overflow: hidden; vertical-align: top; padding-bottom: .08em; margin-bottom: -.08em; }
 .hero h1 .w > span { display: inline-block; }
 .js .hero h1 .w > span { translate: 0 110%; animation: word-up .9s var(--ease-out) forwards; animation-delay: calc(.15s + var(--i) * 70ms); }
@@ -454,37 +461,48 @@ ul { margin: 0; padding: 0; list-style: none; }
 .hero .lede { margin-top: 26px; max-width: 32em; }
 .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 34px; }
 
-/* the flow meter card beside the headline (down to tablets; phones leave it out) */
-.hero-main { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: clamp(32px, 5vw, 80px); align-items: center; }
-/* A white instrument face: a ruled plate with a firm edge, its head and
-   foot ruled off like the title and status lines of a logger's screen. */
-.live {
-  --lp: 20px; position: relative; width: 340px; padding: 0 var(--lp); border-radius: var(--radius); font-size: .8rem; color: var(--muted);
-  border: 1px solid var(--border-field); border-top: 3px solid var(--brand); background: #fff;
-}
-.live-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-inline: calc(var(--lp) * -1); padding: 12px var(--lp); border-bottom: 1px solid var(--border); }
-.live-site { display: inline-flex; align-items: center; gap: 8px; font-size: .82rem; font-weight: 500; color: var(--ink); }
+/* The flow tile under the headline (home): a white instrument face with a
+   firm edge and a brand rule along the top, its head and readings ruled off
+   like the title and status lines of a logger's screen. Between them the
+   last day of flow is drawn as a chart recorder would draw it: the measured
+   line ends at "now" with its reading on a plate beside it, and the dry
+   weather pattern carries on past it, dashed. site.js lays the trace out in
+   real pixels, so nothing is stretched. */
+.live { position: relative; font-size: .8rem; color: var(--muted); border: 1px solid var(--border-field); border-top: 3px solid var(--brand); border-radius: var(--radius); background: #fff; overflow: hidden; }
+.live-head { display: flex; align-items: center; gap: 14px; padding: 11px 16px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.live-site { display: inline-flex; align-items: center; gap: 8px; font-size: .84rem; font-weight: 500; color: var(--ink); }
 .live-site .icon { font-size: 16px; color: var(--eds); }
-.live-tag { display: inline-flex; align-items: center; gap: 8px; color: #166534; font-size: .68rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.live-tag { display: inline-flex; align-items: center; gap: 8px; color: #166534; font-size: .78rem; font-weight: 600; }
 .live-tag::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 3px rgba(34, 197, 94, .24); animation: open-pulse 2.4s var(--ease) infinite; }
-.live-value { display: flex; align-items: baseline; gap: 6px; margin-top: 18px; }
-.live-value b { font-family: var(--font-display); font-size: 2.7rem; font-weight: 650; letter-spacing: -.01em; line-height: 1; color: var(--ink); font-variant-numeric: tabular-nums; }
-.live-value span { font-size: .95rem; font-weight: 500; color: var(--brand); }
-.live-label { margin-top: 6px; color: var(--muted); }
-.live-chart { width: 100%; height: auto; margin-top: 14px; overflow: visible; }
-.live-line { fill: none; stroke: var(--eds); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
-.live-dwf { fill: none; stroke: rgba(15, 43, 42, .28); stroke-width: 1.2; stroke-dasharray: 3 4; }
-.live-dot { fill: #fff; stroke: var(--eds); stroke-width: 2.5; transition: cy .5s var(--ease-out); }
-.live-read { display: grid; grid-template-columns: repeat(3, 1fr); margin: 14px calc(var(--lp) * -1) 0; border-block: 1px solid var(--border); }
-.live-read div { padding: 10px 10px 10px 14px; }
-.live-read div:first-child { padding-left: var(--lp); }
-.live-read div + div { border-left: 1px solid var(--border); }
-.live-read span { display: block; font-size: .7rem; font-weight: 650; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
-.live-read b { font-family: var(--font-display); font-size: 1.08rem; font-weight: 620; color: var(--ink); font-variant-numeric: tabular-nums; }
-.live-read small { margin-left: 3px; color: var(--muted); }
-.live-foot { display: flex; align-items: center; justify-content: space-between; padding-block: 10px; font-size: .75rem; color: var(--muted); }
-.live-foot span { display: inline-flex; align-items: center; gap: 6px; }
-.live-foot .icon { color: var(--eds); }
+.live-note { margin-left: auto; font-size: .75rem; }
+/* site.js draws the plot; without it the head and the readings stand alone */
+:root:not(.js) .trace-plot { display: none; }
+.trace-plot { position: relative; height: var(--trace-h, 124px); --now-inset: 96px; overflow: hidden; }
+.trace-svg { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+/* the measured line shows as far as "now": its box ends there (site.js sets the width) */
+.trace-clip { position: absolute; left: 0; top: 0; width: 0; height: 100%; overflow: hidden; }
+.trace-move { will-change: transform; }
+.trace-grid line { stroke: rgba(15, 43, 42, .08); stroke-width: 1; shape-rendering: crispEdges; }
+.trace-line { fill: none; stroke: var(--eds); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.trace-dwf { fill: none; stroke: rgba(15, 43, 42, .34); stroke-width: 1.2; stroke-dasharray: 3 5; }
+.trace-title { position: absolute; left: 16px; top: 11px; font-size: .74rem; line-height: 1; }
+.trace-axis { position: absolute; left: 0; bottom: 8px; margin: 0; padding: 0; list-style: none; font-size: .7rem; line-height: 1; color: var(--muted); font-variant-numeric: tabular-nums; }
+.trace-axis li { position: absolute; bottom: 0; translate: -50% 0; white-space: nowrap; }
+.trace-axis li:first-child { translate: 16px 0; }
+.trace-axis li:nth-child(2) { left: 50%; }
+.trace-axis li:last-child { left: 100%; font-weight: 600; color: var(--ink); }
+/* the reading rides the end of the line: a dot at "now", its figure on a plate beside it */
+.trace-now { position: absolute; left: 0; top: 0; display: flex; align-items: center; height: 0; opacity: 0; transition: opacity .4s var(--ease); will-change: transform; }
+.live.is-live .trace-now { opacity: 1; }
+.trace-now i { flex: none; width: 11px; height: 11px; margin-left: -5.5px; border-radius: 50%; background: #fff; border: 2.5px solid var(--eds); }
+.trace-now span { margin-left: 8px; padding: 6px 8px 5px; border-radius: var(--radius); background: var(--ink); color: rgba(255, 255, 255, .82); font-size: .76rem; font-weight: 500; line-height: 1; white-space: nowrap; }
+.trace-now b { font-family: var(--font-display); font-size: 1rem; font-weight: 620; color: #fff; font-variant-numeric: tabular-nums; }
+.live-read { display: grid; grid-template-columns: repeat(3, 1fr); margin: 0; border-top: 1px solid var(--border); }
+.live-read > div { padding: 10px 12px 11px 16px; }
+.live-read > div + div { border-left: 1px solid var(--border); }
+.live-read dt { font-size: .72rem; line-height: 1.2; }
+.live-read dd { margin: 3px 0 0; line-height: 1.2; white-space: nowrap; }
+.live-read b { margin-right: 1px; font-family: var(--font-display); font-size: 1.08rem; font-weight: 620; color: var(--ink); font-variant-numeric: tabular-nums; }
 
 /* ---------- interactive city ---------- */
 .city-section { padding-block: clamp(40px, 6vw, 80px) clamp(56px, 6vw, 88px); overflow: hidden; }
@@ -3590,9 +3608,16 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: v
    sections share a layout, and dark bands run on a schedule. */
 
 /* Home: a hero sized to its content, then the logos and key figures. */
-.hero { min-height: 0; justify-content: center; padding-top: calc(var(--header-h) + clamp(40px, 6vw, 88px)); }
-.hero-body { padding-bottom: clamp(48px, 7vw, 104px); }
+.hero { min-height: 0; justify-content: center; padding-top: calc(var(--header-h) + clamp(36px, 5vw, 68px)); }
+.hero-body { padding-bottom: clamp(44px, 5.5vw, 76px); }
 .proof { padding-block: 46px clamp(44px, 6vw, 68px); border-bottom: 0; }
+/* The client marks on the home page are one ruled sheet, like the services
+   and results under it: white cells on the line colour, five across and three
+   down (three by five on a phone), so the grid is always full. */
+.proof .clients-label { margin-bottom: 20px; padding: 0; text-align: left; color: var(--ink-2); }
+.proof .logo-grid { gap: 1px; padding: 0; margin-bottom: clamp(32px, 4vw, 48px); background: var(--border-strong); border: 1px solid var(--border-strong); }
+.proof .logo-grid li { height: 92px; padding-inline: 16px; background: #fff; }
+@media (max-width: 700px) { .proof .logo-grid { gap: 1px; } .proof .logo-grid li { height: 70px; padding-inline: 10px; } }
 /* The proof row under the logos: four statements at one weight, no counters.
    Each is a claim made elsewhere on the site, brought up to the first screen. */
 .proof-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-rows: auto auto; border-top: 1px solid var(--border); }
@@ -3649,6 +3674,12 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: v
 @media (max-width: 560px) {
   .proof-row { grid-template-columns: 1fr; }
   .proof-row > div, .proof-row > div + div { padding: 18px 0 0; border-left: 0; margin-top: 0; }
+  /* on the home page the four read as one ruled list, evenly spaced */
+  .proof .proof-row { display: block; }
+  .proof .proof-row > div:nth-child(n) { display: block; margin-top: 0; padding: 16px 0 17px; }
+  .proof .proof-row > div + div { border-top: 1px solid var(--border); }
+  .proof .proof-row > div:last-child { padding-bottom: 0; }
+  .proof .proof-row b { margin-bottom: 5px; }
 }
 /* one to a row on a narrow phone: the eight ranges become one list on a
    white plate, ruled between rows, rather than eight boxes */
@@ -3813,10 +3844,6 @@ html:has(.secbar) .band[id] { scroll-margin-top: calc(16px - var(--band-pad)); }
   .cat-bar .view-toggle { flex: none; }
 }
 @media (max-width: 1180px) {
-  .hero-main { grid-template-columns: minmax(0, 1fr) 300px; gap: 40px; }
-  .live { width: 300px; }
-  .live-site { white-space: nowrap; }
-  .live-tag { letter-spacing: .06em; }
   .feature-grid.n4 > * { grid-column: span 6; }
   .range-tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
@@ -3842,33 +3869,26 @@ html:has(.secbar) .band[id] { scroll-margin-top: calc(16px - var(--band-pad)); }
 @media (max-width: 980px) and (min-width: 761px) {
   .related-grid.n3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
-/* On a tablet the meter card stays beside the words, a size smaller, rather
-   than leaving half the hero empty */
-@media (max-width: 860px) and (min-width: 701px) {
-  .hero-main { grid-template-columns: minmax(0, 1fr) 280px; gap: 24px; }
-  .live { width: 280px; --lp: 14px; }
-  .live-site { gap: 6px; font-size: .78rem; }
-  .live-tag { gap: 6px; font-size: .62rem; letter-spacing: .05em; }
-  .live-value b { font-size: 2.3rem; }
-  .live-read div { padding-block: 8px; padding-right: 6px; }
-  .live-read span { letter-spacing: .04em; }
+/* The flow tile on smaller screens. Beside the intro on a tablet it is a
+   size smaller. On a phone it runs the width under the buttons as a slim
+   strip (its head and a lower plot, no readings), and on a short phone it
+   goes, so the client logos still meet the first screen. */
+@media (max-width: 980px) {
+  .hero-body { grid-template-columns: minmax(0, 1fr) 320px; padding-bottom: 36px; }
+  .live-head { gap: 10px; padding-inline: 13px; }
+  .live-note { display: none; }
+  .trace-plot { --trace-h: 112px; --now-inset: 90px; }
+  .trace-title { left: 13px; }
+  .trace-axis li:first-child { translate: 13px 0; }
+  .live-read > div { padding-left: 13px; padding-right: 8px; }
 }
-/* On a phone the whole card under the buttons would push the client logos out
-   of the first screen, so the meter becomes a slim strip: the site, the
-   reading with its last day beside it, and the illustration note. On a short
-   phone even the strip would, so there it goes. */
 @media (max-width: 700px) {
-  .hero-main { grid-template-columns: 1fr; gap: 24px; }
-  .hero-body { padding-bottom: 36px; }
-  .hero .live { width: 100%; display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "head head" "value chart" "label foot"; column-gap: 20px; --lp: 16px; }
-  .live-head { grid-area: head; }
-  .live-value { grid-area: value; margin-top: 10px; }
-  .live-value b { font-size: 2rem; }
-  .live-label { grid-area: label; margin-top: 3px; padding-bottom: 10px; font-size: .74rem; }
-  .live-chart { grid-area: chart; align-self: end; margin-top: 10px; }
+  .hero-body { padding-bottom: 32px; }
+  .hero .live { margin-top: 24px; }
+  .live-note { display: inline; }
+  .trace-plot { --trace-h: 92px; }
+  .trace-title { display: none; }
   .live-read { display: none; }
-  .live-foot { grid-area: foot; justify-content: flex-end; margin-top: 3px; padding-block: 0 10px; font-size: .72rem; }
-  .live-foot > :last-child { display: none; }
 }
 @media (max-width: 700px) and (max-height: 699px) {
   .hero .live { display: none; }

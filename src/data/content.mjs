@@ -2855,7 +2855,7 @@ export const about = {
   founder: { name: "Cynthia Harper", role: "Co-founder, Environmental Data Services", text: "EDS continues to strive to deliver the level of service and professionalism that was part of Graham's founding ethos." },
   // Photographs from EDS sites: one beside the timeline on the home page, and
   // the mosaic on the about page (the first photo is the large one).
-  homePhoto: { photo: "sewer-av-meter", alt: "An area velocity flow meter on a mounting band at the invert of a sewer, seen from the manhole above, with wastewater flowing over it", caption: "An area velocity flow meter at the bottom of a sewer, measuring depth and velocity.", pos: "50% 45%" },
+  homePhoto: { photo: "crew-confined-space", alt: "Two crew in hi-vis beside an entry tripod set over an open manhole on a gravel track in bushland, with a confined space warning sign in the foreground", caption: "A crew set up for a confined space entry, with the tripod over the manhole and the warning sign out.", pos: "42% 50%" },
   field: {
     heading: "The work, as it is.",
     lede: "Sewers, chambers, cabinets and poles: the sites our crews instrument, visit and keep reporting.",
