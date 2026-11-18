@@ -1,5 +1,6 @@
 // The EDS site server. Serves the built site in dist/, records visits at
-// /api/collect and hosts the password-protected analytics dashboard at /admin.
+// /api/collect, hosts the password-protected analytics dashboard at /admin and
+// plays the FlowSense video at its private link, /watch/<code> (watch.mjs).
 //   npm run build && npm start   -> http://localhost:4173
 // Settings are environment variables (see .env.example and the README).
 import http from "node:http";
@@ -10,6 +11,7 @@ import { openStore } from "./store.mjs";
 import { collect } from "./collect.mjs";
 import { admin } from "./admin.mjs";
 import { openLookup } from "./lookup.mjs";
+import { openVideo } from "./watch.mjs";
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const DIST = path.join(ROOT, "dist");
@@ -17,6 +19,7 @@ const PORT = Number(process.env.PORT) || 4173;
 const DATA = path.resolve(ROOT, process.env.DATA_DIR || "data");
 const store = openStore(DATA);
 const lookup = openLookup(store, DATA);
+const video = openVideo(DATA);
 // When the pages live on another host (GitHub Pages) and this server only runs
 // analytics, page requests here are sent there so the site has one address.
 const PAGES_URL = (process.env.PAGES_URL || "").replace(/\/+$/, "");
@@ -49,7 +52,8 @@ const server = http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url, "http://localhost");
     if (url.pathname === "/api/collect") return await collect(req, res, store, lookup);
-    if (url.pathname === "/admin" || url.pathname.startsWith("/admin/")) return await admin(req, res, url, store);
+    if (url.pathname === "/admin" || url.pathname.startsWith("/admin/")) return await admin(req, res, url, store, video);
+    if (url.pathname === "/watch" || url.pathname.startsWith("/watch/")) return await video.watch(req, res, url);
     if (PAGES_URL) { res.writeHead(301, { Location: PAGES_URL + url.pathname + url.search }); return res.end(); }
     await serveStatic(req, res, url.pathname);
   } catch (err) {

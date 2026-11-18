@@ -11,7 +11,7 @@ import { clientIp } from "./collect.mjs";
 import { TZ, resolveRange } from "./store.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const ASSETS = { "admin.css": "text/css; charset=utf-8", "admin.js": "text/javascript; charset=utf-8" };
+const ASSETS = { "admin.css": "text/css; charset=utf-8", "admin.js": "text/javascript; charset=utf-8", "video.js": "text/javascript; charset=utf-8" };
 const COOKIE = "eds_admin";
 const MAX_AGE = 14 * 24 * 3600;
 
@@ -50,7 +50,8 @@ const redirect = (res, to, extra = {}) => { res.writeHead(303, { ...HEADERS, Loc
 
 /* ---- icons: Lucide, read from the same package the site build uses ---- */
 const ICONS = ["log-out", "download", "monitor", "smartphone", "tablet", "file-down", "mail", "phone", "external-link", "send", "triangle-alert", "file-text", "info", "users", "chevron-right",
-  "mouse-pointer-click", "link", "search", "list-checks", "panels-top-left", "chevrons-up-down", "hash", "clock", "route", "building-2"];
+  "mouse-pointer-click", "link", "search", "list-checks", "panels-top-left", "chevrons-up-down", "hash", "clock", "route", "building-2",
+  "circle-play", "upload", "copy", "refresh-cw"];
 const sprite = `<svg xmlns="http://www.w3.org/2000/svg" class="sprite" aria-hidden="true">${ICONS.map((name) => {
   const file = path.join(HERE, "../node_modules/lucide-static/icons", `${name}.svg`);
   const inner = existsSync(file) ? readFileSync(file, "utf8").replace(/^[\s\S]*?<svg[\s\S]*?>/, "").replace(/<\/svg>\s*$/, "").replace(/\s*\n\s*/g, "") : "";
@@ -107,6 +108,7 @@ const dashboard = () => page("Site analytics | EDS admin", `
     <a class="brand" href="/admin">${MARK}<span>EDS <b>Site analytics</b></span></a>
     <p class="live" id="live" aria-live="polite"><span class="pulse" aria-hidden="true"></span><span id="live-text">Checking who is on the site…</span></p>
     <div class="top-actions">
+      <a class="btn btn-quiet" href="#video">${icon("circle-play")}<span>Video link</span></a>
       <a class="btn btn-quiet" href="/" target="_blank" rel="noopener">${icon("external-link")}<span>View site</span></a>
       <form method="post" action="/admin/logout"><button class="btn btn-quiet" type="submit">${icon("log-out")}<span>Sign out</span></button></form>
     </div>
@@ -158,6 +160,13 @@ const dashboard = () => page("Site analytics | EDS admin", `
 
   <div class="grid" id="cards"></div>
 
+  <section class="card video-card" id="video" aria-labelledby="video-title">
+    <div class="card-head">
+      <div><h2 id="video-title">FlowSense video link</h2><p class="sub">A private page that plays the FlowSense video tour, for sending to clients. Nothing links to it and search engines are told to skip it, so only people you send the link to can find it.</p></div>
+    </div>
+    <div id="video-body" aria-live="polite"><p class="sub">Loading…</p></div>
+  </section>
+
   <section class="about">
     <h2>${icon("info")}How these numbers are counted</h2>
     <ul>
@@ -172,7 +181,8 @@ const dashboard = () => page("Site analytics | EDS admin", `
     </ul>
   </section>
 </main>
-<script src="/admin/assets/admin.js" defer></script>`, "dash-page");
+<script src="/admin/assets/admin.js" defer></script>
+<script src="/admin/assets/video.js" defer></script>`, "dash-page");
 
 /* ---- routes ---- */
 function readForm(req) {
@@ -210,7 +220,7 @@ function csv(rows) {
   return `﻿${cols.join(",")}\n${lines.join("\n")}\n`;
 }
 
-export async function admin(req, res, url, store) {
+export async function admin(req, res, url, store, video) {
   const route = url.pathname.replace(/\/+$/, "") || "/admin";
   const asset = route.startsWith("/admin/assets/") && route.slice(14);
   if (asset && ASSETS[asset]) return send(res, 200, ASSETS[asset], await readFile(path.join(HERE, "admin", asset)), { "Cache-Control": "no-cache" });
@@ -233,6 +243,11 @@ export async function admin(req, res, url, store) {
   if (!authed) return send(res, 401, "application/json; charset=utf-8", '{"error":"signed out"}');
 
   const q = Object.fromEntries(url.searchParams);
+  if (route === "/admin/api/video" || route.startsWith("/admin/api/video/")) {
+    const proto = req.socket.encrypted || String(req.headers["x-forwarded-proto"] || "").startsWith("https") ? "https" : "http";
+    const [code, data] = await video.api(req, route, q, `${proto}://${req.headers.host}`);
+    return send(res, code, "application/json; charset=utf-8", JSON.stringify(data));
+  }
   if (route === "/admin/api/stats") return json(res, store.stats(q));
   if (route === "/admin/api/live") return json(res, store.live());
   if (route === "/admin/api/visits") return json(res, store.visits(q));

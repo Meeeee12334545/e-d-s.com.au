@@ -75,6 +75,7 @@ The rest is outside the code, and it does more for EDS's place in search than an
 | `server/store.mjs` | The SQLite database (`data/analytics.db`) and the dashboard's queries. |
 | `server/collect.mjs` | Checks each visit, filters bots, works out source, device and location. |
 | `server/admin.mjs`, `server/admin/` | The sign-in and the dashboard page, styles and charts. |
+| `server/watch.mjs`, `server/watch/` | The FlowSense video's private page at `/watch/<code>`, and its upload. |
 
 ## Analytics dashboard
 
@@ -118,6 +119,22 @@ card can name what its buttons belong to with `data-track-item`.
 - GitHub Pages preview copies leave the tracker out, since nothing there can receive visits.
 
 Other settings (`PORT`, `DATA_DIR`, `ANALYTICS_TZ`, `SESSION_SECRET`, `TRUSTED_PROXIES`, `CLIENT_IP_HEADER`, `PAGES_URL`) are described in `.env.example`.
+
+## FlowSense video link
+
+The FlowSense video tour is too detailed for the public site, and this repository is
+public, so the film is never committed. The FlowSense page offers it on request
+through the enquiry form, and EDS sends clients a private link instead:
+https://analytics.e-d-s.com.au/watch/<code>, where the code is 32 random characters.
+
+- **Upload** in the dashboard's "FlowSense video link" card (the "Video link" button at
+  the top of `/admin`). The film goes up 8 MiB at a time and is kept on the server's
+  disk in `DATA_DIR/video`, with the link in `link.json` beside it. Replacing the film
+  keeps the link.
+- **Private, not secret.** Nothing links to the page and it tells search engines to stay
+  away, but anyone with the link can watch, and pass it on. "Make a new link" stops the
+  old one working; whoever follows it gets a page asking them to contact EDS.
+- **Recorded:** only how many times the link was played, and when it was last played.
 
 ## Links that carry context
 
