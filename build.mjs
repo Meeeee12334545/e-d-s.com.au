@@ -137,10 +137,8 @@ const screenFigure = (f, { tall = false, sizes } = {}) => `
 // a roundel and a wordmark carry the same weight in the grid (--h, site.css).
 const pngSize = (file) => { const b = readFileSync(path.join(ROOT, "src", file)); return { w: b.readUInt32BE(16), h: b.readUInt32BE(20) }; };
 const logoHeight = (src) => { const { w, h } = pngSize(src.replace("@root/", "")); return Math.max(24, Math.min(46, Math.round(Math.sqrt(3400 / (w / h))))); };
-// `sheet`: the ruled sheet on the home page rises as one, since a cell still
-// waiting to appear would show as a block of the line colour.
-const logoGrid = ({ sheet = false } = {}) => `<ul class="logo-grid" aria-label="Clients"${sheet ? " data-reveal" : ""}>${C.clients.map((c, i) => `<li${sheet ? "" : " data-reveal"} style="--i:${i % 5};--h:${logoHeight(c.src)}px"><img src="${c.src}" alt="${esc(c.name)}" loading="lazy"></li>`).join("")}</ul>`;
-// Four statements at one weight: the home page's proof row (C.proof).
+const logoGrid = () => `<ul class="logo-grid" aria-label="Clients">${C.clients.map((c, i) => `<li data-reveal style="--i:${i % 5};--h:${logoHeight(c.src)}px"><img src="${c.src}" alt="${esc(c.name)}" loading="lazy"></li>`).join("")}</ul>`;
+// Four statements at one weight: the proof row on the solutions page (C.proof).
 const proofRow = () => `<div class="proof-row">${C.proof.map((p, i) => `<div data-reveal style="--i:${i}"><b>${esc(p.lead)}</b><span>${esc(p.text)}</span></div>`).join("")}</div>`;
 // Two photographs side by side, across the page.
 const figureRow = (figs) => `<div class="photo-row">${figs.map((f, i) => photoFigure(f, { i, sizes: "(max-width: 700px) calc(100vw - 40px), (max-width: 980px) calc(50vw - 28px), 612px" })).join("")}</div>`;
@@ -1266,11 +1264,11 @@ function fsScreen() {
 // are svg elements of their own, so the browser slides them as layers and
 // repaints nothing between readings. The measured line ends at "now", where
 // its reading rides on a plate; the dry weather pattern runs on past it,
-// dashed. Labelled as an illustration, like the flow lab and the FlowSense
-// screens.
+// dashed. At EDS's request (November 2026) it carries no visible
+// "Illustration" label; its accessible name still says it is one.
 const liveTile = () => `
 <aside class="live" aria-label="Illustration of a flow meter reporting live" data-reveal style="--i:5">
-  <div class="live-head"><span class="live-site">${icon("radio-tower", false)}Site 07, trunk sewer</span><span class="live-tag">Reporting</span><span class="live-note">Illustration</span></div>
+  <div class="live-head"><span class="live-site">${icon("radio-tower", false)}Site 07, trunk sewer</span><span class="live-tag">Reporting</span></div>
   <div class="trace-plot" aria-hidden="true">
     <svg class="trace-svg trace-grid" focusable="false"></svg>
     <svg class="trace-svg trace-move trace-dwf-svg" focusable="false"><path class="trace-dwf"/></svg>
@@ -1447,68 +1445,10 @@ function cityLabel(ref) {
   return item.short || item.title;
 }
 
-add({
-  file: "index.html",
-  title: "Environmental Data Services | Water & Wastewater Monitoring",
-  description: "Environmental Data Services (EDS): flow meters, samplers, trained field crews and FlowSense data for water and wastewater. Australian owned since 1991.",
-  current: "home",
-  scripts: ["city-scene.js", "city-traffic.js", "city-sound.js", "city-weather.js", "city.js"],
-  body: (r) => {
-    const words = ["Every", "drop,", "measured."];
-    // The page tells one story in ten bands. Dark bands run on a schedule:
-    // the hero, the city (the one interactive showpiece) and the closing call
-    // to action. The flow lab lives on the sewer flow and I&I pages, the white
-    // papers on Resources, and the office map on About and Contact.
-    return `
-<section class="hero">
-  <div class="wrap hero-body">
-    <h1 class="h-xl" aria-label="Every drop, measured.">${words.map((w, i) => `<span class="w" aria-hidden="true"><span style="--i:${i}">${w}</span></span>`).join(" ")}</h1>
-    <p class="lede" data-reveal style="--i:4">${esc(C.homeLede)}</p>
-    <div class="hero-actions" data-reveal style="--i:5">
-      <a class="btn btn-primary btn-lg" href="${r}services/index.html">Our services</a>
-      <a class="btn btn-ghost btn-lg" href="#city-explorer">Explore the city</a>
-    </div>
-    ${liveTile()}
-  </div>
-</section>
-
-<section class="clients proof" aria-label="Clients and key figures">
-  <div class="wrap">
-    <p class="clients-label">Trusted by government, utilities, councils and industry</p>
-    ${logoGrid({ sheet: true })}
-    ${proofRow()}
-  </div>
-</section>
-
-<section class="section" id="services">
-  <div class="wrap">
-    <div class="section-head split">
-      <h2 class="h-lg" data-reveal>Specialised services, delivered Australia-wide.</h2>
-      <a class="btn btn-outline" href="${r}services/index.html">All services</a>
-    </div>
-    <div class="grid bento">
-      ${C.services.filter((s) => s.featured).map((s, n) => cardLink(r, {
-        href: `services/${s.slug}.html`, iconName: s.icon, title: s.short || s.title, text: s.summary, n, tags: s.tags,
-        // The first service leads with a photo of the meter EDS installs; the
-        // third sits on the brand gradient, so the grid is not all white tiles.
-        ...(n === 0 && { cls: "bento-lead", media: `<span class="bento-shot"><img src="${C.img("s2.5-04-small-766x1024.png")}" alt="" loading="lazy"></span>` }),
-        ...(n === 2 && { cls: "bento-wide" }),
-      })).join("")}
-    </div>
-  </div>
-</section>
-
-<section class="section alt" id="results">
-  <div class="wrap">
-    <div class="section-head split">
-      <div><p class="eyebrow">Results from the field</p><h2 class="h-lg" data-reveal>Data that changed the decision.</h2></div>
-      <a class="btn btn-outline" href="${r}about.html#projects">Recent projects</a>
-    </div>
-    ${resultCards(C.results.filter((x) => x.home))}
-  </div>
-</section>
-
-<section class="section dark city-section" id="city-explorer">
+// The interactive city: the home page's one showpiece. The district copy,
+// the controls and the storm script come from `city`, `cityUi` and
+// `cityStorm` in content.mjs; the scripts that run it are listed on the page.
+const citySection = (r) => `<section class="section dark city-section" id="city-explorer">
   <div class="wrap">
     <div class="section-head">
       <h2 class="h-lg" data-reveal>Where does EDS fit in your network?</h2>
@@ -1591,18 +1531,86 @@ add({
     <div class="city-tour-end" id="city-tour-end"><div><h3>${esc(C.cityUi.tour.end.heading)}</h3><p>${esc(C.cityUi.tour.end.text)}</p><div class="city-tour-acts"><a class="btn btn-primary" href="${r}enquire.html">${esc(C.cityUi.tour.end.enquire)}</a><button type="button" class="btn btn-ghost" data-act="tour-end">${esc(C.cityUi.tour.end.back)}</button></div><p class="city-tour-more">${esc(C.cityUi.tour.end.more)}</p></div></div>
   </div>
   <script type="application/json" id="city-data">${JSON.stringify({ ui: C.cityUi, storm: C.cityStorm, zones: C.city.map(({ id, name, sensors, strata, asset }) => ({ id, name, sensors, strata, asset: { ...asset, parts: asset.parts.map((p) => ({ ...p, href: p.ref ? cityHref(r, p.ref) : "" })) } })) }).replace(/</g, "\\u003c")}</script>
+</section>`;
+
+add({
+  file: "index.html",
+  title: "Environmental Data Services | Water & Wastewater Monitoring",
+  description: "Environmental Data Services (EDS): flow meters, samplers, trained field crews and FlowSense data for water and wastewater. Australian owned since 1991.",
+  current: "home",
+  scripts: ["city-scene.js", "city-traffic.js", "city-sound.js", "city-weather.js", "city.js"],
+  body: (r) => {
+    const words = ["Every", "drop,", "measured."];
+    // The page is seven bands, each one thing (November 2026): the hero with
+    // one line of clients, every service by group, the flagship instruments
+    // and the ranges, FlowSense, the city (the one interactive showpiece and
+    // the one deep band), the company in a paragraph, and the call to
+    // action. The results are on the service pages, buy/hire/DaaS on the
+    // services and products pages, the timeline and the office map on About.
+    return `
+<section class="hero hm-hero">
+  <div class="wrap hero-body">
+    <h1 class="h-xl" aria-label="Every drop, measured.">${words.map((w, i) => `<span class="w" aria-hidden="true"><span style="--i:${i}">${w}</span></span>`).join(" ")}</h1>
+    <p class="lede" data-reveal style="--i:4">${esc(C.homeLede)}</p>
+    <div class="hero-actions" data-reveal style="--i:5">
+      <a class="btn btn-primary btn-lg" href="#services">Our services</a>
+      <a class="btn btn-ghost btn-lg" href="#products">Our products</a>
+    </div>
+    ${liveTile()}
+  </div>
+  <div class="wrap">
+    <div class="hm-logos" data-reveal style="--i:6">
+      <p>Trusted by government, utilities, councils and industry</p>
+      <ul aria-label="Clients">${C.homeClients.map((n) => C.clients.find((c) => c.name === n)).map((c) => `<li style="--h:${logoHeight(c.src)}px"><img src="${c.src}" alt="${esc(c.name)}"></li>`).join("")}</ul>
+    </div>
+  </div>
 </section>
 
-${waysSection(r)}
+<section class="section hm-band" id="services">
+  <div class="wrap">
+    <div class="section-head split">
+      <h2 class="h-lg" data-reveal>Specialised services, delivered Australia-wide.</h2>
+      <a class="btn btn-outline" href="${r}services/index.html">All services</a>
+    </div>
+    <div class="hm-svc" data-reveal>
+      ${C.serviceGroups.map((g) => `
+      <div>
+        <h3>${icon(g.icon, false)}${esc(g.title)}</h3>
+        <p>${esc(g.lede)}</p>
+        <ul>${C.services.filter((s) => s.group === g.id).map((s) => `<li><a href="${r}services/${s.slug}.html">${esc(s.short || s.title)}${icon("arrow-right", false)}</a></li>`).join("")}</ul>
+      </div>`).join("")}
+    </div>
+    <p class="hm-foot">Not sure which service fits? <a class="link-arrow" href="${r}enquire.html">Tell us about the site ${icon("arrow-right")}</a></p>
+  </div>
+</section>
 
-<section class="section fs-band" id="flowsense">
+<section class="section alt hm-band" id="products">
+  <div class="wrap">
+    <div class="section-head split">
+      <div><h2 class="h-lg" data-reveal>${esc(C.shelf.heading)}</h2><p class="lede" data-reveal style="--i:1">${esc(C.shelf.lede)}</p></div>
+      <a class="btn btn-outline" href="${r}products/index.html">All ${products.length} instruments</a>
+    </div>
+    <div class="shelf hm-shelf" data-reveal="scale">
+      ${C.shelf.items.map((it) => `
+      <a class="inst" href="${r}${it.href}">
+        <span class="inst-shot" style="--fit:${it.fit}%"><img src="${it.image}" alt="${esc(it.name)}" loading="lazy"></span>
+        <span class="inst-body"><small>${esc(it.maker)}</small><b>${esc(it.name)}</b><span class="inst-text">${esc(it.kind)}</span></span>
+      </a>`).join("")}
+    </div>
+    <div class="range-grid">
+      ${C.brands.map((b, n) => { const count = products.filter((p) => p.brand === b).length; return `<a class="range-link" href="${r}products/${b.slug}.html" data-reveal style="--i:${n % 4}"><span><b>${esc(b.title)}</b><small>${count} ${count === 1 ? "instrument" : "instruments"}</small></span><span class="go" aria-hidden="true">${icon("arrow-right")}</span></a>`; }).join("")}
+    </div>
+  </div>
+</section>
+
+<section class="section hm-band hm-fsband" id="flowsense">
   <div class="wrap fs-grid">
     <div>
       <h2 class="h-lg" data-reveal>The platform behind every reading.</h2>
-      <p class="lede" data-reveal style="--i:1">EDS FlowSense, built and supported in Australia: live operations, infiltration and inflow, pump stations and calibrated models, for every site we measure.</p>
-      <div class="fs-list" role="group" aria-label="FlowSense tools" data-auto data-reveal style="--i:2">
-        ${[["flame", "I/I heat map", "One colour per severity band, with arrows showing which way the water runs."], ["chart-spline", "Blockage Watch", "Early warning before a dry weather spill."], ["fan", "Pump Station Manager", "The wet well drawn to scale, with its live level."], ["bell-ring", "Alarms that reach people", "Sent to the email and mobile your team holds that day."]]
-          .map(([ic, t, d], i) => `<button type="button" class="fs-item" aria-pressed="${i === 0}"><span class="card-icon">${icon(ic)}</span><span><b>${t}</b><span>${d}</span></span></button>`).join("")}
+      <p class="lede" data-reveal style="--i:1">EDS FlowSense, built and supported in Australia. Every site we measure, on one map.</p>
+      <div class="fs-list hm-fs" role="group" aria-label="FlowSense tools" data-auto data-reveal style="--i:2">
+        ${[["flame", "I/I heat map"], ["chart-spline", "Blockage Watch"], ["fan", "Pump Station Manager"], ["bell-ring", "Alarms that reach people"]]
+          .map(([ic, t], i) => `<button type="button" class="fs-item" aria-pressed="${i === 0}">${icon(ic, false)}<b>${t}</b></button>`).join("")}
       </div>
       <div class="hero-actions">
         <a class="btn btn-primary btn-lg" href="${r}flowsense.html">Discover FlowSense</a>
@@ -1613,60 +1621,21 @@ ${waysSection(r)}
   </div>
 </section>
 
-<section class="section alt" id="products">
-  <div class="wrap">
-    <div class="section-head split">
-      <div><h2 class="h-lg" data-reveal>${esc(C.shelf.heading)}</h2><p class="lede" data-reveal style="--i:1">${esc(C.shelf.lede)}</p></div>
-      <a class="btn btn-outline" href="${r}products/index.html">All ${products.length} instruments</a>
-    </div>
-    <div class="shelf" data-reveal="scale">
-      ${C.shelf.items.map((it, n) => `
-      <a class="inst" href="${r}${it.href}">
-        <span class="inst-shot" style="--fit:${it.fit}%"><img src="${it.image}" alt="${esc(it.name)}" loading="lazy"></span>
-        <span class="inst-body"><small>${esc(it.maker)}</small><b>${esc(it.name)}</b><span class="inst-text">${esc(it.text)}</span><span class="inst-spec">${it.specs.map((x) => `<i>${esc(x)}</i>`).join("")}</span></span>
-      </a>`).join("")}
-    </div>
-    <div class="range-grid">
-      ${C.brands.map((b, n) => { const count = products.filter((p) => p.brand === b).length; return `<a class="range-link" href="${r}products/${b.slug}.html" data-reveal style="--i:${n % 4}"><span><b>${esc(b.title)}</b><small>${count} ${count === 1 ? "instrument" : "instruments"}</small></span><span class="go" aria-hidden="true">${icon("arrow-right")}</span></a>`; }).join("")}
-    </div>
-  </div>
-</section>
+${citySection(r)}
 
-<section class="section" id="about">
-  <div class="wrap split">
+<section class="section hm-band" id="about">
+  <div class="wrap hm-about">
     <div>
       <h2 class="h-lg" data-reveal>Australian owned. Family&nbsp;founded. Still&nbsp;measuring.</h2>
-      <div class="timeline">
-        <span class="timeline-fill"></span>
-        ${C.about.timeline.filter(([, t]) => ["EDS is founded", "Defence facility contract", "Sydney Water panel provider", "Transurban service provider", "Australia's largest supplier"].includes(t)).map(([when, t, d]) => `<div class="tl" data-reveal><time>${when}</time><i></i><div><h3>${t}</h3><p>${d}</p></div></div>`).join("")}
-      </div>
-      <a class="link-arrow" href="${r}about.html" style="margin-top:18px">The EDS story ${icon("arrow-right")}</a>
+      <p data-reveal style="--i:1">${esc(C.about.intro[0])}</p>
+      <p class="hm-offices" data-reveal style="--i:2">Crews from four offices: ${C.offices.map((o) => o.city).join(", ").replace(/, ([^,]+)$/, " and $1")}. One number, <a href="${site.phoneHref}">${site.phone}</a>.</p>
+      <a class="link-arrow" href="${r}about.html" data-reveal style="--i:3">The EDS story ${icon("arrow-right")}</a>
     </div>
-    <div class="about-side">
-      ${photoFigure(C.about.homePhoto, { sizes: "(max-width: 980px) calc(100vw - 40px), 460px" })}
-      <figure class="quote" data-reveal="right">
-        ${icon("quote", false)}
-        <blockquote>${C.about.quote.text}</blockquote>
-        <cite><b>${C.about.quote.who}</b>, ${C.about.quote.org}</cite>
-      </figure>
-    </div>
-  </div>
-  <div class="wrap about-more">
-    <div class="about-block" id="offices" data-reveal>
-      <h3 class="h-md">Four offices. One number.</h3>
-      <p>Crews and support across the country. Call <a href="${site.phoneHref}">${site.phone}</a> from anywhere in Australia.</p>
-      <ul class="mini-grid plain">
-        ${C.offices.map((o) => `<li><span><b>${o.city} <em>${o.state}</em></b><span>${o.note}</span></span></li>`).join("")}
-      </ul>
-      <a class="link-arrow" href="${r}contact.html">Office details ${icon("arrow-right")}</a>
-    </div>
-    <div class="about-block" id="industries" data-reveal style="--i:1">
-      <h3 class="h-md">Built for critical infrastructure.</h3>
-      <p>Government, utilities and industry have relied on EDS for operational monitoring for more than thirty years.</p>
-      <ul class="mini-grid">
-        ${C.industries.map(([ic, t, d]) => `<li><span class="card-icon">${icon(ic)}</span><span><b>${t}</b><span>${d}</span></span></li>`).join("")}
-      </ul>
-    </div>
+    <figure class="quote" data-reveal="right">
+      ${icon("quote", false)}
+      <blockquote>${C.about.quote.text}</blockquote>
+      <cite><b>${C.about.quote.who}</b>, ${C.about.quote.org}</cite>
+    </figure>
   </div>
 </section>
 
