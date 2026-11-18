@@ -1,0 +1,100 @@
+/* The private video page (server/watch.mjs): the site's type and colours
+   (src/css/site.css) cut down to one page. Square edges, no shadows, light. */
+
+@font-face {
+  font-family: "EDS Display";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400 900;
+  src: url("saira.woff2") format("woff2");
+}
+@font-face {
+  font-family: "EDS Text";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 300;
+  src: local("HelveticaNeue-Light"), local("Helvetica Neue Light"), url("aileron-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "EDS Text";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: local("HelveticaNeue"), local("Helvetica Neue"), url("aileron-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "EDS Text";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 500 600;
+  src: local("HelveticaNeue-Medium"), local("Helvetica Neue Medium"), url("aileron-600.woff2") format("woff2");
+}
+
+:root {
+  color-scheme: light;
+  --brand: #0d7c72;
+  --brand-dark: #095f57;
+  --bg: #ffffff;
+  --bg-alt: #eef6f4;
+  --ink: #0f2b2a;
+  --ink-2: #2e4543;
+  --muted: #4e6361;
+  --border: rgba(15, 43, 42, .1);
+  --radius: 2px;
+  --font-body: "EDS Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-display: "EDS Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --gutter: clamp(16px, 4vw, 40px);
+}
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-body);
+  font-size: 17px;
+  font-weight: 300;
+  line-height: 1.6;
+  color: var(--ink-2);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+img { display: block; max-width: 100%; }
+p { margin: 0; text-wrap: pretty; }
+a { color: var(--brand-dark); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+a:hover { color: var(--ink); }
+a[href^="tel:"], a[href^="mailto:"] { white-space: nowrap; }
+:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; border-radius: var(--radius); }
+::selection { background: rgba(13, 124, 114, .25); }
+.wrap { width: 100%; max-width: calc(1120px + var(--gutter) * 2); margin-inline: auto; padding-inline: var(--gutter); }
+
+.top { border-bottom: 1px solid var(--border); }
+.top .wrap { display: flex; align-items: center; min-height: 76px; }
+.logo { display: inline-flex; }
+.logo img { width: auto; height: 40px; }
+
+main { flex: 1; width: 100%; padding-block: clamp(32px, 6vw, 64px) clamp(48px, 7vw, 88px); }
+.eyebrow { margin-bottom: 14px; font-family: var(--font-display); font-size: .95rem; font-weight: 620; color: var(--brand-dark); }
+h1 { margin: 0; font-family: var(--font-display); font-size: clamp(2rem, 4.2vw, 3rem); font-weight: 560; line-height: 1.08; letter-spacing: -.015em; color: var(--ink); text-wrap: balance; }
+.lede { margin-top: 14px; max-width: 34em; font-size: clamp(1.06rem, 1.5vw, 1.25rem); line-height: 1.55; color: var(--muted); }
+
+.player { margin-top: clamp(24px, 4vw, 40px); aspect-ratio: 16 / 9; background: #000; border-radius: var(--radius); overflow: hidden; }
+.player video { display: block; width: 100%; height: 100%; }
+.player p { padding: 24px; color: #fff; }
+.player p a { color: inherit; }
+
+.after { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 32px; margin-top: 28px; }
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: .82em 1.25em; border-radius: var(--radius);
+  background: var(--brand); color: #fff; text-decoration: none;
+  font-size: .95rem; font-weight: 500; line-height: 1; white-space: nowrap;
+  transition: background-color .2s cubic-bezier(.4, 0, .2, 1);
+}
+.btn:hover { background: var(--brand-dark); color: #fff; }
+.fine { margin-top: 28px; padding-top: 16px; border-top: 1px solid var(--border); font-size: .9rem; font-weight: 400; color: var(--muted); }
+
+.foot { background: var(--bg-alt); border-top: 1px solid var(--border); font-size: .92rem; font-weight: 400; color: var(--muted); }
+.foot p { padding-block: 22px; }
+.foot a { color: inherit; }
