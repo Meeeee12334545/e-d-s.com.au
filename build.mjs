@@ -2631,10 +2631,18 @@ add({
 ${pageHero(r, { crumbs: [["About"]], title: "Australian owned and operated since 1991.", lede: "Scientists, engineers and technicians who know water and wastewater monitoring from the manhole up.", visual: heroFacts() })}
 <section class="section"><div class="wrap split">
   <div class="prose" data-reveal>${C.about.intro.map((p) => `<p>${esc(p)}</p>`).join("")}<h2>Our mission</h2>${C.about.mission.map((p) => `<p>${esc(p)}</p>`).join("")}</div>
-  <aside class="aside">
+  <aside class="aside about-aside">
+    ${photoFigure(C.about.sitePhoto, { sizes: "(max-width: 700px) calc(100vw - 40px), (max-width: 980px) calc(50vw - 36px), 470px" })}
     <figure class="quote" data-reveal="right" style="margin:0">${icon("quote", false)}<blockquote style="font-size:1.25rem">${C.about.quote.text}</blockquote><cite><b>${C.about.quote.who}</b>, ${C.about.quote.org}</cite></figure>
   </aside>
-</div></section>
+</div>
+<div class="wrap"><div class="about-industries" id="industries">
+  <div class="about-block"><h2 class="h-md" data-reveal>Built for critical infrastructure.</h2><p data-reveal style="--i:1">Government, utilities and industry have relied on EDS for operational monitoring for more than thirty years.</p></div>
+  <ul class="mini-grid" data-reveal style="--i:1">
+    ${C.industries.map(([ic, t, d]) => `<li><span class="card-icon">${icon(ic)}</span><span><b>${t}</b><span>${d}</span></span></li>`).join("")}
+  </ul>
+</div></div>
+</section>
 <section class="section alt" id="in-the-field"><div class="wrap">
   <div class="section-head"><p class="eyebrow">In the field</p><h2 class="h-lg" data-reveal>${esc(C.about.field.heading)}</h2><p class="lede" data-reveal style="--i:1">${esc(C.about.field.lede)}</p></div>
   <div class="mosaic">${C.about.field.photos.map((f, i) => photoFigure(f, { i, sizes: i ? "(max-width: 560px) calc(100vw - 40px), (max-width: 980px) calc(50vw - 27px), 300px" : "(max-width: 980px) calc(100vw - 40px), 614px" })).join("")}</div>

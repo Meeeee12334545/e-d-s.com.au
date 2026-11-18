@@ -3668,9 +3668,17 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: v
   .range-link { padding-block: 13px; }
 }
 
-/* The offices and industries blocks that sat under the home page's about
-   band until November 2026. Not on a page at present; kept with their
-   content (`industries` in content.mjs) until EDS decides where they go. */
+/* About: who EDS works for, in a row under the opening text (a block on the
+   home page until November 2026): the heading and a line on the left, the
+   four industries on the right, two by two. Beside the opening text the
+   site photo sits above the client's words; on a tablet the two sit side by
+   side under it. */
+.about-aside { gap: 28px; }
+.about-aside .photo { margin: 0; }
+.about-industries { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); gap: clamp(28px, 5vw, 80px); align-items: start; margin-top: clamp(48px, 6vw, 84px); padding-top: clamp(36px, 4.5vw, 56px); border-top: 1px solid var(--border); }
+.about-industries .mini-grid { margin: 0; }
+@media (max-width: 980px) { .about-industries { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 980px) and (min-width: 701px) { .about-aside { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; align-items: center; } }
 .about-block { display: grid; gap: 16px; align-content: start; }
 .about-block > p { color: var(--muted); max-width: 52ch; }
 .about-block > p a { color: var(--brand-dark); font-weight: 650; white-space: nowrap; }
