@@ -3310,10 +3310,11 @@ export const about = {
     ],
   },
   founder: { name: "Cynthia Harper", role: "Co-founder, Environmental Data Services", text: "EDS continues to strive to deliver the level of service and professionalism that was part of Graham's founding ethos." },
-  // Photographs from EDS sites: `homePhoto` stood beside the timeline on the
-  // home page until November 2026 and is not on a page at present; `field` is
-  // the mosaic on the about page (the first photo is the large one).
-  homePhoto: { photo: "crew-confined-space", alt: "Two crew in hi-vis beside an entry tripod set over an open manhole on a gravel track in bushland, with a confined space warning sign in the foreground", caption: "A crew set up for a confined space entry, with the tripod over the manhole and the warning sign out.", pos: "42% 50%" },
+  // Photographs from EDS sites on the about page: `sitePhoto` sits above the
+  // client's words beside the opening text (it was on the home page until
+  // November 2026), and `field` is the mosaic (the first photo is the large
+  // one).
+  sitePhoto: { photo: "crew-confined-space", alt: "Two crew in hi-vis beside an entry tripod set over an open manhole on a gravel track in bushland, with a confined space warning sign in the foreground", caption: "A crew set up for a confined space entry, with the tripod over the manhole and the warning sign out.", pos: "42% 50%" },
   field: {
     heading: "The work, as it is.",
     lede: "Sewers, chambers, cabinets and poles: the sites our crews instrument, visit and keep reporting.",
@@ -3402,8 +3403,8 @@ export const programSteps = [
   ["file-chart-column", "Report and recommend", "Validated data and a report that shows where the problems are and what to fix first, or a feed into your model by API."],
 ];
 
-// The four industries EDS works for. They were a block on the home page until
-// November 2026 and are not on a page at present.
+// The four industries EDS works for, shown under the opening text on the
+// about page (on the home page until November 2026).
 export const industries = [
   ["droplets", "Water & Wastewater", "Councils, utilities and water authorities."],
   ["trees", "Environment", "Catchments, rivers and compliance monitoring."],
