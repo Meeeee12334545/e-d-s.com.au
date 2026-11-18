@@ -75,9 +75,9 @@ export const offices = [
 // The home hero's paragraph: 20 words at most, so the hero fits one screen.
 export const homeLede = "Australia's largest supplier of water and wastewater monitoring equipment, with our own crews and data platform. Australian owned since 1991.";
 
-// The proof row under the client logos on the home page: four statements at
-// one weight. Each is a claim made elsewhere on the site (the About timeline,
-// the footer credentials, the DaaS page), brought up to the first screen.
+// The proof row on the solutions page: four statements at one weight. Each
+// is a claim made elsewhere on the site (the About timeline, the footer
+// credentials, the DaaS page).
 export const proof = [
   { lead: "Looking after Defence and Transurban sites", text: "An Australian Defence facility since 2003, and key Transurban tunnel infrastructure under a 2026 contract." },
   { lead: "Supplied, installed and serviced by EDS", text: "Our own loggers and flow meters, plus Detectronic, Hach, ORI, Beadedstream and more, fitted and maintained by our crews." },
@@ -85,21 +85,23 @@ export const proof = [
   { lead: "Certified for the sewer", text: "Intrinsically safe instruments under ATEX and IECEx for Zone 0. And 99.95% data availability under EDS Data as a Service." },
 ];
 
-// The instrument shelf on the home page: four flagship instruments shown large
-// on one plate, each with its maker, one line and two facts from its own page.
-// `fit` is how much of the shot's height the image may take, so the four sit at
-// a believable relative size. Product shots on transparent backgrounds only.
+// The instrument shelf on the home page: four flagship instruments on one
+// plate, each with its maker, its name and what it is in a few words (`kind`,
+// the tag or label of its own page). `fit` is how much of the shot's height
+// the image may take, so the four sit at a believable relative size. Product
+// shots on transparent backgrounds only. `text` and `specs` are the longer
+// line and two facts the shelf showed until November 2026.
 export const shelf = {
   heading: "The instruments our crews put their name to.",
-  lede: "We design and build our own loggers and flow meters, and represent Detectronic, Hach, ORI, Beadedstream and others. We install, service and calibrate every instrument here ourselves.",
+  lede: "We build our own loggers and flow meters, and represent Detectronic, Hach, ORI, Beadedstream and others. Buy or hire, installed and serviced by our crews.",
   items: [
-    { name: "MSFM S2 with LIDoTT", maker: "Detectronic", href: "products/detectronic.html", image: img("detectronic-msfm-s2-lidott.png"), fit: 100,
+    { name: "MSFM S2 with LIDoTT", kind: "Area velocity flow meter", maker: "Detectronic", href: "products/detectronic.html", image: img("detectronic-msfm-s2-lidott.png"), fit: 100,
       text: "The area velocity meter our sewer fleet runs on, with the level sensor that keeps measuring as the chamber surcharges.", specs: ["ATEX and IECEx Zone 0", "LIDoTT level to ± 2 mm"] },
-    { name: "LIDoTT Alarm", maker: "Detectronic", href: "products/lidott-alarm.html", image: img("lidott-alarm-cut.png"), fit: 90,
+    { name: "LIDoTT Alarm", kind: "Radar level alarm", maker: "Detectronic", href: "products/lidott-alarm.html", image: img("lidott-alarm-cut.png"), fit: 90,
       text: "Radar level sensor, battery, modem and antenna in one device, for early warning of blockages and overflows.", specs: ["Radar level to ± 5 mm", "Up to seven years on battery"] },
-    { name: "Hawk", maker: "EDS", href: "products/hawk.html", image: img("hawk.png"), fit: 94,
+    { name: "Hawk", kind: "Battery-powered 4G logger", maker: "EDS", href: "products/hawk.html", image: img("hawk.png"), fit: 94,
       text: "The 4G logger built for Australian sewer networks. It lives inside the manhole, with no cabinet to build and no power to bring to site.", specs: ["IP68 submersible", "Designed and built by EDS"] },
-    { name: "E-Flow 3", maker: "EDS", href: "products/e-flow-3.html", image: img("e-flow-3.png"), fit: 72,
+    { name: "E-Flow 3", kind: "Dual-mode sewer flow meter", maker: "EDS", href: "products/e-flow-3.html", image: img("e-flow-3.png"), fit: 72,
       text: "Contactless radar measures velocity and depth in normal flow. When the sewer surcharges, ultrasonic and pressure sensors take over.", specs: ["Four sensors, no gap in the record", "Designed and built by EDS"] },
   ],
 };
@@ -115,7 +117,8 @@ export const stats = [
 /* Services                                                            */
 /* ------------------------------------------------------------------ */
 // Services are listed by group, in this order, on the services page and in
-// the menus. `featured` services also appear on the home page and in the
+// the menus, and all of them by group on the home page (each group's `icon`
+// is drawn beside its name there). `featured` services also appear in the
 // footer. `solutions` links a service to the solution pages (the old site's
 // "Applications") it is used for, and `papers` to white papers by id.
 // `pageTitle` (also on solutions and brands) is the whole title shown in
@@ -127,10 +130,10 @@ export const stats = [
 // say what the page offers. Keep it between about 120 and 155 characters and
 // to claims the page already makes.
 export const serviceGroups = [
-  { id: "sewer", title: "Sewer networks", heading: "Know what is in the pipe, and what should not be.", lede: "Measure what flows through the network, find where the water gets in, and prove the fixes worked.", proof: "Intrinsically safe instruments certified for Zone 0, from the company awarded the largest sewer monitoring project in Australia in recent years." },
-  { id: "water", title: "Water & environment", heading: "Quality, sampling and rainfall, measured properly.", lede: "For utilities, industry and environmental projects, from a single sampler on hire to a whole trade waste program.", proof: "The widest range of automatic samplers in Australia, from ORI and MicroLevel." },
-  { id: "data", title: "Real-time data & analysis", heading: "From a reading to a decision.", lede: "Data that arrives as it happens, reaches the systems you already run, and ends in a report you can act on." },
-  { id: "field", title: "Field services & support", heading: "The people and equipment behind every program.", lede: "Calibration, hire, facility management and training, from four offices across Australia and crews who travel." },
+  { id: "sewer", icon: "waves", title: "Sewer networks", heading: "Know what is in the pipe, and what should not be.", lede: "Measure what flows through the network, find where the water gets in, and prove the fixes worked.", proof: "Intrinsically safe instruments certified for Zone 0, from the company awarded the largest sewer monitoring project in Australia in recent years." },
+  { id: "water", icon: "droplets", title: "Water & environment", heading: "Quality, sampling and rainfall, measured properly.", lede: "For utilities, industry and environmental projects, from a single sampler on hire to a whole trade waste program.", proof: "The widest range of automatic samplers in Australia, from ORI and MicroLevel." },
+  { id: "data", icon: "chart-spline", title: "Real-time data & analysis", heading: "From a reading to a decision.", lede: "Data that arrives as it happens, reaches the systems you already run, and ends in a report you can act on." },
+  { id: "field", icon: "hard-hat", title: "Field services & support", heading: "The people and equipment behind every program.", lede: "Calibration, hire, facility management and training, from four offices across Australia and crews who travel." },
 ];
 
 // "At a glance" in each service and solution page hero: [icon, fact, line].
@@ -3307,7 +3310,8 @@ export const about = {
     ],
   },
   founder: { name: "Cynthia Harper", role: "Co-founder, Environmental Data Services", text: "EDS continues to strive to deliver the level of service and professionalism that was part of Graham's founding ethos." },
-  // Photographs from EDS sites: one beside the timeline on the home page, and
+  // Photographs from EDS sites: `homePhoto` stood beside the timeline on the
+  // home page until November 2026 and is not on a page at present; `field` is
   // the mosaic on the about page (the first photo is the large one).
   homePhoto: { photo: "crew-confined-space", alt: "Two crew in hi-vis beside an entry tripod set over an open manhole on a gravel track in bushland, with a confined space warning sign in the foreground", caption: "A crew set up for a confined space entry, with the tripod over the manhole and the warning sign out.", pos: "42% 50%" },
   field: {
@@ -3327,8 +3331,7 @@ export const about = {
 /* ------------------------------------------------------------------ */
 /* Selling points shared across pages                                  */
 /* ------------------------------------------------------------------ */
-// The three ways to work with EDS, shown on the home, services and products
-// pages. `topic` and `mode` pre-fill the enquiry form (see contactHref()).
+// The three ways to work with EDS, shown on the services and products pages. `topic` and `mode` pre-fill the enquiry form (see contactHref()).
 export const ways = {
   heading: "Buy it, hire it, or let EDS run it.",
   lede: "However you fund your program, you get the same instruments, our own crews from four offices and FlowSense. Pick the way that suits your budget and timeline.",
@@ -3356,27 +3359,26 @@ export const ways = {
 
 // Outcomes from EDS projects, each told elsewhere on the site (the data
 // analysis and works verification pages, the about timeline and the white
-// papers). Those marked `home` are shown on the home page, in one row of four;
-// each is also shown on the service and solution pages listed in `services`,
-// two at most.
+// papers). Each is shown on the service and solution pages listed in
+// `services`, two at most.
 export const results = [
   {
-    stat: "$6M", label: "treatment plant expansion avoided", who: "Regional council", home: true,
+    stat: "$6M", label: "treatment plant expansion avoided", who: "Regional council",
     text: "Twenty short-term flow meters and on-site rain gauges showed three subcatchments carried 65% of the I&I. Capital went into relining and inflow reduction instead, and peak wet weather flows fell 35% within two years.",
     services: ["inflow-infiltration-studies", "sewer-flow-monitoring", "rainfall-monitoring"],
   },
   {
-    stat: "34", label: "sites installed and operated in 12 weeks", who: "Townsville City Council", home: true,
+    stat: "34", label: "sites installed and operated in 12 weeks", who: "Townsville City Council",
     text: "Sewer monitoring across the Wulguru and Pallarenda catchments, to inform the council's infrastructure planning and management.",
     services: ["sewer-flow-monitoring", "wastewater-monitoring"],
   },
   {
-    stat: "24 h", label: "until flows were back at baseline after relining", who: "Coastal network", home: true,
+    stat: "24 h", label: "until flows were back at baseline after relining", who: "Coastal network",
     text: "After cleaning and relining, our flow profiles showed the network back to baseline within a day, confirming full capacity was restored.",
     services: ["data-analysis-reporting", "rehabilitation-verification", "asset-network-assessment"],
   },
   {
-    stat: "15", label: "sites of sewer flow and rainfall monitoring in eight weeks", who: "North East Water", home: true,
+    stat: "15", label: "sites of sewer flow and rainfall monitoring in eight weeks", who: "North East Water",
     text: "High-resolution sewer flow and rainfall monitoring, giving the utility the data it needed for infrastructure planning.",
     services: ["rainfall-monitoring", "sewer-flow-monitoring", "wastewater-monitoring"],
   },
@@ -3400,6 +3402,8 @@ export const programSteps = [
   ["file-chart-column", "Report and recommend", "Validated data and a report that shows where the problems are and what to fix first, or a feed into your model by API."],
 ];
 
+// The four industries EDS works for. They were a block on the home page until
+// November 2026 and are not on a page at present.
 export const industries = [
   ["droplets", "Water & Wastewater", "Councils, utilities and water authorities."],
   ["trees", "Environment", "Catchments, rivers and compliance monitoring."],
@@ -3407,7 +3411,9 @@ export const industries = [
   ["landmark", "Government", "Federal, state and local, including Defence."],
 ];
 
-// Client logos, on transparent backgrounds made by tools/logos.py.
+// Client logos, on transparent backgrounds made by tools/logos.py. The whole
+// list is the grid on the FlowSense page; `homeClients` names the eight shown
+// in one line under the home hero, in order.
 export const clients = [
   ["Downer", "client-downer.png"],
   ["Ventia", "client-ventia.png"],
@@ -3425,6 +3431,7 @@ export const clients = [
   ["SMEC", "client-smec.png"],
   ["Veolia", "client-veolia.png"],
 ].map(([name, file]) => ({ name, src: img(file) }));
+export const homeClients = ["Sydney Water", "Urban Utilities", "Yarra Valley Water", "Water Corporation", "Transurban", "Veolia", "Downer", "Aurecon"];
 
 /* ------------------------------------------------------------------ */
 /* Resources                                                           */
