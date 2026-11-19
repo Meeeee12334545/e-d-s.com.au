@@ -2857,7 +2857,7 @@ export const productPages = [
       ],
       note: "From the EDS survey of pH, ORP, four-electrode conductivity and dissolved oxygen sensors, November 2026, for the SF 150. The versions for larger sewers, up to 350 mm, can take larger sensor bodies. Please confirm your sensor with us before you order.",
       makers: {
-        heading: "Makers with sensors that fit",
+        heading: "Makers with Sensors That Fit",
         lede: "Sensor Fort takes any maker's sensor in a size that fits. Each of these 22 makers publishes at least one pH, ORP or dissolved oxygen sensor in a size the SF 150 takes, most of them as the standard 12 mm electrode.",
         names: ["ABB", "Aqualabo", "Broadley-James", "Bürkert", "Emerson (Rosemount)", "Endress+Hauser", "Hach", "Hamilton", "Hanna Instruments", "Honeywell", "Ionode", "JUMO", "Knick", "Krohne", "Kuntze", "Mettler Toledo", "ProMinent", "Schneider Electric (Foxboro)", "Sensorex", "SI Analytics", "WTW", "Yokogawa"],
         note: "Listed from the makers' published dimensions, November 2026, separately from the survey above. Not every model from each maker fits, so please confirm your sensor with us before you order. Names and trade marks belong to their owners.",
