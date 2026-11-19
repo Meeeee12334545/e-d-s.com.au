@@ -2216,6 +2216,10 @@ const lidBand = (l) => {
 const sensorsBand = (s) => `${bandHead(s)}${sfShot(s.figure, { wide: true })}
   <dl class="sf-stats" data-reveal>${s.stats.map(([v, u, l]) => `<div><dt>${esc(l)}</dt><dd>${esc(v)}<small> ${esc(u)}</small></dd></div>`).join("")}</dl>
   <p class="note sf-table-note" data-reveal>${esc(s.note)}</p>
+  <h3 class="sf-sub" data-reveal>${esc(s.makers.heading)}</h3>
+  <p class="sf-makers-lede" data-reveal>${esc(s.makers.lede)}</p>
+  <ul class="sf-makers" data-reveal>${s.makers.names.map((n) => `<li>${esc(n)}</li>`).join("")}</ul>
+  <p class="note sf-table-note" data-reveal>${esc(s.makers.note)}</p>
   <h3 class="sf-sub" data-reveal>${esc(s.sleeves.heading)}</h3>
   <div class="sf-table-wrap" data-reveal><table class="sf-table sf-sleeves">
     <tbody>${s.sleeves.rows.map(([k, v]) => `<tr><th scope="row">${esc(k)}</th><td>${esc(v)}</td></tr>`).join("")}</tbody>
