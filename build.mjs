@@ -2220,8 +2220,9 @@ const sensorsBand = (s) => `${bandHead(s)}${sfShot(s.figure, { wide: true })}
     <tbody>${s.sleeves.rows.map(([k, v]) => `<tr><th scope="row">${esc(k)}</th><td>${esc(v)}</td></tr>`).join("")}</tbody>
   </table></div>
   <ul class="deliv n${s.notes.length} sf-gap">${s.notes.map(([t, d], n) => `<li data-reveal style="--i:${n}"><b>${esc(t)}</b><p>${esc(d)}</p></li>`).join("")}</ul>
+  <p class="sf-note" data-reveal><b>${esc(s.flow[0])}</b> ${esc(s.flow[1])}</p>
   <h3 class="sf-sub" data-reveal>${esc(s.chain.heading)}</h3>
-  <ol class="sf-chain" data-reveal>${s.chain.items.map(([ic, t, d]) => `<li>${icon(ic, false)}<div><b>${esc(t)}</b><p>${esc(d)}</p></div></li>`).join("")}</ol>`;
+  <ol class="sf-chain n${s.chain.items.length}" data-reveal>${s.chain.items.map(([ic, t, d]) => `<li>${icon(ic, false)}<div><b>${esc(t)}</b><p>${esc(d)}</p></div></li>`).join("")}</ol>`;
 // The dimension drawing over the specification tables (`drawing`).
 const drawingFigure = (d) => {
   const dims = sfDims();

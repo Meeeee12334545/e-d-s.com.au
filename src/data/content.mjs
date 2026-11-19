@@ -2690,6 +2690,7 @@ export const productPages = [
       "Sensor Fort lies in the open channel across the manhole floor (the chase), where you can see it from the lid. The flow runs through one smooth U, from a flexible feather edge to the stern, where two sensor tips sit in the wake. The cables run inside the walls and leave above the water.",
       "EDS designed Sensor Fort and builds it in Brisbane, drawing on more than 30 years of experience and knowledge of sewers. It needs nothing to run except your sensors: no power, no pump and no moving parts. One person lowers it from the lid, the flow parks it against the outlet wall, and it's designed for 12 months between visits.",
       "There's a version of Sensor Fort for every sewer size from 150 mm to 350 mm in diameter. The SF 150, shown here, is the one for 150 mm sewers.",
+      "It can give you flow as well. Add a level sensor to measure the depth of water, and flow is calculated from the depth curve of the Sensor Fort.",
     ],
     glance: {
       heading: "SF 150 at a glance",
@@ -2702,6 +2703,7 @@ export const productPages = [
         ["Installation", "From the lid, by one person"],
         ["Power", "None. Fully passive"],
         ["Range", "A version for every sewer size from 150 mm to 350 mm"],
+        ["Flow", "With a level sensor, calculated from the Sensor Fort's depth curve"],
       ],
     },
     anatomy: {
@@ -2868,11 +2870,13 @@ export const productPages = [
         ["Conductivity", "Use a slim four-electrode sensor in the SF 150. Inductive heads need clear water all round, and suit larger sewers."],
         ["Certified for your zone", "The mount has no electrical parts. Sensors and loggers carry their own certification, so you choose the ones certified for your zone."],
       ],
+      flow: ["Flow from the same site.", "Each Sensor Fort has its own depth curve, which relates the depth of water to the flow. Add a level sensor to measure the depth, and flow can be calculated from that curve. One site then gives you flow as well as water quality."],
       chain: {
         heading: "A complete monitoring point from one Brisbane team",
         items: [
           ["shield", "Sensor Fort", "Holds the sensors in the chase and keeps rag off them."],
           ["plug", "Your sensors", "pH, ORP, conductivity or dissolved oxygen, from any maker."],
+          ["waves", "A level sensor", "Measures the depth, so flow can be calculated from the Sensor Fort's depth curve."],
           ["radio", "EDS Metalog 4G", "Logs analogue and Modbus instruments and reports over 4G."],
         ],
       },
@@ -2896,6 +2900,7 @@ export const productPages = [
         ["Why do water quality sensors foul in a sewer?", "Mostly because of how they're held. Rag wraps round anything that faces the flow or crosses it: a probe, a bracket, a cable. Fat coats, grit scours, and storm flows move a loose sensor. Chains, rings, brackets and pumped cabinets all leave something for rag to hold or something more to maintain."],
         ["Which water quality sensors can be installed in a sewer with Sensor Fort?", "Any cylindrical sensor that measures at its tip, from any maker: pH, ORP, four-electrode conductivity (EC) and dissolved oxygen. The SF 150 holds two sensors with bodies up to 28.5 mm across. In our November 2026 survey, 30 of 63 models from 17 makers fit it, and all four types are made as 12 mm electrodes, which fit. The versions for larger sewers can take larger sensor bodies. Check your sensor with us before you order."],
         ["What size sewer does it suit?", "There's a version of Sensor Fort for every gravity sewer size from 150 mm to 350 mm in diameter. Each needs a straight-through manhole with a straight chase. The SF 150, for 150 mm sewers, suits a chase 147 to 153 mm wide, with at least 350 mm of straight chase to the outlet wall."],
+        ["Can I measure flow at the same site?", "Yes. Add a level sensor to measure the depth of water, and flow can be calculated from the depth curve of the Sensor Fort. One site then gives you flow as well as water quality."],
         ["Does it need confined space entry?", "No. One person lowers it from the lid on its tether, and lifts it out the same way. Nothing is drilled or fixed in the chase."],
         ["How often do sensors in a sewer need servicing?", "Sensor Fort is designed for 12 months between visits. Lift it out, service the sensors at the surface and lower it back, or swap it for a prepared mount. No mount stops biofilm growing or a pH reference ageing, so sensor choice and data checks still apply."],
         ["Does it need power or a pump?", "No. Sensor Fort needs nothing to run except your sensors. It's passive, with no power, no moving parts and no electrical parts. The sensors connect to your own logger, or to an EDS Metalog 4G, which logs analogue and Modbus instruments and reports over 4G."],
@@ -2942,6 +2947,7 @@ export const productPages = [
         ["Seal", "Flexible boot flared to 154 mm, 0.5 mm below the invert; flexible lips on both top edges"],
         ["Surface check", "Ray scanned at 40,000 points for slots, crevices and fins finer than 0.8 mm"],
         ["Hydraulics", "Floor lifted about 2 to 3 mm; the cheeks narrow the channel at the stern"],
+        ["Flow", "With a level sensor, flow can be calculated from the depth curve of the Sensor Fort"],
       ]],
       ["Cables and tether", [
         ["Cable route", "Inside the walls, out of the top of the stern blocks 172 mm above the invert, then up the manhole wall"],

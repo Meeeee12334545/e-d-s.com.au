@@ -4489,6 +4489,11 @@ body.is-touring { overscroll-behavior-y: contain; }
 
 /* the monitoring point: mount, sensors, logger, one ruled cell each */
 .sf-chain { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; margin: 0; padding: 0; list-style: none; background: var(--border-strong); border: 1px solid var(--border-strong); }
+.sf-chain.n4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 1100px) and (min-width: 761px) {
+  .sf-chain.n4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .sf-chain.n4 li:nth-child(odd)::before { display: none; }
+}
 .sf-chain li { position: relative; display: flex; gap: 16px; align-items: flex-start; padding: 22px 24px 24px; background: var(--surface); }
 .sf-chain li + li::before { content: ""; position: absolute; left: -7px; top: 30px; width: 12px; height: 12px; background: var(--surface); border: solid var(--border-strong); border-width: 1px 1px 0 0; rotate: 45deg; }
 .sf-chain .icon { flex: none; margin-top: 2px; font-size: 24px; stroke-width: 1.7; color: var(--brand); }
@@ -4513,7 +4518,7 @@ body.is-touring { overscroll-behavior-y: contain; }
   .sf-catch li { grid-template-columns: 56px minmax(0, 1fr); }
   .sf-catch-art { width: 56px; grid-row: 1 / span 2; }
   .sf-catch-sf { grid-column: 2; }
-  .sf-chain, .sf-ticks { grid-template-columns: minmax(0, 1fr); }
+  .sf-chain, .sf-chain.n4, .sf-ticks { grid-template-columns: minmax(0, 1fr); }
   .sf-chain li + li::before { display: none; }
   .sf-sleeves th, .sf-sleeves td { display: block; width: auto; padding-right: 0; }
   .sf-sleeves tbody th { padding-bottom: 0; border-bottom: 0; white-space: normal; }
