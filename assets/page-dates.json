@@ -1,0 +1,214 @@
+{
+ "index.html": {
+  "hash": "741da707c0fd",
+  "date": "2026-11-20"
+ },
+ "services/index.html": {
+  "hash": "49665599718d",
+  "date": "2026-11-20"
+ },
+ "services/sewer-flow-monitoring.html": {
+  "hash": "c5d340782633",
+  "date": "2026-11-20"
+ },
+ "services/inflow-infiltration-studies.html": {
+  "hash": "8af2b9dad47b",
+  "date": "2026-11-20"
+ },
+ "services/data-as-a-service.html": {
+  "hash": "0d75cf4424a9",
+  "date": "2026-11-20"
+ },
+ "services/sewer-model-calibration.html": {
+  "hash": "b842adb64cfd",
+  "date": "2026-11-20"
+ },
+ "services/thermal-infiltration-surveys.html": {
+  "hash": "e22310e034d5",
+  "date": "2026-11-20"
+ },
+ "services/blockage-overflow-alarms.html": {
+  "hash": "bd51a88a63e9",
+  "date": "2026-11-20"
+ },
+ "services/rehabilitation-verification.html": {
+  "hash": "dc5343ce0560",
+  "date": "2026-11-20"
+ },
+ "services/water-quality-monitoring.html": {
+  "hash": "9de2c664dd7f",
+  "date": "2026-11-20"
+ },
+ "services/sampling-programs.html": {
+  "hash": "ec9f4bd77b5f",
+  "date": "2026-11-20"
+ },
+ "services/trade-waste.html": {
+  "hash": "c2504fc4a36a",
+  "date": "2026-11-20"
+ },
+ "services/closed-channel-flow.html": {
+  "hash": "197c1bf3f450",
+  "date": "2026-11-20"
+ },
+ "services/rainfall-monitoring.html": {
+  "hash": "62aa239ee28a",
+  "date": "2026-11-20"
+ },
+ "services/real-time-monitoring.html": {
+  "hash": "c47e7f5cd3ff",
+  "date": "2026-11-20"
+ },
+ "services/pump-station-monitoring.html": {
+  "hash": "96f9a8350a84",
+  "date": "2026-11-20"
+ },
+ "services/scada-telemetry-integration.html": {
+  "hash": "36aad519b7a3",
+  "date": "2026-11-20"
+ },
+ "services/data-analysis-reporting.html": {
+  "hash": "2aa41555eb5b",
+  "date": "2026-11-20"
+ },
+ "services/network-assessment.html": {
+  "hash": "1ac9635af99d",
+  "date": "2026-11-20"
+ },
+ "services/auditing-calibration.html": {
+  "hash": "e8a2f08714df",
+  "date": "2026-11-20"
+ },
+ "services/equipment-rental.html": {
+  "hash": "d8c308288591",
+  "date": "2026-11-20"
+ },
+ "services/facility-management.html": {
+  "hash": "6673e7346328",
+  "date": "2026-11-20"
+ },
+ "services/training-support.html": {
+  "hash": "e457d1f5144c",
+  "date": "2026-11-20"
+ },
+ "solutions/index.html": {
+  "hash": "25a2968ae8ff",
+  "date": "2026-11-14"
+ },
+ "solutions/wastewater-monitoring.html": {
+  "hash": "c31e307d8230",
+  "date": "2026-11-20"
+ },
+ "solutions/asset-network-assessment.html": {
+  "hash": "4db5f1485243",
+  "date": "2026-11-20"
+ },
+ "solutions/network-thermal-monitoring.html": {
+  "hash": "9c3ad7069650",
+  "date": "2026-11-20"
+ },
+ "solutions/automatic-sampling.html": {
+  "hash": "78959c11f54a",
+  "date": "2026-11-20"
+ },
+ "solutions/environmental-monitoring.html": {
+  "hash": "2c387f57486f",
+  "date": "2026-11-20"
+ },
+ "solutions/structure-performance.html": {
+  "hash": "105c5253b219",
+  "date": "2026-11-14"
+ },
+ "products/index.html": {
+  "hash": "23c91a91ff10",
+  "date": "2026-11-20"
+ },
+ "products/eds.html": {
+  "hash": "db161a77472b",
+  "date": "2026-11-20"
+ },
+ "products/detectronic.html": {
+  "hash": "2b694d93b173",
+  "date": "2026-11-20"
+ },
+ "products/ori.html": {
+  "hash": "38fa4fb0fdff",
+  "date": "2026-11-20"
+ },
+ "products/hach-flow.html": {
+  "hash": "a53edfa54b6c",
+  "date": "2026-11-20"
+ },
+ "products/beadedstream.html": {
+  "hash": "984838e07c0d",
+  "date": "2026-11-20"
+ },
+ "products/microlevel.html": {
+  "hash": "1f6c21f54843",
+  "date": "2026-11-20"
+ },
+ "products/aquamonitrix.html": {
+  "hash": "fcbb5b2b37b8",
+  "date": "2026-11-20"
+ },
+ "products/dynaflox.html": {
+  "hash": "9e990b854a99",
+  "date": "2026-11-20"
+ },
+ "products/lidott-alarm.html": {
+  "hash": "6b06546e2dff",
+  "date": "2026-11-14"
+ },
+ "products/alarm2.html": {
+  "hash": "791d03fc7aff",
+  "date": "2026-11-14"
+ },
+ "products/e-flow-3.html": {
+  "hash": "e12a8bffd61e",
+  "date": "2026-11-20"
+ },
+ "products/hawk.html": {
+  "hash": "3a09fc8e7a3f",
+  "date": "2026-11-20"
+ },
+ "products/metalog-4g.html": {
+  "hash": "7f68e009f947",
+  "date": "2026-11-20"
+ },
+ "products/ilab-901.html": {
+  "hash": "68bf98fb90cb",
+  "date": "2026-11-20"
+ },
+ "products/sensor-fort.html": {
+  "hash": "a05cef667560",
+  "date": "2026-11-20"
+ },
+ "flowsense.html": {
+  "hash": "32a1f1e53cde",
+  "date": "2026-11-20"
+ },
+ "about.html": {
+  "hash": "7c40b9a164e7",
+  "date": "2026-11-20"
+ },
+ "resources.html": {
+  "hash": "a0af43848440",
+  "date": "2026-11-20"
+ },
+ "contact.html": {
+  "hash": "8cffa69e8e10",
+  "date": "2026-11-20"
+ },
+ "enquire.html": {
+  "hash": "5dfee5a2ba5c",
+  "date": "2026-11-20"
+ },
+ "404.html": {
+  "hash": "a052939f8c3d",
+  "date": "2026-11-14"
+ },
+ "privacy.html": {
+  "hash": "14db1797c337",
+  "date": "2026-11-20"
+ }
+}
