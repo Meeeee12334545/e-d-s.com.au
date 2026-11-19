@@ -1569,7 +1569,7 @@ add({
 <section class="section hm-band" id="services">
   <div class="wrap">
     <div class="section-head split">
-      <h2 class="h-lg" data-reveal>Specialised services, delivered Australia-wide.</h2>
+      <h2 class="h-lg" data-reveal>Specialised services, delivered Australia wide.</h2>
       <a class="btn btn-outline" href="${r}services/index.html">All services</a>
     </div>
     <div class="hm-svc" data-reveal>
