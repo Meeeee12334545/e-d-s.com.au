@@ -4561,12 +4561,18 @@ body.is-touring { overscroll-behavior-y: contain; }
 .hm-logos li { display: flex; align-items: center; justify-content: center; height: 44px; }
 .hm-logos img { height: calc(var(--h, 32px) * .8); width: auto; max-width: 100%; object-fit: contain; filter: grayscale(1) contrast(1.1); opacity: .62; }
 .hm-hero .hero-body { padding-bottom: clamp(40px, 5vw, 64px); }
+/* a jump to a band (the hero's two buttons) lands on its heading, not on the
+   band's padding above it */
+.hm-band[id] { scroll-margin-top: calc(28px - clamp(56px, 7vw, 96px)); }
 
 /* every service, by group: a sheet under an ink rule, like the results */
 .hm-svc { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background: var(--border-strong); border: 1px solid var(--border-strong); border-top: 2px solid var(--ink); }
 .hm-svc > div { display: grid; grid-template-rows: subgrid; grid-row: span 3; row-gap: 0; padding: 26px 24px 12px; background: #fff; }
 .hm-svc { grid-template-rows: auto auto 1fr; }
-.hm-svc h3 { display: flex; align-items: center; gap: 12px; font-size: 1.16rem; font-weight: 620; letter-spacing: -.01em; }
+.hm-svc h3 { font-size: 1.16rem; font-weight: 620; letter-spacing: -.01em; }
+/* a group's name opens that group on the services page */
+.hm-svc h3 a { display: flex; align-items: center; gap: 12px; color: inherit; transition: color .2s var(--ease); }
+.hm-svc h3 a:hover { color: var(--brand-dark); }
 .hm-svc h3 .icon { font-size: 26px; stroke-width: 1.5; color: var(--eds); }
 .hm-svc p { margin-top: 10px; padding-bottom: 18px; font-size: .9rem; line-height: 1.5; color: var(--muted); }
 .hm-svc ul { align-self: start; margin: 0; padding: 0; list-style: none; }
@@ -4575,12 +4581,17 @@ body.is-touring { overscroll-behavior-y: contain; }
 .hm-svc li a:hover { color: var(--brand-dark); }
 .hm-svc li a:hover .icon { translate: 4px 0; color: var(--brand-dark); }
 .hm-foot { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; margin-top: 22px; font-size: .95rem; color: var(--muted); }
+/* a heading's lede beside its button runs the width it has, in two lines */
+.hm-band .section-head.split .lede { max-width: 44em; }
 
 /* the four flagships: a lower plate, a name and a kind each */
 .hm-shelf { padding: 36px 40px 30px; }
 .hm-shelf .inst { grid-template-rows: 210px auto; gap: 14px; }
 .hm-shelf .inst-body { padding-top: 14px; }
 .hm-shelf .inst-text { margin-top: 3px; }
+/* a range says what it is under its name, with how many beside the name */
+.range-link b i { margin-left: 5px; font-family: var(--font-body); font-size: .8rem; font-style: normal; font-weight: 400; letter-spacing: 0; color: var(--muted); font-variant-numeric: tabular-nums; }
+.range-link small { line-height: 1.35; text-wrap: balance; }
 
 /* FlowSense on a light band: the screen framed by a rule, and the four
    tools as names only, two by two, on a ruled sheet */
@@ -4601,11 +4612,21 @@ body.is-touring { overscroll-behavior-y: contain; }
 .hm-about .hm-offices a { color: var(--brand-dark); font-weight: 500; white-space: nowrap; }
 .hm-about .link-arrow { margin-top: 22px; }
 
+/* under a finger the text links are as tall as a button */
+@media (hover: none) {
+  .hm-foot .link-arrow { padding-block: 10px; margin-block: -10px; }
+  .hm-svc h3 a { padding-block: 9px; margin-block: -9px; }
+  .hm-about div > .link-arrow { padding-block: 10px; margin-block: 12px -10px; }
+  :is(.hm-foot, .hm-about) .link-arrow::after { bottom: 7px; }
+  .hm-about .hm-offices a { padding-block: 9px; }
+}
 @media (max-width: 1180px) {
   .hm-logos { grid-template-columns: minmax(0, 1fr); }
   .hm-svc { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: none; }
   .hm-svc > div { display: block; }
   .hm-shelf { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; padding-inline: 28px; }
+  /* two ranges to a row, so each keeps its name and its line on one line each */
+  .range-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .hm-shelf .inst { grid-template-rows: 180px auto; }
 }
 @media (max-width: 980px) {
@@ -4629,6 +4650,8 @@ body.is-touring { overscroll-behavior-y: contain; }
   .hm-svc p { display: none; }
   .hm-svc ul { margin-top: 16px; }
   .hm-fs { grid-template-columns: minmax(0, 1fr); }
+  .range-grid { grid-template-columns: minmax(0, 1fr); }
+  .range-link { padding-block: 13px; }
   .hm-shelf .inst { grid-template-rows: 124px auto; padding: 18px 14px 16px; }
   .hm-shelf .inst-body b { font-size: 1rem; }
 }

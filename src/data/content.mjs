@@ -130,10 +130,10 @@ export const stats = [
 // say what the page offers. Keep it between about 120 and 155 characters and
 // to claims the page already makes.
 export const serviceGroups = [
-  { id: "sewer", icon: "waves", title: "Sewer networks", heading: "Know what is in the pipe, and what should not be.", lede: "Measure what flows through the network, find where the water gets in, and prove the fixes worked.", proof: "Intrinsically safe instruments certified for Zone 0, from the company awarded the largest sewer monitoring project in Australia in recent years." },
-  { id: "water", icon: "droplets", title: "Water & environment", heading: "Quality, sampling and rainfall, measured properly.", lede: "For utilities, industry and environmental projects, from a single sampler on hire to a whole trade waste program.", proof: "The widest range of automatic samplers in Australia, from ORI and MicroLevel." },
-  { id: "data", icon: "chart-spline", title: "Real-time data & analysis", heading: "From a reading to a decision.", lede: "Data that arrives as it happens, reaches the systems you already run, and ends in a report you can act on." },
-  { id: "field", icon: "hard-hat", title: "Field services & support", heading: "The people and equipment behind every program.", lede: "Calibration, hire, facility management and training, from four offices across Australia and crews who travel." },
+  { id: "sewer", icon: "waves", title: "Sewer Networks", heading: "Know what is in the pipe, and what should not be.", lede: "Measure what flows through the network, find where the water gets in, and prove the fixes worked.", proof: "Intrinsically safe instruments certified for Zone 0, from the company awarded the largest sewer monitoring project in Australia in recent years." },
+  { id: "water", icon: "droplets", title: "Water & Environment", heading: "Quality, sampling and rainfall, measured properly.", lede: "For utilities, industry and environmental projects, from a single sampler on hire to a whole trade waste program.", proof: "The widest range of automatic samplers in Australia, from ORI and MicroLevel." },
+  { id: "data", icon: "chart-spline", title: "Real-Time Data & Analysis", heading: "From a reading to a decision.", lede: "Data that arrives as it happens, reaches the systems you already run, and ends in a report you can act on." },
+  { id: "field", icon: "hard-hat", title: "Field Services & Support", heading: "The people and equipment behind every program.", lede: "Calibration, hire, facility management and training, from four offices across Australia and crews who travel." },
 ];
 
 // "At a glance" in each service and solution page hero: [icon, fact, line].
@@ -351,7 +351,7 @@ export const services = [
         ],
       },
       {
-        heading: "Common questions",
+        heading: "Common Questions",
         faq: [
           ["How long does a flow monitoring program run?", "It depends on what the data has to answer. Short I&I studies typically run 6 to 12 weeks, long enough to capture wet weather. Long-term monitoring runs across seasons. It shows how infiltration changes with groundwater through the year, and what past works achieved."],
           ["How often are readings logged?", "Typically every 1 to 5 minutes. That captures storm peaks, and the daily dry weather pattern that analysis and modelling rely on."],
@@ -396,8 +396,8 @@ export const services = [
         ],
       },
       {
-        heading: "Our I&I services",
-        nav: "Our services",
+        heading: "Our I&I Services",
+        nav: "Our Services",
         items: [
           ["Find the sources", "Flow meters and rain gauges across the catchment show which subcatchments let the water in, and how much."],
           ["Watch it happen", "Intrinsically safe meters report over 4G, so you see each storm's response as it happens."],
@@ -416,8 +416,8 @@ export const services = [
         ],
       },
       {
-        heading: "Short-term and long-term monitoring",
-        nav: "Short or long term",
+        heading: "Short-Term and Long-Term Monitoring",
+        nav: "Short or Long Term",
         lede: "Most I&I programs use one or both. The right choice depends on the decision the data has to support.",
         table: {
           neutral: true,
@@ -433,7 +433,7 @@ export const services = [
         },
       },
       {
-        heading: "Monitoring done properly",
+        heading: "Monitoring Done Properly",
         nav: "How we monitor",
         list: [
           "High-resolution logging, typically every 1 to 5 minutes, to capture storms and the daily pattern",
@@ -444,8 +444,8 @@ export const services = [
         ],
       },
       {
-        heading: "From data to action",
-        nav: "Data to action",
+        heading: "From Data to Action",
+        nav: "Data to Action",
         lede: "In our experience, and across the water industry, about 20% of a sewer network typically carries 80% of its I&I. Finding that 20% is what makes a program pay back.",
         items: [
           ["Targeted repairs", "The data finds the worst sections for relining, grouting and manhole sealing, so you don't have to rehabilitate everything."],
@@ -454,7 +454,7 @@ export const services = [
         ],
       },
       {
-        heading: "Common questions",
+        heading: "Common Questions",
         faq: [
           ["What is the difference between inflow and infiltration?", "Inflow is stormwater that enters directly, through cross connections, unapproved private connections and faulty manholes. It arrives quickly during a storm. Infiltration is groundwater that seeps in through cracks, joints and faulty connections. It builds slowly and lingers."],
           ["How are the two told apart?", "By reading flow against rainfall. Gauges in the catchment and historical climate data separate the fast response of inflow from the slow, groundwater-driven response of infiltration."],
@@ -489,7 +489,7 @@ export const services = [
     ],
     blocks: [
       {
-        heading: "DaaS against traditional monitoring",
+        heading: "DaaS Against Traditional Monitoring",
         lede: "What changes when EDS answers for the data, not just the equipment.",
         table: {
           left: "Traditional monitoring",
@@ -506,7 +506,7 @@ export const services = [
         },
       },
       {
-        heading: "The meter behind it",
+        heading: "The Meter Behind It",
         lede: "EDS runs the Detectronic MSFM in its own monitoring fleet, so the advice you get comes from people who install it.",
         items: [
           ["Detectronic MSFM area velocity flow meter", "The MSFM S2.5T measures velocity from 0.03 to 4 m/s and depth to 3.5 m. It logs every 1 to 60 minutes, and lasts more than 15 weeks on one battery at 2-minute logging."],
@@ -529,7 +529,7 @@ export const services = [
         ],
       },
       {
-        heading: "Common questions",
+        heading: "Common Questions",
         faq: [
           ["Is there any capital outlay?", "No. We supply, install and maintain the equipment, so there's nothing to buy. You pay for validated data and the insight that comes with it."],
           ["What data availability can we expect?", "99.95%, from a managed fleet with continuous oversight, continuous calibration and real-time alerts."],
@@ -572,7 +572,7 @@ export const services = [
         ],
       },
       {
-        heading: "Calibration scored storm by storm",
+        heading: "Calibration Scored Storm by Storm",
         lede: "A single score across a whole record can look fine while the model misses every storm peak. EDS FlowSense scores each storm on its own, to the CIWEM UDG Code of Practice (2017).",
         items: [
           ["Published acceptance bands", "Peak flow within −15% to +25%, event volume within −10% to +20%, and peak timing within one hour. An event passes on peak and volume together."],
@@ -582,7 +582,7 @@ export const services = [
         ],
       },
       {
-        heading: "Common questions",
+        heading: "Common Questions",
         faq: [
           ["How long should calibration monitoring run?", "Long enough to record dry weather flow and several big storms. A calibration needs at least three usable storms, so it depends on the season and the rain. Short programs commonly run 6 to 12 weeks."],
           ["Can you work with our existing model?", "Yes. We deliver flow and rainfall data in formats modelling platforms can import, or by API."],
@@ -619,7 +619,7 @@ export const services = [
         ],
       },
       {
-        heading: "Typical uses",
+        heading: "Typical Uses",
         list: [
           "Locating the infiltration an I&I study has measured",
           "Prioritising CCTV inspections and repairs",
@@ -655,8 +655,8 @@ export const services = [
         ],
       },
       {
-        heading: "Level alarms for every chamber",
-        nav: "Level alarms",
+        heading: "Level Alarms for Every Chamber",
+        nav: "Level Alarms",
         lede: "Three Detectronic radar instruments, all ATEX and IECEx certified for Zone 0, the most hazardous classification.",
         products: [
           { name: "LIDoTT Alarm", maker: "Detectronic", href: "products/lidott-alarm.html", image: img("lidott-alarm-cut.png"), fit: 92,
@@ -713,7 +713,7 @@ export const services = [
     ],
     blocks: [
       {
-        heading: "A before-and-after approach",
+        heading: "A Before-and-After Approach",
         list: [
           "Baseline monitoring before works begin",
           "Rainfall recorded alongside flow, to compare wet weather response before and after",
@@ -768,7 +768,7 @@ export const services = [
         ],
       },
       {
-        heading: "Built for long deployments",
+        heading: "Built for Long Deployments",
         items: [
           ["Readings where you need them", "Continuous readings to SCADA, telemetry or a building management system, as well as to EDS FlowSense."],
           ["Few site visits", "Aquamonitrix runs more than 600 samples between services: over three months at six a day. The iLab 901 cleans itself."],
@@ -807,7 +807,7 @@ export const services = [
         ],
       },
       {
-        heading: "Suitable for",
+        heading: "Suitable For",
         list: [
           "Wastewater, sewer and pretreatment sludge sampling",
           "Trade waste and process water monitoring",
@@ -817,7 +817,7 @@ export const services = [
         ],
       },
       {
-        heading: "Choosing a sampler",
+        heading: "Choosing a Sampler",
         items: [
           ["ORI NEMO 1 M", "Mobile sampler approved under ATEX and IECEx for Zones 1 and 2. Inputs for up to 10 digital and 2 analogue sensors, and an optional LTE modem. Peristaltic, vacuum and hybrid pump versions."],
           ["ORI AquaSamp Mini", "A light portable sampler for spot and timed samples, with 6 m suction lift and up to 144 samples on one charge. An ATEX version is available."],
@@ -849,7 +849,7 @@ export const services = [
     ],
     blocks: [
       {
-        heading: "Trade waste services",
+        heading: "Trade Waste Services",
         items: [
           ["Compliance monitoring", "Monitoring that keeps you within local and national regulations."],
           ["Real-time data", "Continuous readings, so you can step in before a problem becomes a breach."],
@@ -895,7 +895,7 @@ export const services = [
     ],
     blocks: [
       {
-        heading: "The technologies",
+        heading: "The Technologies",
         items: [
           ["Magnetic", "Measures the voltage a conductive liquid creates as it moves through a magnetic field. Nothing blocks the flow and there are no moving parts, but the liquid must be conductive."],
           ["Ultrasonic transit time", "Times sound pulses with and against the flow. Suits clean liquids, and comes inline, as an insertion meter or clamped to the outside of the pipe."],
@@ -905,7 +905,7 @@ export const services = [
         ],
       },
       {
-        heading: "Choosing a meter",
+        heading: "Choosing a Meter",
         lede: "These are the questions that decide it.",
         list: [
           "The liquid: its conductivity, and the solids and bubbles it carries",
@@ -986,7 +986,7 @@ export const services = [
     ],
     blocks: [
       {
-        heading: "Key features",
+        heading: "Key Features",
         items: [
           ["Built tough", "Made for harsh conditions, including a surcharged manhole."],
           ["Wireless from the start", "4G telemetry built in, so a site can go wherever the mobile network reaches."],
@@ -1089,7 +1089,7 @@ export const services = [
     ],
     blocks: [
       {
-        heading: "Ways to connect",
+        heading: "Ways to Connect",
         items: [
           ["Direct to SCADA", "Instruments that work with ClearSCADA, Schneider CITECT, ELPRO and many more."],
           ["4G telemetry", "4G built into flow meters and loggers, for real-time data."],
@@ -1108,7 +1108,7 @@ export const services = [
         ],
       },
       {
-        heading: "From FlowSense to your systems",
+        heading: "From FlowSense to Your Systems",
         lede: "Validated data can flow back out of EDS FlowSense to the SCADA, historian or reporting tools your teams already use.",
         items: [
           ["Scheduled files", "CSV files delivered to your server over SFTP or FTPS, for SCADA file importers and historians."],
@@ -1118,7 +1118,7 @@ export const services = [
         ],
       },
       {
-        heading: "Common questions",
+        heading: "Common Questions",
         faq: [
           ["Does anything need to be installed on our SCADA?", "No. There's no agent, connector or gateway to install. OPC UA, DNP3 and Modbus aren't touched in either direction, and there's no control path into your systems."],
           ["Are the readings changed on the way?", "No. Values are sent exactly as stored, with no gap filling and no smoothing. A missing reading is left blank, not estimated."],
@@ -1210,7 +1210,7 @@ export const services = [
         ],
       },
       {
-        heading: "Alongside an assessment",
+        heading: "Alongside an Assessment",
         list: [
           "Model development",
           "Flow monitoring for model calibration and I&I assessment",
@@ -1286,7 +1286,7 @@ export const services = [
     ],
     blocks: [
       {
-        heading: "In the hire fleet",
+        heading: "In the Hire Fleet",
         lede: "Flow meters, loggers and samplers, with analytical instruments for water quality programs.",
         products: [
           { name: "MSFM flow meters", maker: "Detectronic", href: "products/detectronic.html#msfm-s2-5t", image: img("detectronic-msfm-s2-lidott.png"), fit: 100,
@@ -1333,7 +1333,7 @@ export const services = [
     ],
     blocks: [
       {
-        heading: "Our facility management services",
+        heading: "Our Facility Management Services",
         items: [
           ["Asset management", "Proactive maintenance and lifecycle planning, to get the most from every asset."],
           ["24/7 support and monitoring", "Continuous oversight and a rapid response when something goes wrong, so disruption stays small."],
@@ -1486,7 +1486,7 @@ export const solutions = [
         ],
       },
       {
-        heading: "The equipment",
+        heading: "The Equipment",
         items: [
           ["Beadedstream Digital Temperature Cable", "Up to 750 m long with up to 125 sensors, accurate to ± 0.1 °C between −10 and 30 °C. IP68, and rated to 3.5 MPa fluid pressure."],
           ["Loggers for remote sites", "The Beadedstream D605 reports by two-way Iridium satellite, pole to pole, with four cable ports for up to 500 sensors."],
@@ -1523,7 +1523,7 @@ export const solutions = [
         ],
       },
       {
-        heading: "Programs of every length",
+        heading: "Programs of Every Length",
         list: [
           "Short-term studies for inflow and infiltration and model calibration",
           "Long-term monitoring that tracks performance across seasons",
@@ -1551,7 +1551,7 @@ export const solutions = [
     ],
     blocks: [
       {
-        heading: "Suitable for",
+        heading: "Suitable For",
         list: [
           "Water, stormwater and surface water sampling",
           "River and bore sampling",
@@ -1563,7 +1563,7 @@ export const solutions = [
         ],
       },
       {
-        heading: "Choosing the right sampler",
+        heading: "Choosing the Right Sampler",
         items: [
           ["Hazardous area", "The site's hazardous area classification, and the ATEX and IECEx approval it needs."],
           ["Sample type", "Spot, timed or composite samples, and how many bottles."],
@@ -1591,7 +1591,7 @@ export const solutions = [
     ],
     blocks: [
       {
-        heading: "Data for every stage of a project",
+        heading: "Data for Every Stage of a Project",
         steps: true,
         list: [
           "Guide the design",
@@ -1644,7 +1644,7 @@ export const brands = [
     ],
     groups: [
       {
-        name: "Data loggers",
+        name: "Data Loggers",
         items: [
           { name: "Hawk", type: "logger", note: "Battery-powered 4G sewer logger", image: img("hawk.png"), href: "products/hawk.html", docs: [{ label: "Datasheet", href: localDoc("eds-hawk-datasheet.pdf") }, { label: "Brochure", href: localDoc("eds-hawk-brochure.pdf") }] },
           { name: "Metalog 4G", type: "logger", note: "4G logger for 4 to 20 mA and Modbus instruments", image: img("metalog-4g.png"), href: "products/metalog-4g.html", docs: [{ label: "Datasheet", href: localDoc("eds-metalog-4g-datasheet.pdf") }, { label: "Brochure", href: localDoc("eds-metalog-4g-brochure.pdf") }] },
@@ -1676,6 +1676,8 @@ export const brands = [
     pageTitle: "Detectronic Flow Meters & Level Monitors in Australia | EDS",
     icon: "radar",
     tag: "Sewer and wastewater network monitoring",
+    // the same in fewer words, for the home page's list of ranges
+    tagShort: "Sewer and wastewater monitoring",
     summary: "Ultrasonic flow, level and water quality instruments engineered for sewer networks.",
     description: "Detectronic ultrasonic flow, level and water quality instruments for sewer networks, including the MSFM and LIDoTT, supplied and installed by EDS.",
     logo: img("detectronic-logocolour.png"),
@@ -1689,7 +1691,7 @@ export const brands = [
     ],
     blocks: [
       {
-        heading: "Across the range",
+        heading: "Across the Range",
         lede: "Every instrument here is ATEX and IECEx certified for Zone 0, the most hazardous classification, and built for the sewer.",
         items: [
           ["MSFM S2.5T flow meter", "Velocity 0.03 to 4.00 m/s and depth to 3.5 m, logging every 1 to 60 minutes. More than 15 weeks on one battery at 2-minute logging. Can pulse a sampler for flow-proportional sampling."],
@@ -1703,7 +1705,7 @@ export const brands = [
     ],
     groups: [
       {
-        name: "Flow, level and logging",
+        name: "Flow, Level and Logging",
         items: [
           { name: "MSFM S2.5T", type: "flow", note: "Rugged 4G area velocity flow meter", image: img("s2.5-04-small-766x1024.png"), docs: [{ label: "Datasheet", href: localDoc("detectronic-msfm-s2-5t-datasheet.pdf") }, { label: "Manual", href: localDoc("detectronic-msfm-s2-5t-manual.pdf") }] },
           { name: "LIDoTT Smart", type: "level", note: "LIDoTT Sensor and Smart logger: a long-life, rugged, patented 4G level monitor", image: img("dete01-01.24-600x452.png"), docs: [{ label: "LIDoTT Sensor datasheet", href: localDoc("detectronic-lidott-sensor-datasheet.pdf") }] },
@@ -1732,7 +1734,7 @@ export const brands = [
     ],
     blocks: [
       {
-        heading: "Choosing an ORI sampler",
+        heading: "Choosing an ORI Sampler",
         items: [
           ["NEMO 1 M", "Approved under ATEX and IECEx for Zones 1 and 2. Up to 10 digital and 2 analogue sensors such as pH, conductivity, oxygen and level, 8 GB of memory and an optional LTE modem. Peristaltic (PP), vacuum (V) and hybrid (H) pumps."],
           ["AquaSamp Mini", "Spot and timed sampling with 6 m suction lift and up to 144 samples per charge, at 4.1 kg with its battery. IP65, with an ATEX version available."],
@@ -1743,7 +1745,7 @@ export const brands = [
     ],
     groups: [
       {
-        name: "Mobile samplers",
+        name: "Mobile Samplers",
         items: [
           { name: "AquaSamp Mini", type: "sampling", note: "Portable sampler, up to 144 samples per charge", image: img("aquasamp-mini-teaser.png"), docs: [{ label: "Brochure", href: localDoc("ori-aquasamp-mini-brochure.pdf") }] },
           // One datasheet covers all three NEMO 1 M versions.
@@ -1754,7 +1756,7 @@ export const brands = [
         ],
       },
       {
-        name: "Measuring technology",
+        name: "Measuring Technology",
         items: [
           { name: "Mlog", type: "logger", note: "Multitool logger", image: img("mlog-multitool-logger-gps-01.jpg") },
           { name: "Mlog Z2", type: "logger", note: "ATEX and IECEx", image: img("atex-mlog.jpg") },
@@ -1781,7 +1783,7 @@ export const brands = [
     ],
     blocks: [
       {
-        heading: "Choosing a Hach system",
+        heading: "Choosing a Hach System",
         lede: "Based on Hach's own selection guide. We can help you match the system to the site.",
         items: [
           ["Non-contact", "A flow logger with the Flo-Dar sensor: radar velocity and ultrasonic level from above the flow. Hach's most versatile option, it limits fouling and avoids confined space entry after installation."],
@@ -1834,7 +1836,7 @@ export const brands = [
     ],
     blocks: [
       {
-        heading: "The range at a glance",
+        heading: "The Range at a Glance",
         items: [
           ["Digital Temperature Cable", "Made to length, up to 750 m with up to 125 sensors, accurate to ± 0.1 °C between −10 and 30 °C. IP68, rated to 3.5 MPa fluid pressure."],
           ["D605 logger", "Two-way Iridium satellite, pole to pole. Four cable ports for up to 500 sensors, and more than six months on battery without sun when reporting daily."],
@@ -1845,7 +1847,7 @@ export const brands = [
     ],
     groups: [
       {
-        name: "Product range",
+        name: "Product Range",
         items: [
           { name: "D605", type: "temperature", note: "Satellite logger for temperature cables", image: img("front-view-of-beadedstream-d605-temperature-data-logger-without-antenna.png"), docs: [{ label: "Datasheet", href: localDoc("beadedstream-d605-datasheet.pdf") }] },
           { name: "Spot Logger", type: "temperature", note: "Battery-powered temperature logger", image: img("spot-logger-side-view-with-raymo-connector.png"), docs: [{ label: "Battery install and replacement guide", href: localDoc("beadedstream-spot-logger-battery-guide.pdf") }] },
@@ -1873,7 +1875,7 @@ export const brands = [
     ],
     groups: [
       {
-        name: "MICROSAMPLER range",
+        name: "MICROSAMPLER Range",
         items: [
           { name: "MICROSAMPLER 10P", type: "sampling", note: "Portable composite sampler for wastewater, factory drains, manholes and water channels", image: img("6d2b2a76351a2d8f5edefdcc12c5ea49.png") },
           { name: "MICROSAMPLER 10B", type: "sampling", note: "Fixed composite sampling unit for industrial wastewater, manholes, streams and channels", image: img("0d15002ac7d0c03f9837eecc2143e2ce.png") },
@@ -1911,7 +1913,7 @@ export const brands = [
     ],
     groups: [
       {
-        name: "The analyser",
+        name: "The Analyser",
         items: [
           { name: "Aquamonitrix", type: "quality", note: "Nitrate and nitrite, rugged and portable", image: img("aquamonitrix-analyser.jpg"), docs: [{ label: "Performance datasheet", href: localDoc("aquamonitrix-performance-datasheet.pdf") }] },
         ],
@@ -1934,7 +1936,7 @@ export const brands = [
     ],
     groups: [
       {
-        name: "Select your technology",
+        name: "Select Your Technology",
         items: [
           { name: "UltraD", type: "flow", image: img("i-ultrad.jpg") },
           { name: "Ultra F", type: "flow", image: img("ultrasonicbulk-2.jpg") },
@@ -2233,7 +2235,7 @@ export const productPages = [
       heading: "Unmatched accuracy, from the surface down.",
       lede: "Flow is only as good as its velocity and area. E-Flow 3 reads surface velocity and corrects it to mean velocity through the depth. It measures depth to 1 mm resolution and works out the wetted area from the pipe profile. Then it calculates flow in the sensor itself.",
       diagram: "eflowProfile",
-      heading2: "The figures, from dry weather to full surcharge",
+      heading2: "The Figures, from Dry Weather to Full Surcharge",
       stats: [
         ["1 %", "of reading, ultrasonic velocity", "± 0.005 m/s"],
         ["2 %", "of reading, radar velocity", "± 0.01 m/s"],
@@ -2275,10 +2277,10 @@ export const productPages = [
       nav: "Uses",
       heading: "Where E-Flow 3 fits.",
       items: [
-        ["cloud-rain", "Inflow and infiltration", "Reliable wet weather velocity and depth through surcharge, the events that define an I&I program."],
-        ["waypoints", "Network monitoring", "Long-term flow at key points in reticulation and trunk sewers, with minimal site visits."],
-        ["waves", "Overflow and surcharge", "Capture the peak, the duration and, with the bidirectional model, any reverse flow."],
-        ["fan", "Pump station and catchment", "Inflow to wet wells and catchment boundaries, feeding capacity and growth planning."],
+        ["cloud-rain", "Inflow and Infiltration", "Reliable wet weather velocity and depth through surcharge, the events that define an I&I program."],
+        ["waypoints", "Network Monitoring", "Long-term flow at key points in reticulation and trunk sewers, with minimal site visits."],
+        ["waves", "Overflow and Surcharge", "Capture the peak, the duration and, with the bidirectional model, any reverse flow."],
+        ["fan", "Pump Station and Catchment", "Inflow to wet wells and catchment boundaries, feeding capacity and growth planning."],
       ],
     },
     system: {
@@ -2314,7 +2316,7 @@ export const productPages = [
         ["Depth radar", "120 GHz FMCW, 14° × 10° antenna"],
         ["Pressure transducer", "316 stainless steel, sealed, with dynamic pressure compensation"],
       ]],
-      ["Electrical and communications", [
+      ["Electrical and Communications", [
         ["Supply", "8 to 15 VDC, 12 VDC nominal"],
         ["Current", "150 mA at 12 VDC"],
         ["Interface", "RS485, two-wire"],
@@ -2323,7 +2325,7 @@ export const productPages = [
         ["Firmware", "Remote update over RS485 with an EDS logger"],
         ["Configuration", "EMS-Flow, from the surface through an EDS logger"],
       ]],
-      ["Mechanical and environmental", [
+      ["Mechanical and Environmental", [
         ["Housing", "Alloy and engineering plastic composite"],
         ["Sealing", "Electronics fully potted, unaffected by temperature cycling"],
         ["Cable", "Integral, length to suit the manhole"],
@@ -2391,7 +2393,7 @@ export const productPages = [
         ["Firmware", "Remote update over 4G"],
         ["Operating modes", "Low power and debug, switchable"],
       ]],
-      ["Sensor interface", [
+      ["Sensor Interface", [
         ["Ports", "3 × RS485, independent channels"],
         ["Sensors", "Modbus RTU sensors, including E-Flow 3"],
         ["Serial settings", "Baud rate, parity and stop bits set per channel"],
@@ -2400,14 +2402,14 @@ export const productPages = [
         ["Warm up", "Power on delay up to 255 s before each reading"],
         ["Scheduling", "Logging interval, warm up and retries set per channel"],
       ]],
-      ["Data and power", [
+      ["Data and Power", [
         ["On-board memory", "32 MB, 10 years of data retention"],
         ["Battery", "Internal: 72, 80 or 100 Ah rechargeable, or 152 Ah primary"],
         ["Operating current", "Under 65 mA average at 7.2 VDC"],
         ["Sleep current", "40 µA or less at 7.2 VDC"],
         ["External supply", "None required"],
       ]],
-      ["Enclosure and environment", [
+      ["Enclosure and Environment", [
         ["Protection", "IP68, submersible"],
         ["Material", "V0 flame-retardant, corrosion-resistant ABS"],
         ["Lid", "Bolted, O ring sealed; SIM and battery inside"],
@@ -2417,7 +2419,7 @@ export const productPages = [
         ["Operating temperature", "−40 to 60 °C, 95 % humidity non-condensing"],
         ["Storage temperature", "−40 to 85 °C"],
       ]],
-      ["Sensor connector wiring", [
+      ["Sensor Connector Wiring", [
         ["Red", "12 V switched sensor supply"],
         ["Black", "0 V power ground"],
         ["Green or blue", "RS485 A"],
@@ -2489,14 +2491,14 @@ export const productPages = [
     applications: {
       heading: "Where it works.",
       items: [
-        ["fan", "Pump stations", "Wet well level from a submersible level transducer."],
+        ["fan", "Pump Stations", "Wet well level from a submersible level transducer."],
         ["container", "Reservoirs", "Storage level in tanks and reservoirs."],
-        ["gauge", "Network pressure", "Pressure transmitters at critical points in the reticulation."],
-        ["waves", "Flow metering", "Analogue or Modbus outputs from flow meters."],
+        ["gauge", "Network Pressure", "Pressure transmitters at critical points in the reticulation."],
+        ["waves", "Flow Metering", "Analogue or Modbus outputs from flow meters."],
       ],
     },
     specs: [
-      ["Sensor interface", [
+      ["Sensor Interface", [
         ["Analogue inputs", "4 channels, Ai0 to Ai3, 4 to 20 mA (default)"],
         ["Transmitters", "Two-wire, loop-powered from the logger V+, or three-wire on an external supply"],
         ["Ports", "1 × RS485, two-wire (A+, B−)"],
@@ -2515,7 +2517,7 @@ export const productPages = [
         ["Sensor power", "V+ output at supply voltage when powered from the DC jack"],
         ["Power switch", "On / off"],
       ]],
-      ["Enclosure and environment", [
+      ["Enclosure and Environment", [
         ["Dimensions", "88 × 60 × 25 mm (W × H × D)"],
         ["Protection", "IP58"],
         ["Operating temperature", "−20 to 80 °C"],
@@ -2523,7 +2525,7 @@ export const productPages = [
         ["Terminal block", "8-way, 3.81 mm pitch"],
         ["Indicators", "ACT (red) and SRV (green) LEDs"],
       ]],
-      ["Status lights", [
+      ["Status Lights", [
         ["Setup mode", "ACT flashes every 600 ms"],
         ["Disarmed", "ACT flashes every 6 s"],
         ["Armed", "ACT flashes twice every 3 s"],
@@ -2614,9 +2616,9 @@ export const productPages = [
       nav: "Applications",
       heading: "Where it works.",
       items: [
-        ["waves", "Rivers, lakes and reservoirs", "Online multi-parameter water quality monitoring."],
-        ["droplet", "Source water", "Drinking water sources, groundwater and sea water."],
-        ["trees", "Environmental monitoring", "Long-term water quality records."],
+        ["waves", "Rivers, Lakes and Reservoirs", "Online multi-parameter water quality monitoring."],
+        ["droplet", "Source Water", "Drinking water sources, groundwater and sea water."],
+        ["trees", "Environmental Monitoring", "Long-term water quality records."],
         ["sprout", "Agriculture", "Water quality monitoring for agriculture."],
       ],
     },
@@ -2693,7 +2695,7 @@ export const productPages = [
       "It can give you flow as well. Add a level sensor to measure the depth of water, and flow is calculated from the depth curve of the Sensor Fort.",
     ],
     glance: {
-      heading: "SF 150 at a glance",
+      heading: "SF 150 at a Glance",
       rows: [
         ["Sewer", "150 mm, with a straight-through manhole"],
         ["Length", "345 mm"],
@@ -2715,7 +2717,7 @@ export const productPages = [
       caption: "The SF 150 from upstream. Water runs through the U from the feather edge to the stern, and the sensors lie inside the walls.",
     },
     problem: {
-      nav: "The problem",
+      nav: "The Problem",
       heading: "Four ways to hold a sensor in a sewer.\nNone of them works, and none ever will.",
       lede: "Sewers are hard on sensors. Until now, a sensor in a gravity sewer has been hung, strapped, bolted or pumped. Each way leaves something in the flow for rag to hold, or something more to enter, power and maintain.",
       hazards: [
@@ -2725,10 +2727,10 @@ export const productPages = [
       ],
       fails: "What doesn't work",
       methods: [
-        ["chain", "Swings, and collects rag", "Hung on a chain or its cable", "The probe swings in the flow and collects rag. Sensor manuals warn against hanging a probe in a stream that carries debris."],
-        ["ring", "Everything sits in the flow", "Strapped to a ring in the pipe", "Rings were made for flow sensors. The probe, its carrier and its cable all sit in the flow, out of sight in the pipe."],
-        ["bracket", "Needs entry, then catches rag", "Bolted to a bracket", "Someone has to enter the manhole to drill and fix it, and the bracket itself becomes a rag catcher."],
-        ["cabinet", "More to power, block and maintain", "Pumped to a cabinet", "A pump, a sample line and a cabinet at the surface: more to power, more to block and more to maintain."],
+        ["chain", "Swings, and collects rag", "Hung on a Chain or Its Cable", "The probe swings in the flow and collects rag. Sensor manuals warn against hanging a probe in a stream that carries debris."],
+        ["ring", "Everything sits in the flow", "Strapped to a Ring in the Pipe", "Rings were made for flow sensors. The probe, its carrier and its cable all sit in the flow, out of sight in the pipe."],
+        ["bracket", "Needs entry, then catches rag", "Bolted to a Bracket", "Someone has to enter the manhole to drill and fix it, and the bracket itself becomes a rag catcher."],
+        ["cabinet", "More to power, block and maintain", "Pumped to a Cabinet", "A pump, a sample line and a cabinet at the surface: more to power, more to block and more to maintain."],
       ],
       answer: {
         wins: "What does",
@@ -2828,7 +2830,7 @@ export const productPages = [
         ],
       },
       service: {
-        heading: "Serviced at the surface",
+        heading: "Serviced at the Surface",
         items: [
           ["Lift out, lower back", "Lift the mount out, service the sensors at the surface and lower it back. Or swap it for a prepared mount."],
           ["12 months between visits", "That's the interval Sensor Fort is designed for. The tether stays on as a slack safety line."],
@@ -2855,13 +2857,13 @@ export const productPages = [
       ],
       note: "From the EDS survey of pH, ORP, four-electrode conductivity and dissolved oxygen sensors, November 2026, for the SF 150. The versions for larger sewers, up to 350 mm, can take larger sensor bodies. Please confirm your sensor with us before you order.",
       makers: {
-        heading: "Makers with sensors that fit",
+        heading: "Makers with Sensors That Fit",
         lede: "Sensor Fort takes any maker's sensor in a size that fits. Each of these 22 makers publishes at least one pH, ORP or dissolved oxygen sensor in a size the SF 150 takes, most of them as the standard 12 mm electrode.",
         names: ["ABB", "Aqualabo", "Broadley-James", "Bürkert", "Emerson (Rosemount)", "Endress+Hauser", "Hach", "Hamilton", "Hanna Instruments", "Honeywell", "Ionode", "JUMO", "Knick", "Krohne", "Kuntze", "Mettler Toledo", "ProMinent", "Schneider Electric (Foxboro)", "Sensorex", "SI Analytics", "WTW", "Yokogawa"],
         note: "Listed from the makers' published dimensions, November 2026, separately from the survey above. Not every model from each maker fits, so please confirm your sensor with us before you order. Names and trade marks belong to their owners.",
       },
       sleeves: {
-        heading: "Sleeves and parts for the SF 150",
+        heading: "Sleeves and Parts for the SF 150",
         rows: [
           ["12 mm", "Threaded sleeve for 12 mm electrodes 120 mm long with a PG13.5 thread"],
           ["22 to 26.7 mm", "Split sleeves for 22.0, 22.9, 25.4, 26.0 and 26.7 mm bodies; the 26.7 mm sleeve also suits 3/4 inch NPT"],
@@ -2878,7 +2880,7 @@ export const productPages = [
       ],
       flow: ["Flow from the same site.", "Each Sensor Fort has its own depth curve, which relates the depth of water to the flow. Add a level sensor to measure the depth, and flow can be calculated from that curve. One site then gives you flow as well as water quality."],
       chain: {
-        heading: "A complete monitoring point from one Brisbane team",
+        heading: "A Complete Monitoring Point from One Brisbane Team",
         items: [
           ["shield", "Sensor Fort", "Holds the sensors in the chase and keeps rag off them."],
           ["plug", "Your sensors", "pH, ORP, conductivity or dissolved oxygen, from any maker."],
@@ -2891,10 +2893,10 @@ export const productPages = [
       nav: "Uses",
       heading: "Where it works.",
       items: [
-        ["factory", "Trade waste", "pH and conductivity at a discharge point or in the receiving sewer."],
-        ["route", "Source tracking", "Paired sites that narrow down where an abnormal discharge enters the network."],
-        ["waves", "Saline ingress", "Conductivity changes that reveal saline water entering the network."],
-        ["wind", "Odour and dosing", "pH and ORP trends that support septicity and chemical dosing studies."],
+        ["factory", "Trade Waste", "pH and conductivity at a discharge point or in the receiving sewer."],
+        ["route", "Source Tracking", "Paired sites that narrow down where an abnormal discharge enters the network."],
+        ["waves", "Saline Ingress", "Conductivity changes that reveal saline water entering the network."],
+        ["wind", "Odour and Dosing", "pH and ORP trends that support septicity and chemical dosing studies."],
       ],
     },
     faq: {
@@ -2927,7 +2929,7 @@ export const productPages = [
         ["Operation", "Passive: no power, moving or electrical parts"],
         ["Origin", "Designed and built by EDS in Brisbane, Queensland"],
       ]],
-      ["Dimensions and weight", [
+      ["Dimensions and Weight", [
         ["Length", "345 mm, boot tip to stern block backs"],
         ["Width", "146.9 mm rigid; 154 mm over the flexible lips"],
         ["Height", "135 mm walls (136.5 mm over the strips); 175 mm stern blocks"],
@@ -2940,14 +2942,14 @@ export const productPages = [
         ["Ballast", "316 stainless flat bar, flush in the wall sides"],
         ["Tether, screws", "316 stainless steel"],
       ]],
-      ["Sensor bays", [
+      ["Sensor Bays", [
         ["Number", "Two; a blanking plug closes an unused bay"],
         ["Sensor size", "Bodies to 28.5 mm across and 190 mm rigid length, head and gland included"],
         ["Attitude", "15° tip down, tips at the stern face, in the wake of the mount"],
         ["Types", "Any cylindrical sensor that measures at its tip: pH, ORP, four-electrode conductivity, dissolved oxygen"],
         ["Fastening", "A sleeve for each sensor; one clamp bar and one M5 × 16 316 screw hold both"],
       ]],
-      ["Flow surface", [
+      ["Flow Surface", [
         ["Shape", "One smooth U from a 0.8 mm feather edge to the stern face; every concave corner is a fillet"],
         ["Edges in flow", "Two, and both face downstream"],
         ["Seal", "Flexible boot flared to 154 mm, 0.5 mm below the invert; flexible lips on both top edges"],
@@ -2955,7 +2957,7 @@ export const productPages = [
         ["Hydraulics", "Floor lifted about 2 to 3 mm; the cheeks narrow the channel at the stern"],
         ["Flow", "With a level sensor, flow can be calculated from the depth curve of the Sensor Fort"],
       ]],
-      ["Cables and tether", [
+      ["Cables and Tether", [
         ["Cable route", "Inside the walls, out of the top of the stern blocks 172 mm above the invert, then up the manhole wall"],
         ["Cable size", "Up to 8.5 mm; no ports, clamps or screws"],
         ["Tether", "Two 3 mm 316 legs from the stern blocks, a 5 mm quick link, 3 mm 316 main tether and snap hook"],
@@ -3386,10 +3388,10 @@ export const results = [
 
 // How a monitoring program runs, on the service pages marked `process: true`.
 export const programSteps = [
-  ["map", "Scope and site selection", "Agree what the data has to answer, then choose sites by their hydraulics, not their convenience."],
-  ["hard-hat", "Install and commission", "Trained EDS crews install intrinsically safe instruments, Australia-wide, and check every site before it goes live."],
-  ["activity", "Monitor and validate", "Readings arrive over 4G into FlowSense, with continuous QA/QC and alarms when something changes."],
-  ["file-chart-column", "Report and recommend", "Validated data and a report that shows where the problems are and what to fix first, or a feed into your model by API."],
+  ["map", "Scope and Site Selection", "Agree what the data has to answer, then choose sites by their hydraulics, not their convenience."],
+  ["hard-hat", "Install and Commission", "Trained EDS crews install intrinsically safe instruments, Australia-wide, and check every site before it goes live."],
+  ["activity", "Monitor and Validate", "Readings arrive over 4G into FlowSense, with continuous QA/QC and alarms when something changes."],
+  ["file-chart-column", "Report and Recommend", "Validated data and a report that shows where the problems are and what to fix first, or a feed into your model by API."],
 ];
 
 // The four industries EDS works for, shown under the opening text on the
@@ -3544,7 +3546,7 @@ export const downloads = [
 export const city = [
   {
     id: "sewer",
-    name: "Sewer network",
+    name: "Sewer Network",
     icon: "waves",
     blurb: "Under every street, flow and depth are measured at the manhole and sent in over 4G.",
     services: ["s:sewer-flow-monitoring", "s:inflow-infiltration-studies", "s:blockage-overflow-alarms", "s:sewer-model-calibration"],
@@ -3581,7 +3583,7 @@ export const city = [
   },
   {
     id: "pump",
-    name: "Pump station",
+    name: "Pump Station",
     icon: "fan",
     blurb: "Wet well levels, pump runs and alarms, watched around the clock.",
     services: ["s:pump-station-monitoring", "s:real-time-monitoring", "s:scada-telemetry-integration", "s:network-assessment"],
@@ -3614,7 +3616,7 @@ export const city = [
   },
   {
     id: "plant",
-    name: "Treatment plant",
+    name: "Treatment Plant",
     icon: "flask-conical",
     blurb: "Flow, quality and sampling through every stage of treatment.",
     services: ["s:water-quality-monitoring", "o:wastewater-monitoring", "s:closed-channel-flow", "s:auditing-calibration"],
@@ -3648,7 +3650,7 @@ export const city = [
   },
   {
     id: "industry",
-    name: "Industrial estate",
+    name: "Industrial Estate",
     icon: "factory",
     blurb: "Discharge measured and sampled, so trade waste stays compliant.",
     services: ["s:trade-waste", "s:sampling-programs", "s:equipment-rental", "s:auditing-calibration"],
@@ -3684,7 +3686,7 @@ export const city = [
   },
   {
     id: "river",
-    name: "River & catchment",
+    name: "River & Catchment",
     icon: "trees",
     blurb: "Water quality, rainfall and temperature, from baseline to compliance.",
     services: ["o:environmental-monitoring", "s:water-quality-monitoring", "s:rainfall-monitoring", "o:network-thermal-monitoring"],
@@ -3717,7 +3719,7 @@ export const city = [
   },
   {
     id: "cbd",
-    name: "CBD & facilities",
+    name: "CBD & Facilities",
     icon: "building-2",
     blurb: "Buildings and structures scored 24/7 and managed as one service.",
     services: ["s:facility-management", "o:structure-performance", "o:asset-network-assessment"],
@@ -3751,7 +3753,7 @@ export const city = [
   },
   {
     id: "ops",
-    name: "Operations centre",
+    name: "Operations Centre",
     icon: "monitor-dot",
     blurb: "Every reading arrives in one place: EDS FlowSense.",
     services: ["flowsense", "s:data-analysis-reporting", "s:real-time-monitoring", "s:data-as-a-service"],
@@ -3794,7 +3796,7 @@ export const cityUi = {
   toolbar: { tour: "Take the tour", storm: "Send a storm", stormBusy: "Stop the storm", stormCancelled: "Storm stopped.", mute: "Mute the storm", unmute: "Unmute the storm", under: "Show the sewer", underOn: "Show the surface", expand: "Expand the city", collapse: "Back to the page", close: "Close", zoomLabel: "Zoom", zoomIn: "Zoom in", zoomOut: "Zoom out" },
   captionRest: "Send a storm, take a district apart, or show the sewer beneath the streets.",
   captionRestTouch: "Pinch to zoom in, send a storm, take a district apart, or show the sewer.",
-  sensorsHeading: "Sensors on the map",
+  sensorsHeading: "Sensors on the Map",
   tipLabel: "Sensor readings",
   readingsNote: "Illustrative readings, not live data.",
   note: "An illustrative Australian capital city. The readings, alarms, crews and storm are a simulation, not a real network or live data.",
