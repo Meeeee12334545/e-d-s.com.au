@@ -1660,7 +1660,7 @@ export const brands = [
         items: [
           { name: "E-Flow 3", type: "flow", note: "Dual-mode sewer flow meter", image: img("e-flow-3.png"), href: "products/e-flow-3.html", docs: [{ label: "Datasheet", href: localDoc("eds-e-flow-3-datasheet.pdf") }, { label: "Brochure", href: localDoc("eds-e-flow-3-brochure.pdf") }] },
           { name: "iLab 901", type: "quality", note: "Multi-parameter water quality sonde", image: img("ilab-901.png"), href: "products/ilab-901.html", docs: [{ label: "Datasheet", href: localDoc("eds-ilab-901-datasheet.pdf") }] },
-          { name: "Sensor Fort", type: "quality", note: "Sensor mount for gravity sewers, installed from the lid", image: img("sensor-fort.jpg"), href: "products/sensor-fort.html", docs: [{ label: "Datasheet", href: localDoc("eds-sensor-fort-datasheet.pdf") }, { label: "Brochure", href: localDoc("eds-sensor-fort-brochure.pdf") }] },
+          { name: "Sensor Fort", type: "quality", note: "Sensor mount for 150 to 350 mm gravity sewers, installed from the lid", image: img("sensor-fort.jpg"), href: "products/sensor-fort.html", docs: [{ label: "Datasheet", href: localDoc("eds-sensor-fort-datasheet.pdf") }, { label: "Brochure", href: localDoc("eds-sensor-fort-brochure.pdf") }] },
           { name: "Ultrasonic Level", type: "level", note: "Level sensor", image: img("ultrasonic-level-sensor-image-2.png") },
           { name: "EC", type: "quality", note: "Electro-conductivity sensor", image: img("cos41.jpg") },
           { name: "pH", type: "quality", note: "pH sensor", image: img("eds-ph-sensor.jpg") },
@@ -2672,7 +2672,7 @@ export const productPages = [
     description: "How to install pH, EC and other water quality sensors in a gravity sewer. Sensor Fort goes in from the lid, parks in the chase and gives rag nothing to hold.",
     image: img("sensor-fort.jpg"),
     heroShape: "tall",
-    heroCaption: "Sensor Fort SF 150, for 150 mm sewers, seen from upstream.",
+    heroCaption: "The SF 150, for 150 mm sewers. There's a version for every sewer size up to 350 mm.",
     docs: [
       { label: "Datasheet", note: "SF 150 specifications, sensor fit, sleeves, dimensions and site requirements.", href: localDoc("eds-sensor-fort-datasheet.pdf") },
       { label: "Brochure", note: "The problem, how Sensor Fort works and how it goes in from the lid.", href: localDoc("eds-sensor-fort-brochure.pdf") },
@@ -2682,13 +2682,14 @@ export const productPages = [
       ["arrow-down-to-line", "In and out from the lid", "One person, no pole and no confined space entry"],
       ["plug", "Your sensors, any maker", "Two bays for sensor bodies up to 28.5 mm across"],
       ["zap-off", "Runs on nothing but your sensors", "No power, no pump and no moving parts"],
-      ["ruler", "Sizes from 150 to 350 mm", "For gravity sewers of 150 to 350 mm in diameter"],
+      ["ruler", "A version for every sewer size", "From 150 mm to 350 mm in diameter"],
       ["calendar-check", "12 months between visits", "The service interval it's designed for"],
     ],
     intro: [
       "Utilities and industry want to know what's in the sewer: pH, conductivity (EC), dissolved oxygen. The sensors exist. Getting them into a gravity sewer, and keeping them there and reading, has always been the hard part. Rag wraps round anything that faces the flow or crosses it, and fixing hardware in a manhole means confined space entry.",
       "Sensor Fort lies in the open channel across the manhole floor (the chase), where you can see it from the lid. The flow runs through one smooth U, from a flexible feather edge to the stern, where two sensor tips sit in the wake. The cables run inside the walls and leave above the water.",
-      "EDS designed Sensor Fort and builds it in Brisbane, drawing on more than 30 years of experience and knowledge of sewers. It needs nothing to run except your sensors: no power, no pump and no moving parts. One person lowers it from the lid, the flow parks it against the outlet wall, and it's designed for 12 months between visits. It comes in sizes for sewers from 150 to 350 mm in diameter.",
+      "EDS designed Sensor Fort and builds it in Brisbane, drawing on more than 30 years of experience and knowledge of sewers. It needs nothing to run except your sensors: no power, no pump and no moving parts. One person lowers it from the lid, the flow parks it against the outlet wall, and it's designed for 12 months between visits.",
+      "There's a version of Sensor Fort for every sewer size from 150 mm to 350 mm in diameter. The SF 150, shown here, is the one for 150 mm sewers.",
     ],
     glance: {
       heading: "SF 150 at a glance",
@@ -2700,7 +2701,7 @@ export const productPages = [
         ["Sensors", "Two, with bodies up to 28.5 mm across"],
         ["Installation", "From the lid, by one person"],
         ["Power", "None. Fully passive"],
-        ["Other sizes", "For sewers up to 350 mm"],
+        ["Range", "A version for every sewer size from 150 mm to 350 mm"],
       ],
     },
     anatomy: {
@@ -2813,7 +2814,8 @@ export const productPages = [
       site: {
         heading: "Where the SF 150 fits",
         alt: "Two drawings of the site the SF 150 needs. From the side: the mount in the chase against the outlet wall, with a straight chase at least 350 mm long, chase walls at least 137 mm high and the top of the outlet no more than 165 mm above the invert. Across the chase: the mount in a U-shaped channel 147 to 153 mm wide.",
-        caption: "The chase from the side and across, in millimetres. Measure the chase width, the wall height and the obvert height before you order. For other sewers up to 350 mm, tell us the size.",
+        caption: "The chase from the side and across, in millimetres. Measure the chase width, the wall height and the obvert height before you order.",
+        note: ["A version for every sewer size.", "Sensor Fort is made for every sewer size from 150 mm to 350 mm in diameter. These figures are for the SF 150, the version for 150 mm sewers. Tell us the size of your sewer and we'll match the version to it."],
         items: [
           "A 150 mm sewer with a straight-through manhole",
           "A straight chase at least 350 mm long to the outlet wall",
@@ -2849,7 +2851,7 @@ export const productPages = [
         ["17", "makers", "With sensors that fit"],
         ["30", "models", "Of 63 surveyed"],
       ],
-      note: "From the EDS survey of pH, ORP, four-electrode conductivity and dissolved oxygen sensors, November 2026, for the SF 150. Larger sizes, for sewers up to 350 mm, can take larger sensor bodies. Please confirm your sensor with us before you order.",
+      note: "From the EDS survey of pH, ORP, four-electrode conductivity and dissolved oxygen sensors, November 2026, for the SF 150. The versions for larger sewers, up to 350 mm, can take larger sensor bodies. Please confirm your sensor with us before you order.",
       sleeves: {
         heading: "Sleeves and parts for the SF 150",
         rows: [
@@ -2892,8 +2894,8 @@ export const productPages = [
       items: [
         ["How do you install a pH or EC sensor in a sewer?", "Mount it where rag can't catch it. Sensor Fort lies in the chase of a manhole, lowered from the lid by one person on its tether. The sensors lie inside its walls, 15° tip down, with only their tips in the flow at the stern. There's no pole, no confined space entry and nothing drilled or fixed in the chase."],
         ["Why do water quality sensors foul in a sewer?", "Mostly because of how they're held. Rag wraps round anything that faces the flow or crosses it: a probe, a bracket, a cable. Fat coats, grit scours, and storm flows move a loose sensor. Chains, rings, brackets and pumped cabinets all leave something for rag to hold or something more to maintain."],
-        ["Which water quality sensors can be installed in a sewer with Sensor Fort?", "Any cylindrical sensor that measures at its tip, from any maker: pH, ORP, four-electrode conductivity (EC) and dissolved oxygen. The SF 150 holds two sensors with bodies up to 28.5 mm across. In our November 2026 survey, 30 of 63 models from 17 makers fit it, and all four types are made as 12 mm electrodes, which fit. Larger sizes can take larger sensor bodies. Check your sensor with us before you order."],
-        ["What size sewer does it suit?", "Sensor Fort comes in sizes for gravity sewers from 150 to 350 mm in diameter. It needs a straight-through manhole with a straight chase. The SF 150 suits a chase 147 to 153 mm wide, with at least 350 mm of straight chase to the outlet wall."],
+        ["Which water quality sensors can be installed in a sewer with Sensor Fort?", "Any cylindrical sensor that measures at its tip, from any maker: pH, ORP, four-electrode conductivity (EC) and dissolved oxygen. The SF 150 holds two sensors with bodies up to 28.5 mm across. In our November 2026 survey, 30 of 63 models from 17 makers fit it, and all four types are made as 12 mm electrodes, which fit. The versions for larger sewers can take larger sensor bodies. Check your sensor with us before you order."],
+        ["What size sewer does it suit?", "There's a version of Sensor Fort for every gravity sewer size from 150 mm to 350 mm in diameter. Each needs a straight-through manhole with a straight chase. The SF 150, for 150 mm sewers, suits a chase 147 to 153 mm wide, with at least 350 mm of straight chase to the outlet wall."],
         ["Does it need confined space entry?", "No. One person lowers it from the lid on its tether, and lifts it out the same way. Nothing is drilled or fixed in the chase."],
         ["How often do sensors in a sewer need servicing?", "Sensor Fort is designed for 12 months between visits. Lift it out, service the sensors at the surface and lower it back, or swap it for a prepared mount. No mount stops biofilm growing or a pH reference ageing, so sensor choice and data checks still apply."],
         ["Does it need power or a pump?", "No. Sensor Fort needs nothing to run except your sensors. It's passive, with no power, no moving parts and no electrical parts. The sensors connect to your own logger, or to an EDS Metalog 4G, which logs analogue and Modbus instruments and reports over 4G."],
@@ -2907,7 +2909,8 @@ export const productPages = [
     },
     specs: [
       ["General", [
-        ["Product", "Sensor Fort SF 150, from the range for sewers 150 to 350 mm in diameter"],
+        ["Product", "Sensor Fort SF 150, the version for 150 mm sewers"],
+        ["Range", "A version for every sewer size from 150 mm to 350 mm in diameter"],
         ["Function", "Holds two analytical sensors in the chase of a maintenance hole, with only their tips in the flow"],
         ["Sewer", "DN150, straight-through maintenance hole"],
         ["Operation", "Passive: no power, moving or electrical parts"],

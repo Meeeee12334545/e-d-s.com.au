@@ -2206,6 +2206,7 @@ const lidBand = (l) => {
     <ul class="sf-ticks">${l.site.items.map((t) => `<li>${icon("check", false)}<span>${esc(t)}</span></li>`).join("")}</ul>
     <figure class="diagram sf-fig"><div class="dg-plate" role="img" aria-label="${esc(l.site.alt)}"><div class="sf-scroll">${site.side}</div>${site.end}</div><figcaption>${esc(l.site.caption)}</figcaption></figure>
   </div>
+  <p class="sf-note" data-reveal><b>${esc(l.site.note[0])}</b> ${esc(l.site.note[1])}</p>
   <h3 class="sf-sub" data-reveal>${esc(l.service.heading)}</h3>
   <ul class="deliv n${l.service.items.length}">${l.service.items.map(([t, d], n) => `<li data-reveal style="--i:${n}"><b>${esc(t)}</b><p>${esc(d)}</p></li>`).join("")}</ul>`;
 };
