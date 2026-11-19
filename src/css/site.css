@@ -4428,7 +4428,9 @@ body.is-touring { overscroll-behavior-y: contain; }
 
 /* tables: the comparison, and the sleeves */
 .sf-table-wrap { border-top: 2px solid var(--ink); }
-.sf-table-wrap.scroll { overflow-x: auto; overscroll-behavior-x: contain; }
+/* The scroller is positioned so the cells' .sr-only labels (absolute) stay
+   inside it; unpositioned, they sit out in the page and widen it. */
+.sf-table-wrap.scroll { position: relative; overflow-x: auto; overscroll-behavior-x: contain; }
 .sf-table { width: 100%; border-collapse: collapse; font-size: .95rem; }
 .sf-table th, .sf-table td { padding: 13px 18px 13px 0; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
 .sf-table tbody th { font-family: var(--font-display); font-weight: 620; color: var(--ink); }
