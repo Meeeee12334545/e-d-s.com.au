@@ -251,11 +251,12 @@ function tradewaste(t) {
 /* ---- Sensor Fort: the four usual ways to hold a sensor in a sewer ---- */
 // One long section each, flow left to right, shown failing over a twelve
 // second loop: rag drifts in with the flow and catches, one piece after
-// another, and what else goes wrong follows (a ring of fat, silt in the lee,
-// a float grounded at low flow, a blocked intake). Each carries a red cross,
-// so the four read as what does not work before a word is read. The words
-// are page text under each drawing (build.mjs: problemBand); the motion is
-// CSS (site.css: .sfm-*), paused off screen with the other illustrations.
+// another, on whatever faces the flow or crosses it (a probe on its chain,
+// a ring and its cable, a bracket, the intake of a sample line). Each carries
+// a red cross, so the four read as what does not work before a word is read.
+// The words are page text under each drawing (build.mjs: problemBand); the
+// motion is CSS (site.css: .sfm-*), paused off screen with the other
+// illustrations.
 const SM = { w: 320, h: 168, crown: 52, inv: 138, surf: 100 };
 const RAGS = ["q8 5 18 2t20 4", "q10-5 20 0t18-2", "q7 6 16 3t14 5", "q9-4 18 1t16-1"];
 // a strand of rag that arrives n-th (1 to 4) and stays where it is drawn
@@ -275,35 +276,33 @@ const smScene = (p, inner, { shaft = null, water = null } = {}) => {
   <g class="sfm-x"><circle cx="${w - 22}" cy="22" r="12"/><path d="M${w - 27} 17l10 10m0-10l-10 10"/></g>`, `${efDefs(p)}${ltWaterGrad(p)}`);
 };
 const SF_METHODS = {
-  // a pole down the manhole with the sensor at its foot: rag where the pole
-  // pierces the surface and on the sensor, fat in a ring at the waterline
-  pole: (p) => smScene(p, `
-  <rect class="dg-pole" x="157" y="0" width="6" height="118" rx="1.5"/>
-  <path class="dg-inst-base" d="M154 30h12v5h-12zM154 70h12v5h-12z"/>
-  <rect class="dg-probe" x="149" y="112" width="22" height="18" rx="4"/><path class="dg-probe-tip" d="M171 124h4"/>
-  <ellipse class="dg-grease sfm-grow" cx="146" cy="${SM.surf}" rx="11" ry="2.6"/><ellipse class="dg-grease sfm-grow" cx="175" cy="${SM.surf}" rx="12" ry="2.8"/>
-  ${smRag(150, SM.surf + 3, 1)}${smRag(157, SM.surf + 9, 2)}${smRag(164, 116, 3)}${smRag(160, 126, 4)}`, { shaft: [128, 192] }),
-  // a sensor strapped to a band on the invert, its cable in the flow: rag on
-  // the body, the clamps and the cable, silt settling in its lee
-  band: (p) => smScene(p, `
+  // a probe hung down the manhole on a chain or its own cable: it swings in
+  // the flow, and rag collects on the probe and the chain
+  chain: (p) => smScene(p, `
+  <g class="sfm-swing" style="transform-origin:160px 0">
+    <path class="dg-chain" d="M160 0V108"/>
+    <rect class="dg-probe" x="151" y="106" width="18" height="24" rx="4"/><path class="dg-probe-tip" d="M156 131h8"/>
+    ${smRag(154, SM.surf + 2, 1)}${smRag(150, 110, 2)}${smRag(153, 119, 3)}${smRag(151, 127, 4)}
+  </g>`, { shaft: [128, 192] }),
+  // a probe strapped to a ring in the pipe, as a flow sensor is: the probe,
+  // its carrier and its cable all sit in the flow
+  ring: (p) => smScene(p, `
   <path class="dg-band-ring" d="M156 ${SM.crown + 1.5}h14M144 ${SM.inv - 1.5}h54"/>
   <path class="dg-cable" d="M152 ${SM.inv - 8}C120 ${SM.inv - 3} 84 ${SM.inv - 11} 0 ${SM.inv - 6}"/>
-  <path class="dg-mound sfm-grow" d="M190 ${SM.inv}q5-11 17-12q13-5 23 4q12 0 15 8z"/>
   <rect class="dg-probe" x="150" y="${SM.inv - 16}" width="40" height="14" rx="4"/><path class="dg-probe-tip" d="M190 ${SM.inv - 9}h4"/>
   <path class="dg-clamp" d="M158 ${SM.inv - 18}h6v18h-6zM176 ${SM.inv - 18}h6v18h-6z"/>
   ${smRag(146, SM.inv - 19, 1)}${smRag(156, SM.inv - 25, 2, 3)}${smRag(86, SM.inv - 10, 3, 1, -110)}${smRag(60, SM.inv - 15, 4, 0, -90)}`),
-  // a float on a tether, the sensor beneath it: rag on the tether and the
-  // float, and at low flow the float grounds and tips over
-  float: (p) => smScene(p, `
-  <path class="dg-cable sfm-tether" style="transform-origin:66px ${SM.crown}px" d="M66 ${SM.crown}L166 ${SM.surf - 4}"/>
-  <g class="sfm-sink">
-    <rect class="dg-probe" x="182" y="${SM.surf + 6}" width="9" height="15" rx="3"/><path class="dg-probe-tip" d="M184 ${SM.surf + 22}h5"/>
-    <path class="dg-inst" d="M166 ${SM.surf - 8}h42q5 0 5 5v6q0 5-5 5h-42q-5 0-5-5v-6q0-5 5-5z"/><path class="dg-inst-print" d="M172 ${SM.surf - 3}h22"/>
-    ${smRag(150, SM.surf - 1, 1, 0, -150)}${smRag(158, SM.surf + 8, 2, 2, -160)}${smRag(170, SM.surf + 14, 3, 3)}
-  </g>`, { water: `<g class="sfm-ebb" style="transform-origin:0 ${SM.inv}px">${ltWater(p, 0, SM.w, SM.surf, SM.inv, { flow: false })}</g><path class="dg-flow" d="M14 ${SM.inv - 6}H${SM.w - 14}"/>` }),
-  // a pump lifting a sample up a hose to a flow cell: the intake blocks, the
-  // flow stops and the cell fouls
-  bypass: (p) => smScene(p, `
+  // a bracket bolted to the manhole wall, reaching down into the flow: it has
+  // to be drilled and fixed from inside, and then it catches rag itself
+  bracket: (p) => smScene(p, `
+  <path class="dg-bracket" d="M128 10h16v118h-5V42h-11z"/>
+  <circle class="dg-bolt" cx="133" cy="18" r="1.9"/><circle class="dg-bolt" cx="133" cy="34" r="1.9"/>
+  <rect class="dg-probe" x="144" y="112" width="24" height="14" rx="4"/><path class="dg-probe-tip" d="M168 119h4"/>
+  <path class="dg-clamp" d="M150 110h6v18h-6z"/>
+  ${smRag(137, SM.surf + 2, 1)}${smRag(138, 109, 2)}${smRag(137, 118, 3)}${smRag(146, 108, 4, 1)}`, { shaft: [128, 192] }),
+  // a pump lifting a sample up a line to a cabinet: the intake blocks, the
+  // flow stops, and there is a pump, a line and a cabinet to look after
+  cabinet: (p) => smScene(p, `
   <path class="dg-hose" d="M158 126V40Q158 22 176 22"/>
   <path class="dg-hose-flow sfm-choke" d="M158 126V40Q158 22 176 22"/>
   <rect class="dg-inst" x="174" y="10" width="26" height="25" rx="3"/><path class="dg-inst-print" d="M180 17h13M180 22h9"/><circle class="sfm-led" cx="193" cy="29" r="2"/>
@@ -314,6 +313,212 @@ const SF_METHODS = {
   ${smRag(146, 124, 2, 1)}${smRag(150, 134, 4, 3)}`, { shaft: [128, 262] }),
 };
 export const sfMethod = (kind) => SF_METHODS[kind](`sfm-${kind}`);
+
+/* ---- Sensor Fort itself, drawn from the SF 150 datasheet ---- */
+// The datasheet gives the mount in side elevation and from upstream: 345 mm
+// long with a 47 mm flexible boot at the nose, walls 135 mm high that rise
+// over the last 80 mm to stern blocks 175 mm high, two sensors lying 15° tip
+// down with their tips at the stern face, and each cable running inside its
+// wall and out of the top of its block. These drawings set that out in
+// millimetres (nose at the origin, y up) and place it with X and Y, which
+// turn millimetres into the units of each drawing.
+const sfWall = (X, Y) => `M${X(0)} ${Y(0)}V${Y(131)}Q${X(0)} ${Y(135)} ${X(4)} ${Y(135)}H${X(262)}C${X(292)} ${Y(135)} ${X(298)} ${Y(175)} ${X(326)} ${Y(175)}H${X(345)}V${Y(0)}Z`;
+const sfBoot = (X, Y) => `M${X(0)} ${Y(0)}V${Y(131)}Q${X(0)} ${Y(135)} ${X(4)} ${Y(135)}H${X(47)}V${Y(0)}Z`;
+const sfStrip = (X, Y) => `M${X(47)} ${Y(137)}H${X(262)}V${Y(135)}H${X(47)}Z`;
+// the cable's way out: forward from the head of the sensor, up and back along
+// the top of the wall, then up through the stern block
+const sfRoute = (X, Y) => `M${X(187)} ${Y(72)}H${X(112)}A${f1(Math.abs(X(27) - X(0)))} ${f1(Math.abs(Y(27) - Y(0)))} 0 0 1 ${X(112)} ${Y(126)}H${X(270)}C${X(300)} ${Y(126)} ${X(323)} ${Y(142)} ${X(323)} ${Y(175)}`;
+// a sensor in its bay: 190 mm long, 28.5 mm across, 15° tip down, tip just
+// proud of the stern face
+const sfSensor = (X, Y, { tip = 349, low = 29, len = 190, dia = 28.5 } = {}) => {
+  const c = Math.cos(Math.PI / 12), s = Math.sin(Math.PI / 12), r = dia / 2;
+  const pt = (along, side) => `${X(tip - along * c + side * s)} ${Y(low + along * s + side * c)}`;
+  return `M${pt(0, r)}L${pt(len, r)}L${pt(len, -r)}L${pt(0, -r)}Z`;
+};
+// the mount as a solid body, from the side: teal walls, the dark boot at the
+// nose and the flexible strip along the top
+const sfBody = (X, Y) => `<path class="sfd-body" d="${sfWall(X, Y)}"/><path class="sfd-boot" d="${sfBoot(X, Y)}"/><path class="sfd-strip" d="${sfStrip(X, Y)}"/>`;
+// a dimension: a line between two points with a slash at each end, and its
+// figure beside it
+const sfDim = (x1, y1, x2, y2, text, { dx = 0, dy = -6, a = "middle" } = {}) => `
+  <path class="sfd-dim" d="M${x1} ${y1}L${x2} ${y2}M${x1 - 4} ${y1 + 4}l8-8M${x2 - 4} ${y2 + 4}l8-8"/>
+  <text class="sfd-fig" x="${f1((x1 + x2) / 2 + dx)}" y="${f1((y1 + y2) / 2 + dy)}" text-anchor="${a}">${esc(text)}</text>`;
+const sfDot = (x, y) => `<circle class="sfd-dot" cx="${x}" cy="${y}" r="4.2"/>`;
+const sfBadge = (n, bx, by, dx, dy) => `<path class="sfd-lead" d="M${bx} ${by}L${dx} ${dy}"/>${sfDot(dx, dy)}<g class="sf-b" style="transform-origin:${bx}px ${by}px"><circle cx="${bx}" cy="${by}" r="13"/><text x="${bx}" y="${by}">${n}</text></g>`;
+
+// The mount in the chase, in section along the centre line with the near wall
+// cut away: the manhole floor and the wall above the outlet, the far wall of
+// the mount with its cheek and the sensor inside it, and the cable going up
+// the wall. Water is drawn between two layers of it, on a canvas
+// (src/js/sensor-fort.js), from the surface and the floor given here, so
+// `back` goes under the water and `front` over it; `still` is the water as a
+// plain fill, for a page without the script.
+export function sfSection(p = "sfs") {
+  const W = 1080, H = 470, K = 1.6, INV = 400, N = 250;
+  const X = (mm) => f1(N + mm * K), Y = (mm) => f1(INV - mm * K);
+  const XS = N + 345 * K, OBV = INV - 150 * K, BENCH = INV - 147 * K, LIFT = 3 * K;
+  const surf = [[0, 301], [N, 301], [N + 80, 300], [N + 370, 301], [N + 470, 304], [XS, 309], [XS + 58, 312], [W, 312]];
+  const bed = [[0, INV], [N, INV], [N + 1, INV - 1.3], [N + 47 * K, INV - LIFT], [XS, INV - LIFT], [XS, INV], [W, INV]];
+  // the water runs a little faster between the cheeks and out past the tips
+  const pace = [[0, 1], [N + 230, 1], [XS - 60, 1.5], [XS + 40, 1.55], [W, 1.3]];
+  const defs = `${efDefs(p)}
+  <linearGradient id="${p}-wall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3c9d93"/><stop offset="1" stop-color="#2a7b74"/></linearGradient>
+  <linearGradient id="${p}-cheek" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6fcdc2"/><stop offset=".45" stop-color="#49b1a6"/><stop offset="1" stop-color="#2f8a82"/></linearGradient>
+  <linearGradient id="${p}-boot" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6a7173"/><stop offset="1" stop-color="#3b4142"/></linearGradient>
+  <linearGradient id="${p}-bore" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#dfe7e5"/><stop offset="1" stop-color="#f3f7f6"/></linearGradient>
+  <linearGradient id="${p}-sw" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#78cdc2" stop-opacity=".3"/><stop offset="1" stop-color="#0a6860" stop-opacity=".55"/></linearGradient>`;
+  const back = `<defs>${defs}</defs>
+  <rect width="${W}" height="${H}" fill="url(#${p}-air)"/>
+  <path class="sfd-bench" d="M0 ${f1(BENCH)}H${XS}V${INV}H0Z"/><path class="ef-edge" d="M0 ${f1(BENCH)}H${XS}"/>
+  <rect x="${XS}" y="${OBV}" width="${W - XS}" height="${INV - OBV}" fill="url(#${p}-bore)"/>
+  <path fill="url(#${p}-cut)" d="M0 ${INV}H${W}V${H}H0ZM${XS} 0H${W}V${OBV}H${XS}Z"/>
+  <path class="ef-edge" d="M0 ${INV}H${W}M${XS} 0V${OBV}H${W}"/>
+  <path class="ef-step" d="M${XS} 34h-12v6h12"/>
+  <path d="${sfWall(X, Y)}" fill="url(#${p}-wall)"/>
+  <path d="${sfBoot(X, Y)}" fill="url(#${p}-boot)"/>
+  <path d="M${X(124)} ${Y(3)}C${X(124)} ${Y(72)} ${X(138)} ${Y(113)} ${X(170)} ${Y(111)}L${X(345)} ${Y(64)}V${Y(3)}Z" fill="url(#${p}-cheek)"/>
+  <path class="sfd-strip" d="${sfStrip(X, Y)}"/>
+  <path class="sfd-route" d="${sfRoute(X, Y)}"/>
+  <path class="sfd-sensor" d="${sfSensor(X, Y)}"/>
+  <path class="sfd-tip" d="${sfSensor(X, Y, { tip: 351, len: 6, dia: 15 })}"/>
+  <path class="sfd-edge" d="${sfWall(X, Y)}"/>
+  <path class="sfd-floor b" d="M${X(0)} ${Y(0)}V${Y(0.8)}L${X(47)} ${Y(3)}V${Y(0)}Z"/><path class="sfd-floor" d="M${X(47)} ${Y(0)}V${Y(3)}H${X(345)}V${Y(0)}Z"/>
+  <path class="sfd-tether" d="M${X(336)} ${Y(175)}C${X(336)} ${Y(205)} ${X(339)} ${Y(225)} ${X(339)} ${Y(250)}"/>
+  <path class="sfd-cable" d="M${X(323)} ${Y(175)}C${X(323)} ${Y(200)} ${X(330)} ${Y(218)} ${X(330)} ${Y(250)}"/>`;
+  const still = `<path fill="url(#${p}-sw)" d="M${surf.map(([x, y]) => `${x} ${y}`).join("L")}L${[...bed].reverse().map(([x, y]) => `${f1(x)} ${f1(y)}`).join("L")}Z"/><path class="ef-surf" d="M${surf.map(([x, y]) => `${x} ${y}`).join("L")}"/>`;
+  const front = `
+  <text class="sfd-where" x="16" y="${f1(BENCH + 22)}">Benching</text>
+  <text class="sfd-where" x="${W - 16}" y="30" text-anchor="end">Manhole wall</text>
+  <text class="sfd-where" x="${W - 16}" y="${OBV + 24}" text-anchor="end">Outlet pipe</text>
+  <text class="sf-say" x="22" y="286">Flow</text><path class="dg-arrow" d="M62 281h30m-8-5 8 5-8 5"/>
+  ${sfBadge(1, 196, 348, N + 4, INV - 4)}
+  ${sfBadge(2, 470, 236, 470, 352)}
+  ${sfBadge(3, 372, 118, 420, f1(INV - 136 * K))}
+  ${sfBadge(4, 700, 66, X(338), Y(158))}
+  ${sfBadge(5, 872, 84, X(330.5), 44)}
+  ${sfBadge(6, 912, 250, XS + 7, Y(27))}`;
+  return { w: W, h: H, back, still, front, flow: { w: W, h: H, surf, bed: bed.map(([x, y]) => [f1(x), f1(y)]), pace, wake: XS } };
+}
+
+// Going in from the lid, as one loop: the mount comes down the wall above
+// the outlet hanging nose low, its nose lands in the chase, it lies down
+// pointing upstream as the tether is paid out, and the flow parks its stern
+// blocks on the wall. The motion is sampled here into keyframes, so the mount
+// and the tether it hangs from stay together; the steps beside the drawing
+// light up in time with it (site.css: .sf-go).
+export function sfInstall(p = "sfi") {
+  const W = 720, H = 400, K = 0.8, F = 342, WALL = 552, T = 12;
+  const TILT = 48, LAND = 3.8, DOWN = 6.6, PUSH = 7.0, HOME = 8.0;
+  const ease = (u) => (u <= 0 ? 0 : u >= 1 ? 1 : u * u * (3 - 2 * u));
+  // where the mount is at time t: its nose (drawing units) and its tilt
+  const pose = (t) => {
+    let a = TILT, gap = 9, up = 0;
+    if (t < LAND) up = 330 * (1 - ease(t / LAND) ** 0.9);
+    else if (t < DOWN) { const u = ease((t - LAND) / (DOWN - LAND)); a = TILT * (1 - u); gap = 9 + 9 * u; }
+    else { a = 0; gap = 18 * (1 - ease((t - PUSH) / (HOME - PUSH))); }
+    const r = (a * Math.PI) / 180;
+    const x = WALL - (345 * Math.cos(r) + gap) * K, y = F - up * K;
+    // the top of the stern block, where the tether leaves
+    const hx = x + (333 * Math.cos(r) - 175 * Math.sin(r)) * K, hy = y - (333 * Math.sin(r) + 175 * Math.cos(r)) * K;
+    return { x, y, a, hx, hy };
+  };
+  const steps = 48, frames = Array.from({ length: steps + 1 }, (_, i) => pose((i / steps) * T));
+  const pct = (i) => f1((i / steps) * 100);
+  const keys = (name, fn) => `@keyframes ${name}{${frames.map((f, i) => `${pct(i)}%{transform:${fn(f)}}`).join("")}}`;
+  const end = pose(T);
+  const X = (mm) => f1(mm * K), Y = (mm) => f1(-mm * K);
+  const body = `
+  <style>${keys(`${p}-mount`, (f) => `translate(${f1(f.x)}px,${f1(f.y)}px) rotate(${f1(-f.a)}deg)`)}${keys(`${p}-rope`, (f) => `translate(${f1(f.hx)}px,${f1(f.hy)}px)`)}</style>
+  <rect width="${W}" height="${H}" fill="url(#${p}-air)"/>
+  <path class="sfd-bench" d="M0 ${f1(F - 147 * K)}H${WALL}V${F}H0Z"/><path class="ef-edge" d="M0 ${f1(F - 147 * K)}H${WALL}"/>
+  <rect x="${WALL}" y="${F - 150 * K}" width="${W - WALL}" height="${150 * K}" fill="url(#${p}-bore)"/>
+  <path fill="url(#${p}-cut)" d="M0 ${F}H${W}V${H}H0ZM${WALL} 0H${W}V${F - 150 * K}H${WALL}Z"/>
+  <path class="ef-edge" d="M0 ${F}H${W}M${WALL} 0V${F - 150 * K}H${W}"/>
+  <path class="ef-step" d="M${WALL} 40h-11v6h11M${WALL} 110h-11v6h11"/>
+  ${ltWater(p, 0, W, F - 44, F)}
+  <text class="sfd-where" x="${W - 14}" y="26" text-anchor="end">Manhole wall</text>
+  <text class="sfd-where" x="${W - 14}" y="${F - 150 * K + 22}" text-anchor="end">Outlet pipe</text>
+  <text class="sfd-where" x="14" y="${f1(F - 147 * K - 9)}">Chase</text>
+  <g class="sfi-go">
+    <g class="sfi-rope" style="animation-name:${p}-rope;transform:translate(${f1(end.hx)}px,${f1(end.hy)}px)"><path class="sfd-rope sfi-taut" d="M0 0V-${H}"/></g>
+    <path class="sfd-rope sfi-slack" d="M${f1(end.hx)} ${f1(end.hy)}C${f1(end.hx - 30)} ${f1(end.hy - 60)} ${WALL - 46} 150 ${WALL - 8} 113V0"/>
+    <g class="sfi-mount" style="animation-name:${p}-mount;transform:translate(${f1(end.x)}px,${f1(end.y)}px)">${sfBody(X, Y)}</g>
+  </g>
+  <path class="dg-arrow sfi-push" d="M34 ${F - 22}h64m-9-6 9 6-9 6"/>`;
+  return svg(W, H, body, `${efDefs(p)}${ltWaterGrad(p)}<linearGradient id="${p}-bore" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#dfe7e5"/><stop offset="1" stop-color="#f3f7f6"/></linearGradient>`);
+}
+
+// Where the SF 150 fits: the chase from the side with the three figures to
+// measure, and across with its width.
+export function sfSite(p = "sfw") {
+  const K = 0.9, N = 196, INV = 214;
+  const X = (mm) => f1(N + mm * K), Y = (mm) => f1(INV - mm * K);
+  const XS = N + 345 * K, OBV = INV - 165 * K, TOP = INV - 137 * K;
+  const side = svg(720, 290, `
+  <rect x="48" y="${f1(INV - 52 * K)}" width="${f1(XS + 96 - 48)}" height="${f1(52 * K)}" class="sfd-water"/>
+  <rect x="${XS}" y="${f1(OBV)}" width="96" height="${f1(165 * K)}" class="sfd-outlet"/>
+  <path fill="url(#${p}-cut)" d="M48 ${INV}H${f1(XS + 96)}V${INV + 16}H48ZM${XS} 16H${f1(XS + 46)}V${f1(OBV)}H${XS}Z"/>
+  <path class="ef-edge" d="M48 ${INV}H${f1(XS + 96)}M48 ${INV + 16}H${f1(XS + 96)}M${XS} 16V${f1(OBV)}H${f1(XS + 46)}V16"/>
+  ${sfBody(X, Y)}
+  <path class="sfd-dash" d="M48 ${f1(TOP)}H${XS}M${f1(XS + 96)} ${f1(OBV)}H${f1(XS + 122)}M${f1(XS + 96)} ${INV}H${f1(XS + 122)}"/>
+  <text class="sfd-fig" x="52" y="${f1(TOP - 8)}">Top of chase wall (benching)</text>
+  <text class="sfd-fig" x="${f1(XS + 48)}" y="${f1((OBV + INV) / 2 - 3)}" text-anchor="middle">Outlet<tspan x="${f1(XS + 48)}" dy="1.25em">DN150</tspan></text>
+  ${sfDim(74, INV, 74, f1(TOP), "walls 137 min", { dx: 9, dy: 4, a: "start" })}
+  ${sfDim(f1(XS - 350 * K), INV + 42, XS, INV + 42, "straight chase 350 min", { dy: 19 })}
+  <path class="sfd-ext" d="M${f1(XS - 350 * K)} ${INV + 20}V${INV + 48}M${XS} ${INV + 20}V${INV + 48}"/>
+  ${sfDim(f1(XS + 112), INV, f1(XS + 112), f1(OBV), "obvert 165 max", { dx: 9, dy: 4, a: "start" })}`, efDefs(p));
+  // across the chase: a U channel in the benching, the mount in it
+  const C = 150, R = 73.45, WAT = 54, IR = R - 15, half = Math.sqrt(IR ** 2 - (IR + 15 - WAT) ** 2);
+  const end = svg(300, 290, `
+  <path fill="url(#${p}e-cut)" d="M18 62L75 84V163A75 75 0 0 0 225 163V84L282 62V268H18Z"/>
+  <path class="ef-edge" d="M18 62L75 84V163A75 75 0 0 0 225 163V84L282 62"/>
+  <path class="sfd-body" d="M${C - R} 103V${f1(238 - R)}A${R} ${R} 0 0 0 ${C + R} ${f1(238 - R)}V103H${C + IR}V${f1(238 - R)}A${IR} ${IR} 0 0 1 ${C - IR} ${f1(238 - R)}V103Z"/>
+  <path class="sfd-water" d="M${f1(C - half)} ${238 - WAT}A${IR} ${IR} 0 0 0 ${f1(C + half)} ${238 - WAT}Z"/>
+  <path class="sfd-strip" d="M75 101h17v3H75zM208 101h17v3h-17z"/>
+  <path class="sfd-ext" d="M75 78V38M225 78V38"/>
+  ${sfDim(75, 46, 225, 46, "147 to 153", { dy: -9 })}`, efDefs(`${p}e`));
+  return { side, end };
+}
+
+// The SF 150 in side elevation and from upstream, with its dimensions, as
+// the datasheet draws it.
+export function sfDims() {
+  const K = 1.3, N = 104, INV = 262;
+  const X = (mm) => f1(N + mm * K), Y = (mm) => f1(INV - mm * K);
+  const XS = N + 345 * K;
+  const side = svg(660, 322, `
+  <path class="sfd-sheet" d="${sfWall(X, Y)}"/>
+  <path class="sfd-boot" d="${sfBoot(X, Y)}"/><path class="sfd-strip" d="M${X(47)} ${Y(136.6)}H${X(262)}V${Y(134.4)}H${X(47)}Z"/>
+  <path class="sfd-dash" d="M${X(47)} ${Y(3)}H${X(345)}"/>
+  <path class="sfd-route s" d="${sfRoute(X, Y)}V${Y(198)}m-5 7 5-7 5 7"/>
+  <path class="sfd-sensor s" d="${sfSensor(X, Y)}"/><path class="sfd-axis" d="M${X(349 - 205 * 0.966)} ${Y(29 + 205 * 0.259)}L${X(349 + 12 * 0.966)} ${Y(29 - 12 * 0.259)}"/>
+  <path class="sfd-ext" d="M${N} ${INV + 6}V${INV + 36}M${XS} ${INV + 6}V${INV + 36}M${N} ${Y(140)}V${Y(166)}M${X(47)} ${Y(140)}V${Y(166)}M${N - 6} ${INV}H${N - 30}M${N - 6} ${Y(135)}H${N - 30}M${f1(XS + 6)} ${INV}H${f1(XS + 30)}M${f1(XS + 6)} ${Y(175)}H${f1(XS + 30)}"/>
+  ${sfDim(N, INV + 30, XS, INV + 30, "345", { dy: 19 })}
+  ${sfDim(N, f1(INV - 160 * K), f1(N + 47 * K), f1(INV - 160 * K), "47 boot", { dy: -9, dx: 12 })}
+  ${sfDim(N - 24, INV, N - 24, f1(INV - 135 * K), "135", { dx: -9, dy: 4, a: "end" })}
+  ${sfDim(f1(XS + 24), INV, f1(XS + 24), f1(INV - 175 * K), "175", { dx: 9, dy: 4, a: "start" })}
+  <text class="sfd-fig b" x="${N + 8}" y="${INV + 19}">Flow</text><path class="dg-arrow" d="M${N + 44} ${INV + 14}h34m-8-5 8 5-8 5"/>`);
+  const C = 150, R = 73.45 * K, IR = 58.45 * K, LIP = 77 * K, BAY = 14.25 * K;
+  const end = svg(300, 322, `
+  <path class="sfd-sheet" d="M${f1(C - R)} ${Y(175)}h${f1(15 * K)}V${Y(135)}h${f1(-15 * K)}zM${f1(C + R)} ${Y(175)}h${f1(-15 * K)}V${Y(135)}h${f1(15 * K)}z"/>
+  <path class="sfd-boot" d="M${f1(C - R)} ${Y(135)}V${Y(73.45)}A${f1(R)} ${f1(R)} 0 0 0 ${f1(C + R)} ${Y(73.45)}V${Y(135)}H${f1(C + IR)}V${Y(73.45)}A${f1(IR)} ${f1(IR)} 0 0 1 ${f1(C - IR)} ${Y(73.45)}V${Y(135)}Z"/>
+  <path class="sfd-strip" d="M${f1(C - LIP)} ${Y(136.6)}h${f1(LIP - IR)}V${Y(134.4)}h${f1(IR - LIP)}zM${f1(C + LIP)} ${Y(136.6)}h${f1(IR - LIP)}V${Y(134.4)}h${f1(LIP - IR)}z"/>
+  <circle class="sfd-sensor s" cx="${f1(C - 33 * K)}" cy="${Y(31)}" r="${f1(BAY)}"/><circle class="sfd-sensor s" cx="${f1(C + 33 * K)}" cy="${Y(31)}" r="${f1(BAY)}"/>
+  <path class="sfd-ext" d="M${f1(C - LIP)} ${Y(140)}V${Y(203)}M${f1(C + LIP)} ${Y(140)}V${Y(203)}M${f1(C - R)} ${Y(60)}V${INV + 36}M${f1(C + R)} ${Y(60)}V${INV + 36}"/>
+  ${sfDim(f1(C - LIP), f1(INV - 197 * K), f1(C + LIP), f1(INV - 197 * K), "154 over lips", { dy: -9 })}
+  ${sfDim(f1(C - R), INV + 30, f1(C + R), INV + 30, "146.9", { dy: 19 })}`);
+  return { side, end };
+}
+
+// The four things rag catches on, as small signs: flow from the left, the
+// thing that catches, and a strand of rag caught on it.
+const SF_CATCH = {
+  edge: `<path class="sfc-line" d="M32 12v32h14"/><path class="dg-rag" d="M32 15q7 3 5 10t5 10"/>`,
+  gap: `<path class="sfc-line" d="M27 12h8v32h-8zM39 12h8v32h-8z"/><path class="dg-rag" d="M28 20q8 0 9 6t-1 14"/>`,
+  span: `<path class="sfc-line" d="M27 10v36M47 10v36M27 27h20"/><path class="dg-rag" d="M34 27q-3 7 1 13M40 27q3 5 0 10"/>`,
+  flutter: `<path class="sfc-line" d="M27 10v36"/><path class="sfc-line sfc-wave" d="M27 22q7-7 12 0t11 1"/><path class="dg-rag" d="M38 21q3 7 0 13"/>`,
+};
+export const sfCatch = (kind) => svg(56, 56, `<path class="sfc-flow" d="M6 20h13M6 28h13M6 36h13"/>${SF_CATCH[kind]}`);
 
 /* ---- scatter: a shift in the depth to velocity relationship ---- */
 function scatter(t) {
