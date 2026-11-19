@@ -8,7 +8,7 @@ import { createHash } from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import * as C from "./src/data/content.mjs";
-import { diagram, efDefs, efSensor, efSection, efBeam, sfMethod } from "./diagrams.mjs";
+import { diagram, efDefs, efSensor, efSection, efBeam, sfMethod, sfSection, sfInstall, sfSite, sfDims, sfCatch } from "./diagrams.mjs";
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const DIST = path.join(ROOT, "dist");
@@ -563,7 +563,7 @@ ${scripts.map((s) => `<script src="${asset(r, `js/${s}`)}" defer></script>`).joi
 // `visual` fills the right of the hero on wide screens: a product photo on
 // brand pages, an "On this page" list on longer service pages.
 // `badge` is a short standing fact about the thing itself, set under the lede
-// in a ruled tag (Sensor Fort: its design is patent pending).
+// in a ruled tag (a page's `badge`).
 const pageHero = (r, { crumbs = [], iconName, eyebrow, title, lede, badge, actions = "", after = "", visual = "", compact = false, cls = "" }) => {
   heroCrumbs = crumbs;
   const copy = `
@@ -576,15 +576,15 @@ const pageHero = (r, { crumbs = [], iconName, eyebrow, title, lede, badge, actio
     ${actions ? `<div class="hero-actions" data-reveal style="--i:2">${actions}</div>` : ""}
     ${after}`;
   return `
-<section class="page-hero${visual ? " has-visual" : ""}${visual.includes('class="hero-product"') ? " has-product" : ""}${compact ? " compact" : ""}${cls ? ` ${cls}` : ""}">
+<section class="page-hero${visual ? " has-visual" : ""}${/class="hero-product[ "]/.test(visual) ? " has-product" : ""}${compact ? " compact" : ""}${cls ? ` ${cls}` : ""}">
   <canvas data-flowfield aria-hidden="true"></canvas>
   <div class="wrap">${visual ? `<div class="hero-copy">${copy}</div>${visual}` : copy}</div>
 </section>`;
 };
 
 // A product photograph on a white plate, captioned with what it shows.
-const heroProduct = (src, name, caption) => `
-<figure class="hero-product${caption ? " wide" : ""}" data-reveal="scale" style="--i:2">
+const heroProduct = (src, name, caption, shape = caption ? "wide" : "") => `
+<figure class="hero-product${shape ? ` ${shape}` : ""}" data-reveal="scale" style="--i:2">
   <div class="hero-product-shot"><img src="${src}" alt="${esc(name)}" fetchpriority="high"></div>
   <figcaption>${esc(caption || `Pictured: ${name}`)}</figcaption>
 </figure>`;
@@ -2121,125 +2121,115 @@ const measureBand = (m) => `${bandHead(m)}
 const applicationsBand = (a) => `<div class="section-head"><h2 class="h-lg" data-reveal>${esc(a.heading)}</h2></div>
   <div class="grid c4">${a.items.map(([ic, t, d], i) => `<div class="card holder" data-reveal style="--i:${i}"><span class="card-icon">${icon(ic)}</span><h3>${esc(t)}</h3><p>${esc(d)}</p></div>`).join("")}</div>`;
 
-/* ---- Sensor Fort: the brochure's own figures, and the case for the mount ---- */
-// The figures are EDS's drawings from the Sensor Fort brochure and datasheet,
-// lifted as vectors by tools/sensor_fort.py (src/data/sensor-fort-figures.json):
-// the renders stay images, and every line, water surface, dimension and
-// numbered badge is SVG, so the numbers are text and the drawing is sharp at
-// any size. A figure names one with `name`; its `key` is the numbered list
-// under it, in the order of the badges.
-const SF_FIGS = JSON.parse(readFileSync(path.join(ROOT, "src/data/sensor-fort-figures.json"), "utf8"));
-const sfSvg = (name, alt, { flowing = false, says } = {}) => {
-  const f = SF_FIGS[name];
-  if (!f) throw new Error(`No Sensor Fort figure named "${name}" (tools/sensor_fort.py)`);
-  const body = f.svg.replace(/@img\/([\w.-]+)/g, (m, file) => C.img(file));
-  return flowing ? sfStage(f, body, alt, says) : `<svg viewBox="0 0 ${f.w} ${f.h}" role="img" aria-label="${esc(alt)}">${body}</svg>`;
-};
-// The section figure in motion (`flowing: true`): water moving through the
-// mount, drawn on a canvas between two layers of the figure (sensor-fort.js).
-// Behind it are the pipe and the render; in front, the sensor outline, the
-// dimensions, the leaders and the badges. The canvas is given the brochure's
-// own geometry: the calculated water surface, and the floor the water runs
-// over on the centre line (the thin skin, the ramp of the valley up to the
-// spill lip, the stern), which is the underside of the brochure's water fill.
-// Without the script the brochure's still water shows instead (.sf-still).
-function sfStage(f, body, alt, says) {
-  const fill = body.match(/<path d="M([^"]+)z" fill="#3d9991" fill-opacity="0\.26"\/>/), line = body.match(/<path d="M([^"]+)" fill="none" stroke="#3d9991" stroke-width="2\.4"\/>/);
-  if (!fill || !line) throw new Error("Sensor Fort section: no water to animate (tools/sensor_fort.py)");
-  const pts = (d) => d.split("L").map((p) => p.split(" ").map(Number));
-  const surf = pts(line[1]), poly = pts(fill[1]);
-  const corner = poly.findIndex(([x, y]) => x > f.w - 2 && y > surf.at(-1)[1] + 5);
-  const bed = poly.slice(corner).reverse().filter(([, y]) => y > surf[0][1] + 5);
-  const cut = body.indexOf(line[0]) + line[0].length;
-  const back = body.slice(0, cut).replace(fill[0], `<g class="sf-still">${fill[0]}`).replace(line[0], `${line[0]}</g>`);
-  const box = `viewBox="0 0 ${f.w} ${f.h}"`;
-  return `<div class="sf-stage" style="aspect-ratio:${f.w}/${f.h}" data-flow="${esc(JSON.stringify({ w: f.w, h: f.h, surf, bed }))}"><svg ${box} aria-hidden="true">${back}</svg><canvas aria-hidden="true"></canvas><svg class="sf-front" ${box} role="img" aria-label="${esc(alt)}">${body.slice(cut)}${(says || []).map(([x, y, anchor, t]) => `<text class="sf-say" x="${x}" y="${y}" text-anchor="${anchor}">${esc(t)}</text>`).join("")}</svg></div>`;
-}
+/* ---- Sensor Fort: the case for the mount, in its own pictures ---- */
+// The renders are cut from EDS's Sensor Fort brochure by tools/sensor_fort.py,
+// numbered call-outs and all; the page sets the key to each as text (sfShot).
+// The line drawings are diagrams.mjs's, drawn from the SF 150 datasheet: the
+// section with water moving through it, going in from the lid, where it
+// fits, and the dimensions.
 const sfKey = (key) => (key ? `<ol class="sf-key">${key.map((k, i) => `<li><span aria-hidden="true">${i + 1}</span>${esc(k)}</li>`).join("")}</ol>` : "");
-const sfFigure = (f, { wide = false } = {}) => `
-<figure class="diagram sf-fig sf-${f.name}${wide ? " wide" : ""}" data-reveal>
-  <div class="dg-plate"><div class="sf-scroll">${sfSvg(f.name, f.alt, f)}</div>${sfKey(f.key)}</div>
+const sfShot = (s, { wide = false } = {}) => `
+<figure class="diagram sf-fig sf-shot${wide ? " wide" : ""}" data-reveal>
+  <div class="dg-plate"><img src="${s.src}" alt="${esc(s.alt)}" width="${s.size[0]}" height="${s.size[1]}" loading="lazy" decoding="async">${sfKey(s.key)}</div>
+  <figcaption>${esc(s.caption)}</figcaption>
+</figure>`;
+// The mount in section with water moving through it and rag going with the
+// water (`figure` of the problem's answer): the drawing under the water, a
+// canvas of moving water (sensor-fort.js), then the leaders and badges.
+// Without the script a plain fill of water shows instead (.sf-still).
+const sfFlow = (f) => {
+  const s = sfSection(), box = `viewBox="0 0 ${s.w} ${s.h}"`;
+  return `
+<figure class="diagram sf-fig sf-flow wide" data-reveal>
+  <div class="dg-plate"><div class="sf-scroll"><div class="sf-stage" style="aspect-ratio:${s.w}/${s.h}" data-flow="${esc(JSON.stringify(s.flow))}"><svg ${box} aria-hidden="true">${s.back}<g class="sf-still">${s.still}</g></svg><canvas aria-hidden="true"></canvas><svg class="sf-front" ${box} role="img" aria-label="${esc(f.alt)}">${s.front}</svg></div></div>${sfKey(f.key)}</div>
   <figcaption>${esc(f.caption)}</figcaption>
 </figure>`;
+};
 // The mount with its parts numbered, under the opening text (`anatomy` with a
-// `figure`; the E-Flow 3 page pins its photograph instead).
+// `src`; the E-Flow 3 page pins its photograph instead).
 const sfAnatomy = (a) => `
-<div class="sf-anat"><h2 class="anat-h" data-reveal>${esc(a.heading)}</h2>${sfFigure({ name: a.figure, alt: a.alt, key: a.key, caption: a.caption })}</div>`;
-// The problem (`problem`): the four usual ways to hold a sensor in a sewer,
-// each drawn with what goes wrong, then the idea that answers them.
+<div class="sf-anat"><h2 class="anat-h" data-reveal>${esc(a.heading)}</h2>${sfShot(a)}</div>`;
+// The problem (`problem`): what a sewer does to a sensor, the four usual ways
+// to hold one, each drawn failing, then the mount drawn working and the case
+// for it.
 const problemBand = (p) => `${bandHead(p)}
+  <ul class="deliv n${p.hazards.length}">${p.hazards.map(([t, d], n) => `<li data-reveal style="--i:${n}"><b>${esc(t)}</b><p>${esc(d)}</p></li>`).join("")}</ul>
   <p class="sf-fails" data-reveal>${icon("x", false)}${esc(p.fails)}</p>
   <ol class="sf-methods">${p.methods.map(([kind, verdict, name, why], i) => `<li data-reveal style="--i:${i}"><div class="sf-method-art diagram">${sfMethod(kind)}</div><p class="sf-verdict">${icon("x", false)}<span>${esc(verdict)}</span></p><h3>${esc(name)}</h3><p>${esc(why)}</p></li>`).join("")}</ol>
   <p class="sf-wins" data-reveal>${icon("check", false)}${esc(p.answer.wins)}</p>
+  ${sfFlow(p.answer.figure)}
   <div class="sf-answer" data-reveal>
-    <figure><div class="sf-answer-plate"><img src="${p.answer.image}" alt="${esc(p.answer.alt)}" width="700" height="700" loading="lazy" decoding="async"></div><figcaption>${esc(p.answer.caption)}</figcaption></figure>
     <div>
       <p class="eyebrow">${esc(p.answer.eyebrow)}</p>
       <h3>${esc(p.answer.heading)}</h3>
       <p class="lede">${esc(p.answer.lede)}</p>
-      ${p.answer.badge ? `<p class="stamp">${icon("shield-check", false)}${esc(p.answer.badge)}</p>` : ""}
-      <ul class="sf-points">${p.answer.points.map(([k, d]) => `<li>${icon("check", false)}<span><b>${esc(k)}</b>${esc(d)}</span></li>`).join("")}</ul>
     </div>
+    <ul class="sf-points">${p.answer.points.map(([k, d]) => `<li>${icon("check", false)}<span><b>${esc(k)}</b>${esc(d)}</span></li>`).join("")}</ul>
   </div>`;
-// How it works (`works`): the section with its calculated water surface, the
-// design rules, and what no mount can do.
-const worksBand = (w) => `${bandHead(w)}${sfFigure(w.figure, { wide: true })}
-  <h3 class="sf-sub" data-reveal>${esc(w.rulesHeading)}</h3>
-  <ol class="deliv n${w.rules.length} sf-rules">${w.rules.map(([t, d], n) => `<li data-reveal style="--i:${n % 3}"><b><small>Rule ${n + 1}</small>${esc(t)}</b><p>${esc(d)}</p></li>`).join("")}</ol>
+// How it works (`works`): the view from the lid, what makes the mount
+// different, and that it is passive.
+const worksBand = (w) => `${bandHead(w)}${sfShot(w.figure, { wide: true })}
+  <ul class="deliv n${w.features.length} sf-gap">${w.features.map(([t, d], n) => `<li data-reveal style="--i:${n % 3}"><b>${esc(t)}</b><p>${esc(d)}</p></li>`).join("")}</ul>
   <p class="sf-note" data-reveal><b>${esc(w.note[0])}</b> ${esc(w.note[1])}</p>`;
-// Flow from the same site (`flow`): the manhole figure, the calculated rating
-// as six bars, and what flow adds.
-const flowBand = (f) => {
-  const top = Math.max(...f.rating.points.map(([, d]) => d));
-  return `${bandHead(f)}${sfFigure(f.figure, { wide: true })}
-  <div class="sf-rating" data-reveal>
-    <h3>${esc(f.rating.heading)}</h3>
-    <p class="sf-rating-sub">${esc(f.rating.sub)}</p>
-    <ol>${f.rating.points.map(([q, d]) => `<li style="--v:${(d / top).toFixed(3)}"><b><span class="sr-only">${esc(f.rating.labels[1])} </span>${d}<small> mm</small></b><i aria-hidden="true"></i><span><span class="sr-only">${esc(f.rating.labels[0])} </span>${q} L/s</span></li>`).join("")}</ol>
-    <p class="note">${esc(f.rating.note)}</p>
-  </div>
-  <ul class="deliv n${f.items.length} sf-gap">${f.items.map(([t, d], n) => `<li data-reveal style="--i:${n}"><b>${esc(t)}</b><p>${esc(d)}</p></li>`).join("")}</ul>`;
+// Rag (`rag`): the four things rag catches on, each beside what the mount has
+// instead, then how the surface was checked.
+const ragBand = (g) => `${bandHead(g)}
+  <ol class="sf-catch">${g.rows.map(([kind, what, answer], n) => `<li data-reveal style="--i:${n}"><span class="sf-catch-art diagram">${sfCatch(kind)}</span><p class="sf-catch-on"><small>${esc(g.labels[0])}</small><b>${esc(what)}</b></p><p class="sf-catch-sf"><small>${esc(g.labels[1])}</small>${esc(answer)}</p></li>`).join("")}</ol>
+  <div class="sf-check" data-reveal>
+    <h3>${esc(g.check.heading)}</h3>
+    <dl>${g.check.stats.map(([v, l]) => `<div><dt>${esc(l)}</dt><dd>${esc(v)}</dd></div>`).join("")}</dl>
+    <p>${esc(g.check.text)}</p>
+  </div>`;
+// How it compares (`compare`): the mount against the usual ways, row by row.
+// A cell is true, false or a word.
+const compareBand = (c) => {
+  const cell = (v, col) => `<td${col ? "" : ' class="sf-us"'}>${v === true ? `<span class="sf-yes">${icon("check", false)}<span class="sr-only">Yes</span></span>` : v === false ? `<span class="sf-no">${icon("x", false)}<span class="sr-only">No</span></span>` : esc(v)}</td>`;
+  return `${bandHead(c)}
+  <div class="sf-table-wrap scroll" data-reveal tabindex="0" role="group" aria-label="${esc(c.heading)}"><table class="sf-table sf-cmp">
+    <thead><tr><td></td>${c.columns.map((h, i) => `<th scope="col"${i ? "" : ' class="sf-us"'}>${esc(h)}</th>`).join("")}</tr></thead>
+    <tbody>${c.rows.map(([what, ...cells]) => `<tr><th scope="row">${esc(what)}</th>${cells.map(cell).join("")}</tr>`).join("")}</tbody>
+  </table></div>
+  <p class="note sf-table-note" data-reveal>${esc(c.note)}</p>`;
 };
-// Sensor fit (`fit`): which sensors each model takes, with the share of the
-// surveyed models that fit as a bar, then the range in end view.
-const fitBand = (f) => `${bandHead(f)}
-  <div class="sf-table-wrap" data-reveal><table class="sf-table sf-fit">
-    <thead><tr>${f.columns.map((c) => `<th scope="col">${esc(c)}</th>`).join("")}</tr></thead>
-    <tbody>${f.rows.map(([model, ...cells]) => {
-      const n = cells.pop(), pct = Math.round((n / f.surveyed) * 100);
-      return `<tr><th scope="row">${esc(model)}</th>${cells.map((c, i) => `<td data-l="${esc(f.columns[i + 1])}">${esc(c)}</td>`).join("")}<td data-l="${esc(f.columns.at(-1))}" class="sf-share"><b>${pct}%</b><small>${n} of ${f.surveyed}</small><i aria-hidden="true" style="--p:${pct}%"></i></td></tr>`;
-    }).join("")}</tbody>
-  </table></div>
-  ${sfFigure(f.figure, { wide: true })}
-  <ul class="deliv n${f.notes.length} sf-gap">${f.notes.map(([t, d], n) => `<li data-reveal style="--i:${n}"><b>${esc(t)}</b><p>${esc(d)}</p></li>`).join("")}</ul>`;
-// Fastening (`fastening`): the open bay beside the steps its badges number.
-const fasteningBand = (f) => `${bandHead(f)}
-  <div class="sf-fasten">
-    ${sfFigure(f.figure)}
-    <ol class="sf-steps">${f.steps.map(([t, d], n) => `<li data-reveal style="--i:${n}"><span aria-hidden="true">${n + 1}</span><div><b>${esc(t)}</b><p>${esc(d)}</p></div></li>`).join("")}</ol>
+// Installed from the lid (`lid`): the mount going in, as one loop beside the
+// steps it shows, coming out, where it fits and how it is serviced.
+const lidBand = (l) => {
+  const site = sfSite();
+  return `${bandHead(l)}
+  <div class="sf-go diagram" data-reveal>
+    <figure class="sf-fig"><div class="dg-plate" role="img" aria-label="${esc(l.alt)}">${sfInstall()}</div><figcaption>${esc(l.caption)}</figcaption></figure>
+    <ol class="sf-steps">${l.steps.map(([t, d], n) => `<li><span aria-hidden="true">${n + 1}</span><div><b>${esc(t)}</b><p>${esc(d)}</p></div></li>`).join("")}</ol>
   </div>
-  <ul class="deliv n${f.items.length} sf-gap">${f.items.map(([t, d], n) => `<li data-reveal style="--i:${n}"><b>${esc(t)}</b><p>${esc(d)}</p></li>`).join("")}</ul>`;
-// Service (`service`): the yearly cycle in four steps, then how it is supplied.
-const serviceBand = (v) => `${bandHead(v)}
-  <ol class="sf-cycle">${v.steps.map(([t, d], n) => `<li data-reveal style="--i:${n}"><span aria-hidden="true">${n + 1}</span><b>${esc(t)}</b><p>${esc(d)}</p></li>`).join("")}</ol>
-  <h3 class="sf-sub" data-reveal>${esc(v.supplied.heading)}</h3>
-  <ul class="deliv n${v.supplied.items.length}">${v.supplied.items.map(([t, d], n) => `<li data-reveal style="--i:${n}"><b>${esc(t)}</b><p>${esc(d)}</p></li>`).join("")}</ul>`;
-// The range (`range`): every model with its hydraulic footprint, then what
-// to check before choosing a site. A blank cell prints as a dash.
-const rangeBand = (g) => `${bandHead(g)}
-  <div class="sf-table-wrap scroll" data-reveal tabindex="0" role="group" aria-label="${esc(g.heading)}"><table class="sf-table sf-models">
-    <thead><tr>${g.columns.map((c) => `<th scope="col" rowspan="2">${esc(c)}</th>`).join("")}<th scope="colgroup" colspan="${g.rise.length - 1}" class="sf-rise">${esc(g.rise[0])}</th></tr><tr>${g.rise.slice(1).map((c) => `<th scope="col">${esc(c)}</th>`).join("")}</tr></thead>
-    <tbody>${g.rows.map(([model, ...cells]) => `<tr><th scope="row">${esc(model)}</th>${cells.map((c) => `<td>${c ? esc(c) : '<span aria-hidden="true">–</span><span class="sr-only">Not calculated</span>'}</td>`).join("")}</tr>`).join("")}</tbody>
+  <p class="sf-note" data-reveal><b>${esc(l.out[0])}</b> ${esc(l.out[1])}</p>
+  <h3 class="sf-sub" data-reveal>${esc(l.site.heading)}</h3>
+  <div class="sf-site" data-reveal>
+    <ul class="sf-ticks">${l.site.items.map((t) => `<li>${icon("check", false)}<span>${esc(t)}</span></li>`).join("")}</ul>
+    <figure class="diagram sf-fig"><div class="dg-plate" role="img" aria-label="${esc(l.site.alt)}"><div class="sf-scroll">${site.side}</div>${site.end}</div><figcaption>${esc(l.site.caption)}</figcaption></figure>
+  </div>
+  <h3 class="sf-sub" data-reveal>${esc(l.service.heading)}</h3>
+  <ul class="deliv n${l.service.items.length}">${l.service.items.map(([t, d], n) => `<li data-reveal style="--i:${n}"><b>${esc(t)}</b><p>${esc(d)}</p></li>`).join("")}</ul>`;
+};
+// Sensors (`sensors`): the stern with the sensor tips, what fits, the sleeves
+// that fit it, and the monitoring point it makes with a logger.
+const sensorsBand = (s) => `${bandHead(s)}${sfShot(s.figure, { wide: true })}
+  <dl class="sf-stats" data-reveal>${s.stats.map(([v, u, l]) => `<div><dt>${esc(l)}</dt><dd>${esc(v)}<small> ${esc(u)}</small></dd></div>`).join("")}</dl>
+  <p class="note sf-table-note" data-reveal>${esc(s.note)}</p>
+  <h3 class="sf-sub" data-reveal>${esc(s.sleeves.heading)}</h3>
+  <div class="sf-table-wrap" data-reveal><table class="sf-table sf-sleeves">
+    <tbody>${s.sleeves.rows.map(([k, v]) => `<tr><th scope="row">${esc(k)}</th><td>${esc(v)}</td></tr>`).join("")}</tbody>
   </table></div>
-  <p class="note sf-table-note" data-reveal>${esc(g.note)}</p>
-  <h3 class="sf-sub" data-reveal>${esc(g.check.heading)}</h3>
-  <ul class="deliv n${g.check.items.length}">${g.check.items.map(([t, d], n) => `<li data-reveal style="--i:${n % 3}"><b>${esc(t)}</b><p>${esc(d)}</p></li>`).join("")}</ul>`;
+  <ul class="deliv n${s.notes.length} sf-gap">${s.notes.map(([t, d], n) => `<li data-reveal style="--i:${n}"><b>${esc(t)}</b><p>${esc(d)}</p></li>`).join("")}</ul>
+  <h3 class="sf-sub" data-reveal>${esc(s.chain.heading)}</h3>
+  <ol class="sf-chain" data-reveal>${s.chain.items.map(([ic, t, d]) => `<li>${icon(ic, false)}<div><b>${esc(t)}</b><p>${esc(d)}</p></div></li>`).join("")}</ol>`;
 // The dimension drawing over the specification tables (`drawing`).
-const drawingFigure = (d) => `
+const drawingFigure = (d) => {
+  const dims = sfDims();
+  return `
 <figure class="diagram sf-fig sf-dims" data-reveal>
-  <div class="dg-plate" role="img" aria-label="${esc(d.alt)}">${d.figures.map((name) => sfSvg(name, "").replace(' role="img" aria-label=""', ' aria-hidden="true"')).join("")}</div>
+  <div class="dg-plate" role="img" aria-label="${esc(d.alt)}"><div class="sf-scroll">${dims.side}</div>${dims.end}<ul class="sf-legend" aria-hidden="true">${d.legend.map(([k, t]) => `<li><i class="${k}"></i>${esc(t)}</li>`).join("")}</ul></div>
   <figcaption>${esc(d.caption)}</figcaption>
 </figure>`;
+};
 // Questions and answers (`faq`), marked up as an FAQ for search.
 const questionsBand = (q) => `<div class="split-band">${bandHead(q)}<div data-reveal>${faqHtml(q.items)}</div></div>`;
 
@@ -2376,11 +2366,10 @@ for (const pg of C.productPages) {
   const extra = [
     pg.problem && ["the-problem", pg.problem.nav, problemBand(pg.problem)],
     pg.works && ["how-it-works", pg.works.nav, worksBand(pg.works)],
-    pg.flow && ["flow", pg.flow.nav, flowBand(pg.flow)],
-    pg.fit && ["sensor-fit", pg.fit.nav, fitBand(pg.fit)],
-    pg.fastening && ["fastening", pg.fastening.nav, fasteningBand(pg.fastening)],
-    pg.service && ["service", pg.service.nav, serviceBand(pg.service)],
-    pg.range && ["range", pg.range.nav, rangeBand(pg.range)],
+    pg.rag && ["rag", pg.rag.nav, ragBand(pg.rag)],
+    pg.compare && ["compare", pg.compare.nav, compareBand(pg.compare)],
+    pg.lid && ["installation", pg.lid.nav, lidBand(pg.lid)],
+    pg.sensors && ["sensors", pg.sensors.nav, sensorsBand(pg.sensors)],
     pg.measurements && ["measurements", pg.measurements.nav, measureBand(pg.measurements)],
     pg.modes && ["how-it-measures", pg.modes.nav, diagramBand(pg.modes)],
     pg.demo && ["changeover", pg.demo.nav, `<div class="section-head"><h2 class="h-lg" data-reveal>${esc(pg.demo.heading)}</h2><p class="lede" data-reveal style="--i:1">${esc(pg.demo.lede)}</p></div>${eflowDemo()}`, "dark"],
@@ -2409,9 +2398,9 @@ for (const pg of C.productPages) {
     title: pg.title,
     description: pg.description,
     current: "products",
-    scripts: pg.demo ? ["widgets.js"] : pg.works?.figure.flowing ? ["sensor-fort.js"] : [],
+    scripts: pg.demo ? ["widgets.js"] : pg.problem?.answer.figure ? ["sensor-fort.js"] : [],
     body: (r) => `
-${pageHero(r, { crumbs: [["Products", "products/index.html"], [b.name, `products/${b.slug}.html`], [pg.name]], iconName: pg.icon, eyebrow: pg.tag, title: pg.name, lede: pg.lede, badge: pg.badge, actions: `<a class="btn btn-primary btn-lg" href="${contactHref(r, pricing)}">Request pricing</a>${quoteBtn(quoteItem(products.find((p) => p.href === `products/${pg.slug}.html`)), "btn-lg")}<a class="btn btn-ghost btn-lg" href="${datasheet.href}" rel="noopener">${icon("download")} Datasheet</a>`, visual: pg.hero ? eflowHero(pg) : heroProduct(pg.image, pg.name, pg.heroCaption) })}
+${pageHero(r, { crumbs: [["Products", "products/index.html"], [b.name, `products/${b.slug}.html`], [pg.name]], iconName: pg.icon, eyebrow: pg.tag, title: pg.name, lede: pg.lede, badge: pg.badge, actions: `<a class="btn btn-primary btn-lg" href="${contactHref(r, pricing)}">Request pricing</a>${quoteBtn(quoteItem(products.find((p) => p.href === `products/${pg.slug}.html`)), "btn-lg")}<a class="btn btn-ghost btn-lg" href="${datasheet.href}" rel="noopener">${icon("download")} Datasheet</a>`, visual: pg.hero ? eflowHero(pg) : heroProduct(pg.image, pg.name, pg.heroCaption, pg.heroShape) })}
 <div class="secbar-scope">${bar(r)}
 <section class="section hl-band"><div class="wrap">
   <div class="hl-grid">${pg.highlights.map(([ic, t, d], i) => `<div class="hl holder" data-reveal style="--i:${i % 3}">${icon(ic)}<b>${esc(t)}</b><span>${esc(d)}</span></div>`).join("")}</div>
@@ -2420,10 +2409,11 @@ ${pageHero(r, { crumbs: [["Products", "products/index.html"], [b.name, `products
   <div>
     <div class="prose" data-reveal>${pg.intro.map((p) => `<p>${esc(p)}</p>`).join("")}</div>
     ${pg.features ? `<div class="feature-list" style="margin-top:40px">${pg.features.map(([t, d]) => `<div class="feature holder" data-reveal><div><b>${esc(t)}</b><span>${esc(d)}</span></div></div>`).join("")}</div>` : ""}
-    ${pg.anatomy ? (pg.anatomy.figure ? sfAnatomy(pg.anatomy) : anatomyFigure(pg.anatomy, pg.image)) : ""}
+    ${pg.anatomy ? (pg.anatomy.src ? sfAnatomy(pg.anatomy) : anatomyFigure(pg.anatomy, pg.image)) : ""}
   </div>
   <aside class="aside">
-    <figure class="aside-figure" data-reveal="right"><div class="aside-plate"><img src="${pg.figure.src}" alt="${esc(pg.figure.alt)}" loading="lazy"></div><figcaption>${esc(pg.figure.caption)}</figcaption></figure>
+    ${pg.figure ? `<figure class="aside-figure" data-reveal="right"><div class="aside-plate"><img src="${pg.figure.src}" alt="${esc(pg.figure.alt)}" loading="lazy"></div><figcaption>${esc(pg.figure.caption)}</figcaption></figure>` : ""}
+    ${pg.glance ? `<div class="aside-card" data-reveal="right"><h2>${esc(pg.glance.heading)}</h2><table class="specs"><tbody>${pg.glance.rows.map(([k, v]) => `<tr><th>${esc(k)}</th><td>${esc(v)}</td></tr>`).join("")}</tbody></table></div>` : ""}
     <div class="aside-card" data-reveal="right"><h2>Documents</h2><ul class="aside-links docs">${pg.docs.map((d) => `<li><a href="${d.href}" rel="noopener"><span>${esc(`${pg.name} ${d.label.toLowerCase()}`)}<small>${docType(d.href)} · ${esc(d.note)}</small></span>${icon("download")}</a></li>`).join("")}</ul></div>
     <div class="aside-card" data-reveal="right"><h2>Works with</h2><ul class="aside-links docs">${pg.worksWith.map(([href, t, d]) => `<li><a href="${r}${href}"><span>${esc(t)}<small>${esc(d)}</small></span>${icon("arrow-right")}</a></li>`).join("")}</ul></div>
   </aside>

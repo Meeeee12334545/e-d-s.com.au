@@ -1,204 +1,109 @@
 #!/usr/bin/env python3
-"""Sensor Fort artwork, lifted from EDS's own brochure and datasheet.
+"""Sensor Fort documents and renders, from EDS's own brochure and datasheet.
 
     python3 -I tools/sensor_fort.py [folder with the two PDFs]
 
-Reads "Sensor Fort Brochure SF BR 001 Rev A.pdf" and "Sensor Fort Datasheet
-SF DS 001 Rev A.pdf" (by default from the EDS Synology drive) and writes:
+Reads "Sensor Fort Brochure.pdf" (SF BR 001) and "Sensor Fort SF 150
+Datasheet.pdf" (SF DS 001), by default from the EDS Synology drive, and writes:
 
   src/assets/docs/eds-sensor-fort-{brochure,datasheet}.pdf   the documents
-  src/assets/img/sensor-fort*.png                            the renders, with
-                                                             their transparency
-  src/data/sensor-fort-figures.json                          the figures
+  src/assets/img/sensor-fort*.jpg and .webp                  the renders
 
-The figures are the documents' own drawings (the section with its calculated
-water surface, the flow figure, the range of end views, the anatomy and
-fastening call-outs, the dimension drawing), turned into inline SVG: every
-line, fill and label is kept as a vector, so the page's figures are sharp at
-any size and their numbers are real text. build.mjs sets them (sfFigure) and
-site.css sizes their labels (.sf-fig). The renders get WebP twins here, at a
-higher quality than tools/products.py gives the product shots.
+From Rev C both documents are flattened: every page is one image with the
+words laid over it for search, so there are no vectors to lift. The renders
+are cut from the page images (2382 pixels across an A4 page), numbered
+call-outs and all, and the page's key to them is set as text beside each
+(build.mjs: sfShot). The line drawings (dimensions, site, installation) are
+redrawn as SVG in diagrams.mjs from the datasheet's figures.
 
-Needs PyMuPDF and Pillow (pip install pymupdf pillow).
+The cover render is the one picture that is retouched: its three call-out
+lines and their dots are painted out, so the hero and the product cards show
+the mount alone. Nothing of the mount itself is changed.
+
+Needs PyMuPDF, Pillow, NumPy and OpenCV (pip install pymupdf pillow numpy
+opencv-python-headless). Check the boxes below against a new revision: they
+are in pixels of the page image.
 """
-import html, json, math, os, re, shutil, sys
-import pymupdf
+import os, shutil, sys
+import cv2, numpy as np, pymupdf
 from PIL import Image
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = sys.argv[1] if len(sys.argv) > 1 else os.path.expanduser("~/Library/CloudStorage/SynologyDrive-EDS/EDS Portal/Equipment/EDS/Sensor Fort SF")
-DOCS = {"br": ("Sensor Fort Brochure SF BR 001 Rev A.pdf", "eds-sensor-fort-brochure.pdf"), "ds": ("Sensor Fort Datasheet SF DS 001 Rev A.pdf", "eds-sensor-fort-datasheet.pdf")}
+DOCS = {"br": ("Sensor Fort Brochure.pdf", "eds-sensor-fort-brochure.pdf"), "ds": ("Sensor Fort SF 150 Datasheet.pdf", "eds-sensor-fort-datasheet.pdf")}
 IMG = os.path.join(ROOT, "src/assets/img")
-S = 2  # drawing units per PDF point
+PAGE_W = 2382  # the width the boxes were measured at
 
-# the renders: (document, page, width in pixels, order among that width on the page) -> file
+# the renders: file -> (document, page, box in page pixels, widest it is saved)
 RENDERS = {
-    "sensor-fort.png": ("br", 1, 1600, 0),             # in a 150 mm sewer, pipe cut away
-    "sensor-fort-downstream.png": ("br", 2, 1400, 0),  # the same, from downstream
-    "sensor-fort-section.png": ("br", 3, 1400, 0),     # section on the centre line
-    "sensor-fort-anatomy.png": ("br", 5, 1400, 0),     # the mount alone
-    "sensor-fort-bay.png": ("br", 5, 1400, 1),         # the open side of a bay
-    "sensor-fort-end.png": ("ds", 1, 700, 0),          # end view from downstream
-    "sensor-fort-plan.png": ("ds", 5, 1200, 0),        # dimension drawing: plan
-    "sensor-fort-side.png": ("ds", 5, 1200, 1),        # dimension drawing: section
-    "sensor-fort-end-light.png": ("ds", 5, 700, 0),    # dimension drawing: end view
+    "sensor-fort": ("br", 1, (537, 1296, 1717, 2690), 1180),      # the mount from upstream, on white
+    "sensor-fort-lid": ("br", 4, (0, 529, 2382, 2285), 2000),     # in the chase, seen from the lid
+    "sensor-fort-parts": ("br", 5, (179, 2043, 1135, 3014), 956),  # the five parts, numbered
+    "sensor-fort-stern": ("br", 7, (179, 641, 2203, 1782), 1800),  # the stern face and the sensor tips
 }
-# the figures: (document, page, clip in points, options)
-FIGURES = {
-    "section": ("br", 3, (45, 201, 550.8, 376), {}),
-    "flow": ("br", 4, (45, 216.5, 550.8, 453), {}),
-    "range": ("br", 6, (45, 340, 552, 434), {"text": r"^\d+$"}),
-    "anatomy": ("br", 5, (118, 180, 512, 455), {}),
-    "bay": ("br", 5, (45, 517, 303.5, 648.5), {}),
-    "dimensions": ("ds", 5, (45, 138, 350, 388), {}),
-    "end": ("ds", 5, (375, 258, 545, 402), {}),
-}
-
-# the drawings' letterspaced headings, whose word breaks the PDF does not keep
-HEADS = {"PLAN": "Plan", "SECTIONONTHECENTRELINE": "Section on the centre line", "VIEWFROMDOWNSTREAM": "View from downstream", "MANHOLE": "Manhole"}
-
-hexc = lambda c: None if c is None else "#%02x%02x%02x" % tuple(int(round(v * 255)) for v in c)
-n1 = lambda v: ("%.1f" % v).rstrip("0").rstrip(".")
+# the cover's call-outs, in the cover box's own pixels: a rule on the white
+# page, a leader from its end, and a dot on the mount. Where a leader or dot
+# lies on the mount's long faces it is covered with the same face from a
+# little further along the mount (SHIFT), which is shaded the same; the rest
+# is filled in from its surroundings.
+RULE_C = ((0, 1259), (342, 1259))
+RULE_C_WHITE = 280    # rule C is on the white page as far as this
+LEAD_A, LEAD_B, LEAD_C = ((1214, 174), (1095, 272)), ((1127, 786), (678, 844)), ((342, 1259), (456, 1193))
+SHIFT = (35, -29)     # along the mount: its walls and lips run this way
+CABLE_SHIFT = (1, 38)  # down the cable, for the dot that sits on it
 
 
-def rdp(pts, tol):
-    """Drop the points a polyline does not need (Ramer-Douglas-Peucker)."""
-    if len(pts) < 3:
-        return pts
-    (x0, y0), (x1, y1) = pts[0], pts[-1]
-    if abs(x1 - x0) + abs(y1 - y0) < 1e-6:  # a closed loop: split it at its far point
-        at = max(range(len(pts)), key=lambda i: (pts[i][0] - x0) ** 2 + (pts[i][1] - y0) ** 2)
-        return rdp(pts[: at + 1], tol)[:-1] + rdp(pts[at:], tol) if 0 < at < len(pts) - 1 else [pts[0], pts[-1]]
-    dx, dy = x1 - x0, y1 - y0
-    den = (dx * dx + dy * dy) ** 0.5 or 1e-9
-    far, at = 0, 0
-    for i in range(1, len(pts) - 1):
-        d = abs(dy * (pts[i][0] - x0) - dx * (pts[i][1] - y0)) / den
-        if d > far:
-            far, at = d, i
-    if far <= tol:
-        return [pts[0], pts[-1]]
-    return rdp(pts[: at + 1], tol)[:-1] + rdp(pts[at:], tol)
-
-
-def path_of(items, ox, oy, closed):
-    """A drawing's items as SVG path data, in drawing units from the clip's corner."""
-    P = lambda p: ((p.x - ox) * S, (p.y - oy) * S)
-    near = lambda a, b: b is not None and abs(a[0] - b[0]) < 0.05 and abs(a[1] - b[1]) < 0.05
-    subs, end = [], None  # each subpath: [start, [command, ...]]
-    for it in items:
-        k = it[0]
-        if k in ("l", "c"):
-            pts = [P(p) for p in it[1:]]
-            if not near(pts[0], end):
-                subs.append([pts[0], []])
-            subs[-1][1].append(pts[1:])
-            end = pts[-1]
-        elif k == "re":
-            r = it[1]
-            subs.append(f"M{n1((r.x0 - ox) * S)} {n1((r.y0 - oy) * S)}h{n1(r.width * S)}v{n1(r.height * S)}h{n1(-r.width * S)}z")
-            end = None
-        elif k == "qu":
-            q = it[1]
-            subs.append("M" + "L".join(f"{n1(x)} {n1(y)}" for x, y in (P(q.ul), P(q.ur), P(q.lr), P(q.ll))) + "z")
-            end = None
-    out = []
-    for sub in subs:
-        if isinstance(sub, str):
-            out.append(sub)
-            continue
-        start, cmds = sub
-        d, at, run = f"M{n1(start[0])} {n1(start[1])}", start, []
-        for c in cmds + [None]:
-            if c is not None and len(c) == 1:
-                run.append(c[0])
-                continue
-            if run:  # a run of straight segments, thinned
-                d += "".join(f"L{n1(x)} {n1(y)}" for x, y in rdp([at] + run, 0.12)[1:])
-                at, run = run[-1], []
-            if c is not None:
-                d += "C" + " ".join(f"{n1(x)} {n1(y)}" for x, y in c)
-                at = c[-1]
-        out.append(d + ("z" if closed else ""))
-    return "".join(out)
-
-
-def figure(doc, pno, clip, opt):
+def page_image(doc, pno):
+    """The one image a page is made of, as RGB."""
     pg = doc[pno - 1]
-    x0, y0, x1, y1 = clip
-    box = pymupdf.Rect(clip)
-    w, h = (x1 - x0) * S, (y1 - y0) * S
-    back, parts, discs = [], [], []
-    # the renders: over the figure's background, under its lines and water
-    for inf in pg.get_image_info(xrefs=True):
-        b = pymupdf.Rect(inf["bbox"])
-        if inf["width"] < 700 or not box.contains(b + (2, 2, -2, -2)):
-            continue
-        name = next(n for n, (d, p, least, k) in RENDERS.items() if doc.name.endswith(DOCS[d][0]) and p == pno and render_xref(doc, pno, least, k) == inf["xref"])
-        parts.append(f'<image href="@img/{name}" x="{n1((b.x0 - x0) * S)}" y="{n1((b.y0 - y0) * S)}" width="{n1(b.width * S)}" height="{n1(b.height * S)}"/>')
-    for dr in pg.get_drawings():
-        r = dr["rect"]
-        if r.x0 < x0 - 1 or r.x1 > x1 + 1 or r.y0 < y0 - 1 or r.y1 > y1 + 1:
-            continue
-        fill, stroke = hexc(dr.get("fill")), hexc(dr.get("color"))
-        items = dr["items"]
-        # a circle: the numbered discs and the pin heads
-        if all(i[0] == "c" for i in items) and len(items) in (4, 8, 16, 32) and abs(r.width - r.height) < 0.4:
-            cx, cy, rad = ((r.x0 + r.x1) / 2 - x0) * S, ((r.y0 + r.y1) / 2 - y0) * S, r.width * S / 2
-            if fill == "#1b4e4a" and rad > 10:
-                discs.append((cx, cy, rad))
-                continue
-            parts.append(f'<circle cx="{n1(cx)}" cy="{n1(cy)}" r="{n1(rad)}"' + (f' fill="{fill}"' if fill else ' fill="none"') + (f' stroke="{stroke}" stroke-width="{n1(dr["width"] * S)}"' if stroke else "") + "/>")
-            continue
-        a = [f'd="{path_of(items, x0, y0, bool(fill))}"', f'fill="{fill}"' if fill else 'fill="none"']
-        if fill and (dr.get("fill_opacity") or 1) < 0.99:
-            a.append(f'fill-opacity="{round(dr["fill_opacity"], 2)}"')
-        if dr.get("even_odd") and fill:
-            a.append('fill-rule="evenodd"')
-        if stroke and dr["type"] != "f":
-            a.append(f'stroke="{stroke}" stroke-width="{n1(dr["width"] * S)}"')
-            dash = re.findall(r"[\d.]+", dr.get("dashes") or "")
-            if len(dash) > 1 and float(dash[0]):
-                a.append(f'stroke-dasharray="{" ".join(n1(float(v) * S) for v in dash[:-1])}"')
-        ground = fill and dr["type"] == "f" and all(i[0] == "re" for i in items) and (dr.get("fill_opacity") or 1) > 0.99
-        (back if ground else parts).append(f"<path {' '.join(a)}/>")
-    # the words: a number on a disc becomes a badge, the rest are labels
-    badges, labels = [], []
-    for blk in pg.get_text("dict", clip=box)["blocks"]:
-        for line in blk.get("lines", []):
-            for sp in line["spans"]:
-                t = sp["text"].strip()
-                if not t or (opt.get("text") and not re.search(opt["text"], t)):
-                    continue
-                bx = pymupdf.Rect(sp["bbox"])
-                mx, my = ((bx.x0 + bx.x1) / 2 - x0) * S, ((bx.y0 + bx.y1) / 2 - y0) * S
-                disc = next((d for d in discs if abs(d[0] - mx) < d[2] and abs(d[1] - my) < d[2]), None)
-                if disc and t.isdigit():
-                    badges.append((int(t), disc))
-                    continue
-                head = HEADS.get(t.replace(" ", ""))  # a letterspaced heading, set in sentence case
-                t = head or t
-                cls = "h" if head else "b" if "Bold" in sp["font"] or sp["flags"] & 16 else ""
-                ox, oy = (sp["origin"][0] - x0) * S, (sp["origin"][1] - y0) * S
-                dx, dy = line["dir"]
-                attrs = [f'x="{n1(ox)}" y="{n1(oy)}"', f'fill="#{sp["color"]:06x}"']
-                if cls:
-                    attrs.append(f'class="{cls}"')
-                if abs(dy) > 0.01:
-                    attrs.append(f'transform="rotate({n1(math.degrees(math.atan2(dy, dx)))} {n1(ox)} {n1(oy)})"')
-                labels.append(f"<text {' '.join(attrs)}>{html.escape(t, quote=False)}</text>")
-    for n, (cx, cy, rad) in sorted(badges):
-        labels.append(f'<g class="sf-b" style="transform-origin:{n1(cx)}px {n1(cy)}px"><circle cx="{n1(cx)}" cy="{n1(cy)}" r="{n1(rad)}"/><text x="{n1(cx)}" y="{n1(cy)}">{n}</text></g>')
-    return {"w": round(w), "h": round(h), "svg": "".join(back) + "".join(parts) + "".join(labels), "badges": len(badges)}
+    xref = max(pg.get_images(full=True), key=lambda x: x[2] * x[3])[0]
+    pm = pymupdf.Pixmap(doc, xref)
+    if pm.n != 3:
+        pm = pymupdf.Pixmap(pymupdf.csRGB, pm)
+    im = Image.frombytes("RGB", (pm.width, pm.height), pm.samples)
+    if im.width != PAGE_W:
+        raise SystemExit(f"{doc.name} page {pno}: page image is {im.width} px wide, not {PAGE_W}. Re-measure the boxes.")
+    return im
 
 
-_xrefs = {}
-def render_xref(doc, pno, least, k):
-    """The xref of the k-th render `least` pixels wide on a page, in page order."""
-    key = (doc.name, pno, least)
-    if key not in _xrefs:
-        _xrefs[key] = [x[0] for x in doc[pno - 1].get_images(full=True) if x[2] == least]
-    return _xrefs[key][k]
+def clean_cover(im):
+    """Paint out the cover's three call-outs, leaving the mount as rendered."""
+    a = cv2.cvtColor(np.asarray(im), cv2.COLOR_RGB2BGR)
+    h, w = a.shape[:2]
+
+    def cover(mask, shift):
+        # the picture moved by `shift`, let in through a soft-edged mask
+        m = np.float32([[1, 0, -shift[0]], [0, 1, -shift[1]]])
+        moved = cv2.warpAffine(a, m, (w, h), borderMode=cv2.BORDER_REPLICATE)
+        alpha = cv2.GaussianBlur(mask, (0, 0), 2.2).astype(np.float32)[..., None] / 255
+        return (a * (1 - alpha) + moved * alpha).astype(np.uint8)
+
+    # leader B, its rule and its dot: over the lip, the wall and the shadow
+    # beside it, which all run the way the mount does
+    mask = np.zeros((h, w), np.uint8)
+    cv2.line(mask, (w, LEAD_B[0][1]), LEAD_B[0], 255, 15)
+    cv2.line(mask, *LEAD_B, 255, 15)
+    cv2.circle(mask, LEAD_B[1], 19, 255, -1)
+    a = cover(mask, SHIFT)
+    # the dot on the cable
+    mask[:] = 0
+    cv2.circle(mask, LEAD_A[1], 18, 255, -1)
+    a = cover(mask, CABLE_SHIFT)
+    # leader A on the white page, as far as the cable
+    (ax, ay), (bx, by) = LEAD_A
+    ex = bx + 26
+    cv2.line(a, (ax, ay), (ex, round(ay + (by - ay) * (ax - ex) / (ax - bx))), (255, 255, 255), 23)
+    # rule C and its leader and dot, at the nose: filled in from around them
+    cv2.line(a, RULE_C[0], (RULE_C_WHITE, RULE_C[0][1]), (255, 255, 255), 11)
+    mask[:] = 0
+    cv2.line(mask, (RULE_C_WHITE, RULE_C[0][1]), RULE_C[1], 255, 9)
+    cv2.line(mask, *LEAD_C, 255, 11)
+    cv2.circle(mask, LEAD_C[1], 16, 255, -1)
+    a = cv2.inpaint(a, mask, 5, cv2.INPAINT_TELEA)
+    # the ends of the page's own captions, in the two bottom corners
+    a[1285:, :230] = 255
+    a[1285:, 960:] = 255
+    return Image.fromarray(cv2.cvtColor(a, cv2.COLOR_BGR2RGB))
 
 
 def main():
@@ -208,26 +113,16 @@ def main():
         docs[k] = pymupdf.open(path)
         shutil.copyfile(path, os.path.join(ROOT, "src/assets/docs", out))
         print(f"{out}: {os.path.getsize(path) // 1024} KB, {len(docs[k])} pages")
-    for name, (d, pno, least, k) in RENDERS.items():
-        doc = docs[d]
-        xref = render_xref(doc, pno, least, k)
-        mask = next(x[1] for x in doc[pno - 1].get_images(full=True) if x[0] == xref)
-        pm = pymupdf.Pixmap(doc, xref)
-        if mask:
-            pm = pymupdf.Pixmap(pm, pymupdf.Pixmap(doc, mask))
-        pm.save(os.path.join(IMG, name))
-        # the WebP twin img() serves: near lossless, so the renders stay sharp
-        # under the figures' call-outs and the moving water (products.py
-        # leaves these alone)
-        Image.open(os.path.join(IMG, name)).save(os.path.join(IMG, name[:-4] + ".webp"), "WEBP", quality=94, method=6)
-        print(f"{name}: {pm.width} x {pm.height}, WebP {os.path.getsize(os.path.join(IMG, name[:-4] + '.webp')) // 1024} KB")
-    figs = {}
-    for name, (d, pno, clip, opt) in FIGURES.items():
-        figs[name] = figure(docs[d], pno, clip, opt)
-        print(f"figure {name}: {figs[name]['w']} x {figs[name]['h']}, {len(figs[name]['svg']) // 1024} KB, {figs[name].pop('badges')} badges")
-    with open(os.path.join(ROOT, "src/data/sensor-fort-figures.json"), "w") as f:
-        json.dump(figs, f, indent=1)
-        f.write("\n")
+    for name, (d, pno, box, widest) in RENDERS.items():
+        im = page_image(docs[d], pno).crop(box)
+        if name == "sensor-fort":
+            im = clean_cover(im)
+        if im.width > widest:
+            im = im.resize((widest, round(im.height * widest / im.width)), Image.LANCZOS)
+        jpg, webp = os.path.join(IMG, name + ".jpg"), os.path.join(IMG, name + ".webp")
+        im.save(jpg, "JPEG", quality=90, optimize=True, progressive=True)
+        im.save(webp, "WEBP", quality=90, method=6)
+        print(f"{name}: {im.width} x {im.height}, JPEG {os.path.getsize(jpg) // 1024} KB, WebP {os.path.getsize(webp) // 1024} KB")
 
 
 if __name__ == "__main__":

@@ -1,21 +1,22 @@
 /* Sensor Fort: water moving through the mount (products/sensor-fort.html).
 
-   The figure is the brochure's section on the centre line. build.mjs
-   (sfStage) stacks it as the pipe and the render, this canvas, then the
-   outline, dimensions and badges, and hands the canvas the brochure's own
-   geometry in drawing units: the calculated water surface (`surf`) and the
-   floor the water runs over (`bed`: the thin skin, the ramp of the valley up
-   to the spill lip, the stern). Everything here is drawn between those two.
+   The figure is the mount in the chase, in section along the centre line
+   (diagrams.mjs: sfSection). build.mjs (sfFlow) stacks it as the chase and
+   the mount, this canvas, then the leaders and badges, and hands the canvas
+   the drawing's geometry in its own units: the water surface (`surf`), the
+   floor the water runs over (`bed`: the chase, the thin lift of the mount's
+   floor, the outlet pipe), how much faster the water runs at each point
+   (`pace`), and where the stern is (`wake`). Everything here is drawn between
+   the surface and the floor.
 
    What moves is an illustration of that flow, not a simulation of it:
-   - the surface ripples, most where the water spills over the lip;
-   - lines of flow run from the floor to the surface, each streak moving at a
-     speed that goes with one over the depth (the same flow through less
-     water), so they crawl in the pool, race over the lip and stay fast
-     across the sensor tips, with a tail as long as they are fast;
-   - foam forms where the sheet leaves the lip and is carried off;
-   - strands of rag ride over the mount and grit rolls up the ramp and over,
-     and neither stops.
+   - the surface ripples, most in the wake behind the stern;
+   - lines of flow run from the floor to the surface, each streak quicker
+     where the channel narrows between the cheeks, with a tail as long as it
+     is fast;
+   - a little foam forms in the wake and is carried off;
+   - strands of rag ride through the mount and grit rolls along its floor,
+     and neither stops, because nothing in the channel faces the flow.
 
    The canvas is drawn at the screen's own pixel density, runs only while it
    is in view, and keeps moving (a little slower) under reduced motion. */
@@ -36,20 +37,14 @@
     }
     return pts[pts.length - 1][1];
   };
-  const still = along(D.surf), bed = along(D.bed);
-  const INV = D.bed[0][1], DEEP = INV - D.surf[0][1];
-  // the spill lip: the highest point of the floor
-  const LIP = D.bed.reduce((a, b) => (b[1] < a[1] ? b : a));
+  const still = along(D.surf), floor = along(D.bed);
+  const INV = D.bed[0][1], WAKE = D.wake;
   const smooth = (t) => (t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t));
-  // the floor the flow follows: the bed as far as the lip, then the sheet
-  // falling away from it to the invert
-  const FALL = 150;
-  const floor = (x) => (x <= LIP[0] ? bed(x) : LIP[1] + (INV - LIP[1]) * smooth((x - LIP[0]) / FALL));
-  // how much faster the water runs than in the pool upstream
-  const pace = (x) => Math.min(4.6, Math.max(1, DEEP / Math.max(18, floor(x) - still(x))));
-  // ripples: three trains of small waves moving downstream, largest where the
-  // water spills and settles again
-  const swell = (x) => 0.75 + 2.3 * Math.exp(-(((x - LIP[0] - 86) / 84) ** 2)) + 0.55 * smooth((x - LIP[0]) / 60);
+  // how much faster the water runs than in the chase upstream
+  const pace = along(D.pace);
+  // ripples: three trains of small waves moving downstream, largest in the
+  // wake of the stern, where the water closes in behind the sensor tips
+  const swell = (x) => 0.7 + 1.5 * Math.exp(-(((x - WAKE - 46) / 62) ** 2)) + 0.35 * smooth((x - WAKE) / 60);
   let now = 0;
   const ripple = (x, lag = 0) => {
     const t = now - lag;
@@ -62,7 +57,7 @@
   /* ---- what the water carries ---- */
   let seed = 20261114;
   const rnd = () => { seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
-  const V0 = 62 * calm; // drawing units a second, in the pool
+  const V0 = 74 * calm; // drawing units a second, in the chase
   const streak = (x) => ({ x, f: 0.05 + 0.9 * rnd(), a: 0.28 + 0.6 * rnd(), w: 0.8 + 1.1 * rnd(), l: 0.7 + 0.7 * rnd() });
   const streaks = Array.from({ length: 150 }, () => streak(-40 + rnd() * (D.w + 80)));
   const grit = Array.from({ length: 22 }, () => ({ x: rnd() * D.w, f: 0.015 + 0.05 * rnd(), r: 0.8 + 0.9 * rnd(), p: rnd() * 6.3 }));
@@ -117,7 +112,7 @@
       const k = pace(s.x);
       s.x += V0 * k * dt;
       if (s.x > D.w + 40) Object.assign(s, streak(-40 - rnd() * 30));
-      const len = (7 + 8.5 * k) * s.l;
+      const len = (9 + 9 * k) * s.l;
       for (let j = 0; j < 5; j++) {
         const xa = s.x - (len * j) / 5, xb = s.x - (len * (j + 1)) / 5;
         ctx.beginPath();
@@ -129,7 +124,7 @@
       }
     }
 
-    // grit rolling along the floor, up the ramp and over the lip
+    // grit rolling along the floor, up the feather edge and through
     ctx.fillStyle = "rgba(62, 52, 40, .78)";
     for (const g of grit) {
       g.x += V0 * pace(g.x) * 0.5 * dt;
@@ -157,10 +152,8 @@
       }
     }
 
-    // foam where the sheet leaves the lip, mixed down and carried off
-    for (let n = 0; n < 2; n++) {
-      if (foam.length < 90 && rnd() < 46 * dt) foam.push({ x: LIP[0] - 10 + rnd() * 46, d: rnd() * 5, sink: 3 + rnd() * 16, r: 0.7 + rnd() * 1.7, age: 0, life: 0.7 + rnd() * 1.1 });
-    }
+    // a little foam in the wake of the stern, mixed down and carried off
+    if (foam.length < 40 && rnd() < 16 * dt) foam.push({ x: WAKE + 4 + rnd() * 44, d: rnd() * 4, sink: 2 + rnd() * 9, r: 0.6 + rnd() * 1.3, age: 0, life: 0.6 + rnd() * 0.9 });
     for (let i = foam.length - 1; i >= 0; i--) {
       const b = foam[i];
       b.age += dt;
@@ -214,9 +207,9 @@
   for (let i = 0; i < 40; i++) { now += 0.05; frame(0.05); }
   stage.classList.add("is-flowing");
   // on a phone the figure is wider than its plate and scrolls sideways:
-  // start it on the spill lip and the sensor tips, where the story is
+  // start it on the stern and the sensor tips, where the story is
   const plate = stage.parentElement;
-  if (plate && plate.scrollWidth > plate.clientWidth + 4) plate.scrollLeft = (LIP[0] / D.w) * plate.scrollWidth - plate.clientWidth * 0.6;
+  if (plate && plate.scrollWidth > plate.clientWidth + 4) plate.scrollLeft = (WAKE / D.w) * plate.scrollWidth - plate.clientWidth * 0.72;
   new IntersectionObserver(([en]) => { seen = en.isIntersecting; run(); }, { rootMargin: "60px 0px" }).observe(stage);
   if ("ResizeObserver" in window) new ResizeObserver(() => { size(); if (!raf) frame(0); }).observe(canvas);
   stage.sfFlow = { get time() { return now; }, streaks, foam };
