@@ -67,7 +67,7 @@ export function openStore(dir) {
       ts INTEGER NOT NULL,          -- unix ms
       day TEXT NOT NULL,            -- YYYY-MM-DD in the site's time zone
       hour INTEGER NOT NULL,
-      type TEXT NOT NULL,           -- pageview, or an action: link, button, toggle, tab, download, contact, outbound, search, choice, form
+      type TEXT NOT NULL,           -- pageview, or an action: link, button, toggle, tab, download, contact, outbound, search, choice, form, form_failure
       visitor TEXT NOT NULL,        -- hash of IP + browser + a salt that is thrown away daily
       session TEXT NOT NULL,
       entry INTEGER NOT NULL DEFAULT 0, -- 1 on the first page view of a visit
