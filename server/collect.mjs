@@ -9,8 +9,8 @@ import { isIP } from "node:net";
 
 // Page views and time on page, then each thing a visitor did: links and
 // buttons clicked, menus and questions opened, tabs picked, documents, email
-// and phone, other sites, searches, form options chosen and forms sent.
-const TYPES = new Set(["pageview", "engagement", "link", "button", "toggle", "tab", "download", "contact", "outbound", "search", "choice", "form"]);
+// and phone, other sites, searches, form options chosen, forms sent and failed form attempts.
+const TYPES = new Set(["pageview", "engagement", "link", "button", "toggle", "tab", "download", "contact", "outbound", "search", "choice", "form", "form_failed"]);
 const BOT = /bot|crawl|spider|slurp|scrape|headless|lighthouse|pagespeed|gtmetrix|pingdom|uptime|preview|facebookexternalhit|embedly|whatsapp|curl|wget|python|axios|node-fetch|go-http|java\//i;
 
 // Australian time zones say which state a visitor is in; elsewhere the
