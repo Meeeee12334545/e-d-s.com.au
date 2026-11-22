@@ -93,7 +93,7 @@ export const proof = [
 // line and two facts the shelf showed until November 2026.
 export const shelf = {
   heading: "The instruments our crews put their name to.",
-  lede: "We build our own loggers and flow meters, and represent Detectronic, Hach, ORI, Beadedstream and others. Buy or hire, installed and serviced by our crews.",
+  lede: "We build our own loggers and flow meters, and represent Detectronic, Hach, ORI, Beadedstream and others. Buy or hire, and we'll install and service them.",
   items: [
     { name: "MSFM S2 with LIDoTT", kind: "Area velocity flow meter", maker: "Detectronic", href: "products/detectronic.html", image: img("detectronic-msfm-s2-lidott.png"), fit: 100,
       text: "The area velocity meter our sewer fleet runs on, with the level sensor that keeps measuring as the chamber surcharges.", specs: ["ATEX and IECEx Zone 0", "LIDoTT level to ± 2 mm"] },
@@ -1635,6 +1635,7 @@ export const brands = [
     pageTitle: "EDS Data Loggers, Sensors & Pump Station Manager",
     icon: "cpu",
     tag: "Designed and built by EDS",
+    tagShort: "Loggers, sensors and flow meters",
     summary: "Data loggers, sensors and the Pump Station Manager, manufactured by EDS.",
     description: "Data loggers, sensors and the Pump Station Manager, designed and built by EDS, including the 4G Hawk and Metalog loggers and the E-Flow 3 sewer flow meter.",
     cover: img("e-flow-3.png"),
@@ -3261,6 +3262,10 @@ export const flowsense = {
 /* About                                                               */
 /* ------------------------------------------------------------------ */
 export const about = {
+  // the home page's paragraph: the founding, then what the one team does
+  // (from `approach.lede`), since the hero already says largest supplier and
+  // the heading says Australian owned
+  homeIntro: "Graham and Cynthia Harper founded EDS in Queensland in 1991. Today we make instruments, install and maintain them with our own crews, and deliver the data. One team answers for all of it.",
   intro: [
     "Graham and Cynthia Harper founded Environmental Data Services (EDS) in Queensland in 1991. Today we're Australia's largest supplier of monitoring equipment to the water and wastewater industry, and still Australian owned.",
     "We also supply instruments and services to mining, manufacturing, power and processing. Our team covers every part of environmental monitoring, from the manhole to the final report.",

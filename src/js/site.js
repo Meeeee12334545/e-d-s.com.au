@@ -332,7 +332,7 @@
     // first paint: the line draws itself in from the left, then the reading appears and the chart moves on
     const intro = () => {
       measure(); rest();
-      const t0 = performance.now() + 450, ms = 1500;
+      const t0 = performance.now() + 900, ms = 1500;
       const frame = (ts) => {
         const k = Math.min(1, Math.max(0, (ts - t0) / ms)), e = 1 - (1 - k) ** 3;
         clip.style.width = `${(X * e).toFixed(1)}px`;
@@ -533,6 +533,9 @@
       }
       const done = $(`[data-done=${sent ? "sent" : "error"}]`, form);
       done.hidden = false;
+      // a live region that appears already full is often not read out: show it
+      // empty, then put its words back on the next frame
+      if (done.getAttribute("role") === "status") { const words = done.innerHTML; done.innerHTML = ""; requestAnimationFrame(() => (done.innerHTML = words)); }
       const fieldset = $(".form-fields", form);
       if (fieldset && sent) {
         fieldset.hidden = true;

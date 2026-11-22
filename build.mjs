@@ -329,12 +329,12 @@ function footer(r) {
           <p class="footer-hours">${site.hours}</p>
           ${openStatus()}
           <form class="signup" ${formSend} data-subject="Register for EDS updates" data-track="Updates sign-up">
-            <label for="f-email">Register for updates on projects, equipment and servicing</label>
-            <input id="f-email" name="Email" type="email" placeholder="Your email" autocomplete="email" required>
+            <label for="f-email">Sign up for email updates on projects, equipment and servicing</label>
+            <input id="f-email" name="Email" type="email" placeholder="name@example.com" autocomplete="email" required>
             ${botcheck}
-            <button class="btn btn-primary" type="submit" aria-label="Register for updates">${icon("arrow-right")}<i class="spin" aria-hidden="true"></i></button>
+            <button class="btn btn-primary" type="submit" aria-label="Sign up for updates">${icon("arrow-right")}<i class="spin" aria-hidden="true"></i></button>
             <p class="signup-done" role="status" data-done="sent" hidden>${icon("check", false)} Thanks, you're signed up for EDS updates.</p>
-            <p class="signup-done form-error" role="alert" data-done="error" hidden>${icon("circle-alert", false)} That did not go through. Please try again in a moment.</p>
+            <p class="signup-done form-error" role="alert" data-done="error" hidden>${icon("circle-alert", false)} Your sign-up didn't go through. Please try again in a moment.</p>
           </form>
         </div>
       </div>
@@ -1015,7 +1015,11 @@ function fsScreen() {
     const isGauge = (x, y) => gauges.some(([gx, gy]) => gx === x && gy === y);
     const nodes = [...new Map(pipes.flatMap(([pts]) => pts).filter(([x, y]) => x > 0 && x < 480 && y > 0 && y < 270 && !isGauge(x, y) && !(x === 436 && y === 226)).map((p) => [p.join(), p])).values()];
 
-    return `<svg class="fs-map" viewBox="0 0 480 270" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+    // Three layers on one viewBox, so only the thin middle one (the glow, the
+    // flows and the ping) repaints as it moves: the map and the labels are
+    // drawn once, as the city keeps its moving parts in #city-fx.
+    const vb = `viewBox="0 0 480 270" preserveAspectRatio="xMidYMid meet" aria-hidden="true"`;
+    return `<div class="fs-map-wrap"><svg class="fs-map" ${vb}>
     <defs><linearGradient id="fs-hm-g" x1="0" x2="1"><stop offset="0" stop-color="#2563eb"/><stop offset=".2" stop-color="#60a5fa"/><stop offset=".45" stop-color="#facc15"/><stop offset=".7" stop-color="#f97316"/><stop offset="1" stop-color="#dc2626"/></linearGradient></defs>
     <rect x="-130" y="-90" width="740" height="450" fill="#f1f3ef"/><rect x="-130" y="250" width="740" height="110" fill="#dcebd3"/>
     <path d="${creek}" fill="none" stroke="#dcebd3" stroke-width="44" stroke-linecap="round"/>
@@ -1035,16 +1039,20 @@ function fsScreen() {
       <g stroke="#fff">${roads.map(([pts, hw]) => `<path d="${line(pts)}" stroke-width="${hw * 2}"/>`).join("")}${courts.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="7.6" fill="#fff" stroke="none"/>`).join("")}</g>
       <path d="M162.6 238V258M175.4 236V256" stroke="#9fb0b0" stroke-width="1.4"/>
     </g>
-    <path class="fs-hm-glow" d="M296 96L300 202" fill="none" stroke="#ef4444" stroke-width="16" stroke-linecap="round"/>
     <path d="M436 226C452 231 468 236 492 236H610" fill="none" stroke="#6b7f7d" stroke-width="2" stroke-dasharray="4 3"/>
     <g fill="none" stroke-linecap="round" stroke-linejoin="round">
       <g stroke="${INK}" stroke-opacity=".22">${pipes.map(([pts, , w]) => `<path d="${line(pts)}" stroke-width="${w + 2}"/>`).join("")}</g>
       ${pipes.map(([pts, s, w]) => `<path d="${line(pts)}" stroke="${COL[band(s)]}" stroke-width="${w}"/>`).join("")}
+    </g>
+  </svg><svg class="fs-map-fx" ${vb}>
+    <path class="fs-hm-glow" d="M296 96L300 202" fill="none" stroke="#ef4444" stroke-width="16" stroke-linecap="round"/>
+    <g fill="none" stroke-linecap="round" stroke-linejoin="round">
       ${pipes.map(([pts, s]) => `<path class="fs-hm-flow b${band(s)}" d="${line(pts)}"/>`).join("")}
     </g>
+    <circle class="fs-hm-ping" cx="404" cy="205" r="8.5" fill="none" stroke="${COL[3]}" stroke-width="2"/>
+  </svg><svg class="fs-map-top" ${vb}>
     <g stroke="#fff" stroke-width="1.1" stroke-linejoin="round" paint-order="stroke">${arrows}</g>
     <g fill="#fff" stroke="${INK2}" stroke-width="1.1">${nodes.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="2.4"/>`).join("")}</g>
-    <circle class="fs-hm-ping" cx="404" cy="205" r="8.5" fill="none" stroke="${COL[3]}" stroke-width="2"/>
     ${gauges.map(([x, y, s]) => `<circle cx="${x}" cy="${f1(y + 1.3)}" r="9" fill="${INK}" fill-opacity=".18"/><circle cx="${x}" cy="${y}" r="8.5" fill="${COL[band(s)]}" stroke="#fff" stroke-width="2"/><text class="fine" x="${x}" y="${f1(y + 3.1)}" font-size="8.4" font-weight="700" text-anchor="middle" fill="${band(s) === 1 ? INK : "#fff"}">${s}</text>`).join("")}
     <rect x="429" y="219" width="14" height="14" rx="3.5" fill="#0c5f59" stroke="#fff" stroke-width="1.8"/><circle cx="436" cy="226" r="2.6" fill="none" stroke="#fff" stroke-width="1.3"/>
     <circle cx="298" cy="149" r="4.6" fill="#fff" stroke="#ef4444" stroke-width="2.2"/>
@@ -1074,7 +1082,7 @@ function fsScreen() {
       <g stroke="${INK2}" stroke-width="1.2" stroke-linecap="round"><path d="M300 258h56M300 254v8M356 254v8"/></g><text x="328" y="251" font-size="8" text-anchor="middle" fill="${INK2}" ${halo}>100 m</text>
       <circle cx="466" cy="256" r="8.5" fill="#fff" stroke="${LINE}"/><path d="M466 249.5l3 6.5h-6z" fill="${INK}"/><path d="M466 262.5l3-6.5h-6z" fill="#c3cdcc"/>
     </g>
-  </svg>`;
+  </svg></div>`;
   })();
 
   // 2. Blockage Watch: the site's verdict and risk score on its bands, then
@@ -1275,7 +1283,7 @@ function fsScreen() {
 
   // [title, note beside it, status bar note, drawing]
   const views = [
-    ["I/I heat map", "Severity by pipe", "Arrows run downstream, faster where I/I is worse", heat],
+    ["I/I Heat Map", "Severity by pipe", "Arrows run downstream, faster where I/I is worse", heat],
     ["Blockage Watch", "Dry nights only", "Rain set aside, judged on the overnight trough", blockage],
     ["Pump Station Manager", "Wet well, to scale", "Live level and pump runs", psm],
     ["Alarms", "Sent to people, not addresses", "Sent to whoever is on call today", alarms],
@@ -1283,7 +1291,7 @@ function fsScreen() {
   const rail = ["layout-grid", "flame", "chart-spline", "fan", "bell-ring", "file-text"];
   return `
   <div class="fs-screen" data-reveal="right" data-view="0">
-    <div class="fs-chrome"><img src="${site.logoWhite}" alt=""><span>FlowSense</span><span class="dot">Demo</span><span class="fs-bell">${icon("bell", false)}<b>3</b></span></div>
+    <div class="fs-chrome" aria-hidden="true"><img src="${site.logoWhite}" alt=""><span>FlowSense</span><span class="dot">Demo</span><span class="fs-bell">${icon("bell", false)}<b>3</b></span></div>
     <div class="fs-rail" aria-hidden="true">${rail.map((ic, k) => `<i${k >= 1 && k <= 4 ? ` data-v="${k - 1}"` : ""}>${icon(ic, false)}</i>`).join("")}</div>
     ${views.map(([t, s, , svg], i) => `<div class="fs-view${i === 0 ? " active" : ""}"><p class="fs-view-title">${t}<small>${s}</small></p>${svg}</div>`).join("")}
     <div class="fs-status"><span class="fs-caption">Illustration</span>${views.map(([, , note], i) => `<span data-v="${i}">${note}</span>`).join("")}</div>
@@ -1512,7 +1520,7 @@ const citySection = (r) => `<section class="section dark city-section" id="city-
       </div>
 
       <div class="city-bar">
-        <div class="city-toolbar" role="toolbar" aria-label="${esc(C.cityUi.toolbarLabel)}">
+        <div class="city-toolbar" role="group" aria-label="${esc(C.cityUi.toolbarLabel)}">
           <button type="button" class="btn btn-primary city-btn" data-act="tour">${icon("route")}<span>${esc(C.cityUi.toolbar.tour)}</span></button>
           <button type="button" class="btn btn-ghost city-btn" data-act="storm" data-pressed="false" aria-describedby="city-note">${icon("cloud-rain")}<span>${esc(C.cityUi.toolbar.storm)}</span></button>
           <button type="button" class="btn btn-ghost city-btn" data-act="sound" data-pressed="false" aria-label="${esc(C.cityUi.toolbar.mute)}">${icon("volume-2", false)}${icon("volume-x", false)}</button>
@@ -1538,7 +1546,7 @@ const citySection = (r) => `<section class="section dark city-section" id="city-
           <div class="city-card-head" style="--i:0"><span class="city-badge holder">${icon(z.icon)}</span><h3>${z.name}</h3></div>
           <p style="--i:1">${z.blurb}</p>
           <button type="button" class="city-inside" style="--i:1" data-asset="${z.asset.id}" data-zone="${z.id}">${icon("scan-eye")}<span>${esc(z.asset.button)}</span>${icon("arrow-right", false)}</button>
-          <div style="--i:2"><h4>Services</h4><ul class="city-list">${z.services.map((s) => `<li><a href="${cityHref(r, s)}">${cityLabel(s)}${icon("arrow-right")}</a></li>`).join("")}</ul></div>
+          <div style="--i:2"><h4>Services</h4><ul class="city-list">${z.services.map((s) => `<li><a href="${cityHref(r, s)}">${cityLabel(s)}${icon("arrow-right", false)}</a></li>`).join("")}</ul></div>
           <div style="--i:3"><h4>Products</h4><div class="chips">${z.products.map(([label, ref]) => `<a class="chip" href="${cityHref(r, ref)}">${esc(label)}</a>`).join("")}</div></div>
           <div style="--i:4"><h4>${esc(C.cityUi.sensorsHeading)}</h4>
             <ul class="city-sensors">${z.sensors.map((s) => `<li><button type="button" data-sensor="${s.id}" aria-controls="city-tip" aria-expanded="false">${icon(s.icon, false)}<span class="cs-name">${esc(s.name)}</span><span class="sr-only">: </span><span class="cs-read"><b data-read="${s.id}">${s.reads[0].text ? esc(C.cityUi.text[s.reads[0].text]) : s.reads[0].base.toFixed(s.reads[0].decimals)}</b>${s.reads[0].unit === "%" ? "%" : s.reads[0].unit ? ` ${esc(s.reads[0].unit)}` : ""}</span></button></li>`).join("")}</ul>
@@ -1638,8 +1646,8 @@ const homeBody = (r) => {
         <span class="inst-body"><small>${esc(it.maker)}</small><b>${esc(it.name)}</b><span class="inst-text">${esc(it.kind)}</span></span>
       </a>`).join("")}
     </div>
-    <div class="range-grid">
-      ${C.brands.map((b, n) => { const count = products.filter((p) => p.brand === b).length; return `<a class="range-link" href="${r}products/${b.slug}.html" data-reveal style="--i:${n % 4}"><span><b>${esc(b.title)} <i>${count}<span class="sr-only"> ${count === 1 ? "instrument" : "instruments"}</span></i></b><small>${esc(b.tagShort || b.tag)}</small></span><span class="go" aria-hidden="true">${icon("arrow-right")}</span></a>`; }).join("")}
+    <div class="range-grid" data-reveal style="--i:1">
+      ${C.brands.map((b) => { const count = products.filter((p) => p.brand === b).length; return `<a class="range-link" href="${r}products/${b.slug}.html"><span><b>${esc(b.title)} <i>${count}<span class="sr-only"> ${count === 1 ? "instrument" : "instruments"}</span></i></b><small>${esc(b.tagShort || b.tag)}</small></span><span class="go" aria-hidden="true">${icon("arrow-right", false)}</span></a>`; }).join("")}
     </div>
     <p class="hm-foot">Only need it for one job? <a class="link-arrow" href="${r}services/equipment-rental.html">Hire the equipment ${icon("arrow-right")}</a></p>
   </div>
@@ -1649,9 +1657,9 @@ const homeBody = (r) => {
   <div class="wrap fs-grid">
     <div>
       <h2 class="h-lg" data-reveal>The platform behind every reading.</h2>
-      <p class="lede" data-reveal style="--i:1">EDS FlowSense, built and supported in Australia. Every site we measure, on one map.</p>
+      <p class="lede" data-reveal style="--i:1">EDS FlowSense, built and supported in Australia. Every site we measure on one map, refreshed every 60 seconds.</p>
       <div class="fs-list hm-fs" role="group" aria-label="FlowSense tools" data-auto data-reveal style="--i:2">
-        ${[["flame", "I/I heat map"], ["chart-spline", "Blockage Watch"], ["fan", "Pump Station Manager"], ["bell-ring", "Alarms that reach people"]]
+        ${[["flame", "I/I Heat Map"], ["chart-spline", "Blockage Watch"], ["fan", "Pump Station Manager"], ["bell-ring", "Alarms that reach people"]]
           .map(([ic, t], i) => `<button type="button" class="fs-item" aria-pressed="${i === 0}">${icon(ic, false)}<b>${t}</b></button>`).join("")}
       </div>
       <div class="hero-actions">
@@ -1669,7 +1677,7 @@ ${citySection(r)}
   <div class="wrap hm-about">
     <div>
       <h2 class="h-lg" data-reveal><span>Australian owned.</span> <span>Family&nbsp;founded.</span> <span>Still&nbsp;measuring.</span></h2>
-      <p data-reveal style="--i:1">${esc(C.about.intro[0])}</p>
+      <p data-reveal style="--i:1">${esc(C.about.homeIntro)}</p>
       <p class="hm-offices" data-reveal style="--i:2">Crews from <a href="${r}contact.html#offices">four offices</a>: ${C.offices.map((o) => o.city).join(", ").replace(/, ([^,]+)$/, " and $1")}. One number, <a href="${site.phoneHref}">${site.phone}</a>.</p>
       <a class="link-arrow" href="${r}about.html" data-reveal style="--i:3">The EDS story ${icon("arrow-right")}</a>
     </div>
