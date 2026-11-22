@@ -660,6 +660,16 @@
     loops.forEach((el) => io3.observe(el));
   }
 
+  /* ---- footage plays only on screen ---- */
+  // The home page's two loops (build.mjs: homeMedia) play while in view and
+  // pause off it; the closing band's is not fetched until it nears the
+  // screen. A visitor who has asked to save data keeps the still frames.
+  const clips = $$("video[data-ambient]");
+  if (clips.length && !navigator.connection?.saveData) {
+    const io4 = new IntersectionObserver((entries) => entries.forEach((en) => (en.isIntersecting ? en.target.play().catch(() => {}) : en.target.pause())), { rootMargin: "200px 0px" });
+    clips.forEach((v) => io4.observe(v));
+  } else clips.forEach((v) => { v.autoplay = false; v.pause(); });
+
   /* ---- flow field: streamlines that part around the pointer ---- */
   function flowField(canvas) {
     const ctx = canvas.getContext("2d");

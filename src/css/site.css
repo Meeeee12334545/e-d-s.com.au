@@ -396,7 +396,7 @@ ul { margin: 0; padding: 0; list-style: none; }
    largest; a section head on the home or an index page a step below; a band
    head inside a page (the heading of a checklist, a table or a few questions)
    a step below that. The closing call to action keeps the title size. */
-.section-head > .h-lg, .fs-grid .h-lg, .split > div > .h-lg, .fs-psm-head > .h-lg { font-size: clamp(1.85rem, 3.2vw, 2.6rem); }
+.section-head > .h-lg, .fs-grid .h-lg, .split > div > .h-lg, .fs-psm-head > .h-lg, .hm-about .h-lg { font-size: clamp(1.85rem, 3.2vw, 2.6rem); }
 .band-head > .h-lg, .band .section-head > .h-lg, .fs-stop h2 { font-size: clamp(1.55rem, 2.4vw, 2.05rem); letter-spacing: -.015em; }
 :not(.section-head) > :is(.h-lg, .h-xl) + .lede { margin-top: 20px; }
 .lede { font-size: clamp(1.06rem, 1.5vw, 1.25rem); line-height: 1.55; color: var(--muted); max-width: 34em; text-wrap: balance; }
@@ -449,7 +449,7 @@ ul { margin: 0; padding: 0; list-style: none; }
 @media (min-width: 701px) {
   .hero h1 { grid-column: 1 / -1; max-width: none; white-space: nowrap; font-size: clamp(3.4rem, 6.6vw, 6rem); letter-spacing: -.025em; }
   .hero-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 440px); grid-template-rows: auto auto 1fr; column-gap: clamp(28px, 6vw, 96px); }
-  .hero .lede { grid-column: 1; margin-top: clamp(24px, 3vw, 34px); }
+  .hero .lede { grid-column: 1; }
   .hero .hero-actions { grid-column: 1; align-self: start; }
   .hero .live { grid-column: 2; grid-row: 2 / 4; align-self: start; margin-top: clamp(28px, 3.2vw, 40px); }
 }
@@ -458,7 +458,7 @@ ul { margin: 0; padding: 0; list-style: none; }
 .js .hero h1 .w > span { translate: 0 110%; animation: word-up .9s var(--ease-out) forwards; animation-delay: calc(.15s + var(--i) * 70ms); }
 @keyframes word-up { to { translate: 0 0; } }
 .hero h1 em { font-style: normal; color: var(--brand); }
-.hero .lede { margin-top: 26px; max-width: 32em; }
+.hero .lede { max-width: 32em; }
 .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 34px; }
 
 /* The flow tile under the headline (home): a white instrument face with a
@@ -473,7 +473,10 @@ ul { margin: 0; padding: 0; list-style: none; }
 .live-site { display: inline-flex; align-items: center; gap: 8px; font-size: .84rem; font-weight: 500; color: var(--ink); }
 .live-site .icon { font-size: 16px; color: var(--eds); }
 .live-tag { display: inline-flex; align-items: center; gap: 8px; color: #166534; font-size: .78rem; font-weight: 600; }
-.live-tag::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 3px rgba(34, 197, 94, .24); animation: open-pulse 2.4s var(--ease) infinite; }
+/* the status light stays lit; a ring pulses out from it (as the open-now
+   dot in the footer does), so the light never blinks out */
+.live-tag i { position: relative; flex: none; width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 3px rgba(34, 197, 94, .24); }
+.live-tag i::after { content: ""; position: absolute; inset: -3px; border-radius: 50%; border: 3px solid rgba(34, 197, 94, .24); animation: open-pulse 2.4s var(--ease) infinite; }
 /* site.js draws the plot; without it the head and the readings stand alone */
 :root:not(.js) .trace-plot { display: none; }
 .trace-plot { position: relative; height: var(--trace-h, 124px); --now-inset: 96px; overflow: hidden; }
@@ -3215,7 +3218,8 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: v
   .ind { grid-template-columns: 1fr 1fr; }
   .ind > div:nth-child(3) { border-left: 0; }
   .ind > div:nth-child(n + 3) { border-top: 1px solid var(--border); }
-  .city-grid { grid-template-areas: "stage" "bar" "tabs" "panel"; row-gap: 20px; }
+  /* the tabs lead here too, as in the source, so focus moves down the page */
+  .city-grid { grid-template-areas: "tabs" "stage" "bar" "panel"; row-gap: 20px; }
   .city-card { display: none; }
   .city-card.active { display: flex; }
   /* the bar stacks; the tiles and the tabs scroll sideways, the progress
@@ -3232,6 +3236,11 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: v
   .city-tile { scroll-snap-align: start; }
   .city-tabs { flex-wrap: nowrap; justify-content: flex-start; }
   .city-tab { flex: none; white-space: nowrap; scroll-snap-align: center; }
+  /* a tablet has room for every tab and tool in view, so they wrap rather
+     than hide past the edge; a phone keeps the rows to swipe */
+  @media (min-width: 701px) {
+    .city-toolbar, .city-tabs { flex-wrap: wrap; overflow: visible; scroll-snap-type: none; margin-inline: 0; padding-inline: 0; }
+  }
   .city-legend { justify-content: flex-start; }
   .section-head.split { grid-template-columns: 1fr; }
   .section-head.split > .btn { justify-self: start; }
@@ -3902,7 +3911,7 @@ html:has(.secbar) .band[id] { scroll-margin-top: calc(16px - var(--band-pad)); }
    pipe and the "open now" dot pause while they are off screen (site.js), so
    a page does not repaint them on every frame while the visitor reads
    something else. */
-.offscreen, .offscreen * { animation-play-state: paused !important; }
+.offscreen, .offscreen *, .offscreen *::before, .offscreen *::after { animation-play-state: paused !important; }
 
 /* ---------- the tour: the visitor's own scrolling flies the camera ----------
    "Take the tour" pins the city to the screen and lays a scroll track
@@ -4190,7 +4199,7 @@ body.is-touring { overscroll-behavior-y: contain; }
    the corner arrow stays put; under a finger a link card presses in a little
    instead, as the buttons do. */
 @media (hover: none) {
-  a.card:hover .go .icon, .range-link:hover .go .icon, .range-tile:hover .go .icon { translate: none; }
+  a.card:hover .go .icon, .range-link:hover .go .icon, .range-tile:hover .go .icon, .hm-svc li a:hover .icon { translate: none; }
   a.card, .range-link, .range-tile, .inst { transition: border-color .2s var(--ease), background-color .2s var(--ease), scale .16s var(--ease-out); }
   a.card:active, .range-link:active, .range-tile:active, .inst:active { scale: .985; }
 }
@@ -4555,12 +4564,31 @@ body.is-touring { overscroll-behavior-y: contain; }
    services one ruled sheet with a column for each group and every service a
    row in it, and the four flagships a lower plate with a name and a kind
    each. Nothing here casts a shadow or carries a wash: rules and type. */
-.hm-logos { display: grid; grid-template-columns: minmax(0, 190px) minmax(0, 1fr); gap: 18px clamp(24px, 4vw, 56px); align-items: center; padding-block: 24px 28px; border-top: 1px solid var(--border-strong); }
+.hm-logos { display: grid; grid-template-columns: minmax(0, 220px) minmax(0, 1fr); gap: 18px clamp(24px, 4vw, 56px); align-items: center; padding-block: 24px 28px; border-top: 1px solid var(--border-strong); }
 .hm-logos p { font-size: .88rem; font-weight: 500; line-height: 1.4; color: var(--muted); text-wrap: balance; }
 .hm-logos ul { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 10px clamp(12px, 2vw, 30px); align-items: center; margin: 0; padding: 0; list-style: none; }
 .hm-logos li { display: flex; align-items: center; justify-content: center; height: 44px; }
-.hm-logos img { height: calc(var(--h, 32px) * .8); width: auto; max-width: 100%; object-fit: contain; filter: grayscale(1) contrast(1.1); opacity: .62; }
+.hm-logos img { height: calc(var(--h, 32px) * .8); width: auto; max-width: 100%; object-fit: contain; filter: grayscale(1) contrast(1.1); opacity: var(--o, .62); }
 .hm-hero .hero-body { padding-bottom: clamp(40px, 5vw, 64px); }
+/* The entrance is one sequence: the three words rise, then the intro, the
+   buttons, the tile and the clients follow a beat apart, all settled by about
+   1.5 s, so the headline lands before anything competes with it. */
+.js .hm-hero .lede { animation-delay: .45s; }
+.js .hm-hero .hero-actions { animation-delay: .55s; }
+.js .hm-hero .live { animation-delay: .65s; }
+.js .hm-hero .hm-logos { animation-delay: .8s; }
+.js .hm-hero :is(.lede, .hero-actions, .live, .hm-logos) { animation-duration: .7s; }
+/* The intro's first capitals and the tile's top rule share one line. Where
+   text-box is supported the intro's box is trimmed to its cap height, so
+   equal margins line them up; elsewhere the intro starts .45em higher, the
+   measured space above Helvetica's capitals at this leading. */
+@media (min-width: 701px) {
+  .hm-hero .hero-body > .lede { margin-top: calc(clamp(26px, 2.4vw, 34px) - .45em); }
+  .hm-hero .hero-body > .live { margin-top: clamp(26px, 2.4vw, 34px); }
+  @supports (text-box-trim: trim-start) {
+    .hm-hero .hero-body > .lede { margin-top: clamp(26px, 2.4vw, 34px); text-box-trim: trim-start; text-box-edge: cap alphabetic; }
+  }
+}
 /* a jump to a band (the hero's two buttons) lands on its heading, not on the
    band's padding above it */
 .hm-band[id] { scroll-margin-top: calc(28px - clamp(56px, 7vw, 96px)); }
@@ -4571,9 +4599,11 @@ body.is-touring { overscroll-behavior-y: contain; }
 .hm-svc { grid-template-rows: auto auto 1fr; }
 .hm-svc h3 { font-size: 1.16rem; font-weight: 620; letter-spacing: -.01em; }
 /* a group's name opens that group on the services page */
-.hm-svc h3 a { display: flex; align-items: center; gap: 12px; color: inherit; transition: color .2s var(--ease); }
+.hm-svc h3 a { display: flex; align-items: flex-start; gap: 12px; color: inherit; transition: color .2s var(--ease); }
 .hm-svc h3 a:hover { color: var(--brand-dark); }
-.hm-svc h3 .icon { font-size: 26px; stroke-width: 1.5; color: var(--eds); }
+/* the icon sits on the name's first line, so a name that wraps to two
+   ("Real-Time Data & Analysis") keeps its icon level with its neighbours' */
+.hm-svc h3 .icon { font-size: 26px; stroke-width: 1.5; color: var(--eds); margin-top: -2px; }
 .hm-svc p { margin-top: 10px; padding-bottom: 18px; font-size: .9rem; line-height: 1.5; color: var(--muted); }
 .hm-svc ul { align-self: start; margin: 0; padding: 0; list-style: none; }
 .hm-svc li a { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 0; border-top: 1px solid var(--border); font-size: .97rem; font-weight: 400; line-height: 1.3; color: var(--ink); transition: color .2s var(--ease); }
@@ -4607,10 +4637,39 @@ body.is-touring { overscroll-behavior-y: contain; }
 
 /* the company in a paragraph, beside one client's words */
 .hm-about { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); gap: clamp(32px, 7vw, 110px); align-items: center; }
+/* three short sentences, one to a line at every width */
+.hm-about h2 span { display: block; }
 .hm-about p { margin-top: 20px; max-width: 33em; }
 .hm-about .hm-offices { margin-top: 12px; color: var(--muted); }
 .hm-about .hm-offices a { color: var(--brand-dark); font-weight: 500; white-space: nowrap; }
 .hm-about .link-arrow { margin-top: 22px; }
+
+/* Footage (build.mjs: homeMedia). The hero's right column is a drone shot
+   of a treatment plant in a plain frame, and the flow tile stands over its
+   lower left corner, out into the space under the buttons: the reading in
+   front of the kind of place it comes from. The closing band runs a river in
+   the brand teal (the colour is in the file, so nothing here filters or
+   blends). Square and flat: a frame, no shadow, no glow. */
+.hm-stage { position: relative; }
+.hm-stage-video { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border: 1px solid var(--border-strong); border-radius: var(--radius); background: #c9d3cf; }
+@media (min-width: 981px) {
+  .hm-hero.has-stage .hero-body { grid-template-columns: minmax(0, 1fr) minmax(420px, 600px); }
+  .hm-hero.has-stage .hm-stage { grid-column: 2; grid-row: 2 / 4; align-self: start; margin-top: clamp(26px, 2.4vw, 34px); margin-bottom: 56px; }
+  .hm-hero.has-stage .hm-stage .live { position: absolute; left: -120px; bottom: -56px; width: min(400px, 72%); margin: 0; }
+}
+@media (min-width: 701px) and (max-width: 980px) {
+  .hm-hero.has-stage .hm-stage { grid-column: 2; grid-row: 2 / 4; align-self: start; margin-top: clamp(26px, 2.4vw, 34px); }
+  .hm-hero.has-stage .hm-stage-video { aspect-ratio: 4 / 3; }
+  .hm-hero.has-stage .hm-stage .live { margin: -32px 0 0 -32px; position: relative; }
+}
+@media (max-width: 700px) {
+  .hm-hero.has-stage .hm-stage { margin-top: 28px; }
+  .hm-hero.has-stage .hm-stage-video { aspect-ratio: 2 / 1; }
+  .hm-hero.has-stage .hm-stage .live { margin: -36px 14px 0; position: relative; }
+}
+.cta.has-video { background: var(--brand-band); }
+.cta-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -1; }
+.cta.has-video .wrap { padding-block: clamp(24px, 4vw, 56px); }
 
 /* under a finger the text links are as tall as a button */
 @media (hover: none) {
@@ -4622,8 +4681,9 @@ body.is-touring { overscroll-behavior-y: contain; }
 }
 @media (max-width: 1180px) {
   .hm-logos { grid-template-columns: minmax(0, 1fr); }
-  .hm-svc { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: none; }
-  .hm-svc > div { display: block; }
+  /* two columns keep the subgrid, so a name, its line and its first service
+     sit level with their neighbour's across the sheet */
+  .hm-svc { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(2, auto auto 1fr); }
   .hm-shelf { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; padding-inline: 28px; }
   /* two ranges to a row, so each keeps its name and its line on one line each */
   .range-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -4644,8 +4704,8 @@ body.is-touring { overscroll-behavior-y: contain; }
   .hm-logos li { height: 40px; }
 }
 @media (max-width: 620px) {
-  .hm-svc { grid-template-columns: minmax(0, 1fr); }
-  .hm-svc > div { padding: 22px 20px 8px; }
+  .hm-svc { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; }
+  .hm-svc > div { display: block; padding: 22px 20px 8px; }
   /* on a phone the group's name and its services are enough */
   .hm-svc p { display: none; }
   .hm-svc ul { margin-top: 16px; }

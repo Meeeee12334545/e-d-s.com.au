@@ -5,6 +5,7 @@
 import { mkdir, readFile, writeFile, rm, cp } from "node:fs/promises";
 import { readFileSync, readdirSync, existsSync, statSync } from "node:fs";
 import { createHash } from "node:crypto";
+import { inflateSync } from "node:zlib";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import * as C from "./src/data/content.mjs";
@@ -137,6 +138,37 @@ const screenFigure = (f, { tall = false, sizes } = {}) => `
 // a roundel and a wordmark carry the same weight in the grid (--h, site.css).
 const pngSize = (file) => { const b = readFileSync(path.join(ROOT, "src", file)); return { w: b.readUInt32BE(16), h: b.readUInt32BE(20) }; };
 const logoHeight = (src) => { const { w, h } = pngSize(src.replace("@root/", "")); return Math.max(24, Math.min(46, Math.round(Math.sqrt(3400 / (w / h))))); };
+// Height evens out the area; ink evens out the weight. A thin wordmark
+// (Urban Utilities covers a ninth of its box) set at the same grey as a heavy
+// one (Aurecon covers over a third) all but disappears beside it, so each
+// mark's opacity is set from how much of its box it inks: alpha times
+// darkness, read from the PNG itself (8-bit RGBA, as tools/logos.py writes
+// them). A typical mark (about a fifth inked) keeps the old .62.
+const pngInk = (file) => {
+  const b = readFileSync(path.join(ROOT, "src", file));
+  const w = b.readUInt32BE(16), h = b.readUInt32BE(20);
+  if (b[24] !== 8 || b[25] !== 6 || b[28] !== 0) return null;
+  const idat = [];
+  for (let o = 8; o < b.length; o += b.readUInt32BE(o) + 12) if (b.toString("ascii", o + 4, o + 8) === "IDAT") idat.push(b.subarray(o + 8, o + 8 + b.readUInt32BE(o)));
+  const raw = inflateSync(Buffer.concat(idat)), row = w * 4, px = Buffer.alloc(row * h);
+  for (let y = 0; y < h; y++) {
+    const f = raw[y * (row + 1)], s = y * (row + 1) + 1, d = y * row;
+    for (let x = 0; x < row; x++) {
+      const a = x >= 4 ? px[d + x - 4] : 0, u = y ? px[d - row + x] : 0, c = y && x >= 4 ? px[d - row + x - 4] : 0;
+      const p = a + u - c, pa = Math.abs(p - a), pb = Math.abs(p - u), pc = Math.abs(p - c);
+      px[d + x] = raw[s + x] + [0, a, u, (a + u) >> 1, pa <= pb && pa <= pc ? a : pb <= pc ? u : c][f];
+    }
+  }
+  let x0 = w, y0 = h, x1 = -1, y1 = -1, ink = 0;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const i = (y * w + x) * 4;
+    if (!px[i + 3]) continue;
+    x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y);
+    ink += (px[i + 3] / 255) * (1 - (.3 * px[i] + .59 * px[i + 1] + .11 * px[i + 2]) / 255);
+  }
+  return x1 < 0 ? null : ink / ((x1 - x0 + 1) * (y1 - y0 + 1));
+};
+const logoOpacity = (src) => { const ink = pngInk(src.replace("@root/", "")); return ink ? Math.max(.42, Math.min(.9, .62 * (.21 / ink) ** .6)).toFixed(2) : ".62"; };
 const logoGrid = () => `<ul class="logo-grid" aria-label="Clients">${C.clients.map((c, i) => `<li data-reveal style="--i:${i % 5};--h:${logoHeight(c.src)}px"><img src="${c.src}" alt="${esc(c.name)}" loading="lazy"></li>`).join("")}</ul>`;
 // Four statements at one weight: the proof row on the solutions page (C.proof).
 const proofRow = () => `<div class="proof-row">${C.proof.map((p, i) => `<div data-reveal style="--i:${i}"><b>${esc(p.lead)}</b><span>${esc(p.text)}</span></div>`).join("")}</div>`;
@@ -472,7 +504,7 @@ function shareImage(file, html) {
   return { ...OG_CARD, alt: esc(OG_CARD.alt) };
 }
 
-function layout({ file, title, description, current, menuTab, body, scripts = [], service }) {
+function layout({ file, title, description, current, menuTab, body, scripts = [], service, preload = [] }) {
   const depth = file.split("/").length - 1;
   // The not-found page can be served at any depth, so it links from the root.
   const r = file === "404.html" ? "/" : "../".repeat(depth);
@@ -512,7 +544,7 @@ function layout({ file, title, description, current, menuTab, body, scripts = []
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" type="image/png" sizes="32x32" href="${r}assets/img/favicon-32.png">
 <link rel="apple-touch-icon" href="${r}assets/img/apple-touch-icon.png">
-<link rel="preload" href="${r}assets/fonts/saira-semiexpanded-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="${r}assets/fonts/saira-semiexpanded-latin.woff2" as="font" type="font/woff2" crossorigin>${preload.map((src) => `\n<link rel="preload" href="${src}" as="image" fetchpriority="high">`).join("")}
 <script>document.documentElement.classList.add("js");setTimeout(function(){if(!window.EDS_READY)document.documentElement.classList.remove("js")},4000)</script>
 <link rel="stylesheet" href="${asset(r, "css/site.css")}">
 ${jsonLd(file, crumbs, { description, service, image })}
@@ -611,9 +643,9 @@ const heroFacts = () => heroPanel("EDS at a glance", `<dl class="hero-facts">${C
 // Three steps, each an icon, a name and a line: [icon, name, line].
 const heroSteps = (title, steps) => heroPanel(title, `<ol class="hero-steps">${steps.map(([ic, t, d]) => `<li><span class="card-icon">${icon(ic, false)}</span><span><b>${esc(t)}</b><small>${esc(d)}</small></span></li>`).join("")}</ol>`);
 
-const ctaSection = (r, { title = "Talk to the people who measure it.", lede = "Tell us about your network, site or project. A real person from our team will come back to you.", topic, product } = {}) => `
-<section class="section dark cta">
-  <canvas data-flowfield aria-hidden="true"></canvas>
+const ctaSection = (r, { title = "Talk to the people who measure it.", lede = "Tell us about your network, site or project. A real person from our team will come back to you.", topic, product, video } = {}) => `
+<section class="section dark cta${video ? " has-video" : ""}">
+  ${video ? ambientVideo(video, "cta-video") : `<canvas data-flowfield aria-hidden="true"></canvas>`}
   <div class="wrap">
     <h2 class="h-lg" data-reveal>${title}</h2>
     <p class="lede" data-reveal style="--i:1">${lede}</p>
@@ -1268,7 +1300,7 @@ function fsScreen() {
 // "Illustration" label; its accessible name still says it is one.
 const liveTile = () => `
 <aside class="live" aria-label="Illustration of a flow meter reporting live" data-reveal style="--i:5">
-  <div class="live-head"><span class="live-site">${icon("radio-tower", false)}Site 07, trunk sewer</span><span class="live-tag">Reporting</span></div>
+  <div class="live-head"><span class="live-site">${icon("radio-tower", false)}Site 07, trunk sewer</span><span class="live-tag"><i></i>Reporting</span></div>
   <div class="trace-plot" aria-hidden="true">
     <svg class="trace-svg trace-grid" focusable="false"></svg>
     <svg class="trace-svg trace-move trace-dwf-svg" focusable="false"><path class="trace-dwf"/></svg>
@@ -1533,13 +1565,22 @@ const citySection = (r) => `<section class="section dark city-section" id="city-
   <script type="application/json" id="city-data">${JSON.stringify({ ui: C.cityUi, storm: C.cityStorm, zones: C.city.map(({ id, name, sensors, strata, asset }) => ({ id, name, sensors, strata, asset: { ...asset, parts: asset.parts.map((p) => ({ ...p, href: p.ref ? cityHref(r, p.ref) : "" })) } })) }).replace(/</g, "\\u003c")}</script>
 </section>`;
 
-add({
-  file: "index.html",
-  title: "Environmental Data Services | Water & Wastewater Monitoring",
-  description: "Environmental Data Services (EDS): flow meters, samplers, trained field crews and FlowSense data for water and wastewater. Australian owned since 1991.",
-  current: "home",
-  scripts: ["city-scene.js", "city-traffic.js", "city-sound.js", "city-weather.js", "city.js"],
-  body: (r) => {
+// Footage on the home page (November 2026, at EDS's request): stock clips
+// from Pexels (free to use, no credit needed), cut to short silent loops and
+// served from the site. They show the kind of place EDS works, never a named
+// site or client. Treatment plant: Pexels 38145781, 6.5 s down and back up.
+// River: Pexels 20082504, 8.5 s with its end faded into its start, taken to
+// grey and multiplied by the brand teal in the file itself, so the browser
+// filters nothing and white words never meet anything lighter than the band.
+// site.js plays each only while it is on screen (and not at all when the
+// visitor has asked to save data); until then the poster frame stands in.
+const homeMedia = {
+  hero: { src: "@root/assets/video/treatment-plant-aerial.mp4", poster: "@root/assets/video/treatment-plant-aerial.jpg", eager: true },
+  cta: { src: "@root/assets/video/river-aerial-teal.mp4", poster: "@root/assets/video/river-aerial-teal.jpg" },
+};
+const ambientVideo = (m, cls) => `<video class="${cls}" src="${m.src}" poster="${m.poster}" muted loop playsinline${m.eager ? " autoplay" : ""} preload="${m.eager ? "auto" : "none"}" aria-hidden="true" tabindex="-1" data-ambient></video>`;
+const homeScripts = ["city-scene.js", "city-traffic.js", "city-sound.js", "city-weather.js", "city.js"];
+const homeBody = (r) => {
     const words = ["Every", "drop,", "measured."];
     // The page is seven bands, each one thing (November 2026): the hero with
     // one line of clients, every service by group, the flagship instruments
@@ -1548,7 +1589,7 @@ add({
     // action. The results are on the service pages, buy/hire/DaaS on the
     // services and products pages, the timeline and the office map on About.
     return `
-<section class="hero hm-hero">
+<section class="hero hm-hero has-stage">
   <div class="wrap hero-body">
     <h1 class="h-xl" aria-label="Every drop, measured.">${words.map((w, i) => `<span class="w" aria-hidden="true"><span style="--i:${i}">${w}</span></span>`).join(" ")}</h1>
     <p class="lede" data-reveal style="--i:4">${esc(C.homeLede)}</p>
@@ -1556,12 +1597,12 @@ add({
       <a class="btn btn-primary btn-lg" href="#services">Our services</a>
       <a class="btn btn-ghost btn-lg" href="#products">Our products</a>
     </div>
-    ${liveTile()}
+    <div class="hm-stage" data-reveal style="--i:5">${ambientVideo(homeMedia.hero, "hm-stage-video")}${liveTile()}</div>
   </div>
   <div class="wrap">
     <div class="hm-logos" data-reveal style="--i:6">
       <p>Trusted by government, utilities, councils and industry</p>
-      <ul aria-label="Clients">${C.homeClients.map((n) => C.clients.find((c) => c.name === n)).map((c) => `<li style="--h:${logoHeight(c.src)}px"><img src="${c.src}" alt="${esc(c.name)}"></li>`).join("")}</ul>
+      <ul aria-label="Clients">${C.homeClients.map((n) => C.clients.find((c) => c.name === n)).map((c) => `<li style="--h:${logoHeight(c.src)}px;--o:${logoOpacity(c.src)}"><img src="${c.src}" alt="${esc(c.name)}"></li>`).join("")}</ul>
     </div>
   </div>
 </section>
@@ -1593,7 +1634,7 @@ add({
     <div class="shelf hm-shelf" data-reveal="scale">
       ${C.shelf.items.map((it) => `
       <a class="inst" href="${r}${it.href}">
-        <span class="inst-shot" style="--fit:${it.fit}%"><img src="${it.image}" alt="${esc(it.name)}" loading="lazy"></span>
+        <span class="inst-shot" style="--fit:${it.fit}%"><img src="${it.image}" alt="" loading="lazy"></span>
         <span class="inst-body"><small>${esc(it.maker)}</small><b>${esc(it.name)}</b><span class="inst-text">${esc(it.kind)}</span></span>
       </a>`).join("")}
     </div>
@@ -1627,7 +1668,7 @@ ${citySection(r)}
 <section class="section hm-band" id="about">
   <div class="wrap hm-about">
     <div>
-      <h2 class="h-lg" data-reveal>Australian owned. Family&nbsp;founded. Still&nbsp;measuring.</h2>
+      <h2 class="h-lg" data-reveal><span>Australian owned.</span> <span>Family&nbsp;founded.</span> <span>Still&nbsp;measuring.</span></h2>
       <p data-reveal style="--i:1">${esc(C.about.intro[0])}</p>
       <p class="hm-offices" data-reveal style="--i:2">Crews from <a href="${r}contact.html#offices">four offices</a>: ${C.offices.map((o) => o.city).join(", ").replace(/, ([^,]+)$/, " and $1")}. One number, <a href="${site.phoneHref}">${site.phone}</a>.</p>
       <a class="link-arrow" href="${r}about.html" data-reveal style="--i:3">The EDS story ${icon("arrow-right")}</a>
@@ -1640,8 +1681,16 @@ ${citySection(r)}
   </div>
 </section>
 
-${ctaSection(r)}`;
-  },
+${ctaSection(r, { video: homeMedia.cta })}`;
+};
+add({
+  file: "index.html",
+  title: "Environmental Data Services | Water & Wastewater Monitoring",
+  description: "Environmental Data Services (EDS): flow meters, samplers, trained field crews and FlowSense data for water and wastewater. Australian owned since 1991.",
+  current: "home",
+  scripts: homeScripts,
+  preload: [homeMedia.hero.poster],
+  body: (r) => homeBody(r),
 });
 
 /* ---- services ---- */
@@ -3023,6 +3072,7 @@ for (const f of readdirSync(path.join(ROOT, "src/css"))) await writeFile(path.jo
 await cp(path.join(ROOT, "src/js"), path.join(DIST, "assets/js"), { recursive: true });
 await cp(path.join(ROOT, "src/assets/img"), path.join(DIST, "assets/img"), { recursive: true });
 await cp(path.join(ROOT, "src/assets/docs"), path.join(DIST, "assets/docs"), { recursive: true });
+await cp(path.join(ROOT, "src/assets/video"), path.join(DIST, "assets/video"), { recursive: true });
 // Saira for headings, cut to its semi-expanded width by tools/fonts.py;
 // Aileron, which stands in for Helvetica Neue where a visitor has none; and
 // Geist Mono for readouts.

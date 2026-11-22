@@ -28,6 +28,7 @@ const TYPES = {
   ".html": "text/html; charset=utf-8", ".css": "text/css", ".js": "text/javascript", ".svg": "image/svg+xml", ".woff2": "font/woff2",
   ".json": "application/json", ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".gif": "image/gif", ".webp": "image/webp",
   ".ico": "image/x-icon", ".txt": "text/plain; charset=utf-8", ".xml": "application/xml", ".pdf": "application/pdf", ".zip": "application/zip",
+  ".mp4": "video/mp4",
 };
 
 async function serveStatic(req, res, pathname) {
@@ -39,6 +40,18 @@ async function serveStatic(req, res, pathname) {
     const modified = info.mtime.toUTCString();
     const headers = { "Content-Type": TYPES[path.extname(file)] || "application/octet-stream", "Last-Modified": modified, "Cache-Control": "no-cache" };
     if (req.headers["if-modified-since"] === modified) { res.writeHead(304, headers); return res.end(); }
+    // Footage is sent in whatever byte range the player asks for: Safari plays
+    // a video only from a server that answers ranges.
+    const range = /^bytes=(\d*)-(\d*)$/.exec(String(req.headers.range || "").trim());
+    if (range && file.endsWith(".mp4")) {
+      const size = info.size;
+      const start = range[1] ? Number(range[1]) : Math.max(0, size - Number(range[2]));
+      const end = range[1] && range[2] ? Math.min(Number(range[2]), size - 1) : size - 1;
+      if (start > end || start >= size) { res.writeHead(416, { "Content-Range": `bytes */${size}` }); return res.end(); }
+      res.writeHead(206, { ...headers, "Accept-Ranges": "bytes", "Content-Range": `bytes ${start}-${end}/${size}`, "Content-Length": end - start + 1 });
+      return res.end(req.method === "HEAD" ? undefined : (await readFile(file)).subarray(start, end + 1));
+    }
+    if (file.endsWith(".mp4")) headers["Accept-Ranges"] = "bytes";
     res.writeHead(200, headers);
     res.end(req.method === "HEAD" ? undefined : await readFile(file));
   } catch {
