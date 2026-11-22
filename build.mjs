@@ -668,6 +668,19 @@ const cardLink = (r, { href, iconName, title, text, n, cls = "", media = "", tag
   <span class="go" aria-hidden="true">${icon("arrow-right")}</span>${media}
 </a>`;
 
+// A card led by a photograph of the work (the solutions index): the photo
+// across the top in the site's grade, then the title with its arrow, the
+// summary and the chips. The photo is decoration: the title names the link.
+const photoCard = (r, { href, title, text, n, tags = [], photo: name, pos }) => `
+<a class="card photo-card" href="${r}${href}" data-reveal style="--i:${n % 3}">
+  <span class="card-media photo-frame"${pos ? ` style="--pos:${esc(pos)}"` : ""}>${photo(name, "", { sizes: "(max-width: 700px) calc(100vw - 40px), (max-width: 980px) calc(50vw - 30px), 400px" })}</span>
+  <span class="photo-card-head"><h3>${esc(title)}</h3><span class="go" aria-hidden="true">${icon("arrow-right")}</span></span>
+  <p>${esc(text)}</p>
+  ${tags.length ? `<p class="card-for">${tags.map((t) => `<span>${esc(t)}</span>`).join("")}</p>` : ""}
+</a>`;
+// The photo in the right part of a group's lead card (the services index).
+const cardSide = (f) => (f ? `<span class="card-media photo-frame"${f.pos ? ` style="--pos:${esc(f.pos)}"` : ""}>${photo(f.photo, "", { sizes: "(max-width: 700px) calc(100vw - 40px), (max-width: 980px) 40vw, 340px" })}</span>` : "");
+
 // The flow meter's pipe: a 600 mm sewer in cross-section, drawn with the
 // E-Flow 3 kit on the deep teal, with an area velocity meter on the invert
 // looking up at the surface. lab.js slides the water (a 160 unit block from
@@ -1720,7 +1733,7 @@ ${C.serviceGroups.map((g, gi) => `
       const list = C.services.filter((s) => s.group === g.id);
       const extra = (3 - (list.length + 1) % 3) % 3;
       const wide = new Set([0, ...Array.from({ length: extra }, (_, k) => list.length - 1 - k).filter((k) => k > 0)]);
-      return list.map((s, n) => cardLink(r, { href: `services/${s.slug}.html`, iconName: s.icon, title: s.title, text: s.summary, n, cols: 3, tags: n === 0 ? s.tags || [] : [], cls: n === 0 ? "wide lead" : wide.has(n) ? "wide" : "" })).join("");
+      return list.map((s, n) => cardLink(r, { href: `services/${s.slug}.html`, iconName: s.icon, title: s.title, text: s.summary, n, cols: 3, tags: n === 0 ? s.tags || [] : [], cls: n === 0 ? `wide lead${g.photo ? " has-photo" : ""}` : wide.has(n) ? "wide" : "", media: n === 0 ? cardSide(g.photo) : "" })).join("");
     })()}
   </div>
 </div></section>`).join("")}
@@ -1952,7 +1965,13 @@ ${pageHero(r, { crumbs: [["Solutions"]], title: "Monitoring applied to the probl
 <section class="section"><div class="wrap">
   <div class="section-head"><h2 class="h-lg" data-reveal>Start with the problem you are solving.</h2><p class="lede" data-reveal style="--i:1">Each solution page sets out what we look for, how we measure it, and the instruments and crews we bring.</p></div>
   <div class="grid c3">
-  ${C.solutions.map((s, n) => cardLink(r, { href: `solutions/${s.slug}.html`, iconName: s.icon, title: s.title, text: s.summary, n, cols: 3, tags: s.tags || [] })).join("")}
+  ${C.solutions.map((s, n) => {
+    // Each card shows the photograph its page opens with, or `cardPhoto`
+    // where the page opens with a drawing.
+    const p = s.cardPhoto || s.figure || s.figures?.[0];
+    return p ? photoCard(r, { href: `solutions/${s.slug}.html`, title: s.title, text: s.summary, n, tags: s.tags || [], photo: p.photo, pos: p.pos })
+      : cardLink(r, { href: `solutions/${s.slug}.html`, iconName: s.icon, title: s.title, text: s.summary, n, cols: 3, tags: s.tags || [] });
+  }).join("")}
   </div>
 </div></section>
 <section class="section alt proof-band" aria-label="Why EDS"><div class="wrap">${proofRow()}</div></section>
@@ -2080,7 +2099,7 @@ ${pageHero(r, { crumbs: [["Products", "products/index.html"], [b.name]], iconNam
       ? `<div class="aside-card" data-reveal="right"><h2>Documents</h2><ul class="aside-links docs">${docs.map((d) => `<li><a href="${d.href}" rel="noopener"><span>${esc(d.title)}<small>${esc(d.meta)}</small></span>${icon("download")}</a></li>`).join("")}</ul></div>`
       : `<div class="aside-card" data-reveal="right"><h2>Datasheets and Manuals</h2><p>Ask us for the datasheet, manual or software for any ${esc(b.name)} product.</p><a class="link-arrow" href="${contactHref(r, { topic: "General enquiry", product: `${b.name} datasheet or manual` })}">Request a datasheet ${icon("arrow-right")}</a></div>`}
   </aside>
-</div></section>
+</div>${b.field ? `<div class="wrap">${figureRow(b.field)}</div>` : ""}</section>
 <section class="section alt" id="range"><div class="wrap">
   ${b.groups.map((g) => `
   <div class="block">
@@ -2114,6 +2133,7 @@ ${pageHero(r, { crumbs: [["Products", "products/index.html"], ["Detectronic", "p
     <div class="prose" data-reveal>${C.lidott.description.map((p) => `<p>${esc(p)}</p>`).join("")}</div>
     <div class="feature-list" style="margin-top:40px">${C.lidott.sections.map(([t, d]) => `<div class="feature holder" data-reveal><div><b>${esc(t)}</b><span>${esc(d)}</span></div></div>`).join("")}</div>
     ${photoFigure(C.lidott.figure)}
+    ${C.lidott.photo ? photoFigure(C.lidott.photo) : ""}
   </div>
   <aside class="aside">
     <figure class="aside-figure" data-reveal="right"><div class="aside-plate"><img src="${C.lidott.image2}" alt="Drawing of LIDoTT Alarm in section" loading="lazy"></div><figcaption>LIDoTT Alarm, in section</figcaption></figure>
@@ -2916,6 +2936,7 @@ ${pageHero(r, { crumbs: [["Contact"]], title: "Give us a call or drop\u00a0in. W
   </ul>`, "hero-contact") })}
 <section class="section alt"><div class="wrap contact-grid">
   <div class="contact-cards">
+    ${C.headOffice ? photoFigure(C.headOffice, { cls: "contact-photo", sizes: "(max-width: 980px) calc(100vw - 40px), 460px" }) : ""}
     <a class="contact-card" href="${site.phoneHref}" data-reveal><span class="card-icon">${icon("phone")}</span><span><b>${site.phone}</b><span>General enquiries, customer service, service department and sales</span></span></a>
     <a class="contact-card" href="${contactHref(r, { topic: "Product pricing" }, "contact.html")}" data-reveal><span class="card-icon">${icon("tag")}</span><span><b>Sales</b><span>${site.sales}<br>Pricing, quotes and hire</span></span></a>
     <a class="contact-card" href="${contactHref(r, { topic: "Equipment service or calibration" }, "contact.html")}" data-reveal><span class="card-icon">${icon("wrench")}</span><span><b>Service</b><span>${site.service}<br>Equipment service and calibration</span></span></a>

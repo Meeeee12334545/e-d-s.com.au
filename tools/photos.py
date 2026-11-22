@@ -2,7 +2,7 @@
 """Prepare a photograph for the site.
 
     python3 tools/photos.py <source> <name> [--crop x0,y0,x1,y1] [--patch x0,y0,x1,y1:fx,fy]
-                            [--widths 1600,800] [--quality 82] [--no-grade]
+                            [--fill x0,y0,x1,y1] [--widths 1600,800] [--quality 82] [--no-grade]
 
 Writes src/assets/img/photos/<name>-<w>x<h>.jpg and .webp at each width (never
 larger than the source), with the camera's metadata left out. build.mjs finds
@@ -10,6 +10,8 @@ them by name, so a page refers to the photo as photo("<name>"). Fractions of
 the image, 0 to 1, describe a crop, or a patch: the rectangle to cover and the
 top left corner of the area to copy over it, or "above" to mirror the strip
 just above it (to hide a date stamp). Patches are feathered at the edges.
+A fill paints a rectangle in the colour around its top and sides, for a
+number plate on a plain panel where no nearby area matches it to copy.
 Each photo is graded the same way, so the set matches: levels stretched a
 little with the colour balance kept, and the colour eased back. --no-grade
 leaves a drawing alone. site.css adds the brand tint on the page.
@@ -38,6 +40,7 @@ def box(im, f):
 ap = argparse.ArgumentParser()
 ap.add_argument("source"); ap.add_argument("name", nargs="?")
 ap.add_argument("--crop"); ap.add_argument("--patch", action="append", default=[])
+ap.add_argument("--fill", action="append", default=[])
 ap.add_argument("--widths", default="1600,800"); ap.add_argument("--quality", type=int, default=82)
 ap.add_argument("--no-grade", action="store_true")
 ap.add_argument("--product"); ap.add_argument("--max", type=int, default=1000)
@@ -68,6 +71,14 @@ for p in a.patch:
     mask = Image.new("L", (w, h), 0)
     ImageDraw.Draw(mask).rectangle((8, 8, w - 9, h - 9), fill=255)
     im.paste(tile, (x0, y0), mask.filter(ImageFilter.GaussianBlur(5)))
+for f in a.fill:
+    x0, y0, x1, y1 = box(im, frac(f)); w, h = x1 - x0, y1 - y0; m = 14
+    # the median of a band above and either side (the foot often holds text)
+    px = [p for r in (im.crop((x0 - m, y0 - m, x1 + m, y0)), im.crop((x0 - m, y0, x0, y1)), im.crop((x1, y0, x1 + m, y1))) for p in r.getdata()]
+    col = tuple(sorted(c[i] for c in px)[len(px) // 2] for i in range(3))
+    mask = Image.new("L", (w, h), 0)
+    ImageDraw.Draw(mask).rectangle((3, 3, w - 4, h - 4), fill=255)
+    im.paste(Image.new("RGB", (w, h), col), (x0, y0), mask.filter(ImageFilter.GaussianBlur(2)))
 if a.crop:
     im = im.crop(box(im, frac(a.crop)))
 if not a.no_grade:

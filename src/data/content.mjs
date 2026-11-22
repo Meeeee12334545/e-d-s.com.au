@@ -65,6 +65,9 @@ export const site = {
   indexNowKey: "d968c1e599ceeb8a6cdacc2021cf1270",
 };
 
+// The contact page's photo of the head office, over the ways to reach us.
+export const headOffice = { photo: "head-office", alt: "The EDS head office: a two-storey unit with a roller door in an industrial estate, with an EDS van parked out the front", caption: "Our head office at Meadowbrook, Queensland.", pos: "50% 60%" };
+
 export const offices = [
   { city: "Brisbane", state: "QLD", note: "Head office, Meadowbrook", lon: 153.1, lat: -27.66, head: true },
   { city: "Richmond", state: "NSW", note: "Serving New South Wales and the ACT", lon: 150.75, lat: -33.6 },
@@ -130,10 +133,10 @@ export const stats = [
 // say what the page offers. Keep it between about 120 and 155 characters and
 // to claims the page already makes.
 export const serviceGroups = [
-  { id: "sewer", icon: "waves", title: "Sewer Networks", heading: "Know what is in the pipe, and what should not be.", lede: "Measure what flows through the network, find where the water gets in, and prove the fixes worked.", proof: "Intrinsically safe instruments certified for Zone 0, from the company awarded the largest sewer monitoring project in Australia in recent years." },
-  { id: "water", icon: "droplets", title: "Water & Environment", heading: "Quality, sampling and rainfall, measured properly.", lede: "For utilities, industry and environmental projects, from a single sampler on hire to a whole trade waste program.", proof: "The widest range of automatic samplers in Australia, from ORI and MicroLevel." },
-  { id: "data", icon: "chart-spline", title: "Real-Time Data & Analysis", heading: "From a reading to a decision.", lede: "Data that arrives as it happens, reaches the systems you already run, and ends in a report you can act on." },
-  { id: "field", icon: "hard-hat", title: "Field Services & Support", heading: "The people and equipment behind every program.", lede: "Calibration, hire, facility management and training, from four offices across Australia and crews who travel." },
+  { id: "sewer", photo: { photo: "manhole-shaft-deep", pos: "50% 46%" }, icon: "waves", title: "Sewer Networks", heading: "Know what is in the pipe, and what should not be.", lede: "Measure what flows through the network, find where the water gets in, and prove the fixes worked.", proof: "Intrinsically safe instruments certified for Zone 0, from the company awarded the largest sewer monitoring project in Australia in recent years." },
+  { id: "water", photo: { photo: "stormwater-culvert", pos: "40% 50%" }, icon: "droplets", title: "Water & Environment", heading: "Quality, sampling and rainfall, measured properly.", lede: "For utilities, industry and environmental projects, from a single sampler on hire to a whole trade waste program.", proof: "The widest range of automatic samplers in Australia, from ORI and MicroLevel." },
+  { id: "data", photo: { photo: "site-cabinet-gazebo", pos: "50% 45%" }, icon: "chart-spline", title: "Real-Time Data & Analysis", heading: "From a reading to a decision.", lede: "Data that arrives as it happens, reaches the systems you already run, and ends in a report you can act on." },
+  { id: "field", photo: { photo: "crew-solar-pole", pos: "62% 60%" }, icon: "hard-hat", title: "Field Services & Support", heading: "The people and equipment behind every program.", lede: "Calibration, hire, facility management and training, from four offices across Australia and crews who travel." },
 ];
 
 // "At a glance" in each service and solution page hero: [icon, fact, line].
@@ -711,6 +714,10 @@ export const services = [
       "Rehabilitation is a big investment, and flow data is the most direct way to show it worked. We monitor before and after relining, cleaning and repairs, so the change is measured, not assumed.",
       "Utilities increasingly use these comparisons to check contractor performance, which means fewer disputes and clearer accountability.",
     ],
+    figures: [
+      { photo: "pipe-sensor-cable", alt: "Looking into a large sewer pipe from a manhole, with a yellow sensor cable fixed along the pipe wall and flow running out across the floor", caption: "A flow sensor's cable run into a large sewer pipe on an EDS install.", pos: "50% 50%" },
+      { photo: "velocity-check-manhole", alt: "A technician kneeling at an open manhole beside a tripod winch, reading a handheld flow meter whose sensor is lowered into the sewer", caption: "A spot check of velocity at a manhole with an FH950 handheld meter. Photo: Hach.", pos: "50% 60%" },
+    ],
     blocks: [
       {
         heading: "A Before-and-After Approach",
@@ -846,6 +853,10 @@ export const services = [
       "Trade waste monitoring keeps your business compliant and your discharge under control. EDS works with some of Australia's largest companies to measure, sample and report on what leaves their sites.",
       "A trade waste program usually covers flow, sampling and quality. We supply, install and service all three, so you deal with one team, not three suppliers.",
       "For utilities, flow data also shows trade waste where it shouldn't be. In one Queensland catchment, steady overnight flow with no rain to explain it revealed a trade waste connection wrongly tied into the sewer.",
+    ],
+    figures: [
+      { photo: "sampler-open-channel", alt: "A portable automatic sampler being set up beside a concrete channel, its intake line laid into the flow", caption: "A portable sampler beside an open channel, its intake in the flow. Photo: Hach.", pos: "40% 60%" },
+      { photo: "fl1500-logger-post", alt: "A Hach FL1500 flow logger in an open weatherproof case on a post at an outdoor site, with a technician plugging in a USB stick", caption: "An FL1500 logger on its post, downloading to a USB stick on site. Photo: Hach.", pos: "50% 45%" },
     ],
     blocks: [
       {
@@ -1284,6 +1295,7 @@ export const services = [
       "The hire fleet is the same equipment our own crews run, so the advice that comes with it is from people who use it in the field.",
       "Difficult sites are our specialty. Ask us for an off-the-shelf system or a custom package, for one site or a national or international project.",
     ],
+    figure: { photo: "crew-van-roadside", alt: "An EDS technician in a hard hat at the back of the EDS van beside a road, with cones and a barrier set out around a manhole", caption: "A trained EDS crew setting up at a roadside manhole. Hire the equipment, or have us install it.", pos: "50% 30%" },
     blocks: [
       {
         heading: "In the Hire Fleet",
@@ -1370,6 +1382,7 @@ export const services = [
       "Our own crews are trained in installation, maintenance and calibration, because that's what keeps data quality high over a long program.",
       "We also support the instruments and software we supply. Manuals, software and drivers are on our Resources page, and EDS, Hach Flo-Ware and Dynaflox software is available on request.",
     ],
+    figure: { photo: "crew-manhole-harness", alt: "An EDS technician in a hard hat and harness at the bottom of a manhole, fitting a sensor in the flow, with the rescue line running up the shaft", caption: "Fitting a sensor at the bottom of a manhole, on a harness and rescue line. Confined space work, done by a trained crew.", pos: "50% 40%" },
     blocks: [
       {
         heading: "How we help",
@@ -1405,6 +1418,7 @@ export const solutions = [
       "Every job is different, from buildings to hydraulic assessments. On one government asset, we fitted light, moisture, seismic and temperature sensors at critical points, for 24/7 monitoring and evaluation.",
       "The score's history can also raise alarms on a trigger you set. If any reading moves more than 5% in 60 minutes, say, site managers and key stakeholders are alerted.",
     ],
+    figure: { photo: "concrete-structure-water", alt: "The piers and deck of a weathered concrete structure standing in calm water, stained where the water level has risen and fallen", caption: "A concrete structure in water. Its condition can change faster than an annual inspection will catch." },
     blocks: [
       {
         heading: "How the EDS Asset Score works",
@@ -1430,6 +1444,7 @@ export const solutions = [
   },
   {
     slug: "asset-network-assessment",
+    cardPhoto: { photo: "sewer-pipe-downstream", pos: "50% 55%" },
     diagram: "scatter",
     tags: ["Blockages and sediment", "Cross connections"],
     title: "Asset & Network Assessment",
@@ -1466,6 +1481,7 @@ export const solutions = [
   },
   {
     slug: "network-thermal-monitoring",
+    cardPhoto: { photo: "temperature-string-install", pos: "40% 50%" },
     diagram: "thermal",
     tags: ["Up to 125 sensors", "± 0.1 °C"],
     title: "Network Thermal Monitoring",
@@ -1475,6 +1491,10 @@ export const solutions = [
     intro: [
       "Water getting into a pipe is usually a different temperature from what's already in it. Our temperature studies use that difference to find exactly where it gets in. They work in water, wastewater and most other piped networks, pressurised or not.",
       "It's a growing practice in network assessment: accurate, low cost, and able to pinpoint each source.",
+    ],
+    figures: [
+      { photo: "temperature-probe-beads", alt: "A clear rigid temperature probe with its sensors showing inside as yellow beads, held in a bracket on a wall", caption: "A rigid temperature probe, its sensors set along its length. Photo: Beadedstream." },
+      { photo: "temperature-string-install", alt: "Two technicians in hi-vis on open grassland fixing a logger post, with a temperature cable laid across the ground", caption: "Fitting a temperature string and its logger in the field. Photo: Beadedstream.", pos: "40% 55%" },
     ],
     blocks: [
       {
@@ -1538,6 +1558,7 @@ export const solutions = [
   },
   {
     slug: "automatic-sampling",
+    cardPhoto: { photo: "ori-sampler-manhole", pos: "50% 92%" },
     diagram: "sampling",
     tags: ["Intrinsically safe", "Buy or hire"],
     title: "Automatic Sampling",
@@ -1690,6 +1711,10 @@ export const brands = [
       "Its flow meters support early flood detection, I&I assessment, combined sewer overflow (CSO) monitoring and smart sewer networks, in short studies and long-term programs.",
       "We supply and install Detectronic instruments across Australia and run them in our own fleet, so the advice comes from people who install them.",
     ],
+    field: [
+      { photo: "msfm-sensor-flow", alt: "An MSFM area velocity sensor on its band at the bottom of an incoming sewer line, its yellow cable running out through the flow", caption: "An MSFM sensor installed by EDS at the bottom of an incoming line, measuring depth and velocity.", pos: "50% 45%" },
+      { photo: "lidott-sensor-chamber", alt: "A LIDoTT Sensor on a stainless bracket in a concrete chamber, looking down at the channel below", caption: "A LIDoTT Sensor on its bracket in a chamber, measuring the level from above. Photo: Detectronic.", pos: "50% 40%" },
+    ],
     blocks: [
       {
         heading: "Across the Range",
@@ -1732,6 +1757,10 @@ export const brands = [
       "EDS represents ORI in Australia. Over a long partnership, we've put its rugged, reliable samplers to work in the field.",
       "ORI has made sampling, measuring and laboratory equipment for over 60 years. Still 100% family owned, it's recognised as the world's leading maker of ATEX and IECEx certified sampling systems.",
       "ORI samplers come with one of two controls: BASIC, for simple programs, or NEMO, which adds logging, telemetry and control.",
+    ],
+    field: [
+      { photo: "ori-sampler-manhole", alt: "An ORI AquaSamp Mini sampler standing beside an open manhole, with its suction hose and strainer held over the shaft on a yellow pole", caption: "An AquaSamp Mini set up beside a manhole, its strainer going down into the flow. Photo: ORI.", pos: "50% 96%" },
+      { photo: "ori-display-manhole", alt: "An ORI handheld display lying on a manhole cover, its cable tied off and running down into the shaft", caption: "An ORI display on a manhole cover, cabled to the instrument below. Photo: ORI.", pos: "50% 40%" },
     ],
     blocks: [
       {
@@ -1782,6 +1811,10 @@ export const brands = [
       "Hach Flow, with its legacy brands Sigma and Marsh-McBirney, has a long record of innovation and accuracy in open channel flow measurement. We've supplied the range since the Marsh-McBirney days in the 1990s.",
       "Hach meters collect flow data and get it to you reliably, for fixed, portable, permanent or temporary use. Sensors range from non-contact types above the flow, which limit fouling, to rugged submerged AV sensors.",
     ],
+    field: [
+      { photo: "flodar-manhole", alt: "A Flo-Dar sensor on its frame at the top of a sewer channel, seen from the manhole opening, with the flow running beneath it", caption: "A Flo-Dar on an EDS-monitored site: radar velocity and ultrasonic level, from above the flow.", pos: "50% 55%" },
+      { photo: "flo-station-cabinet", alt: "An open stainless site cabinet under a solar panel frame, with a Flo-Station logger, its power supply and a telemetry unit inside", caption: "A Flo-Station in its site cabinet, with power and telemetry, on the same program.", pos: "50% 40%" },
+    ],
     blocks: [
       {
         heading: "Choosing a Hach System",
@@ -1810,7 +1843,7 @@ export const brands = [
       {
         name: "Sensors",
         items: [
-          { name: "Flo-Dar", type: "flow", note: "Non-contact radar velocity and ultrasonic level", image: img("landing-flo-dar-1.jpg") },
+          { name: "Flo-Dar", type: "flow", note: "Non-contact radar velocity and ultrasonic level", image: img("flo-dar.jpg") },
           { name: "Sub AV Sensor", type: "flow", note: "Submerged Doppler velocity and pressure level", image: img("landing-sigma-av.jpg") },
           { name: "Flo-Tote 3", type: "flow", note: "Submerged AV for clean water and low flows", image: img("landing-flo-tote.jpg") },
           { name: "AV Flow Sensor with Bubbler", type: "flow", note: "Submerged AV with bubbler level", image: img("landing-sigma-av-bubbler.jpg") },
@@ -1834,6 +1867,10 @@ export const brands = [
       "We represent Beadedstream, whose loggers, sensors and data systems measure air, soil and water temperature in the toughest places.",
       "Its reputation for reliability was earned in the extremes of Alaska, on research, industrial and remote sites.",
       "In sewers, we lay Beadedstream cables alongside flow meters to find where groundwater gets in.",
+    ],
+    field: [
+      { photo: "temperature-string-river", alt: "A temperature string on a post on a river bank, with its logger and a radiation shield fixed to the post", caption: "A temperature string and logger on a river bank. Photo: Beadedstream.", pos: "50% 50%" },
+      { photo: "d605-logger-post", alt: "A Beadedstream D605 data logger clamped to a post outdoors", caption: "The D605 logger, clamped to its post in the field. Photo: Beadedstream." },
     ],
     blocks: [
       {
@@ -1899,6 +1936,10 @@ export const brands = [
       "Aquamonitrix brings laboratory accuracy for nitrate and nitrite into the field. It measures raw, process and effluent water in real time, and sends results straight to your SCADA or telemetry and to its own Datamonitrix platform.",
       "Its calibration stays stable over long deployments, with little need for intervention. It can be running within a couple of hours, and it's easy to operate and service, which keeps costs low.",
       "It measures nitrate and nitrite from one sample. It's portable, and its built-in sample system handles wastewater with no pre-treatment or costly add-ons.",
+    ],
+    field: [
+      { photo: "nitrate-analyser-river", alt: "The Aquamonitrix analyser cabinet on a timber stand beside a river, with sample troughs and a laptop on the bench and a stone bridge behind", caption: "Aquamonitrix measuring nitrate and nitrite beside a river. Photo: Aquamonitrix.", pos: "60% 50%" },
+      { photo: "nitrate-analyser-kiosk", alt: "A portable Aquamonitrix analyser inside an open green kiosk on an estuary wall", caption: "A portable analyser in a kiosk on an estuary wall. Photo: Aquamonitrix.", pos: "40% 50%" },
     ],
     blocks: [
       {
@@ -2078,6 +2119,7 @@ export const lidott = {
   datasheet: localDoc("detectronic-lidott-alarm-datasheet.pdf"),
   // Detectronic's drawing of the alarm in place, labelled as an illustration.
   figure: { photo: "lidott-alarm-site", alt: "Cutaway illustration of a LIDoTT Alarm mounted at the top of a manhole beneath a street, measuring the sewer level below by radar and sending level alarms to the cloud over the mobile network", caption: "Illustration: where it sits. Mounted in the manhole, measuring the level by radar and reporting alarms over the mobile network.", plain: true },
+  photo: { photo: "lidott-alarm-culvert", alt: "A red LIDoTT Alarm bolted to the stone headwall of a culvert, above floodwater held back by a floating barrier", caption: "A LIDoTT Alarm on a culvert headwall, above the water it watches. Photo: Detectronic.", pos: "50% 45%" },
   highlights: [
     ["radar", "Radar sensor", "5° beam angle"],
     ["ruler", "Range", "Measures up to 8.4 m"],

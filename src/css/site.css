@@ -2169,14 +2169,16 @@ main:has(> .alt:last-child) + .footer { background: var(--bg); }
 /* contact */
 .contact-grid { display: grid; grid-template-columns: minmax(0, .82fr) minmax(0, 1.18fr); gap: clamp(28px, 4vw, 56px); align-items: start; }
 .contact-cards { display: grid; gap: 12px; align-content: start; }
-/* the ways to reach us stay beside the form as it scrolls past */
-@media (min-width: 981px) {
+/* the ways to reach us stay beside the form as it scrolls past, where the
+   screen is tall enough to hold them with the head office photo */
+@media (min-width: 981px) and (min-height: 900px) {
   .contact-cards { position: sticky; top: calc(var(--header-h) + 20px); }
 }
-/* above the form on a tablet: two to a row, the phone number across the top */
+/* above the form on a tablet: two to a row, the photo and the phone number
+   across the top */
 @media (min-width: 701px) and (max-width: 980px) {
   .contact-cards { grid-template-columns: 1fr 1fr; }
-  .contact-cards > :first-child { grid-column: 1 / -1; }
+  .contact-cards > :first-child, .contact-cards > .contact-photo + * { grid-column: 1 / -1; }
 }
 /* enquire.html: the form, with a call card and head office beside it */
 .enquire-section { padding-top: clamp(32px, 5vw, 64px); }
@@ -2734,6 +2736,33 @@ kbd { display: inline-block; min-width: 22px; padding: 3px 6px; border-radius: v
   .mosaic { grid-template-columns: 1fr; grid-auto-rows: 240px; }
   .mosaic .photo:first-child { grid-column: auto; grid-row: auto; }
 }
+/* cards that carry a photograph of the work, in the same grade as every
+   other photo: across the top of a solution card, and in the right part of
+   each group's lead card on the services index. The photo meets the card's
+   own edges, so it sits inside the card's rule rather than in a second frame.
+   The card still answers the pointer with its edge; the photo settles in a
+   little, as product shots do. */
+.card > .card-media { display: block; border: 0; border-radius: 0; box-shadow: none; background: var(--bg-alt); }
+a.card:hover > .card-media img { scale: 1.04; }
+.photo-card { padding: 0 0 26px; gap: 10px; }
+.photo-card > .card-media { aspect-ratio: 16 / 10; margin-bottom: 12px; border-bottom: 1px solid var(--border); }
+.photo-card > :not(.card-media) { margin-inline: 26px; }
+.photo-card-head { display: flex; justify-content: space-between; align-items: start; gap: 14px; }
+.photo-card .go { position: static; flex: none; margin: -2px -4px 0 0; }
+.grid.c3 > .card.lead.has-photo { padding-right: calc(40% + 32px); min-height: 252px; }
+.card.has-photo > .card-media { position: absolute; inset: 0 0 0 auto; z-index: 0; width: 40%; aspect-ratio: auto; border-left: 1px solid var(--border); }
+.grid.c3 > .card.lead.has-photo > .go { right: calc(40% + 26px); }
+@media (max-width: 700px) {
+  /* on a phone the photo runs across the foot of the card, under the text
+     (the card's icon sits beside its text here: see the end of the file) */
+  .grid.c3 > .card.lead.has-photo { padding-right: 20px; min-height: 0; }
+  .card.has-photo > .card-media { position: relative; inset: auto; grid-column: 1 / -1; width: auto; aspect-ratio: 16 / 9; margin: 12px -20px -22px; border-left: 0; border-top: 1px solid var(--border); }
+  .grid.c3 > .card.lead.has-photo > .go { right: 16px; }
+}
+/* contact: head office over the ways to reach it, in a wider frame */
+.contact-photo { margin: 0 0 4px; }
+.contact-photo .photo-frame { aspect-ratio: 16 / 9; }
+.contact-photo figcaption { margin-top: 10px; }
 /* ---------- illustrations and FlowSense screens ----------
    Where a page has no photograph of its method, an illustration shows how
    it works (diagrams.mjs): a white plate, the site's own lines and type, the
