@@ -2890,6 +2890,41 @@ a.card:hover > .card-media img { scale: 1.04; }
 .dg-arrow.w { stroke: #fff; }
 .diagram .dg-gap-t { fill: #9a4f46; font-weight: 600; font-size: 12px; }
 .diagram .dg-i { font-style: italic; font-size: 15px; }
+/* rainfall: rain falling on the catchment, the gauge on its post, inflow
+   running in at the manhole, and the chart's fast and slow responses */
+.dg-shower path { fill: none; stroke: #2b9bd0; stroke-opacity: .38; stroke-width: 1.1; stroke-linecap: round; stroke-dasharray: 5 9; animation: dg-flow .7s linear infinite; }
+.dg-inflow { fill: none; stroke: #2b9bd0; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 4 10; animation: dg-flow .8s linear infinite; }
+.dg-inflow-head { fill: none; stroke: #1d84b8; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.dg-band-fast { fill: #2b9bd0; fill-opacity: .32; }
+.dg-post { stroke: #7d8a88; stroke-width: .8; }
+.dg-gauge { stroke: #6f7e7c; stroke-width: 1; }
+.dg-gauge-rim { stroke: #94681f; stroke-width: .8; stroke-linejoin: round; }
+.dg-gauge-mouth { fill: #6b4c17; }
+.dg-gauge-spout { fill: none; stroke: #94681f; stroke-width: 2; stroke-linecap: round; }
+.dg-bucket { fill: none; stroke: #94681f; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.dg-pivot { fill: #3e4846; }
+/* fullpipe: coils and their field, electrodes, clamp-on transducers on
+   their bands, and sound pulses with and against the flow */
+.dg-rule { fill: none; stroke: #e3e9e8; stroke-width: 1; }
+.dg-coil { stroke: #94681f; stroke-width: .8; }
+.dg-coil-wind { fill: none; stroke: #94681f; stroke-opacity: .7; stroke-width: .9; }
+.dg-field { fill: none; stroke: #7a5bc7; stroke-width: 1.2; stroke-dasharray: 3 2.5; }
+.dg-field-arrow { fill: none; stroke: #7a5bc7; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+.dg-volt { fill: none; stroke: #1d2726; stroke-width: 1.4; }
+.dg-volt-end { fill: none; stroke: #1d2726; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+.dg-electrode { fill: #2f3b39; stroke: #fff; stroke-width: .8; }
+.dg-strap-band { fill: #5d6866; }
+.dg-tx { fill: #e4e9ea; stroke: #7d8a88; stroke-width: .9; }
+.dg-tx-screen { fill: #2f3b39; }
+.dg-tx-keys { fill: none; stroke: #5d6866; stroke-width: 1.8; stroke-linecap: round; }
+.dg-sound { fill: none; stroke: #1d6fa0; stroke-opacity: .6; stroke-width: 1.2; stroke-linejoin: round; }
+.dg-sound.back { stroke: #49b3e6; stroke-opacity: .85; }
+.dg-sound-pulse { fill: none; stroke: #1d6fa0; stroke-width: 2.6; stroke-linecap: round; stroke-dasharray: 3 11; animation: dg-flow 1s linear infinite; }
+.dg-sound-pulse.back { stroke: #49b3e6; }
+.dg-sound-arrow { fill: none; stroke: #1d6fa0; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+.dg-sound-arrow.back { stroke: #49b3e6; }
+.dg-particle { fill: #8f7859; stroke: #fff; stroke-width: .6; }
+.dg-bubble { fill: #fff; fill-opacity: .85; stroke: #2b9bd0; stroke-width: .8; }
 .ef-road { fill: #59625f; }
 .ef-edge { fill: none; stroke: #8ea19e; stroke-width: 1; }
 .ef-frame { fill: #3e4846; }
