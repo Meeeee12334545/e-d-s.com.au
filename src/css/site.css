@@ -3949,6 +3949,7 @@ html:has(.secbar) .band[id] { scroll-margin-top: calc(16px - var(--band-pad)); }
   .related-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .split-band > .band-head, .intro > .photo, .intro > .aside-figure, .intro > .diagram, .intro > .screen, .fig-band > .diagram, .fig-band > .photo, .fig-band > .screen { position: static; }
   .fig-band { grid-template-columns: 1fr; gap: 28px; }
+  .fig-band > .diagram { max-width: 620px; }
   /* a drawing's labels scale with it, so it stops short of the full width */
   .intro > .diagram, .intro > .screen.tall { max-width: 620px; }
   .intro { gap: 24px; }
