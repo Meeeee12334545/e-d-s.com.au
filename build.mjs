@@ -193,6 +193,25 @@ const pngInk = (file) => {
 const logoOpacity = (src) => { const ink = pngInk(src.replace("@root/", "")); return ink ? Math.max(.42, Math.min(.9, .62 * (.21 / ink) ** .6)).toFixed(2) : ".62"; };
 const logoGrid = () => `<ul class="logo-grid" aria-label="Clients">${C.clients.map((c, i) => `<li data-reveal style="--i:${i % 5};--h:${logoHeight(c.src)}px"><img src="${c.src}" alt="${esc(c.name)}" loading="lazy"></li>`).join("")}</ul>`;
 // Four statements at one weight: the proof row on the solutions page (C.proof).
+// The office map on About and Contact: Australia from Natural Earth (coast,
+// islands, state borders and shaded relief, cut by tools/ausmap.py into
+// src/data/ausmap.json and ausmap-relief.webp), drawn once in a still layer;
+// the office pins and the arcs between them go on a layer of their own
+// (widgets.js), in the same projection, so their loops never repaint the map.
+const AUS = JSON.parse(readFileSync(path.join(ROOT, "src/data/ausmap.json"), "utf8"));
+const ausNames = [["WA", 122, -26], ["NT", 133.6, -19.6], ["SA", 135.2, -29.6], ["QLD", 144.4, -22.6], ["NSW", 146.2, -32.2], ["VIC", 142.9, -36.3], ["TAS", 146.6, -42.2]];
+const ausXY = (lon, lat) => [Math.round((lon - AUS.lon0) * AUS.k * 10) / 10, Math.round((AUS.lat0 - lat) * AUS.k * AUS.stretch * 10) / 10];
+const ausMap = () => `<div class="aus-map" data-reveal="scale">
+  <svg class="aus-base" viewBox="0 0 ${AUS.w} ${AUS.h}" aria-hidden="true">
+    <path class="map-other" d="${AUS.other}"/>
+    <path class="map-land" d="${AUS.aus}"/>
+    <image href="@root/assets/img/ausmap-relief.webp" width="${AUS.w}" height="${AUS.h}" preserveAspectRatio="none"/>
+    <path class="map-states" d="${AUS.states}"/>
+    <path class="map-coast" d="${AUS.aus}"/>
+    <g class="map-names">${ausNames.map(([n, lon, lat]) => { const [x, y] = ausXY(lon, lat); return `<text x="${x}" y="${y}">${n}</text>`; }).join("")}</g>
+  </svg>
+  <svg id="ausmap" viewBox="0 0 ${AUS.w} ${AUS.h}" data-offices='${JSON.stringify(C.offices)}' role="img" aria-label="Map of Australia showing EDS offices"></svg>
+</div>`;
 const proofRow = () => `<div class="proof-row">${C.proof.map((p, i) => `<div data-reveal style="--i:${i}"><b>${esc(p.lead)}</b><span>${esc(p.text)}</span></div>`).join("")}</div>`;
 // Two photographs side by side, across the page.
 const figureRow = (figs) => `<div class="photo-row">${figs.map((f, i) => photoFigure(f, { i, sizes: "(max-width: 700px) calc(100vw - 40px), (max-width: 980px) calc(50vw - 28px), 612px" })).join("")}</div>`;
@@ -2805,7 +2824,7 @@ ${pageHero(r, { crumbs: [["About"]], title: "Australian owned and operated since
   <figure class="quote" data-reveal style="margin:48px 0 0">${icon("quote", false)}<blockquote>${C.about.founder.text}</blockquote><cite><b>${C.about.founder.name}</b>, ${C.about.founder.role}</cite></figure>
 </div></section>
 <section class="section dark"><div class="wrap aus">
-  <svg id="ausmap" data-offices='${JSON.stringify(C.offices)}' role="img" aria-label="Map of Australia showing EDS offices" data-reveal="scale"></svg>
+  ${ausMap()}
   <div><h2 class="h-lg" data-reveal>Four offices across Australia.</h2>
   <p class="lede" data-reveal style="--i:1">Crews and support across the country, on one number. Tell us about your network, site or project.</p>
   <div class="office-list" style="margin-top:26px">${C.offices.map((o) => `<button class="office" type="button"><span class="card-icon">${icon("map-pin")}</span><span><b>${o.city}</b><span>${o.note}</span></span><em>${o.state}</em></button>`).join("")}</div>
@@ -3172,7 +3191,7 @@ ${pageHero(r, { crumbs: [["Contact"]], title: "Give us a call or drop in. We'd 
   <div class="ask-card" data-reveal="right">${enquiryForm(r, { heading: "Start an Enquiry" })}</div>
 </div></section>
 <section class="section dark" id="offices"><div class="wrap aus">
-  <svg id="ausmap" data-offices='${JSON.stringify(C.offices)}' role="img" aria-label="Map of Australia showing EDS offices" data-reveal="scale"></svg>
+  ${ausMap()}
   <div><p class="eyebrow">Office locations</p><h2 class="h-lg" data-reveal>Find us in four states.</h2>
   <div class="office-list" style="margin-top:26px">${C.offices.map((o) => `<button class="office" type="button"><span class="card-icon">${icon("map-pin")}</span><span><b>${o.city}</b><span>${o.note}</span></span><em>${o.state}</em></button>`).join("")}</div></div>
 </div></section>`,

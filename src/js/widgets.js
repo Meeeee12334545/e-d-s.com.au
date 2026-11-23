@@ -10,34 +10,13 @@
     return n;
   };
 
-  /* ================= Australia, as a dot map ================= */
+  /* ================= Australia: the office pins ================= */
+  // The map itself is drawn at build time from Natural Earth (build.mjs:
+  // ausMap, tools/ausmap.py) in a still layer under this one; here go the
+  // pins and the arcs from the head office, in the same projection.
   const map = document.getElementById("ausmap");
   if (map) {
-    // A simplified coastline (lon, lat). It only decides which dots are land.
-    const MAIN = [[114, -21.8], [113.4, -24.5], [113.2, -26.2], [114.6, -28.8], [115.7, -31.9], [115, -34.2], [117.9, -35.1], [121.9, -33.9], [126, -32.3], [129, -31.6], [131.2, -31.5], [133.7, -32.2], [135.9, -34.8], [137.8, -32.6], [137.5, -35.1], [138.5, -34.9], [139.5, -36], [140.9, -38], [143.5, -38.8], [144.9, -38], [146.4, -39.1], [149.9, -37.5], [150.2, -36], [151.2, -33.9], [152.5, -32.2], [153.1, -30.3], [153.6, -28.6], [153.1, -27.2], [152.9, -25.3], [151, -23.5], [149.2, -21.1], [146.8, -19.3], [146, -17.5], [145.3, -15.5], [143.6, -14.2], [143.2, -12], [142.5, -10.7], [141.6, -12.6], [141.7, -15], [140.8, -17.5], [139.5, -17.5], [137.7, -16], [135.8, -15], [136, -13.3], [136.9, -12.2], [135.2, -12.2], [132.6, -11.5], [130.8, -12.4], [129.6, -14.9], [128.2, -14.9], [127, -13.9], [125, -15.5], [123.6, -17.3], [122.2, -18], [121, -19.6], [118.6, -20.3], [116.7, -20.7]];
-    const TAS = [[144.7, -40.7], [146.5, -41.1], [148.3, -40.9], [148.3, -42.2], [147.9, -43.2], [146.8, -43.6], [145.9, -43.3], [145.2, -42.2], [144.7, -41.2]];
-    const inside = (p, poly) => {
-      let c = false;
-      for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
-        const [xi, yi] = poly[i], [xj, yj] = poly[j];
-        if (yi > p[1] !== yj > p[1] && p[0] < ((xj - xi) * (p[1] - yi)) / (yj - yi) + xi) c = !c;
-      }
-      return c;
-    };
     const K = 14, XY = (lon, lat) => [(lon - 111) * K, (-lat - 9) * K * 1.13];
-    map.setAttribute("viewBox", `0 0 ${45 * K} ${36.5 * K * 1.13}`);
-    // the coast is a shade brighter than the interior, so the outline reads
-    const isLand = (lon, lat) => inside([lon, lat], MAIN) || inside([lon, lat], TAS);
-    const land = el("g", { class: "land" }, map), coast = el("g", { class: "land coast" }, map);
-    for (let lat = -10; lat >= -44; lat -= 0.82) {
-      for (let lon = 112.5; lon <= 154; lon += 0.92) {
-        if (isLand(lon, lat)) {
-          const [x, y] = XY(lon, lat);
-          const edge = !(isLand(lon + 0.92, lat) && isLand(lon - 0.92, lat) && isLand(lon, lat + 0.82) && isLand(lon, lat - 0.82));
-          el("circle", { cx: x.toFixed(1), cy: y.toFixed(1), r: edge ? 2.8 : 2.4 }, edge ? coast : land);
-        }
-      }
-    }
     const offices = JSON.parse(map.dataset.offices);
     const head = offices.find((o) => o.head);
     const [hx, hy] = XY(head.lon, head.lat);
@@ -53,7 +32,7 @@
       el("circle", { class: "halo", cx: x, cy: y, r: o.head ? 26 : 18 }, g);
       el("circle", { class: "ring", cx: x, cy: y, r: 8, style: `animation-delay:${i * 0.5}s` }, g);
       el("circle", { class: "core", cx: x, cy: y, r: 6 }, g);
-      const left = o.lon > 152;
+      const left = o.lon > 150; // east coast labels sit inland, clear of the edge
       el("text", { x: x + (left ? -14 : 14), y: y + 5, "text-anchor": left ? "end" : "start" }, g).textContent = o.city;
       return g;
     });
