@@ -2420,7 +2420,7 @@ function eflowDemo() {
     <g class="ef-uswrap">${bu.draw}${bu2.draw}<text class="ef-tag u" x="12" y="196">Ultrasonic measuring</text></g>
     ${ef.draw}
     <g id="ef-head" class="ef-head"><path id="ef-head-ext" class="ef-ext"/><path id="ef-head-dim" class="ef-dim"/><text id="ef-head-t" x="484" y="120"><tspan id="ef-head-v">0.00 m</tspan><tspan x="484" dy="1.2em">head</tspan></text></g>
-    ${K.tag(470, 96, "Logger")}${K.tag(150, 196, "E-Flow 3 at the obvert")}<path class="sc-lead" d="M262 192L318 179"/><circle class="sc-lead-dot" cx="318" cy="179" r="1.9"/>
+    ${K.tag(470, 96, "Logger")}${K.tag(178, 236, "E-Flow 3 at the obvert", { a: "end" })}<path class="sc-lead" d="M182 232L318 181"/><circle class="sc-lead-dot" cx="318" cy="181" r="1.9"/>
     <text class="ef-flow-l" x="494" y="287">Flow</text><path class="dg-arrow w" d="M526 283h20m-5-3.6 5 3.6-5 3.6"/>`;
   return `
 <div class="demo ef-demo" data-reveal>
