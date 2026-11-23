@@ -762,6 +762,7 @@ export const services = [
     blocks: [
       {
         heading: "What we measure",
+        diagram: "wqstation",
         items: [
           ["pH, EC and turbidity", "EDS-made sensors for continuous measurement in water and wastewater."],
           ["Several parameters at once", "The iLab 901 measures up to seven at once, from a list including pH, ORP, conductivity, turbidity, dissolved oxygen, ammonia and nitrate. The handheld iLab Sonde covers field checks."],
@@ -1127,6 +1128,7 @@ export const services = [
       },
       {
         heading: "From FlowSense to Your Systems",
+        diagram: "connect",
         lede: "Validated data can flow back out of EDS FlowSense to the SCADA, historian or reporting tools your teams already use.",
         items: [
           ["Scheduled files", "CSV files delivered to your server over SFTP or FTPS, for SCADA file importers and historians."],
@@ -2024,6 +2026,16 @@ export const productTypes = [
 // grow a step on phones), `alt` describes the whole drawing for screen
 // readers, and two-panel drawings take `panels` and a `legend`.
 export const diagrams = {
+  wqstation: {
+    alt: "Illustration of a water quality station on a riverbank, in section. A multi-parameter sonde sits under the surface in a slotted guard pipe fixed down the bank, measuring pH, EC, turbidity and dissolved oxygen. Its cable runs up the bank to a cabinet on a post with a solar panel and an antenna, which sends the readings to EDS FlowSense or your own SCADA.",
+    caption: "Illustration: one sonde in a river measures several parameters at once, and its readings go straight to EDS FlowSense or your own SCADA.",
+    labels: { data: "To EDS FlowSense or your SCADA", sensors: ["pH", "EC", "Turbidity", "Dissolved oxygen"], more: "Up to seven at once" },
+  },
+  connect: {
+    alt: "Illustration of data flowing out of EDS FlowSense. Flow meters and loggers at a manhole and a pump station send their readings over 4G to EDS FlowSense. From there, four one-way links carry the data out to your SCADA, historian and reporting tools: scheduled files, MQTT, the read API and webhooks. There's no control path back into your systems.",
+    caption: "Illustration: readings arrive over 4G, and validated data flows one way out of EDS FlowSense to the tools your teams already use.",
+    labels: { platform: "EDS FlowSense", g4: "4G", links: ["Scheduled files", "MQTT", "Read API", "Webhooks"], none: ["No control", "path back"], yours: ["Your SCADA, historian", "and reporting tools"], sites: "Flow meters and loggers" },
+  },
   thermal: {
     alt: "Illustration of a sewer in section between two manholes. A thermistor string runs along the invert from a logger, and a flow meter sits at the downstream manhole. Groundwater seeps in through a cracked joint, and a chart beneath shows the temperature along the pipe changing at the sensors nearest the crack.",
     caption: "Illustration: a thermistor string along the pipe and a flow meter downstream. The temperature changes at the sensors nearest the defect.",
