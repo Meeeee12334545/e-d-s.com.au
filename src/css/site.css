@@ -4624,9 +4624,10 @@ body.is-touring { overscroll-behavior-y: contain; }
 .hero-product.wide { width: min(100%, 520px); }
 .hero-product.wide .hero-product-shot { aspect-ratio: 4 / 3; padding: 22px; }
 
-/* a standing fact about a product, as a badge under a page hero's lede */
-.stamp { display: inline-flex; align-items: center; gap: 8px; width: fit-content; margin-top: 18px; padding: 8px 14px 8px 11px; border-radius: var(--radius); font-family: var(--font-display); font-size: var(--text-4); font-weight: 620; letter-spacing: .01em; line-height: var(--lh-tight); color: #fff; background: var(--brand-dark); }
-.stamp .icon { flex: none; font-size: 18px; stroke-width: 2; color: #c9fff5; }
+/* the EDS patent pending mark (tools/patent_mark.py) under a product hero's
+   lede and in the Sensor Fort answer panel; the plate is drawn in the SVG */
+.ip-mark { margin-top: 24px; line-height: 0; }
+.ip-mark img { display: block; width: auto; height: 40px; max-width: 100%; }
 
 /* ---------- home (the minimal page, November 2026) ----------
    Seven bands, each one thing. The clients are one line under the hero, the
