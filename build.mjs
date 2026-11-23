@@ -613,11 +613,15 @@ ${scripts.map((s) => `<script src="${asset(r, `js/${s}`)}" defer></script>`).joi
 /* ------------------------------------------------------------------ */
 /* shared sections                                                     */
 /* ------------------------------------------------------------------ */
+// The EDS patent pending mark, drawn by tools/patent_mark.py: for products
+// whose design EDS has a patent application for (`patent: true` on a product
+// page). It goes under the hero's lede and in the Sensor Fort answer panel.
+const patentSize = readFileSync(path.join(ROOT, "src/assets/img/patent-pending.svg"), "utf8").match(/width="(\d+)" height="(\d+)"/).slice(1);
+const patentMark = (attrs = "") => `<p class="ip-mark"${attrs ? ` ${attrs}` : ""}><img src="@root/assets/img/patent-pending.svg" alt="EDS, patent pending" width="${patentSize[0]}" height="${patentSize[1]}"></p>`;
 // `visual` fills the right of the hero on wide screens: a product photo on
 // brand pages, an "On this page" list on longer service pages.
-// `badge` is a short standing fact about the thing itself, set under the lede
-// in a ruled tag (a page's `badge`).
-const pageHero = (r, { crumbs = [], iconName, eyebrow, title, lede, badge, actions = "", after = "", visual = "", compact = false, cls = "" }) => {
+// `patent` sets the EDS patent pending mark under the lede.
+const pageHero = (r, { crumbs = [], iconName, eyebrow, title, lede, patent, actions = "", after = "", visual = "", compact = false, cls = "" }) => {
   heroCrumbs = crumbs;
   const copy = `
     <nav class="crumbs" aria-label="Breadcrumb"><a href="${r || "./"}">Home</a>${crumbs.map(([label, href]) => `${icon("chevron-down", false)}${href ? `<a href="${r}${href}">${esc(label)}</a>` : `<span aria-current="page">${esc(label)}</span>`}`).join("")}</nav>
@@ -625,7 +629,7 @@ const pageHero = (r, { crumbs = [], iconName, eyebrow, title, lede, badge, actio
     ${eyebrow ? `<p class="eyebrow">${esc(eyebrow)}</p>` : ""}
     <h1 class="h-lg" data-reveal>${esc(title)}</h1>
     ${lede ? `<p class="lede" data-reveal style="--i:1">${esc(lede)}</p>` : ""}
-    ${badge ? `<p class="stamp" data-reveal style="--i:1">${icon("shield-check", false)}${esc(badge)}</p>` : ""}
+    ${patent ? patentMark('data-reveal style="--i:1"') : ""}
     ${actions ? `<div class="hero-actions" data-reveal style="--i:2">${actions}</div>` : ""}
     ${after}`;
   return `
@@ -2279,6 +2283,7 @@ const problemBand = (p) => `${bandHead(p)}
       <p class="eyebrow">${esc(p.answer.eyebrow)}</p>
       <h3>${esc(p.answer.heading)}</h3>
       <p class="lede">${esc(p.answer.lede)}</p>
+      ${p.answer.patent ? patentMark() : ""}
     </div>
     <ul class="sf-points">${p.answer.points.map(([k, d]) => `<li>${icon("check", false)}<span><b>${esc(k)}</b>${esc(d)}</span></li>`).join("")}</ul>
   </div>`;
@@ -2523,7 +2528,7 @@ for (const pg of C.productPages) {
     current: "products",
     scripts: pg.demo ? ["widgets.js"] : pg.problem?.answer.figure ? ["sensor-fort.js"] : [],
     body: (r) => `
-${pageHero(r, { crumbs: [["Products", "products/index.html"], [b.name, `products/${b.slug}.html`], [pg.name]], iconName: pg.icon, eyebrow: pg.tag, title: pg.name, lede: pg.lede, badge: pg.badge, actions: `<a class="btn btn-primary btn-lg" href="${contactHref(r, pricing)}">Request pricing</a>${quoteBtn(quoteItem(products.find((p) => p.href === `products/${pg.slug}.html`)), "btn-lg")}<a class="btn btn-ghost btn-lg" href="${datasheet.href}" rel="noopener">${icon("download")} Datasheet</a>`, visual: pg.hero ? eflowHero(pg) : heroProduct(pg.image, pg.name, pg.heroCaption, pg.heroShape) })}
+${pageHero(r, { crumbs: [["Products", "products/index.html"], [b.name, `products/${b.slug}.html`], [pg.name]], iconName: pg.icon, eyebrow: pg.tag, title: pg.name, lede: pg.lede, patent: pg.patent, actions: `<a class="btn btn-primary btn-lg" href="${contactHref(r, pricing)}">Request pricing</a>${quoteBtn(quoteItem(products.find((p) => p.href === `products/${pg.slug}.html`)), "btn-lg")}<a class="btn btn-ghost btn-lg" href="${datasheet.href}" rel="noopener">${icon("download")} Datasheet</a>`, visual: pg.hero ? eflowHero(pg) : heroProduct(pg.image, pg.name, pg.heroCaption, pg.heroShape) })}
 <div class="secbar-scope">${bar(r)}
 <section class="section hl-band"><div class="wrap">
   <div class="hl-grid">${pg.highlights.map(([ic, t, d], i) => `<div class="hl holder" data-reveal style="--i:${i % 3}">${icon(ic)}<b>${esc(t)}</b><span>${esc(d)}</span></div>`).join("")}</div>
