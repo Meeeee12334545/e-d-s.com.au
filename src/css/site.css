@@ -3819,6 +3819,12 @@ html:has(.secbar) .band[id] { scroll-margin-top: calc(16px - var(--band-pad)); }
 .split-band { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: clamp(32px, 5vw, 80px); align-items: start; }
 .split-band > .band-head { position: sticky; top: calc(68px + 58px + 28px); margin-bottom: 0; }
 .split-band .flat-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 26px 40px; }
+/* a band with its own picture: the heading and points beside the drawing or
+   photo, which stays in view while the points are read */
+.fig-band { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: clamp(32px, 5vw, 80px); align-items: start; }
+.fig-band > .diagram, .fig-band > .photo { margin: 0; position: sticky; top: calc(68px + 58px + 28px); }
+.fig-band .band-head { margin-bottom: clamp(20px, 3vw, 28px); }
+.fig-band .flat-list { gap: 20px; }
 .split-band .checks { gap: 14px; }
 /* Rows always fill: four to a row, three when that leaves no gap, and the
    last row of seven shares the width three ways. */
@@ -3919,7 +3925,8 @@ html:has(.secbar) .band[id] { scroll-margin-top: calc(16px - var(--band-pad)); }
   .band-results .result.more { grid-column: 1 / -1; }
   .band-results .result.more ul { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 28px; }
   .related-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .split-band > .band-head, .intro > .photo, .intro > .aside-figure, .intro > .diagram, .intro > .screen { position: static; }
+  .split-band > .band-head, .intro > .photo, .intro > .aside-figure, .intro > .diagram, .intro > .screen, .fig-band > .diagram, .fig-band > .photo { position: static; }
+  .fig-band { grid-template-columns: 1fr; gap: 28px; }
   /* a drawing's labels scale with it, so it stops short of the full width */
   .intro > .diagram, .intro > .screen.tall { max-width: 620px; }
   .intro { gap: 24px; }
