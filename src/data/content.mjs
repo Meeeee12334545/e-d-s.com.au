@@ -1395,6 +1395,7 @@ export const services = [
     blocks: [
       {
         heading: "How we help",
+        screen: { name: "ems-flow-wizard", alt: "The EMS-Flow setup wizard on its first step, zeroing the depth with the sensor held in air, with the five steps across the top: zero depth, site details, averaging, verify and commission.", caption: "Step one of the EMS-Flow setup wizard, from its user manual." },
         items: [
           ["Monitoring and modelling practice", "Training for your staff in the practices behind network monitoring and hydraulic models."],
           ["Software and drivers", "FSDATA Desktop and USB-serial drivers to download, with EDS (EMS2001, EMS4000), Hach Flo-Ware and Dynaflox software on request."],

@@ -112,18 +112,21 @@ const photoFigure = (f, { i, sizes, cls = "" } = {}) => `
 // brochures into src/assets/img/flowsense as <name>-<w>x<h>.jpg with a WebP
 // twin, at one or two widths, laid out like the photographs above. Shown
 // in their own colours: they are the platform, not a photograph.
-const SHOTS = {};
-for (const f of readdirSync(path.join(ROOT, "src/assets/img/flowsense"))) {
+// Screens of EDS's own software (EMS-Flow), lifted out of its manuals by
+// tools/software_screens.py into src/assets/img/software, are shown the same way.
+const SHOTS = {}, SHOT_DIR = {};
+for (const dir of ["flowsense", "software"]) for (const f of readdirSync(path.join(ROOT, "src/assets/img", dir))) {
   const m = f.match(/^(.+)-(\d+)x(\d+)\.jpg$/);
-  if (m) (SHOTS[m[1]] ||= []).push({ w: +m[2], h: +m[3] });
+  if (m) { (SHOTS[m[1]] ||= []).push({ w: +m[2], h: +m[3] }); SHOT_DIR[m[1]] = dir; }
 }
 for (const list of Object.values(SHOTS)) list.sort((a, b) => b.w - a.w);
 function shot(name, alt, { sizes = "(max-width: 980px) calc(100vw - 40px), 700px", eager = false } = {}) {
   const v = SHOTS[name];
-  if (!v) throw new Error(`No FlowSense screen named "${name}" in src/assets/img/flowsense (see tools/flowsense_screens.py)`);
-  const set = (ext) => v.map((s) => `@root/assets/img/flowsense/${name}-${s.w}x${s.h}.${ext} ${s.w}w`).join(", ");
+  if (!v) throw new Error(`No screen named "${name}" in src/assets/img/flowsense or software (see tools/flowsense_screens.py, tools/software_screens.py)`);
+  const dir = SHOT_DIR[name];
+  const set = (ext) => v.map((s) => `@root/assets/img/${dir}/${name}-${s.w}x${s.h}.${ext} ${s.w}w`).join(", ");
   const [big] = v;
-  return `<picture><source type="image/webp" srcset="${set("webp")}" sizes="${sizes}"><img src="@root/assets/img/flowsense/${name}-${big.w}x${big.h}.jpg" srcset="${set("jpg")}" sizes="${sizes}" width="${big.w}" height="${big.h}" alt="${esc(alt)}"${eager ? ' fetchpriority="high"' : ' loading="lazy"'} decoding="async"></picture>`;
+  return `<picture><source type="image/webp" srcset="${set("webp")}" sizes="${sizes}"><img src="@root/assets/img/${dir}/${name}-${big.w}x${big.h}.jpg" srcset="${set("jpg")}" sizes="${sizes}" width="${big.w}" height="${big.h}" alt="${esc(alt)}"${eager ? ' fetchpriority="high"' : ' loading="lazy"'} decoding="async"></picture>`;
 }
 // White paper covers: the first page of each paper, rendered by
 // tools/doc_covers.py into src/assets/img/covers as <id>-<w>x<h>.jpg with a
@@ -1873,7 +1876,11 @@ const blockBody = (b) => (b.items ? flatItems(b.items) : b.list ? checkList(b.li
 // its heading and points in one column, the picture beside them, as the
 // opening text sits beside a page's first picture. Product pages use it for
 // an instrument in place (`scene`).
-const figBand = (b) => `<div class="fig-band"><div class="fig-band-text">${bandHead(b)}${blockBody(b)}</div>${b.diagram ? diagram(b.diagram, C.diagrams[b.diagram]) : photoFigure(b.figure, { sizes: "(max-width: 980px) calc(100vw - 40px), 620px" })}</div>`;
+const figBand = (b) => {
+  const sizes = "(max-width: 980px) calc(100vw - 40px), 620px";
+  const visual = b.diagram ? diagram(b.diagram, C.diagrams[b.diagram]) : b.screen ? screenFigure(b.screen, { sizes }) : photoFigure(b.figure, { sizes });
+  return `<div class="fig-band"><div class="fig-band-text">${bandHead(b)}${blockBody(b)}</div>${visual}</div>`;
+};
 const bandShot = (b) => (b.shot ? screenFigure(b.shot, { sizes: "(max-width: 1240px) calc(100vw - 40px), 1200px" }) : "");
 const band = (tone, inner, { id, cls = "" } = {}) => `
 <section class="section band${tone === "alt" ? " alt" : ""}${cls ? ` ${cls}` : ""}"${id ? ` id="${id}"` : ""}><div class="wrap">${inner}</div></section>`;
@@ -1884,7 +1891,7 @@ function bandsOf(s, r) {
   let cards = false;
   for (const b of blocks) {
     const id = slugify(b.heading);
-    if (b.diagram || b.figure) {
+    if (b.diagram || b.figure || b.screen) {
       // a block with its own illustration or photograph: the heading and
       // its points in one column, the picture beside them, as the opening
       // text sits beside the page's first picture
