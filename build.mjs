@@ -125,6 +125,23 @@ function shot(name, alt, { sizes = "(max-width: 980px) calc(100vw - 40px), 700px
   const [big] = v;
   return `<picture><source type="image/webp" srcset="${set("webp")}" sizes="${sizes}"><img src="@root/assets/img/flowsense/${name}-${big.w}x${big.h}.jpg" srcset="${set("jpg")}" sizes="${sizes}" width="${big.w}" height="${big.h}" alt="${esc(alt)}"${eager ? ' fetchpriority="high"' : ' loading="lazy"'} decoding="async"></picture>`;
 }
+// White paper covers: the first page of each paper, rendered by
+// tools/doc_covers.py into src/assets/img/covers as <id>-<w>x<h>.jpg with a
+// WebP twin, at two widths. Shown on the paper's card as it will look when
+// it is downloaded.
+const COVERS = {};
+for (const f of readdirSync(path.join(ROOT, "src/assets/img/covers"))) {
+  const m = f.match(/^(.+)-(\d+)x(\d+)\.jpg$/);
+  if (m) (COVERS[m[1]] ||= []).push({ w: +m[2], h: +m[3] });
+}
+for (const list of Object.values(COVERS)) list.sort((a, b) => b.w - a.w);
+function cover(id, { sizes = "(max-width: 560px) 88px, 132px" } = {}) {
+  const v = COVERS[id];
+  if (!v) return "";
+  const set = (ext) => v.map((s) => `@root/assets/img/covers/${id}-${s.w}x${s.h}.${ext} ${s.w}w`).join(", ");
+  const [big] = v;
+  return `<span class="paper-cover"><picture><source type="image/webp" srcset="${set("webp")}" sizes="${sizes}"><img src="@root/assets/img/covers/${id}-${big.w}x${big.h}.jpg" srcset="${set("jpg")}" sizes="${sizes}" width="${big.w}" height="${big.h}" alt="" loading="lazy" decoding="async"></picture></span>`;
+}
 // A FlowSense screen on a service page, captioned like a photograph:
 // { name, alt, caption }. `tall` keeps the top of a long screen (a report)
 // in a portrait frame and fades it out at the foot.
@@ -2788,9 +2805,9 @@ ${pageHero(r, { crumbs: [["Resources"]], title: "White papers, downloads and sup
   <div class="section-head"><p class="eyebrow">White papers</p><h2 class="h-lg" data-reveal>EDS Publications</h2></div>
   <div class="grid ${C.papers.length % 3 ? "c2" : "c3"}">
     ${C.papers.map((p, n) => `
-    <a class="card paper" href="${p.href}" rel="noopener" data-reveal style="--i:${n}">
-      <div class="paper-top"><span class="card-icon">${icon("file-text")}</span><span class="tag">${p.date}</span></div>
-      <div class="paper-body"><h3>${esc(p.title)}</h3><p>${esc(p.text)}</p><span class="go" aria-hidden="true">${icon("download")}</span></div>
+    <a class="card paper${COVERS[p.id] ? " has-cover" : ""}" href="${p.href}" rel="noopener" data-reveal style="--i:${n}">
+      ${cover(p.id) || `<div class="paper-top"><span class="card-icon">${icon("file-text")}</span><span class="tag">${p.date}</span></div>`}
+      <div class="paper-body">${COVERS[p.id] ? `<span class="tag">${p.date}</span>` : ""}<h3>${esc(p.title)}</h3><p>${esc(p.text)}</p><span class="go" aria-hidden="true">${icon("download")}</span></div>
     </a>`).join("")}
   </div>
 </div></section>

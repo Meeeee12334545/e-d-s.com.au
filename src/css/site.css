@@ -1821,6 +1821,18 @@ input[type="range"]:active::-moz-range-thumb { cursor: grabbing; box-shadow: 0 0
 /* a link card, so its icon is drawn plain, level with the download arrow */
 .paper-top .card-icon { width: auto; height: 32px; border-radius: 0; background: none; font-size: 30px; justify-content: start; }
 .paper .go { top: 28px; right: 28px; }
+/* with its cover: the first page beside the words, like a paper on a desk */
+.paper.has-cover { display: grid; grid-template-columns: 132px minmax(0, 1fr); align-items: start; }
+.paper-cover { margin: 28px 0 28px 28px; border: 1px solid var(--border); background: #fff; aspect-ratio: 640 / 905; overflow: hidden; }
+.paper-cover img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top; }
+.paper.has-cover .paper-body { padding: 28px 64px 28px 24px; }
+.paper.has-cover .paper-body .tag { align-self: start; }
+@media (max-width: 560px) {
+  .paper.has-cover { grid-template-columns: minmax(0, 1fr); }
+  .paper-cover { width: 88px; margin: 22px 0 0 20px; }
+  .paper.has-cover .paper-body { padding: 16px 20px 22px; }
+  .paper .go { top: 22px; right: 20px; }
+}
 
 /* ---------- CTA + footer ---------- */
 /* The close is the brand: the FlowSense teal, lit from the top right, with
