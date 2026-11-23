@@ -688,6 +688,215 @@ function scatter(t) {
   return svg(480, 296, body);
 }
 
+/* ---- rainfall: a wet weather response read against the rain ---- */
+// a tipping bucket rain gauge on its post: a bronze collar round the funnel
+// mouth, a steel body with the bucket seen through a window, and drips
+// falling from the funnel into the bucket's upper side
+const ltGauge = (p, cx, top, ground) => {
+  const w = 30, x = cx - w / 2, neck = top + 9, foot = top + 48;
+  return `
+  <rect x="${cx - 2.5}" y="${foot + 3}" width="5" height="${ground - foot - 3}" fill="url(#${p}-steel)" class="dg-post"/>
+  <rect x="${x}" y="${neck}" width="${w}" height="${foot - neck}" fill="url(#${p}-cyl)" class="dg-gauge"/>
+  <path d="M${x - 3} ${top}H${x + w + 3}L${x + w} ${neck}H${x}Z" fill="url(#${p}-gold)" class="dg-gauge-rim"/>
+  <ellipse class="dg-gauge-mouth" cx="${cx}" cy="${top}" rx="${w / 2 + 3}" ry="1.6"/>
+  <rect class="dg-sampler-win" x="${x + 5}" y="${neck + 6}" width="${w - 10}" height="${foot - neck - 12}" rx="2"/>
+  <path class="dg-gauge-spout" d="M${cx + 4} ${neck}v8"/>
+  <path class="dg-bucket" transform="translate(${cx} ${foot - 11}) rotate(-13)" d="M-8 -5V0H8V-5M0 0V-7"/>
+  <circle class="dg-pivot" cx="${cx}" cy="${foot - 10}" r="1.5"/>
+  <g class="dg-drips">${[0, 1, 2].map((n) => `<ellipse cx="${cx + 4}" cy="${neck + 10}" rx="1.1" ry="1.7" style="--d:${n * 0.6}s"/>`).join("")}</g>
+  <rect class="dg-cab-foot" x="${x - 2}" y="${foot}" width="${w + 4}" height="3" rx="1"/>
+  <circle class="dg-inst-base" cx="${x + 4}" cy="${foot - 3}" r=".9"/><circle class="dg-inst-base" cx="${x + w - 4}" cy="${foot - 3}" r=".9"/>`;
+};
+// Above, a catchment in section: the gauge with a logger strapped to its
+// post, rain reaching the sewer two ways (straight in at a manhole, and later
+// through the ground and a cracked joint) and the flow meter upstream of the
+// manhole. Beneath, the same storm as a chart: rain bars at the top, and the
+// flow over dry weather flow split into the fast inflow peak and the slow
+// infiltration that lingers.
+function rainfall(t) {
+  const L = t.labels, p = "ltr";
+  const G = 112, TABLE = 140, CROWN = 166, INV = 196, LVL = 182, SOIL = 230;
+  const SA = [292, 330]; // the manhole, inside faces
+  const GX = 52, GT = 14; // the gauge: its axis and the top of its collar
+  const crack = 168;
+  // rain: long slanting streaks, dashed, the dashes falling
+  const shower = Array.from({ length: 36 }, (_, k) => {
+    const x = -26 + k * 14.2 + ((k * 7) % 5), y0 = 2 + ((k * 11) % 9);
+    return `<path d="M${f1(x)} ${y0}L${f1(x + 0.2 * (G - 8 - y0))} ${G - 8}" style="animation-delay:-${((k * 0.29) % 0.7).toFixed(2)}s"/>`;
+  }).join("");
+  // the chart: 72 hours, the storm at about 12 h
+  const RT = 248, AX = 396;
+  const CX = (u) => 14 + u * 452, CY = (v) => AX - v * 46;
+  const base = (u) => 0.62 + 0.15 * Math.sin(2 * Math.PI * 3 * u - 1.1);
+  const inflow = (u) => 1.25 * pulse(u, 0.165, 0.034);
+  const infil = (u) => { const s = u - 0.17; return s <= 0 ? 0 : 0.8 * (1 - Math.exp(-s / 0.09)) * Math.exp(-s / 0.75); };
+  const us = sample(0, 1, 0.005, (u) => u).map(([u]) => u);
+  const line = (fn) => us.map((u) => [CX(u), CY(fn(u))]);
+  const back = (pts) => pts.slice().reverse().map(([x, y]) => `${f1(x)} ${f1(y)}`).join("L");
+  const meas = line((u) => base(u) + infil(u) + inflow(u)), slow = line((u) => base(u) + infil(u)), dry = line(base);
+  const rain = [3, 6, 10, 17, 27, 31, 24, 28, 19, 13, 9, 11, 7, 4, 3, 2];
+  const ticks = [[0, "0 h"], [1 / 3, "24 h"], [2 / 3, "48 h"], [1, "72 h"]];
+  const body = `
+  <g clip-path="url(#${p}-sky)"><g class="dg-shower">${shower}</g></g>
+  <rect x="0" y="${G}" width="480" height="${SOIL - G}" fill="url(#${p}-soil)"/>
+  <rect x="0" y="${TABLE}" width="480" height="${SOIL - TABLE}" fill="url(#${p}-gw)"/>
+  <rect class="ef-road" x="0" y="${G - 5}" width="480" height="5"/>
+  <path class="dg-table" d="M0 ${TABLE}H480"/>
+  <path class="dg-table-mark" d="M86 ${TABLE - 8}h10l-5 7z"/>
+  ${label(102, TABLE - 4, L.groundwater, { cls: "dg-m dg-h" })}
+  ${ltPipe(p, 0, 480, CROWN, INV, { gaps: [[SA[0] - LW, SA[1] + LW]] })}
+  ${ltShaft(p, SA[0], SA[1], G, CROWN, INV, { steps: "" })}
+  ${ltWater(p, 0, 480, LVL, INV)}
+  ${[52, 110, crack, 226, 384, 442].map((x) => `<path class="dg-joint" d="M${x} ${CROWN - LW}V${CROWN}M${x} ${INV}V${INV + LW}"/>`).join("")}
+  <path class="dg-crack" d="M${crack - 4} ${CROWN - LW - 1}l4 4-2 3 5 3 3-4M${crack + 6} ${CROWN - LW - 1}v8"/>
+  <g class="dg-seep"><path d="M${crack - 24} ${TABLE + 6}q12 8 22 ${CROWN - LW - TABLE - 6}"/><path d="M${crack + 28} ${TABLE + 6}q-12 8 -22 ${CROWN - LW - TABLE - 6}"/></g>
+  <g class="dg-drips">${[0, 1, 2].map((n) => `<ellipse cx="${crack + n * 3}" cy="${CROWN + 2}" rx="1.5" ry="2.3" style="--d:${n * 0.6}s"/>`).join("")}</g>
+  ${label(crack + 34, CROWN - LW - 6, L.infiltration, { cls: "dg-b dg-h" })}
+  <path class="dg-inflow" d="M206 ${G - 7.5}H${SA[0] - 10}Q${SA[0] + 1} ${G - 7.5} ${SA[0] + 2.5} ${G + 4}V${LVL - 1}"/>
+  <path class="dg-inflow-head" d="M${SA[0] - 22} ${G - 11}l5 3.5-5 3.5"/>
+  ${label(206, G - 16, L.inflow, { cls: "dg-b dg-h" })}
+  ${ltAv(244, INV)}
+  <path class="ef-cable" d="M268 ${INV - 5}H318V148"/>
+  ${ltLogger(311, 120)}
+  ${ltFlow(414, CROWN + 13, L.flow || "Flow")}
+  ${label(256, SOIL - 8, L.meter, { a: "middle", cls: "dg-b dg-h" })}${leader(`M256 ${SOIL - 21}V${INV - 4}`)}
+  ${ltGauge(p, GX, GT, G - 5)}
+  <path class="ef-cable" d="M${GX + 9} ${GT + 51}V${GT + 60}"/>
+  ${ltLogger(GX + 2, GT + 60)}
+  ${label(GX + 30, GT + 16, L.gauge, { cls: "dg-b dg-h" })}
+  <path class="dg-grid" d="${[1, 2].map((v) => `M14 ${f1(CY(v))}H466`).join("")}"/>
+  <g class="dg-rain">${rain.map((h, n) => `<rect x="${f1(CX(0.15) + n * 3.2)}" y="${RT}" width="2.3" height="${h}" rx=".8"/>`).join("")}</g>
+  ${label(f1(CX(0.15) + rain.length * 3.2 + 8), RT + 12, L.rain, { cls: "dg-m" })}
+  <path class="dg-band-slow" fill="url(#${p}-slow)" d="${smooth(slow)}L${back(dry)}Z"/>
+  <path class="dg-band-fast" d="${smooth(meas)}L${back(slow)}Z"/>
+  <path class="dg-axis" d="M14 ${AX}H466"/>
+  <path class="dg-tick-mark" d="${ticks.map(([u]) => `M${f1(CX(u))} ${AX}v4`).join("")}"/>
+  ${ticks.map(([u, s], i) => `<text class="dg-tick" x="${f1(CX(u))}" y="${AX + 15}"${i === 0 ? "" : ` text-anchor="${i === ticks.length - 1 ? "end" : "middle"}"`}>${s}</text>`).join("")}
+  <path class="dg-dwf" d="${smooth(dry)}"/>
+  <path class="dg-meas-g" d="${smooth(meas)}"/>
+  <path class="dg-meas" d="${smooth(meas)}"/>
+  ${label(144, 300, L.fast[0], { cls: "dg-b" })}${label(144, 316, L.fast[1], { cls: "dg-m" })}${leader(`M140 306L${f1(CX(0.22))} ${f1(CY(base(0.22) + infil(0.22) + inflow(0.22) * 0.45))}`)}
+  ${label(274, 300, L.slow[0], { cls: "dg-b" })}${label(274, 316, L.slow[1], { cls: "dg-m" })}${leader(`M310 322L${f1(CX(0.62))} ${f1(CY(base(0.62) + infil(0.62) * 0.5))}`)}
+  ${label(466, 346, L.measured, { a: "end", cls: "dg-m" })}
+  ${label(466, 388, L.dry, { a: "end", cls: "dg-m" })}`;
+  const defs = `${efDefs(p)}${ltWaterGrad(p)}${ltGroundGrad(p)}<clipPath id="${p}-sky"><rect width="480" height="${G}"/></clipPath>
+  <linearGradient id="${p}-cyl" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8f9b9a"/><stop offset=".32" stop-color="#f1f4f4"/><stop offset=".7" stop-color="#c3cccb"/><stop offset="1" stop-color="#7f8b8a"/></linearGradient>
+  <pattern id="${p}-slow" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="5" height="5" fill="#2b9bd0" fill-opacity=".1"/><path d="M0 0V5" stroke="#2b9bd0" stroke-opacity=".55" stroke-width="1.1"/></pattern>`;
+  return svg(480, 414, body, defs);
+}
+
+/* ---- fullpipe: three ways to meter a full pipe ---- */
+// Three full pipes in long section, one above the other, flow left to right:
+// the cut wall hatched above and below, water from crown to invert. A
+// magnetic meter's coils and field, with the pipe seen end on beside it for
+// the electrodes and the voltage across them; a clamp-on transit time pair
+// strapped to the pipe, timing pulses with and against the flow; and one
+// Doppler transducer, its sound bouncing back off particles and bubbles.
+function fullpipe(t) {
+  const L = t.labels, p = "ltf";
+  const D = 44, W = 6, ROW = 118; // the bore, the wall, one row
+  const crownOf = (y0) => y0 + 36;
+  // a full pipe: water from crown to invert, the walls cut and hatched;
+  // `end` closes it with its cut end seen a little from the side
+  const pipe = (x0, x1, c, { end = false } = {}) => `
+  <rect x="${x0}" y="${c}" width="${x1 - x0}" height="${D}" fill="url(#${p}-fw)"/>
+  <path fill="url(#${p}-cut)" d="M${x0} ${c - W}H${x1}V${c}H${x0}ZM${x0} ${c + D}H${x1}V${c + D + W}H${x0}Z"/>
+  <path class="ef-edge" d="M${x0} ${c - W}H${x1}M${x0} ${c}H${x1}M${x0} ${c + D}H${x1}M${x0} ${c + D + W}H${x1}"/>
+  ${end ? `<ellipse cx="${x1}" cy="${c + D / 2}" rx="6" ry="${D / 2 + W}" fill="url(#${p}-cut)" class="ef-edge"/><ellipse cx="${x1}" cy="${c + D / 2}" rx="4.6" ry="${D / 2}" fill="url(#${p}-fw)" class="ef-edge"/>` : ""}`;
+  // a coil: copper windings on a former, seen from the side
+  const coil = (x, y, w) => `<rect x="${x}" y="${y}" width="${w}" height="12" rx="2.5" fill="url(#${p}-gold)" class="dg-coil"/><path class="dg-coil-wind" d="${Array.from({ length: Math.floor((w - 6) / 3.2) + 1 }, (_, k) => `M${f1(x + 3 + k * 3.2)} ${y + 2}v8`).join("")}"/>`;
+  // field lines from the top coil to the bottom one, arrowed (at `ya`, the
+  // middle unless something else is drawn there)
+  const field = (xs, y0, y1, ya = (y0 + y1) / 2) => `<path class="dg-field" d="${xs.map((x) => `M${x} ${y0}V${y1}`).join("")}"/><path class="dg-field-arrow" d="${xs.map((x) => `M${x - 3} ${ya - 2}l3 4 3-4`).join("")}"/>`;
+  // a clamp-on transducer on the crown, the band round the pipe over it (seen
+  // again under the pipe) and its cable gland
+  const xdcr = (x, c, gland = "right") => `
+  <path class="dg-inst" d="M${x} ${c - W}V${c - W - 9}H${x + 20}V${c - W}Z"/>
+  <path class="dg-inst-print" d="M${x + 3} ${c - W - 3}h4M${x + 13} ${c - W - 3}h4"/>
+  <path class="dg-strap-band" d="M${x + 8} ${c - W}V${c - W - 10.4}H${x + 12}V${c - W}Z"/>
+  <rect class="dg-strap-band" x="${x + 8}" y="${c + D + W}" width="4" height="2.4" rx=".8"/>
+  <rect class="ef-gland" x="${gland === "right" ? x + 20 : x - 4}" y="${c - W - 7}" width="4" height="5" rx="1"/>`;
+  // the transmitter: a wall box with its display and keys
+  const tx = (x, y) => `
+  <rect class="dg-tx" x="${x}" y="${y}" width="30" height="23" rx="2.5"/>
+  <rect class="dg-tx-screen" x="${x + 4}" y="${y + 4}" width="22" height="6.5" rx="1"/>
+  <path class="dg-tx-keys" d="${[0, 1, 2, 3].map((k) => `M${x + 6 + k * 6} ${y + 14.5}h2.4M${x + 6 + k * 6} ${y + 18.5}h2.4`).join("")}"/>`;
+  const chev = (x, y, dx, dy) => { const n = Math.hypot(dx, dy), ux = dx / n, uy = dy / n; return `M${f1(x - 6 * ux - 4 * uy)} ${f1(y - 6 * uy + 4 * ux)}L${f1(x)} ${f1(y)}L${f1(x - 6 * ux + 4 * uy)} ${f1(y - 6 * uy - 4 * ux)}`; };
+  const flowM = (x, c) => `${label(x, c + 39, L.flow, { cls: "dg-w" })}<path class="dg-arrow w" d="M${x + 40} ${c + 35}h18m-5-3.5 5 3.5-5 3.5"/>`;
+  const rule = (y0) => `<path class="dg-rule" d="M0 ${y0 - 10}H480"/>`;
+  // the clamp-on pair (and the Doppler transducer) sit at A and B, with the
+  // transmitter between them
+  const A = 160, B = 284, ax = A + 10, bx = B + 10, m = (ax + bx) / 2;
+
+  // magnetic: coils above and below, the field across the flow; beside it the
+  // pipe end on, with the electrodes and the voltage across them
+  const c1 = crownOf(0), EX = 380, EY = c1 + D / 2, R = D / 2, X1 = 306;
+  const mag = `
+  ${label(0, 13, L.magnetic, { cls: "dg-t" })}
+  ${pipe(0, X1, c1, { end: true })}
+  <path class="dg-flow" d="M84 ${c1 + 38}H112M190 ${c1 + 38}H292"/>
+  ${coil(120, c1 - W - 14, 62)}${coil(120, c1 + D + W + 2, 62)}
+  ${field([132, 145, 158, 171], c1 - W - 2, c1 + D + W + 2)}
+  ${label(194, c1 - W - 9, L.field, { cls: "dg-b dg-h" })}${leader(`M191 ${c1 - W - 13}L173 ${c1 + 5}`)}
+  ${flowM(18, c1)}
+  <circle cx="${EX}" cy="${EY}" r="${R}" fill="url(#${p}-fw)"/>
+  <circle cx="${EX}" cy="${EY}" r="${R + W / 2}" fill="none" stroke="url(#${p}-cut)" stroke-width="${W}"/>
+  <circle class="ef-edge" cx="${EX}" cy="${EY}" r="${R}"/><circle class="ef-edge" cx="${EX}" cy="${EY}" r="${R + W}"/>
+  ${coil(EX - 24, c1 - W - 14, 48)}${coil(EX - 24, c1 + D + W + 2, 48)}
+  ${field([EX - 11, EX, EX + 11], c1 - W - 2, c1 + D + W + 2, EY + 11)}
+  <path class="dg-volt" d="M${EX - R + 3} ${EY}H${EX + R - 3}"/>
+  <path class="dg-volt-end" d="M${EX - R + 7} ${EY - 3}l-4 3 4 3M${EX + R - 7} ${EY - 3}l4 3-4 3"/>
+  <rect class="dg-electrode" x="${EX - R - W - 2}" y="${EY - 3}" width="${W + 4}" height="6" rx="1.2"/>
+  <rect class="dg-electrode" x="${EX + R - 2}" y="${EY - 3}" width="${W + 4}" height="6" rx="1.2"/>
+  ${label(EX + R + W + 8, EY + 4, L.voltage, { cls: "dg-b dg-h" })}`;
+
+  // transit time: a V path off the far wall, one pulse each way
+  const y2 = ROW, c2 = crownOf(y2), bed = c2 + D, top2 = c2 - W + 1;
+  const withP = [[ax - 4, top2], [m - 3, bed], [bx - 4, top2]], against = [[bx + 4, top2], [m + 3, bed], [ax + 4, top2]];
+  const pth = (pts) => `M${pts.map(([x, y]) => `${f1(x)} ${f1(y)}`).join("L")}`;
+  const at = (a, b, s) => [a[0] + (b[0] - a[0]) * s, a[1] + (b[1] - a[1]) * s];
+  // one arrowhead on each path, on the leg nearest its label
+  const arrowOn = ([a, b]) => { const [x, y] = at(a, b, 0.6); return chev(x, y, b[0] - a[0], b[1] - a[1]); };
+  const cables = (y0, both) => `<path class="ef-cable" d="M${A + 24} ${crownOf(y0) - W - 4.5}C${A + 34} ${crownOf(y0) - W - 4.5} ${A + 34} ${y0 + 13} ${A + 44} ${y0 + 13}H${m - 15}${both ? `M${B - 4} ${crownOf(y0) - W - 4.5}C${B - 14} ${crownOf(y0) - W - 4.5} ${B - 14} ${y0 + 13} ${B - 24} ${y0 + 13}H${m + 15}` : ""}"/>`;
+  const transit = `
+  ${rule(y2)}
+  ${label(0, y2 + 13, L.transit, { cls: "dg-t" })}
+  ${pipe(0, 480, c2)}
+  <path class="dg-flow" d="M14 ${c2 + 38}H${A - 14}M${B + 44} ${c2 + 38}H400"/>
+  <path class="dg-sound" d="${pth(withP)}"/><path class="dg-sound back" d="${pth(against)}"/>
+  <path class="dg-sound-pulse" d="${pth(withP)}"/><path class="dg-sound-pulse back" d="${pth(against)}"/>
+  <path class="dg-sound-arrow" d="${arrowOn(withP)}"/><path class="dg-sound-arrow back" d="${arrowOn(against)}"/>
+  ${xdcr(A, c2, "right")}${xdcr(B, c2, "left")}
+  ${cables(y2, true)}${tx(m - 15, y2 + 1)}
+  ${label(ax + 2, c2 + 26, L.with, { a: "end", cls: "dg-b dg-h" })}
+  ${label(bx - 14, c2 + 26, L.against, { cls: "dg-b dg-h" })}
+  ${flowM(410, c2)}`;
+
+  // Doppler: one transducer, its beam into the liquid, echoes off what it carries
+  const y3 = 2 * ROW, c3 = crownOf(y3);
+  const beam = efBeam(p, "dp", [ax, c3, 0.5, 0.866], 13, { toY: c3 + D - 2, kind: "u", waves: 3 });
+  const hits = [[ax + 12, c3 + 19, "p"], [ax + 25, c3 + 33, "b"]];
+  const arc = ([x, y], r) => { const a = Math.atan2(c3 - y, ax - x), s = 0.75; return `M${f1(x + r * Math.cos(a - s))} ${f1(y + r * Math.sin(a - s))}A${r} ${r} 0 0 1 ${f1(x + r * Math.cos(a + s))} ${f1(y + r * Math.sin(a + s))}`; };
+  const solids = [...hits, [30, c3 + 13, "b"], [62, c3 + 31, "p"], [100, c3 + 9, "b"], [124, c3 + 35, "p"], [378, c3 + 11, "b"], [394, c3 + 22, "p"], [440, c3 + 9, "b"], [470, c3 + 17, "p"]];
+  const dop = `
+  ${rule(y3)}
+  ${label(0, y3 + 13, L.doppler, { cls: "dg-t" })}
+  ${pipe(0, 480, c3)}
+  <path class="dg-flow" d="M14 ${c3 + 38}H${A - 14}M${B + 64} ${c3 + 38}H400"/>
+  <g clip-path="url(#${p}-bore)"><g class="dg-bits">${[[20, c3 + 22, 0], [60, c3 + 40, -2.4], [8, c3 + 6, -4.6], [40, c3 + 28, -6.8]].map(([x, y, d]) => `<circle cx="${x}" cy="${y}" r="1.8" style="--d:${d}s"/>`).join("")}</g></g>
+  ${beam.draw}
+  <g class="ef-waves">${hits.map((e, i) => [5.5, 10].map((r, k) => `<path class="ef-wave u" style="--d:${(i * 0.45 + k * 0.25).toFixed(2)}s" d="${arc(e, r)}"/>`).join("")).join("")}</g>
+  ${solids.map(([x, y, k]) => (k === "p" ? `<circle class="dg-particle" cx="${x}" cy="${y}" r="2.3"/>` : `<circle class="dg-bubble" cx="${x}" cy="${y}" r="2.6"/>`)).join("")}
+  ${xdcr(A, c3, "right")}
+  ${cables(y3, false)}${tx(m - 15, y3 + 1)}
+  ${label(ax + 54, c3 + 17, L.bounce, { cls: "dg-b dg-h" })}${leader(`M${ax + 50} ${c3 + 25}L${ax + 30} ${c3 + 32}`)}
+  ${flowM(410, c3)}`;
+  const defs = `${efDefs(p)}${beam.defs}
+  <linearGradient id="${p}-fw" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="ef-w0"/><stop offset=".45" class="ef-w1"/><stop offset="1" class="ef-w2"/></linearGradient>
+  <clipPath id="${p}-bore"><rect x="0" y="${c3}" width="480" height="${D}"/></clipPath>`;
+  return svg(480, 2 * ROW + 92, `${mag}${transit}${dop}`, defs);
+}
+
 /* ---- E-Flow 3: a drawing kit ---- */
 // Shared by the E-Flow 3 drawings and the changeover demo (build.mjs):
 // gradients and section hatching for cut concrete and soil (ids prefixed per
@@ -1254,6 +1463,8 @@ const DRAW = {
   wqstation: (t) => wqstation(t),
   connect: (t) => connect(t),
   scatter: (t) => scatter(t),
+  rainfall: (t) => rainfall(t),
+  fullpipe: (t) => fullpipe(t),
   beforeafter: (t) => panels(t, [[t.panels[0][0], t.panels[0][1], hydro(1.05, 0.28)], [t.panels[1][0], t.panels[1][1], hydro(0.26, 0.06)]]),
   sampling: (t) => panels(t, [[t.panels[0][0], t.panels[0][1], sampling("time")], [t.panels[1][0], t.panels[1][1], sampling("flow")]]),
   hawk: (t) => hawk(t),

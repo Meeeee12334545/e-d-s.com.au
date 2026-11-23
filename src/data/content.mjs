@@ -914,6 +914,7 @@ export const services = [
     blocks: [
       {
         heading: "The Technologies",
+        diagram: "fullpipe",
         items: [
           ["Magnetic", "Measures the voltage a conductive liquid creates as it moves through a magnetic field. Nothing blocks the flow and there are no moving parts, but the liquid must be conductive."],
           ["Ultrasonic transit time", "Times sound pulses with and against the flow. Suits clean liquids, and comes inline, as an insertion meter or clamped to the outside of the pipe."],
@@ -965,6 +966,7 @@ export const services = [
     blocks: [
       {
         heading: "What is included",
+        diagram: "rainfall",
         items: [
           ["Tipping bucket rain gauges", "RIMCO 7499 gauges sited within the catchment being monitored."],
           ["High-resolution logging", "Rain recorded typically every 1 to 5 minutes, to capture storm peaks."],
@@ -2155,6 +2157,16 @@ export const diagrams = {
     ],
     gap: "No reading",
     legend: [["truth", "What actually flowed"], ["band", "Pipe running full"], ["recr", "Recorded by radar"], ["recu", "Recorded by ultrasonic and pressure"], ["recw", "Recorded by a wetted sensor"]],
+  },
+  rainfall: {
+    alt: "Illustration of a catchment in section during a storm. A tipping bucket rain gauge on a post records the rain, with a logger strapped to the post. Below ground, rain reaches the sewer two ways: quickly, straight in at a manhole, and slowly, through the groundwater and a cracked joint. A flow meter sits on the invert. A chart beneath shows the storm's rainfall above the flow: inflow arrives quickly, in a sharp peak soon after the rain, then infiltration builds slowly and lingers above dry weather flow.",
+    caption: "Illustration: a wet weather response read against the rain that caused it. Inflow arrives quickly. Infiltration builds slowly and lingers.",
+    labels: { gauge: ["RIMCO 7499", "rain gauge"], groundwater: "Groundwater", inflow: "Inflow", infiltration: "Infiltration", meter: "Flow meter", flow: "Flow", rain: "Rainfall", fast: ["Inflow", "arrives quickly"], slow: ["Infiltration builds", "slowly and lingers"], measured: "Flow", dry: "Dry weather flow" },
+  },
+  fullpipe: {
+    alt: "Illustration of three full pipes in long section, flow left to right. Magnetic: coils above and below the pipe set up a magnetic field across it, and seen end on, two electrodes in the pipe wall pick up the voltage a conductive liquid creates as it moves through the field. Ultrasonic transit time: two transducers strapped to the outside of the pipe time sound pulses across it, with the flow and against it. Ultrasonic Doppler: one transducer on the outside of the pipe sends sound into the liquid, and it bounces back off particles and bubbles.",
+    caption: "Illustration: three ways to measure flow in a full pipe. Not to scale.",
+    labels: { magnetic: "Magnetic", field: "Magnetic field", voltage: "Voltage", transit: "Ultrasonic transit time", with: "With the flow", against: "Against the flow", doppler: "Ultrasonic Doppler", bounce: ["Bounces sound off", "particles and bubbles"], flow: "Flow" },
   },
 };
 
