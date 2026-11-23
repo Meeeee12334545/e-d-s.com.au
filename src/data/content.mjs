@@ -314,6 +314,8 @@ export const services = [
     group: "sewer",
     process: true,
     featured: true,
+    // lists the open channel flow calculator in its related links
+    calculator: true,
     summary: "Temporary and permanent flow monitoring for councils and water authorities, installed by trained crews Australia-wide.",
     description: "Temporary and permanent sewer flow monitoring for councils and water authorities, with Detectronic MSFM meters installed by our crews Australia-wide.",
     tags: ["Detectronic MSFM meters", "ATEX and IECEx"],
@@ -1244,6 +1246,7 @@ export const services = [
     icon: "clipboard-check",
     group: "field",
     featured: true,
+    calculator: true,
     summary: "Audits and calibration of your monitoring equipment where it's installed, by experienced EDS technicians, so your data holds up.",
     intro: [
       "A drifting instrument costs you twice: once in readings you can't trust, and again in the decisions made on them. Our technicians audit and calibrate equipment where it's installed: closed channel, open channel, level, pressure, rainfall and analytical.",
@@ -3474,6 +3477,131 @@ export const clients = [
   ["Veolia", "client-veolia.png"],
 ].map(([name, file]) => ({ name, src: img(file) }));
 export const homeClients = ["Sydney Water", "Urban Utilities", "Yarra Valley Water", "Water Corporation", "Transurban", "Veolia", "Downer", "Aurecon"];
+
+/* ------------------------------------------------------------------ */
+/* Open channel flow calculator (open-channel-flow-calculator.html)    */
+/* ------------------------------------------------------------------ */
+// The words of the calculator and its page. The sums are in
+// src/js/flow-calc.js. `example` is the first calculation on the page,
+// drawn into it at build time; each shape keeps its own sizes (`value`, in
+// millimetres) when the visitor switches between them.
+export const flowCalc = {
+  title: "Open Channel Flow Calculator",
+  pageTitle: "Open Channel and Part-Full Pipe Flow Calculator | EDS",
+  description: "Work out the flow in an open channel or part-full pipe from depth and velocity. Circular, egg-shaped, rectangular, trapezoidal, U and V shapes.",
+  lede: "Pick a shape, enter its size, the depth and the velocity, and the flow is worked out as you type.",
+  card: "The flow in a pipe or channel from depth and velocity, for six shapes, drawn to scale as you type.",
+  example: { shape: "circle", depth: 120, velocity: 0.8 },
+  shapes: [
+    { id: "circle", name: "Circular pipe", alt: "circular pipe", fields: [
+      { k: "d", label: "Diameter", hint: "Inside diameter", value: 300 },
+    ] },
+    { id: "egg", name: "Egg-shaped pipe", alt: "egg-shaped pipe", fields: [
+      { k: "w", label: "Width", hint: "A standard egg, 1.5 times as high as it is wide", value: 600 },
+    ] },
+    { id: "rect", name: "Rectangular", alt: "rectangular channel", closed: "Closed top, like a box culvert", fields: [
+      { k: "b", label: "Width", value: 600 },
+      { k: "h", label: "Height", optional: true, hint: "Leave blank for an open channel" },
+    ] },
+    { id: "trap", name: "Trapezoidal", alt: "trapezoidal channel", fields: [
+      { k: "b", label: "Bottom width", value: 500 },
+      { k: "z", label: "Side slope", unit: "H : 1 V", rule: "slope", zero: true, step: 0.1, hint: "1.5 means 1.5 across for every 1 up", value: 1.5 },
+      { k: "h", label: "Channel depth", optional: true },
+    ] },
+    { id: "u", name: "U-shaped", alt: "U-shaped channel", fields: [
+      { k: "w", label: "Width", hint: "Across the sides, and across the round bottom", value: 450 },
+      { k: "h", label: "Channel depth", optional: true },
+    ] },
+    { id: "v", name: "V-shaped", alt: "V-shaped channel", fields: [
+      { k: "z", label: "Side slope", unit: "H : 1 V", rule: "slope", step: 0.1, hint: "2 means 2 across for every 1 up", value: 2 },
+      { k: "h", label: "Channel depth", optional: true },
+    ] },
+  ],
+  legends: { shape: "Shape", size: "Size", flow: "Depth and velocity", kind: "Velocity reading" },
+  depth: { label: "Depth of water", hint: "From the bottom of the pipe or channel (the invert)" },
+  kinds: [["mean", "Mean"], ["surface", "Surface"]],
+  meanVelocity: "Mean velocity",
+  surfaceVelocity: "Surface velocity",
+  meanHint: "The average across the flow, as an area velocity meter reports it.",
+  surfaceHint: "The speed at the surface, from radar or a float. It's multiplied by the factor below to give the mean.",
+  factor: { label: "Surface to mean factor", hint: "About 0.85 is a common starting point. A factor from your own site is better." },
+  results: {
+    flow: "Flow",
+    rows: [
+      ["A", "Wetted area", "m²"],
+      ["P", "Wetted perimeter", "m"],
+      ["R", "Hydraulic radius", "m"],
+      ["T", "Surface width", "m"],
+      ["depthShare", "Depth", ""],
+      ["areaShare", "Flow area", ""],
+      ["vMean", "Mean velocity", "m/s"],
+      ["Fr", "Froude number", ""],
+    ],
+    note: "A guide for planning and checking. It's only as good as the depth and velocity you enter.",
+  },
+  caption: "Drawn to scale from the figures you enter.",
+  copy: "Copy link",
+  copied: "Link copied",
+  copyFailed: "Copy the address bar instead",
+  reset: "Start again",
+  // the words the script writes (flow-calc.js)
+  script: {
+    depth: "depth",
+    high: "high",
+    slope: "side slope",
+    full: "Full",
+    surcharged: "surcharged",
+    ofHeight: "{n} of the height",
+    ofFull: "{n} of full",
+    sub: "subcritical",
+    near: "near critical",
+    super: "supercritical",
+    fullNote: "Running full. The water is above the top of the pipe, so the flow area is the whole pipe.",
+    reverseNote: "The velocity is below zero, so the flow is running backwards.",
+    alt: "A cross-section of the {shape}, drawn to scale, with water {depth} deep.",
+    altFull: "A cross-section of the {shape}, drawn to scale, running full.",
+    live: "Flow is {q} litres a second.",
+    errors: {
+      empty: "Enter a number.",
+      empty_d: "Enter the diameter.",
+      empty_w: "Enter the width.",
+      empty_b: "Enter the width.",
+      empty_z: "Enter the side slope.",
+      empty_depth: "Enter the depth of water.",
+      empty_v: "Enter the velocity.",
+      empty_k: "Enter the factor.",
+      number: "Enter a number, like 300 or 0.85.",
+      size: "Enter a size above zero.",
+      slope: "Enter a slope above zero.",
+      slopeZero: "Enter a slope of zero or more.",
+      depth: "The depth can't be below zero.",
+      factor: "Enter a factor above zero and up to 1.5.",
+      culvert: "Enter the height of the culvert.",
+      uHeight: "Make it at least half the width deep, so the round bottom fits.",
+      over: "That's deeper than the channel. Check the depth or the channel depth.",
+    },
+  },
+  method: {
+    nav: "How it works",
+    heading: "How it's worked out",
+    lede: "Flow is the wetted area times the mean velocity.",
+    equation: [["Q", "Flow"], ["A", "Wetted area"], ["v", "Mean velocity"]],
+    items: [
+      ["Wetted area", "The area of water in the section at the depth you enter, worked out from the shape and its size."],
+      ["Mean velocity", "Water runs faster at the surface than near the bed. A radar or a float reads the surface, so its reading is multiplied by a factor, often about 0.85."],
+      ["Running full", "Once the water reaches the top of a pipe or culvert, the area stops growing. The flow is then the full area times the velocity."],
+      ["Hydraulic radius", "The wetted area divided by the wetted perimeter, the figure Manning's equation uses."],
+      ["Froude number", "Velocity against the speed of a wave on the surface. Under 1 the flow is subcritical, deeper and calmer. Over 1 it's supercritical, fast and shallow."],
+      ["Egg-shaped pipes", "The standard egg is 1.5 times as high as it is wide. Its top radius is half the width, its bottom radius a quarter and its sides 1.5 times the width."],
+    ],
+    measure: "Measuring Flow",
+  },
+  cta: {
+    title: "Need the flow measured?",
+    lede: "Our crews install and look after area velocity flow meters in sewers, drains and channels Australia-wide.",
+    topic: "Sewer Flow Monitoring",
+  },
+};
 
 /* ------------------------------------------------------------------ */
 /* Resources                                                           */
