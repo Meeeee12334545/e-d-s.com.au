@@ -93,7 +93,7 @@
     waterPath();
     ctx.clip();
     // the body of the water, deepening towards the invert
-    ctx.fillStyle = tone(D.surf[0][1], INV, [[0, "rgba(120, 205, 194, .30)"], [0.45, "rgba(52, 160, 149, .40)"], [1, "rgba(10, 104, 96, .56)"]]);
+    ctx.fillStyle = tone(D.surf[0][1], INV, [[0, "rgba(150, 178, 164, .42)"], [0.45, "rgba(95, 124, 112, .55)"], [1, "rgba(52, 77, 69, .72)"]]);
     ctx.fillRect(0, 0, D.w, D.h);
     // light let down from the surface: bands that follow its ripples
     [[5, 0.34, 1.5, 0.12], [12, 0.2, 1.2, 0.3], [21, 0.12, 1, 0.5]].forEach(([d, a, w, lag]) => {
@@ -176,7 +176,7 @@
     ctx.stroke();
     ctx.beginPath();
     for (let x = 0; x <= D.w + 4; x += 4) x ? ctx.lineTo(x, top(x)) : ctx.moveTo(x, top(x));
-    ctx.strokeStyle = "#2a8f85";
+    ctx.strokeStyle = "rgba(236, 248, 242, .85)";
     ctx.lineWidth = 2.3;
     ctx.stroke();
     for (let x = 0; x < D.w; x += 5) {

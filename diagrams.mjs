@@ -10,6 +10,8 @@
 // room to grow into. Moving parts are few and use transforms, dashes and
 // fill-opacity, and pause off screen like the other ambient loops.
 
+import { texDefs, matDefs, instDefs, ground, waterTable, pipeLong, chamber, chamberWalls, shaft, water, eflow3, cable, hawk, coverFrame, stepIron, avSensor, lidottR, kiosk, d605, dtc, hanger, frameSpan, tag, lead, flowArrow, subPump, riser, pipeRun, hatch, vent, sampler, building, sonde, rag, grease, silt, fouling, textW, lidAside, tablet } from "./scene.mjs";
+
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 const f1 = (n) => Math.round(n * 10) / 10;
 // A smooth line through [x, y] points (Catmull-Rom as cubic Béziers).
@@ -104,148 +106,181 @@ const ltSampler = (x, y, w = 40, h = 46) => `
 // a flow mark inside a pipe on the light plate
 const ltFlow = (x, y, text) => `<text x="${x}" y="${y}" class="dg-m">${esc(text)}</text><path class="dg-arrow" d="M${x + 38} ${y - 4}h14m-4-3.5 4 3.5-4 3.5"/>`;
 
+// the foot of a section block fading into the white plate
+const fadeDef = (p) => `<linearGradient id="${p}-fade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#fff"/></linearGradient>`;
+
 /* ---- thermal: a thermistor string finds where groundwater gets in ---- */
+// A street in section between two manholes, the water table above the pipe.
+// A string of temperature sensors runs from a D605 logger in the upstream
+// manhole along the invert; a flow meter sits just upstream of the next one.
+// Groundwater comes in at an open joint, and the chart under the ground
+// shows the temperature along the pipe changing at the sensors nearest it.
 function thermal(t) {
-  const L = t.labels, p = "ltt";
-  const G = 52, TABLE = 104, CROWN = 140, INV = 176, SOIL = 224;
-  const SA = [58, 86], SB = [394, 422]; // the two shafts (inside faces)
-  const beads = Array.from({ length: 12 }, (_, k) => 100 + k * 22);
-  const at = 242; // the defective joint
-  const temp = (x) => 262 + 32 * Math.exp(-(((x - at) / 30) ** 2));
-  const hot = beads.filter((x) => temp(x) - 262 > 5);
-  const bead = (x, y) => `${hot.includes(x) ? `<circle class="dg-bead-g" cx="${x}" cy="${y}" r="3.2"/>` : ""}<circle class="dg-bead${hot.includes(x) ? " hot" : ""}" cx="${x}" cy="${y}" r="3.2"/>`;
+  const L = t.labels, p = "rtt";
+  const W = 480, G = 34, TABLE = 92, CR = 148, INV = 180, T = 6, BOT = 236, WT = 8;
+  const MA = [36, 96], MB = [384, 444], open = 34, oA = 66, oB = 414;
+  const level = 169, at = 236, joints = [140, 188, 236, 284, 332];
+  const beads = Array.from({ length: 12 }, (_, k) => 106 + k * 21.5);
+  const base = 270, temp = (x) => base + 30 * Math.exp(-(((x - at) / 30) ** 2));
+  const hot = beads.filter((x) => temp(x) - base > 5);
+  const steps = [G + 38, G + 60, G + 82, G + 104];
+  const drips = [0, 1, 2].map((n) => `<ellipse class="sc-drip" cx="${f1(at + 1 + n * 1.6)}" cy="${CR + 2}" rx="1.2" ry="1.9" style="--d:${n * 0.55}s"/>`).join("");
   const body = `
-  <rect x="0" y="${G}" width="480" height="${SOIL - G}" fill="url(#${p}-soil)"/>
-  <rect x="0" y="${TABLE}" width="480" height="${SOIL - TABLE}" fill="url(#${p}-gw)"/>
-  <rect class="ef-road" x="0" y="${G - 5}" width="480" height="5"/>
-  <path class="dg-table" d="M0 ${TABLE}H480"/>
-  <path class="dg-table-mark" d="M122 96h10l-5 7z"/>
-  ${label(138, 100, L.groundwater, { cls: "dg-m dg-h" })}
-  ${ltPipe(p, 0, 480, CROWN, INV, { gaps: [[SA[0] - LW, SA[1] + LW], [SB[0] - LW, SB[1] + LW]] })}
-  ${ltShaft(p, SA[0], SA[1], G, CROWN, INV, { steps: "right" })}
-  ${ltShaft(p, SB[0], SB[1], G, CROWN, INV, { steps: "left" })}
-  ${ltWater(p, 0, 480, 160, INV)}
-  ${[104, 150, 196, 288, 334, 380].map((x) => `<path class="dg-joint" d="M${x} ${CROWN - LW}V${CROWN}M${x} ${INV}V${INV + LW}"/>`).join("")}
-  <path class="dg-crack" d="M238 ${CROWN - LW - 1}l4 4-2 3 5 3 3-4M248 ${CROWN - LW - 1}v8"/>
-  <g class="dg-seep"><path d="M216 112q12 8 22 22"/><path d="M270 112q-12 8-22 22"/></g>
-  <g class="dg-drips">${[0, 1, 2].map((n) => `<ellipse cx="${240 + n * 3}" cy="146" rx="1.5" ry="2.3" style="--d:${n * 0.6}s"/>`).join("")}</g>
-  ${label(262, 124, L.defect, { cls: "dg-b dg-h" })}${leader("M258 120L249 134")}
-  <path class="ef-cable" d="M70 86V173H346"/>
-  ${beads.map((x) => bead(x, 173)).join("")}
-  ${ltLogger(63, 58)}
-  ${ltAv(360, INV)}
-  <path class="ef-cable" d="M384 171H400V86"/>
-  ${ltLogger(401, 58)}
-  ${ltFlow(422, 156, L.flow || "Flow")}
-  ${label(100, 73, L.logger, { cls: "dg-b dg-h" })}${leader("M97 69L80 69")}
-  ${label(380, 73, L.meter, { a: "end", cls: "dg-b dg-h" })}${leader("M372 77V166")}
-  ${label(98, 208, L.string, { cls: "dg-b dg-h" })}${leader("M108 196V182")}
-  <g class="dg-guide">${hot.map((x) => `<path d="M${x} 182V${f1(temp(x)) - 5}"/>`).join("")}</g>
-  <path class="dg-grid" d="M92 262H388"/>
-  <path class="dg-band-cool" d="${smooth(sample(92, 388, 8, temp))}L388 262H92Z"/>
-  <path class="dg-axis" d="M92 326H388"/>
+  ${ground(p, { x0: 0, x1: W, y: G, bottom: BOT, holes: [frameSpan(open, oA), frameSpan(open, oB)] })}
+  ${waterTable(p, { x0: 0, x1: W, y: TABLE, bottom: BOT })}
+  ${pipeLong(p, { x0: 0, x1: W, crown: CR, inv: INV, t: T, joints, gaps: [[MA[0] - WT, MA[1] + WT], [MB[0] - WT, MB[1] + WT]], open: [MA, MB], bed: 7, stain: level - 3 })}
+  <ellipse cx="${at + 1}" cy="${CR + 10}" rx="13" ry="12" fill="url(#${p}-wetwall)"/>
+  <path class="sc-trickle" d="M${at + 1} ${CR}q1.5 7 -.5 13"/>
+  ${chamber(p, { a: MA[0], b: MA[1], crown: CR, inv: INV, t: WT })}
+  ${chamber(p, { a: MB[0], b: MB[1], crown: CR, inv: INV, t: WT })}
+  ${shaft(p, { a: MA[0], b: MA[1], top: G, bottom: CR, t: WT, ring: 28, slab: 8, open, oc: oA, steps, stepW: 18, wallTo: CR })}
+  ${shaft(p, { a: MB[0], b: MB[1], top: G, bottom: CR, t: WT, ring: 28, slab: 8, open, oc: oB, steps, stepW: 18, wallTo: CR })}
+  ${chamberWalls(p, { a: MA[0], b: MA[1], top: CR, crown: CR, inv: INV, t: WT })}
+  ${chamberWalls(p, { a: MB[0], b: MB[1], top: CR, crown: CR, inv: INV, t: WT })}
+  <path class="sc-dtc" d="M47 ${G + 30}V${INV - 3}Q47 ${INV - 1.6} 49 ${INV - 1.6}H${beads[0] - 4}"/>
+  ${d605(p, 40, G + 14, 14)}
+  ${hanger(p, MB[1], 434, G + 22)}
+  ${hawk(p, 434, G + 22, 11)}
+  ${cable(`M375 ${INV - 2}H431Q436 ${INV - 2} 436 ${INV - 7}V${G + 46}`, { w: 1.2 })}
+  ${water(p, { x0: 0, x1: W, level, bottom: INV })}
+  <g class="sc-drips">${drips}</g>
+  ${dtc(p, 47, beads[beads.length - 1] + 4, INV - 1.6, beads, { hot })}
+  ${avSensor(p, 352, INV, 22)}
+  <path class="sc-joint-open" d="M${at - 0.6} ${CR - T - 0.4}l1.2 ${T * 0.45}-1 .9 1.6 ${T * 0.6}"/>
+  <g class="sc-seep"><path d="M206 104q18 10 26 38"/><path d="M268 104q-18 10 -26 38"/></g>
+  ${tag(112, 56, L.logger, { bold: true })}${lead([[110, 52.5], [55, G + 21]])}
+  ${tag(372, 56, L.meter, { a: "end", bold: true })}${lead([[366, 61], [366, INV - 5]])}
+  ${tag(148, 86, L.groundwater)}<path class="sc-table-mark" d="M131 ${TABLE - 9}h11l-5.5 7.5z"/>
+  ${tag(254, 126, L.defect, { bold: true })}${lead([[252, 129], [237.5, CR - 3]])}
+  ${tag(84, 218, L.string, { bold: true })}${lead([[122, 209], [beads[1], INV - 1.6]])}
+  ${flowArrow(150, 162)}
+  <rect x="0" y="${BOT - 22}" width="${W}" height="23" fill="url(#${p}-fade)"/>
+  <g class="sc-guide">${hot.map((x) => `<path d="M${f1(x)} ${INV + 3}V${f1(temp(x) - 5)}"/>`).join("")}</g>
+  <path class="dg-grid" d="M92 ${base}H388"/>
+  <path class="dg-band-cool" d="${smooth(sample(92, 388, 8, temp))}L388 ${base}H92Z"/>
+  <path class="dg-axis" d="M92 318H388"/>
   <path class="dg-trace" d="${smooth(sample(92, 388, 8, temp))}"/>
-  ${beads.map((x) => bead(x, f1(temp(x)))).join("")}
-  ${label(92, 346, L.chart, { cls: "dg-b" })}
+  ${beads.map((x) => `${hot.includes(x) ? `<circle class="dg-bead-g" cx="${f1(x)}" cy="${f1(temp(x))}" r="3.2"/>` : ""}<circle class="dg-bead${hot.includes(x) ? " hot" : ""}" cx="${f1(x)}" cy="${f1(temp(x))}" r="3.2"/>`).join("")}
+  ${label(92, 340, L.chart, { cls: "dg-b" })}
   ${label(292, 290, L.change, { cls: "dg-m" })}${leader("M288 287L256 293")}`;
-  return svg(480, 354, body, `${efDefs(p)}${ltWaterGrad(p)}${ltGroundGrad(p)}`);
+  const defs = `${texDefs(p, 0.62)}${matDefs(p)}${instDefs(p)}${fadeDef(p)}<radialGradient id="${p}-wetwall">${["#1d2a24", "#1d2a24", "#1d2a24"].map((c, i) => `<stop offset="${[0, 0.55, 1][i]}" stop-color="${c}" stop-opacity="${[0.5, 0.22, 0][i]}"/>`).join("")}</radialGradient>`;
+  return svg(480, 352, body, defs);
 }
 
 /* ---- wetwell: a pump station under watch ---- */
+// A sewage pump station in section: the precast wet well under its cover
+// slab and hatch, the gravity main coming in, two submersible pumps on
+// their duckfoot bends with the risers, valves and header taking the rising
+// main out through the wall. The level rises from stop to start and the
+// pumps draw it down (CSS: .dg-water, .dg-run, .dg-main-flow, on one 14 s
+// cycle). A LIDoTT R under the slab reads the level by radar; the Pump
+// Station Manager in its kiosk takes that and the pump runs, and sends them
+// on. The water is drawn see-through, as a cutaway would show it, so the
+// pumps read under it.
 function wetwell(t) {
-  const L = t.labels, p = "ltw";
-  const G = 86, WL = 176, WR = 320, WW = 8, FLOOR = 352;
+  const L = t.labels, p = "rtw";
+  const W = 480, G = 86, WL = 176, WR = 320, WW = 10, FLOOR = 352, SLAB = 12;
   const lv = { overflow: 132, surcharge: 174, start: 222, stop: 296 };
-  const radar = { cx: 196, y: 90 };
-  const beam = efBeam(p, "bm", [radar.cx, radar.y + 21, 0, 1], 5, { toY: lv.stop - 4, waves: 3 });
-  const pump = (x, n) => `
-  <g class="dg-pump">
-    <rect class="dg-pump-body" x="${x}" y="318" width="34" height="32" rx="5" fill="url(#${p}-steel)"/>
-    <rect class="dg-pump-cap" x="${x + 5}" y="312" width="24" height="8" rx="3"/>
-    <path class="dg-cab-seam" d="M${x + 6} 334h22M${x + 6} 340h22"/>
-    <rect class="dg-inst-base" x="${x - 2}" y="350" width="38" height="2.4" rx="1"/>
-    <circle class="dg-run" cx="${x + 17}" cy="327" r="3.4" style="--d:${n * 0.25}s"/>
-  </g>`;
+  const CR = 150, INV = 174, HEAD = 118;
+  const radar = { cx: 198, y: G + SLAB + 3 };
+  const beam = efBeam(p, "bm", [radar.cx, radar.y + 22.5, 0, 1], 5, { toY: lv.stop - 4, waves: 3 });
+  const p1 = subPump(p, 210, FLOOR, 28, { rails: G + SLAB + 2, run: "dg-run" }), p2 = subPump(p, 262, FLOOR, 28, { rails: G + SLAB + 2, run: "dg-run" });
+  const risers = [p1.out, p2.out];
+  const wellClip = `<clipPath id="${p}-well"><rect x="${WL}" y="${G + SLAB}" width="${WR - WL}" height="${FLOOR - G - SLAB}"/></clipPath>`;
+  const level = (y, cls) => `<g class="dg-level${cls ? ` ${cls}` : ""}"><path d="M${WL} ${y}H${WR + WW + 8}"/></g>`;
   const body = `
-  <rect x="0" y="${G}" width="480" height="${372 - G}" fill="url(#${p}-soil)"/>
-  <rect class="ef-road" x="0" y="${G - 5}" width="480" height="5"/>
-  <rect x="${WL}" y="${G}" width="${WR - WL}" height="${FLOOR - G}" fill="url(#${p}-air)"/>
-  ${ltPipe(p, 0, WL, 150, 174, { w: 5 })}
-  ${ltWater(p, 0, WL - 2, 162, 174)}
-  <path class="dg-fall" d="M${WL - 1} 170q8 3 10 24"/>
-  <g clip-path="url(#${p}-well)"><g class="dg-water"><rect x="${WL}" y="${lv.start}" width="${WR - WL}" height="${FLOOR - lv.start + 80}" fill="url(#${p}-wg)"/><path class="ef-surf-g" d="M${WL} ${lv.start}H${WR}"/><path class="ef-surf" d="M${WL} ${lv.start}H${WR}"/></g></g>
-  <path fill="url(#${p}-cut)" d="M${WL - WW} ${G}H${WL}V145H${WL - WW}ZM${WL - WW} 179H${WL}V${FLOOR}H${WL - WW}ZM${WR} ${G}H${WR + WW}V${FLOOR}H${WR}ZM${WL - WW} ${FLOOR}H${WR + WW}V${FLOOR + WW}H${WL - WW}ZM156 ${G - 10}H340V${G}H156Z"/>
-  <path class="ef-edge" d="M${WL - WW} ${G}V145M${WL - WW} 179V${FLOOR + WW}H${WR + WW}V${G}M${WL} ${G}V150M${WL} 174V${FLOOR}H${WR}V${G}M156 ${G - 10}H340M156 ${G}H340"/>
-  <rect class="ef-frame" x="170" y="${G - 14}" width="52" height="3.4" rx="1"/>
-  <rect class="ef-lid" x="175" y="${G - 15.6}" width="42" height="3.2" rx="1"/>
-  ${[1, 2, 3].map((k) => `<path class="ef-step" d="M${WR} ${G + 18 * k}h-6v4h6"/>`).join("")}
-  <g class="dg-level alarm"><path d="M${WL} ${lv.overflow}H${WR + 16}M${WL} ${lv.surcharge}H${WR + 16}"/></g>
-  <g class="dg-level"><path d="M${WL} ${lv.start}H${WR + 16}M${WL} ${lv.stop}H${WR + 16}"/></g>
-  ${label(342, lv.overflow + 4, L.overflow, { cls: "dg-alarm" })}${label(342, lv.surcharge + 4, L.surcharge, { cls: "dg-alarm" })}
-  ${label(342, lv.start + 4, L.start, { cls: "dg-b" })}${label(342, lv.stop + 4, L.stop, { cls: "dg-b" })}
-  <path class="dg-main" d="M213 318V300H304V118H480M261 318V300"/>
-  <path class="dg-main-core" d="M213 318V300H304V118H480M261 318V300"/>
-  <path class="dg-main-flow" d="M304 290V118H470"/>
-  ${pump(196, 0)}${pump(244, 1)}
-  ${label(474, 108, L.main, { a: "end", cls: "dg-m dg-h" })}
+  ${ground(p, { x0: 0, x1: W, y: G, bottom: 372, holes: [[WL - WW - 10, WR + WW + 10]] })}
+  ${pipeLong(p, { x0: 0, x1: WL - WW + 1, crown: CR, inv: INV, t: 5, joints: [44, 112], bed: 6, stain: 167 })}
+  ${water(p, { x0: 0, x1: WL - WW + 1, level: 162, bottom: INV })}
+  <linearGradient id="${p}-ww" href="#${p}-in-shaft" gradientUnits="userSpaceOnUse" x1="${WL}" y1="0" x2="${WR}" y2="0"/>
+  <linearGradient id="${p}-wf" href="#${p}-fall" gradientUnits="userSpaceOnUse" x1="0" y1="${G}" x2="0" y2="${FLOOR}"/>
+  <rect x="${WL}" y="${G + SLAB}" width="${WR - WL}" height="${FLOOR - G - SLAB}" fill="url(#${p}-wall)"/>
+  <rect x="${WL}" y="${G + SLAB}" width="${WR - WL}" height="${FLOOR - G - SLAB}" fill="url(#${p}-ww)"/>
+  <rect x="${WL}" y="${G + SLAB}" width="${WR - WL}" height="${FLOOR - G - SLAB}" fill="url(#${p}-wf)"/>
+  <rect x="${WL}" y="${lv.start - 2}" width="${WR - WL}" height="${FLOOR - lv.start + 2}" fill="#3b4524" fill-opacity=".12"/>
+  <path class="sc-tide" d="M${WL} ${lv.start - 2}H${WR}"/>
+  <path class="sc-bore-joint" d="M${WL} 150H${WR}M${WL} 222H${WR}M${WL} 294H${WR}"/>
+  <path fill="url(#${p}-conc)" d="M${WL} ${FLOOR - 24}L${WL + 26} ${FLOOR}H${WL}ZM${WR} ${FLOOR - 24}L${WR - 26} ${FLOOR}H${WR}Z"/>
+  <path class="sc-cut-edge" d="M${WL} ${FLOOR - 24}L${WL + 26} ${FLOOR}M${WR} ${FLOOR - 24}L${WR - 26} ${FLOOR}"/>
+  ${p1.draw}${p2.draw}
+  ${risers.map(([x, y], k) => riser(p, x, y, HEAD + 3.5, 6, { valves: [HEAD + 66 + k * 0, HEAD + 34] })).join("")}
+  ${pipeRun(p, risers[0][0] - 3, W, HEAD, 7, [WR + WW + 18, 420])}
+  <path class="dg-main-flow" d="${risers.map(([x, y]) => `M${f1(x)} ${f1(y)}V${HEAD}`).join("")}M${f1(risers[0][0])} ${HEAD}H${W - 6}"/>
+  ${cable(`M${f1(210 + 28 * 0.66 * 0.18 + 1.4)} ${f1(FLOOR - 28 * 0.44 - 25.2 - 2.24)}V${G + SLAB + 1}`, { w: 1 })}
+  ${cable(`M${f1(262 + 28 * 0.66 * 0.18 + 1.4)} ${f1(FLOOR - 28 * 0.44 - 25.2 - 2.24)}V${G + SLAB + 1}`, { w: 1 })}
+  <g clip-path="url(#${p}-well)"><g class="dg-water">${water(p, { x0: WL, x1: WR, level: lv.start, bottom: FLOOR + 80, streaks: false, alpha: "t" })}</g></g>
+  <path class="dg-fall" d="M${WL - 1} 168q8 3 10 24"/>
+  <path fill="url(#${p}-conc)" d="M${WL - WW} ${G + SLAB}H${WL}V${CR - 5}H${WL - WW}ZM${WL - WW} ${INV + 5}H${WL}V${FLOOR}H${WL - WW}ZM${WR} ${G + SLAB}H${WR + WW}V${HEAD - 4.5}H${WR}ZM${WR} ${HEAD + 4.5}H${WR + WW}V${FLOOR}H${WR}ZM${WL - WW} ${FLOOR}H${WR + WW}V${FLOOR + 16}H${WL - WW}Z"/>
+  <path class="sc-cut-edge" d="M${WL - WW} ${G + SLAB}V${CR - 5}M${WL - WW} ${INV + 5}V${FLOOR + 16}H${WR + WW}V${HEAD + 4.5}M${WR + WW} ${HEAD - 4.5}V${G + SLAB}M${WL} ${G + SLAB}V${CR - 5}M${WL} ${INV + 5}V${FLOOR}H${WR}V${HEAD + 4.5}M${WR} ${HEAD - 4.5}V${G + SLAB}"/>
+  <path fill="url(#${p}-conc)" d="M${WL - WW - 10} ${G}H${WR + WW + 10}V${G + SLAB}H${WL - WW - 10}Z"/>
+  <rect x="194" y="${G - 0.5}" width="98" height="${SLAB + 0.5}" fill="url(#${p}-void)"/>
+  ${hatch(p, 194, 292, G - 1.8)}
+  <path class="sc-cut-edge" d="M${WL - WW - 10} ${G}H194M292 ${G}H${WR + WW + 10}V${G + SLAB}H${WL - WW - 10}Z"/>
+  ${vent(p, 310, G - 1, 22, 4)}
   ${beam.draw}
-  ${ltRadar(p, radar.cx, radar.y)}
-  ${label(12, 108, L.radar, { cls: "dg-b dg-h" })}${leader("M136 104L183 98")}
-  ${label(12, 196, L.inlet, { cls: "dg-m dg-h" })}
-  ${label(12, 334, L.pumps, { cls: "dg-b dg-h" })}${leader("M138 330L192 334")}
-  <path class="ef-cable" d="M74 86V94H190V${radar.y}M213 318V310H184V94"/>
-  ${ltCabinet(p, 44, 40, 60, 46)}
-  ${ltAntenna(60, 40)}
-  ${label(110, 64, L.manager, { cls: "dg-b" })}
-  <path class="dg-link" d="M72 24H276"/>
-  ${label(474, 28, L.data, { a: "end", cls: "dg-m" })}`;
-  const defs = `${efDefs(p)}${ltWaterGrad(p)}${beam.defs}<clipPath id="${p}-well"><rect x="${WL}" y="${G}" width="${WR - WL}" height="${FLOOR - G}"/></clipPath>`;
+  <path class="sc-hanger" d="M${radar.cx} ${G + SLAB}V${radar.y}"/>
+  ${lidottR(p, radar.cx, radar.y, 15)}
+  ${cable(`M${radar.cx} ${radar.y}V${G + SLAB + 1}`, { w: 1 })}
+  <path class="sc-conduit" d="M62 ${G + 3}V${G + 16}Q62 ${G + 22} 68 ${G + 22}H${WL - WW + 1}"/><path class="sc-conduit-hi" d="M62 ${G + 3}V${G + 16}Q62 ${G + 22} 68 ${G + 22}H${WL - WW + 1}"/>
+  ${kiosk(p, 34, 42, 52, 42, { antenna: 14 })}
+  <g>${level(lv.overflow, "alarm")}${level(lv.surcharge, "alarm")}${level(lv.start, "")}${level(lv.stop, "")}</g>
+  ${tag(344, lv.overflow + 4, L.overflow, { cls: "alarm" })}${tag(344, lv.surcharge + 4, L.surcharge, { cls: "alarm" })}
+  ${tag(344, lv.start + 4, L.start, { bold: true })}${tag(344, lv.stop + 4, L.stop, { bold: true })}
+  ${tag(474, 106, L.main, { a: "end" })}
+  ${tag(14, 126, L.radar, { bold: true })}${lead([[128, 122], [radar.cx - 8, radar.y + 12]])}
+  ${tag(14, 198, L.inlet)}
+  ${tag(14, 334, L.pumps, { bold: true })}${lead([[118, 330], [210 + 28 * 0.66 * 0.24, FLOOR - 28 * 0.44 - 25.2 * 0.52]])}
+  ${label(92, 64, L.manager, { cls: "dg-b" })}
+  <path class="dg-link" d="M60 14H${W - 196}"/>
+  ${label(474, 18, L.data, { a: "end", cls: "dg-m" })}`;
+  const defs = `${texDefs(p, 0.62)}${matDefs(p)}${instDefs(p)}${beam.defs}${wellClip}
+  <linearGradient id="${p}-wtr-t" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9db4a8" stop-opacity=".78"/><stop offset=".06" stop-color="#7f9a8d" stop-opacity=".62"/><stop offset=".5" stop-color="#5f7c70" stop-opacity=".58"/><stop offset="1" stop-color="#344d45" stop-opacity=".72"/></linearGradient>`;
   return svg(480, 372, body, defs);
 }
 
 /* ---- tradewaste: flow, sampling and quality at one discharge point ---- */
+// A factory's discharge point in section: the drain leaves the building and
+// runs to a metering pit on its way to the sewer. In the pit an area
+// velocity sensor sits on the invert and a quality sonde hangs in the flow;
+// a sampler beside the pit draws through its suction hose, and a kiosk with
+// a logger and antenna sends the readings on.
 function tradewaste(t) {
-  const L = t.labels, p = "ltx";
-  const G = 118, CROWN = 214, INV = 234, PA = 228, PB = 288; // the pit, inside faces
+  const L = t.labels, p = "rtx";
+  const W = 480, G = 122, CR = 212, INV = 234, T = 5, BOT = 304, PT = 7;
+  const PA = 232, PB = 290, open = 40, oc = 261;
+  const level = 227;
   const body = `
-  <rect x="0" y="${G}" width="480" height="${300 - G}" fill="url(#${p}-soil)"/>
-  <rect class="ef-road" x="0" y="${G - 5}" width="480" height="5"/>
-  <g class="dg-building">
-    <path class="dg-wall" d="M14 ${G}V66h120V${G}z"/>
-    <path class="dg-roof" d="M14 66V46l30-14v14l30-14v14l30-14v14l30-14v34z"/>
-    <path class="dg-glazing" d="M14 66V46l30-14v34zM74 66V46l30-14v34z"/>
-    <rect class="dg-stack" x="118" y="30" width="9" height="36" rx="1"/>
-    <path class="dg-wall-line" d="M14 66h120"/>
-    <g class="dg-window"><rect x="26" y="80" width="16" height="11" rx="1"/><rect x="54" y="80" width="16" height="11" rx="1"/><rect x="82" y="80" width="16" height="11" rx="1"/><rect x="110" y="80" width="16" height="11" rx="1"/></g>
-    <rect class="dg-door" x="56" y="98" width="14" height="20" rx="1"/>
-  </g>
-  ${label(76, 24, L.site, { a: "middle", cls: "dg-m" })}
-  <rect x="100" y="${G}" width="14" height="${CROWN - G}" fill="url(#${p}-air)"/>
-  <path fill="url(#${p}-cut)" d="M96 ${G}H100V${CROWN}H96ZM114 ${G}H118V${CROWN - 4}H114Z"/>
-  <path class="ef-edge" d="M96 ${G}V${CROWN}M100 ${G}V${CROWN}M114 ${G}V${CROWN - 4}M118 ${G}V${CROWN - 4}"/>
-  ${ltPipe(p, 96, 480, CROWN, INV, { gaps: [[96, 118], [PA - LW, PB + LW]], w: 4 })}
-  <rect x="${PA}" y="120" width="${PB - PA}" height="${INV - 120}" fill="url(#${p}-air)"/>
-  <path fill="url(#${p}-cut)" d="M${PA - LW} 120H${PA}V${CROWN - 4}H${PA - LW}ZM${PB} 120H${PB + LW}V${CROWN - 4}H${PB}Z"/>
-  <path class="ef-edge" d="M${PA - LW} 120V${CROWN - 4}M${PA} 120V${CROWN}M${PB} 120V${CROWN}M${PB + LW} 120V${CROWN - 4}"/>
-  <rect class="ef-frame" x="${PA - LW - 4}" y="${G - 7}" width="${PB - PA + 2 * LW + 8}" height="3.4" rx="1"/>
-  <rect class="ef-lid" x="${PA - 1}" y="${G - 8.6}" width="${PB - PA + 2}" height="3.2" rx="1"/>
-  ${ltWater(p, 100, 480, 225, INV)}
-  ${label(470, 206, L.sewer, { a: "end", cls: "dg-m dg-h" })}
-  ${ltAv(246, INV)}
-  <path class="ef-cable" d="M195 118V126H236V228H246"/>
-  <path class="ef-cable" d="M236 132H274V206"/>
-  <rect class="dg-probe" x="270" y="206" width="8" height="24" rx="3"/>
-  <path class="dg-probe-tip" d="M272 230h4"/>
-  ${ltCabinet(p, 178, 82, 34, 36)}
-  ${ltAntenna(195, 82)}
-  ${ltSampler(312, 72)}
-  <path class="dg-hose" d="M320 118C318 160 302 192 284 228"/>
-  <path class="dg-hose-flow" d="M284 228C302 192 318 160 320 118"/>
-  ${label(195, 48, L.data, { a: "middle", cls: "dg-b" })}
-  ${label(332, 62, L.sampling, { a: "middle", cls: "dg-b" })}
-  ${label(314, 186, L.quality, { cls: "dg-b dg-h" })}${leader("M310 182L281 202")}
-  ${label(176, 284, L.flow, { cls: "dg-b dg-h" })}${leader("M208 272L250 238")}`;
-  return svg(480, 300, body, `${efDefs(p)}${ltWaterGrad(p)}`);
+  ${building(p, 10, 152, 46, G)}
+  ${ground(p, { x0: 0, x1: W, y: G, bottom: BOT, holes: [frameSpan(open, oc)] })}
+  <rect x="106" y="${G}" width="12" height="${CR - G - 2}" fill="url(#${p}-pvcv)"/>
+  <path class="sc-edge-dk" d="M106 ${G}V${CR - 2}M118 ${G}V${CR - 2}"/>
+  ${pipeLong(p, { x0: 100, x1: W, crown: CR, inv: INV, t: 3, gaps: [[107, 117], [PA - PT, PB + PT]], open: [[PA, PB]], bed: 6, mat: "pvc", stain: level - 2 })}
+  <rect x="96" y="${CR - 3}" width="4" height="${INV - CR + 9}" fill="url(#${p}-pvcv)"/>
+  ${chamber(p, { a: PA, b: PB, crown: CR, inv: INV, t: PT, base: 8 })}
+  ${shaft(p, { a: PA, b: PB, top: G, bottom: CR, t: PT, ring: 30, slab: 7, open, oc, steps: [G + 34, G + 58], stepW: 16, wallTo: CR })}
+  ${chamberWalls(p, { a: PA, b: PB, top: CR, crown: CR, inv: INV, t: PT, base: 8 })}
+  ${cable(`M258 ${INV - 2}H284Q287 ${INV - 2} 287 ${INV - 6}V${G + 18}`, { w: 1 })}
+  ${water(p, { x0: 100, x1: W, level, bottom: INV })}
+  ${avSensor(p, 240, INV, 18)}
+  <path class="sc-probe-cable" d="M271 ${G + 14}V${CR + 2}"/>
+  ${sonde(p, 271, CR + 1, INV - 2.5, 6.4)}
+  <path class="sc-hanger" d="M${PB} ${G + 14}H271"/>
+  <path class="sc-hose" d="M${336 - 17} ${G - 20}C300 ${G - 20} 298 ${G - 6} 298 ${G + 2}V${G + 8}Q298 ${G + 14} 292 ${G + 18}Q280 ${G + 26} 280 ${G + 40}V${INV - 6}"/>
+  <path class="sc-hose-in sc-draw" d="M280 ${INV - 6}V${G + 40}Q280 ${G + 26} 292 ${G + 18}Q298 ${G + 14} 298 ${G + 8}V${G + 2}C298 ${G - 6} 300 ${G - 20} ${336 - 17} ${G - 20}"/>
+  <rect x="277.6" y="${INV - 7}" width="4.8" height="5" rx="1" fill="url(#${p}-ssv)"/>
+  <path class="sc-conduit" d="M186 ${G + 5}V${G + 12}Q186 ${G + 16} 190 ${G + 16}H${PA - PT}"/><path class="sc-conduit-hi" d="M186 ${G + 5}V${G + 12}Q186 ${G + 16} 190 ${G + 16}H${PA - PT}"/>
+  ${cable(`M${PA} ${G + 16}H271`, { w: 0.9 })}
+  ${kiosk(p, 168, 80, 36, 42, { antenna: 12 })}
+  ${sampler(p, 336, G, 34)}
+  <rect x="0" y="${BOT - 20}" width="${W}" height="21" fill="url(#${p}-fade)"/>
+  ${label(81, 30, L.site, { a: "middle", cls: "dg-m" })}
+  ${label(186, 52, L.data, { a: "middle", cls: "dg-b" })}
+  ${label(336, 52, L.sampling, { a: "middle", cls: "dg-b" })}
+  ${tag(318, 186, L.quality, { bold: true })}${lead([[316, 183], [274.6, 214]])}
+  ${tag(170, 278, L.flow, { bold: true })}${lead([[202, 272], [247, INV - 3]])}
+  ${tag(470, 202, L.sewer, { a: "end" })}
+  ${flowArrow(372, 222, "", { len: 30 })}`;
+  return svg(480, 304, body, `${texDefs(p, 0.55)}${matDefs(p)}${instDefs(p)}${fadeDef(p)}`);
 }
 
 /* ---- Sensor Fort: the four usual ways to hold a sensor in a sewer ---- */
@@ -258,59 +293,57 @@ function tradewaste(t) {
 // motion is CSS (site.css: .sfm-*), paused off screen with the other
 // illustrations.
 const SM = { w: 320, h: 168, crown: 52, inv: 138, surf: 100 };
-const RAGS = ["q8 5 18 2t20 4", "q10-5 20 0t18-2", "q7 6 16 3t14 5", "q9-4 18 1t16-1"];
 // a strand of rag that arrives n-th (1 to 4) and stays where it is drawn
-const smRag = (x, y, n, k = n, dx = -170) => `<path class="dg-rag sfm-in n${n}" style="--dx:${dx}px" d="M${x} ${y}${RAGS[k % 4]}"/>`;
-const smScene = (p, inner, { shaft = null, water = null } = {}) => {
-  const { w, h, crown, inv, surf } = SM;
+const smRag = (p, x, y, n, k = n, dx = -170) => `<g class="sfm-in n${n}" style="--dx:${dx}px">${rag(x, y, 20, { seed: `${p}${n}${k}`, tone: k, bend: 2.2 })}</g>`;
+const smScene = (p, inner, { shaft = null } = {}) => {
+  const { w, h, crown, inv, surf } = SM, T = 8;
   return svg(w, h, `
-  <rect width="${w}" height="${h}" fill="url(#${p}-soil)"/>
-  ${shaft ? `<rect x="${shaft[0]}" y="0" width="${shaft[1] - shaft[0]}" height="${crown}" fill="url(#${p}-air)"/>
-  <path fill="url(#${p}-cut)" d="M${shaft[0] - LW} 0H${shaft[0]}V${crown - LW}H${shaft[0] - LW}ZM${shaft[1]} 0H${shaft[1] + LW}V${crown - LW}H${shaft[1]}Z"/>
-  <path class="ef-edge" d="M${shaft[0] - LW} 0V${crown - LW}M${shaft[0]} 0V${crown}M${shaft[1]} 0V${crown}M${shaft[1] + LW} 0V${crown - LW}"/>
-  ${[14, 32].map((y) => `<path class="ef-step" d="M${shaft[1]} ${y}h-7v4h7"/>`).join("")}` : ""}
-  ${ltPipe(p, 0, w, crown, inv, { gaps: shaft ? [[shaft[0] - LW, shaft[1] + LW]] : [] })}
-  ${water || ltWater(p, 0, w, surf, inv)}
+  <rect width="${w}" height="${crown - T}" fill="url(#${p}-soil)"/><rect y="${inv + T}" width="${w}" height="${h - inv - T}" fill="url(#${p}-soil)"/>
+  ${pipeLong(p, { x0: 0, x1: w, crown, inv, t: T, joints: [40, 290], gaps: shaft ? [[shaft[0], shaft[1]]] : [], bed: 0, stain: surf - 3 })}
+  ${shaft ? `<linearGradient id="${p}-sh" href="#${p}-in-shaft" gradientUnits="userSpaceOnUse" x1="${shaft[0]}" y1="0" x2="${shaft[1]}" y2="0"/>
+  <rect x="${shaft[0]}" y="0" width="${shaft[1] - shaft[0]}" height="${crown}" fill="url(#${p}-wall)"/><rect x="${shaft[0]}" y="0" width="${shaft[1] - shaft[0]}" height="${crown}" fill="url(#${p}-sh)"/>
+  ${stepIron(p, (shaft[0] + shaft[1]) / 2 + 10, 18, 16)}
+  <path fill="url(#${p}-conc)" d="M${shaft[0] - T} 0H${shaft[0]}V${crown}H${shaft[0] - T}ZM${shaft[1]} 0H${shaft[1] + T}V${crown}H${shaft[1]}Z"/>
+  <path class="sc-cut-edge" d="M${shaft[0] - T} 0V${crown - T}M${shaft[0]} 0V${crown}M${shaft[1]} 0V${crown}M${shaft[1] + T} 0V${crown - T}"/>` : ""}
+  ${water(p, { x0: 0, x1: w, level: surf, bottom: inv })}
   ${inner}
-  <path class="dg-arrow" d="M276 ${inv - 9}h22m-6-4 6 4-6 4"/>
-  <g class="sfm-x"><circle cx="${w - 22}" cy="22" r="12"/><path d="M${w - 27} 17l10 10m0-10l-10 10"/></g>`, `${efDefs(p)}${ltWaterGrad(p)}`);
+  <path class="sm-arrow" d="M272 ${inv - 9}h26m-6-4 6 4-6 4"/>
+  <g class="sfm-x"><circle cx="${w - 22}" cy="22" r="12"/><path d="M${w - 27} 17l10 10m0-10l-10 10"/></g>`, `${efDefs(p, { k: 0.5 })}`);
 };
 const SF_METHODS = {
-  // a probe hung down the manhole on a chain or its own cable: it swings in
-  // the flow, and rag collects on the probe and the chain
+  // a probe hung down the manhole on a chain: it swings in the flow, and
+  // rag collects on the probe and the chain
   chain: (p) => smScene(p, `
   <g class="sfm-swing" style="transform-origin:160px 0">
-    <path class="dg-chain" d="M160 0V108"/>
-    <rect class="dg-probe" x="151" y="106" width="18" height="24" rx="4"/><path class="dg-probe-tip" d="M156 131h8"/>
-    ${smRag(154, SM.surf + 2, 1)}${smRag(150, 110, 2)}${smRag(153, 119, 3)}${smRag(151, 127, 4)}
+    <path class="sm-chain" d="M160 0V106"/><path class="sm-chain l" d="M160 0V106"/>
+    ${sonde(p, 160, 104, 132, 10)}
+    ${smRag(p, 150, SM.surf + 2, 1)}${smRag(p, 148, 110, 2)}${smRag(p, 151, 119, 3)}${smRag(p, 149, 126, 4)}
   </g>`, { shaft: [128, 192] }),
-  // a probe strapped to a ring in the pipe, as a flow sensor is: the probe,
-  // its carrier and its cable all sit in the flow
+  // a sensor strapped to a band in the pipe, as a flow sensor is: the
+  // sensor, its band and its cable all sit in the flow
   ring: (p) => smScene(p, `
-  <path class="dg-band-ring" d="M156 ${SM.crown + 1.5}h14M144 ${SM.inv - 1.5}h54"/>
-  <path class="dg-cable" d="M152 ${SM.inv - 8}C120 ${SM.inv - 3} 84 ${SM.inv - 11} 0 ${SM.inv - 6}"/>
-  <rect class="dg-probe" x="150" y="${SM.inv - 16}" width="40" height="14" rx="4"/><path class="dg-probe-tip" d="M190 ${SM.inv - 9}h4"/>
-  <path class="dg-clamp" d="M158 ${SM.inv - 18}h6v18h-6zM176 ${SM.inv - 18}h6v18h-6z"/>
-  ${smRag(146, SM.inv - 19, 1)}${smRag(156, SM.inv - 25, 2, 3)}${smRag(86, SM.inv - 10, 3, 1, -110)}${smRag(60, SM.inv - 15, 4, 0, -90)}`),
-  // a bracket bolted to the manhole wall, reaching down into the flow: it has
-  // to be drilled and fixed from inside, and then it catches rag itself
+  <rect x="146" y="${SM.crown}" width="20" height="2" fill="url(#${p}-ss)"/><rect x="140" y="${SM.inv - 2}" width="58" height="2" fill="url(#${p}-ss)"/>
+  ${cable(`M152 ${SM.inv - 4}C120 ${SM.inv - 3} 84 ${SM.inv - 6} 0 ${SM.inv - 4}`, { w: 1.6 })}
+  ${avSensor(p, 150, SM.inv - 1.6, 40)}
+  ${smRag(p, 142, SM.inv - 10, 1)}${smRag(p, 152, SM.inv - 14, 2, 3)}${smRag(p, 86, SM.inv - 6, 3, 1, -110)}${smRag(p, 60, SM.inv - 8, 4, 0, -90)}`),
+  // a bracket bolted to the manhole wall, reaching down into the flow: it
+  // has to be drilled and fixed from inside, and then it catches rag itself
   bracket: (p) => smScene(p, `
-  <path class="dg-bracket" d="M128 10h16v118h-5V42h-11z"/>
-  <circle class="dg-bolt" cx="133" cy="18" r="1.9"/><circle class="dg-bolt" cx="133" cy="34" r="1.9"/>
-  <rect class="dg-probe" x="144" y="112" width="24" height="14" rx="4"/><path class="dg-probe-tip" d="M168 119h4"/>
-  <path class="dg-clamp" d="M150 110h6v18h-6z"/>
-  ${smRag(137, SM.surf + 2, 1)}${smRag(138, 109, 2)}${smRag(137, 118, 3)}${smRag(146, 108, 4, 1)}`, { shaft: [128, 192] }),
+  <path d="M128 10h14v118h-5V40h-9z" fill="url(#${p}-galvv)"/><path class="sc-edge-dk" d="M128 10h14v118h-5V40h-9z"/>
+  <circle class="sc-bolt" cx="133" cy="18" r="2"/><circle class="sc-bolt" cx="133" cy="32" r="2"/>
+  <rect x="140" y="112" width="34" height="13" rx="5" fill="url(#${p}-blk)"/><rect x="174" y="114.5" width="5" height="8" rx="1.5" fill="url(#${p}-ss)"/>
+  <rect x="148" y="109" width="6" height="19" rx="1" fill="url(#${p}-galvv)"/>
+  ${smRag(p, 131, SM.surf + 2, 1)}${smRag(p, 132, 109, 2)}${smRag(p, 131, 118, 3)}${smRag(p, 142, 107, 4, 1)}`, { shaft: [128, 192] }),
   // a pump lifting a sample up a line to a cabinet: the intake blocks, the
   // flow stops, and there is a pump, a line and a cabinet to look after
   cabinet: (p) => smScene(p, `
-  <path class="dg-hose" d="M158 126V40Q158 22 176 22"/>
-  <path class="dg-hose-flow sfm-choke" d="M158 126V40Q158 22 176 22"/>
-  <rect class="dg-inst" x="174" y="10" width="26" height="25" rx="3"/><path class="dg-inst-print" d="M180 17h13M180 22h9"/><circle class="sfm-led" cx="193" cy="29" r="2"/>
-  <path class="dg-hose" d="M200 22h14"/><path class="dg-hose-flow sfm-choke" d="M200 22h14"/>
-  <rect class="dg-cell" x="214" y="11" width="34" height="22" rx="3"/><rect class="dg-foul sfm-grow" x="216" y="13" width="30" height="18" rx="2"/><rect class="dg-probe" x="227" y="3" width="8" height="20" rx="2.5"/>
-  <path class="dg-intake" d="M153 126h10v6h-10z"/>
-  ${lumps([[146, 128, 0, 0, "sfm-in n1"], [156, 133, 1, 0, "sfm-in n2"], [162, 126, 2, 0, "sfm-in n3"]])}
-  ${smRag(146, 124, 2, 1)}${smRag(150, 134, 4, 3)}`, { shaft: [128, 262] }),
+  <path class="sm-hose" d="M158 126V40Q158 22 176 22"/><path class="dg-hose-flow sfm-choke" d="M158 126V40Q158 22 176 22"/>
+  <rect x="174" y="9" width="28" height="26" rx="1.5" fill="url(#${p}-brushed)"/><path class="sc-seam" d="M176 12h24v20h-24z"/><rect x="179" y="15" width="12" height="7" fill="#2a3236"/><circle class="sfm-led" cx="196" cy="29" r="2"/>
+  <path class="sm-hose" d="M202 22h12"/><path class="dg-hose-flow sfm-choke" d="M202 22h12"/>
+  <rect x="214" y="11" width="34" height="22" rx="1.5" fill="url(#${p}-brushed)"/><rect x="217" y="14" width="28" height="16" fill="#cfe3e6" fill-opacity=".6"/><rect class="dg-foul sfm-grow" x="217" y="14" width="28" height="16"/><rect x="227" y="3" width="8" height="21" rx="2" fill="url(#${p}-blkv)"/>
+  <rect x="153" y="125" width="10" height="7" rx="1.5" fill="url(#${p}-ssv)"/>
+  ${[[146, 128, 0], [156, 133, 1], [162, 126, 2]].map(([x, y, k]) => `<g class="sfm-in n${k + 1}">${grease(p, x, y, 4.2, 2.6)}</g>`).join("")}
+  ${smRag(p, 144, 124, 2, 1)}${smRag(p, 148, 133, 4, 3)}`, { shaft: [128, 262] }),
 };
 export const sfMethod = (kind) => SF_METHODS[kind](`sfm-${kind}`);
 
@@ -337,7 +370,9 @@ const sfSensor = (X, Y, { tip = 349, low = 29, len = 190, dia = 28.5 } = {}) => 
 };
 // the mount as a solid body, from the side: teal walls, the dark boot at the
 // nose and the flexible strip along the top
-const sfBody = (X, Y) => `<path class="sfd-body" d="${sfWall(X, Y)}"/><path class="sfd-boot" d="${sfBoot(X, Y)}"/><path class="sfd-strip" d="${sfStrip(X, Y)}"/>`;
+const sfBody = (X, Y, p) => (p
+  ? `<path d="${sfWall(X, Y)}" fill="url(#${p}-sft)"/><path d="${sfWall(X, Y)}" fill="url(#${p}-sfsh)"/><path d="${sfBoot(X, Y)}" fill="url(#${p}-sfboot)"/><path d="${sfStrip(X, Y)}" fill="url(#${p}-sfstrip)"/><path class="sfd-edge" d="${sfWall(X, Y)}"/>`
+  : `<path class="sfd-body" d="${sfWall(X, Y)}"/><path class="sfd-boot" d="${sfBoot(X, Y)}"/><path class="sfd-strip" d="${sfStrip(X, Y)}"/>`);
 // a dimension: a line between two points with a slash at each end, and its
 // figure beside it
 const sfDim = (x1, y1, x2, y2, text, { dx = 0, dy = -6, a = "middle" } = {}) => `
@@ -346,6 +381,17 @@ const sfDim = (x1, y1, x2, y2, text, { dx = 0, dy = -6, a = "middle" } = {}) => 
 const sfDot = (x, y) => `<circle class="sfd-dot" cx="${x}" cy="${y}" r="4.2"/>`;
 const sfBadge = (n, bx, by, dx, dy) => `<path class="sfd-lead" d="M${bx} ${by}L${dx} ${dy}"/>${sfDot(dx, dy)}<g class="sf-b" style="transform-origin:${bx}px ${by}px"><circle cx="${bx}" cy="${by}" r="13"/><text x="${bx}" y="${by}">${n}</text></g>`;
 
+// The mount's materials, after EDS's renders: teal moulded polymer lit from
+// above (a sheen along its top, deeper where it meets the floor), the
+// paler curved cheek, the black flexible boot and the grey lip strips.
+const sfMat = (p) => `
+  <linearGradient id="${p}-sft" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5fbfb3"/><stop offset=".12" stop-color="#3f9f95"/><stop offset=".6" stop-color="#2f8a81"/><stop offset="1" stop-color="#1f6b63"/></linearGradient>
+  <linearGradient id="${p}-sfsh" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#000" stop-opacity=".1"/><stop offset=".3" stop-color="#fff" stop-opacity=".06"/><stop offset=".7" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".14"/></linearGradient>
+  <linearGradient id="${p}-cheek" x1="0" y1="0" x2=".3" y2="1"><stop offset="0" stop-color="#86dccf"/><stop offset=".4" stop-color="#55b9ac"/><stop offset="1" stop-color="#2f8a81"/></linearGradient>
+  <linearGradient id="${p}-sfboot" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3b4244"/><stop offset=".35" stop-color="#626a6c"/><stop offset="1" stop-color="#2b3133"/></linearGradient>
+  <linearGradient id="${p}-sfstrip" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c7ccce"/><stop offset="1" stop-color="#7f8789"/></linearGradient>
+  <linearGradient id="${p}-benchf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".2"/><stop offset="1" stop-color="#000" stop-opacity=".22"/></linearGradient>
+  <linearGradient id="${p}-mouth" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset=".5" stop-color="#000" stop-opacity=".22"/><stop offset="1" stop-color="#000" stop-opacity=".5"/></linearGradient>`;
 // The mount in the chase, in section along the centre line with the near wall
 // cut away: the manhole floor and the wall above the outlet, the far wall of
 // the mount with its cheek and the sensor inside it, and the cable going up
@@ -361,35 +407,41 @@ export function sfSection(p = "sfs") {
   const bed = [[0, INV], [N, INV], [N + 1, INV - 1.3], [N + 47 * K, INV - LIFT], [XS, INV - LIFT], [XS, INV], [W, INV]];
   // the water runs a little faster between the cheeks and out past the tips
   const pace = [[0, 1], [N + 230, 1], [XS - 60, 1.5], [XS + 40, 1.55], [W, 1.3]];
-  const defs = `${efDefs(p)}
-  <linearGradient id="${p}-wall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3c9d93"/><stop offset="1" stop-color="#2a7b74"/></linearGradient>
-  <linearGradient id="${p}-cheek" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6fcdc2"/><stop offset=".45" stop-color="#49b1a6"/><stop offset="1" stop-color="#2f8a82"/></linearGradient>
-  <linearGradient id="${p}-boot" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6a7173"/><stop offset="1" stop-color="#3b4142"/></linearGradient>
-  <linearGradient id="${p}-bore" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#dfe7e5"/><stop offset="1" stop-color="#f3f7f6"/></linearGradient>
-  <linearGradient id="${p}-sw" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#78cdc2" stop-opacity=".3"/><stop offset="1" stop-color="#0a6860" stop-opacity=".55"/></linearGradient>`;
+  const defs = `${efDefs(p, { k: 1.5 })}${sfMat(p)}
+  <linearGradient id="${p}-ins" href="#${p}-in-shaft" gradientUnits="userSpaceOnUse" x1="-200" y1="0" x2="${W + 200}" y2="0"/>
+  <linearGradient id="${p}-inb" href="#${p}-in-pipe" gradientUnits="userSpaceOnUse" x1="0" y1="${OBV}" x2="0" y2="${INV}"/>
+  <linearGradient id="${p}-sw" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9db4a8" stop-opacity=".4"/><stop offset="1" stop-color="#344d45" stop-opacity=".7"/></linearGradient>`;
   const back = `<defs>${defs}</defs>
-  <rect width="${W}" height="${H}" fill="url(#${p}-air)"/>
-  <path class="sfd-bench" d="M0 ${f1(BENCH)}H${XS}V${INV}H0Z"/><path class="ef-edge" d="M0 ${f1(BENCH)}H${XS}"/>
-  <rect x="${XS}" y="${OBV}" width="${W - XS}" height="${INV - OBV}" fill="url(#${p}-bore)"/>
+  <rect width="${W}" height="${H}" fill="url(#${p}-wall)"/><rect width="${W}" height="${H}" fill="url(#${p}-ins)"/>
+  <rect width="${W}" height="${f1(BENCH)}" fill="#000" fill-opacity=".16"/>
+  <path class="sc-bore-joint" d="M0 120H${XS}"/><path class="sc-bore-joint l" d="M0 121.2H${XS}"/>
+  <path fill="url(#${p}-wall)" d="M0 ${f1(BENCH)}H${XS}V${INV}H0Z"/><path fill="url(#${p}-benchf)" d="M0 ${f1(BENCH)}H${XS}V${INV}H0Z"/>
+  <path class="sc-bench-edge" d="M0 ${f1(BENCH)}H${XS}"/>
+  <rect x="${XS}" y="${OBV}" width="${W - XS}" height="${INV - OBV}" fill="url(#${p}-wall)"/><rect x="${XS}" y="${OBV}" width="${W - XS}" height="${INV - OBV}" fill="url(#${p}-inb)"/>
+  <rect x="${XS}" y="${OBV}" width="${W - XS}" height="${INV - OBV}" fill="url(#${p}-mouth)"/>
   <path fill="url(#${p}-cut)" d="M0 ${INV}H${W}V${H}H0ZM${XS} 0H${W}V${OBV}H${XS}Z"/>
-  <path class="ef-edge" d="M0 ${INV}H${W}M${XS} 0V${OBV}H${W}"/>
-  <path class="ef-step" d="M${XS} 34h-12v6h12"/>
-  <path d="${sfWall(X, Y)}" fill="url(#${p}-wall)"/>
-  <path d="${sfBoot(X, Y)}" fill="url(#${p}-boot)"/>
+  <path class="sc-cut-edge" d="M0 ${INV}H${W}M${XS} 0V${OBV}H${W}"/>
+  ${stepIron(p, XS - 40, 34, 34).replace(/ellipse cx="[^"]+"/, (m) => m)}
+  <path d="${sfWall(X, Y)}" fill="url(#${p}-sft)"/>
+  <path d="${sfWall(X, Y)}" fill="url(#${p}-sfsh)"/>
+  <path d="${sfBoot(X, Y)}" fill="url(#${p}-sfboot)"/>
+  <path class="sfd-boot-hi" d="M${X(3)} ${Y(128)}H${X(45)}"/>
   <path d="M${X(124)} ${Y(3)}C${X(124)} ${Y(72)} ${X(138)} ${Y(113)} ${X(170)} ${Y(111)}L${X(345)} ${Y(64)}V${Y(3)}Z" fill="url(#${p}-cheek)"/>
-  <path class="sfd-strip" d="${sfStrip(X, Y)}"/>
+  <path class="sfd-cheek-hi" d="M${X(127)} ${Y(20)}C${X(127)} ${Y(72)} ${X(140)} ${Y(108)} ${X(170)} ${Y(107)}L${X(340)} ${Y(63)}"/>
+  <path d="${sfStrip(X, Y)}" fill="url(#${p}-sfstrip)"/>
+  <path class="sfd-rim" d="M${X(47)} ${Y(134.6)}H${X(262)}C${X(292)} ${Y(134.6)} ${X(298)} ${Y(174.6)} ${X(326)} ${Y(174.6)}H${X(345)}"/>
   <path class="sfd-route" d="${sfRoute(X, Y)}"/>
   <path class="sfd-sensor" d="${sfSensor(X, Y)}"/>
   <path class="sfd-tip" d="${sfSensor(X, Y, { tip: 351, len: 6, dia: 15 })}"/>
   <path class="sfd-edge" d="${sfWall(X, Y)}"/>
   <path class="sfd-floor b" d="M${X(0)} ${Y(0)}V${Y(0.8)}L${X(47)} ${Y(3)}V${Y(0)}Z"/><path class="sfd-floor" d="M${X(47)} ${Y(0)}V${Y(3)}H${X(345)}V${Y(0)}Z"/>
   <path class="sfd-tether" d="M${X(336)} ${Y(175)}C${X(336)} ${Y(205)} ${X(339)} ${Y(225)} ${X(339)} ${Y(250)}"/>
-  <path class="sfd-cable" d="M${X(323)} ${Y(175)}C${X(323)} ${Y(200)} ${X(330)} ${Y(218)} ${X(330)} ${Y(250)}"/>`;
+  ${cable(`M${X(323)} ${Y(175)}C${X(323)} ${Y(200)} ${X(330)} ${Y(218)} ${X(330)} ${Y(250)}`, { w: 8 })}`;
   const still = `<path fill="url(#${p}-sw)" d="M${surf.map(([x, y]) => `${x} ${y}`).join("L")}L${[...bed].reverse().map(([x, y]) => `${f1(x)} ${f1(y)}`).join("L")}Z"/><path class="ef-surf" d="M${surf.map(([x, y]) => `${x} ${y}`).join("L")}"/>`;
   const front = `
-  <text class="sfd-where" x="16" y="${f1(BENCH + 22)}">Benching</text>
-  <text class="sfd-where" x="${W - 16}" y="30" text-anchor="end">Manhole wall</text>
-  <text class="sfd-where" x="${W - 16}" y="${OBV + 24}" text-anchor="end">Outlet pipe</text>
+  ${tag(18, f1(BENCH + 26), "Benching", { size: 13 })}
+  ${tag(W - 18, 32, "Manhole wall", { a: "end", size: 13 })}
+  ${tag(W - 18, OBV + 28, "Outlet pipe", { a: "end", size: 13 })}
   <text class="sf-say" x="22" y="286">Flow</text><path class="dg-arrow" d="M62 281h30m-8-5 8 5-8 5"/>
   ${sfBadge(1, 196, 348, N + 4, INV - 4)}
   ${sfBadge(2, 470, 236, 470, 352)}
@@ -429,23 +481,24 @@ export function sfInstall(p = "sfi") {
   const X = (mm) => f1(mm * K), Y = (mm) => f1(-mm * K);
   const body = `
   <style>${keys(`${p}-mount`, (f) => `translate(${f1(f.x)}px,${f1(f.y)}px) rotate(${f1(-f.a)}deg)`)}${keys(`${p}-rope`, (f) => `translate(${f1(f.hx)}px,${f1(f.hy)}px)`)}</style>
-  <rect width="${W}" height="${H}" fill="url(#${p}-air)"/>
-  <path class="sfd-bench" d="M0 ${f1(F - 147 * K)}H${WALL}V${F}H0Z"/><path class="ef-edge" d="M0 ${f1(F - 147 * K)}H${WALL}"/>
-  <rect x="${WALL}" y="${F - 150 * K}" width="${W - WALL}" height="${150 * K}" fill="url(#${p}-bore)"/>
+  <rect width="${W}" height="${H}" fill="url(#${p}-wall)"/><rect width="${W}" height="${H}" fill="url(#${p}-ins)"/>
+  <rect width="${W}" height="${f1(F - 147 * K)}" fill="#000" fill-opacity=".16"/>
+  <path fill="url(#${p}-wall)" d="M0 ${f1(F - 147 * K)}H${WALL}V${F}H0Z"/><path fill="url(#${p}-benchf)" d="M0 ${f1(F - 147 * K)}H${WALL}V${F}H0Z"/><path class="sc-bench-edge" d="M0 ${f1(F - 147 * K)}H${WALL}"/>
+  <rect x="${WALL}" y="${F - 150 * K}" width="${W - WALL}" height="${150 * K}" fill="url(#${p}-wall)"/><rect x="${WALL}" y="${F - 150 * K}" width="${W - WALL}" height="${150 * K}" fill="url(#${p}-inb)"/><rect x="${WALL}" y="${F - 150 * K}" width="${W - WALL}" height="${150 * K}" fill="url(#${p}-mouth)"/>
   <path fill="url(#${p}-cut)" d="M0 ${F}H${W}V${H}H0ZM${WALL} 0H${W}V${F - 150 * K}H${WALL}Z"/>
-  <path class="ef-edge" d="M0 ${F}H${W}M${WALL} 0V${F - 150 * K}H${W}"/>
-  <path class="ef-step" d="M${WALL} 40h-11v6h11M${WALL} 110h-11v6h11"/>
-  ${ltWater(p, 0, W, F - 44, F)}
-  <text class="sfd-where" x="${W - 14}" y="26" text-anchor="end">Manhole wall</text>
-  <text class="sfd-where" x="${W - 14}" y="${F - 150 * K + 22}" text-anchor="end">Outlet pipe</text>
-  <text class="sfd-where" x="14" y="${f1(F - 147 * K - 9)}">Chase</text>
+  <path class="sc-cut-edge" d="M0 ${F}H${W}M${WALL} 0V${F - 150 * K}H${W}"/>
+  ${stepIron(p, WALL - 34, 44, 28)}${stepIron(p, WALL - 34, 114, 28)}
+  ${water(p, { x0: 0, x1: W, level: F - 44, bottom: F })}
+  ${tag(W - 16, 28, "Manhole wall", { a: "end", size: 12 })}
+  ${tag(W - 16, F - 150 * K + 26, "Outlet pipe", { a: "end", size: 12 })}
+  ${tag(16, f1(F - 147 * K - 12), "Chase", { size: 12 })}
   <g class="sfi-go">
     <g class="sfi-rope" style="animation-name:${p}-rope;transform:translate(${f1(end.hx)}px,${f1(end.hy)}px)"><path class="sfd-rope sfi-taut" d="M0 0V-${H}"/></g>
     <path class="sfd-rope sfi-slack" d="M${f1(end.hx)} ${f1(end.hy)}C${f1(end.hx - 30)} ${f1(end.hy - 60)} ${WALL - 46} 150 ${WALL - 8} 113V0"/>
-    <g class="sfi-mount" style="animation-name:${p}-mount;transform:translate(${f1(end.x)}px,${f1(end.y)}px)">${sfBody(X, Y)}</g>
+    <g class="sfi-mount" style="animation-name:${p}-mount;transform:translate(${f1(end.x)}px,${f1(end.y)}px)">${sfBody(X, Y, p)}</g>
   </g>
   <path class="dg-arrow sfi-push" d="M34 ${F - 22}h64m-9-6 9 6-9 6"/>`;
-  return svg(W, H, body, `${efDefs(p)}${ltWaterGrad(p)}<linearGradient id="${p}-bore" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#dfe7e5"/><stop offset="1" stop-color="#f3f7f6"/></linearGradient>`);
+  return svg(W, H, body, `${efDefs(p, { k: 1 })}${sfMat(p)}<linearGradient id="${p}-ins" href="#${p}-in-shaft" gradientUnits="userSpaceOnUse" x1="-160" y1="0" x2="${W + 160}" y2="0"/><linearGradient id="${p}-inb" href="#${p}-in-pipe" gradientUnits="userSpaceOnUse" x1="0" y1="${F - 150 * K}" x2="0" y2="${F}"/>`);
 }
 
 // Where the SF 150 fits: the chase from the side with the three figures to
@@ -466,7 +519,7 @@ export function sfSite(p = "sfw") {
   ${sfDim(74, INV, 74, f1(TOP), "walls 137 min", { dx: 9, dy: 4, a: "start" })}
   ${sfDim(f1(XS - 350 * K), INV + 42, XS, INV + 42, "straight chase 350 min", { dy: 19 })}
   <path class="sfd-ext" d="M${f1(XS - 350 * K)} ${INV + 20}V${INV + 48}M${XS} ${INV + 20}V${INV + 48}"/>
-  ${sfDim(f1(XS + 112), INV, f1(XS + 112), f1(OBV), "obvert 165 max", { dx: 9, dy: 4, a: "start" })}`, efDefs(p));
+  ${sfDim(f1(XS + 112), INV, f1(XS + 112), f1(OBV), "obvert 165 max", { dx: 9, dy: 4, a: "start" })}`, efDefsFlat(p));
   // across the chase: a U channel in the benching, the mount in it
   const C = 150, R = 73.45, WAT = 54, IR = R - 15, half = Math.sqrt(IR ** 2 - (IR + 15 - WAT) ** 2);
   const end = svg(300, 290, `
@@ -476,7 +529,7 @@ export function sfSite(p = "sfw") {
   <path class="sfd-water" d="M${f1(C - half)} ${238 - WAT}A${IR} ${IR} 0 0 0 ${f1(C + half)} ${238 - WAT}Z"/>
   <path class="sfd-strip" d="M75 101h17v3H75zM208 101h17v3h-17z"/>
   <path class="sfd-ext" d="M75 78V38M225 78V38"/>
-  ${sfDim(75, 46, 225, 46, "147 to 153", { dy: -9 })}`, efDefs(`${p}e`));
+  ${sfDim(75, 46, 225, 46, "147 to 153", { dy: -9 })}`, efDefsFlat(`${p}e`));
   return { side, end };
 }
 
@@ -564,7 +617,10 @@ const EF = {
   depth: [16, 23.6, 0, 1], vel: [40, 25.8, -0.77, 0.64], us: [50.4, 38.4, -0.8, 0.6], press: [59.5, 46.6, 0, 1],
 };
 const turn = (dx, dy, a) => { const r = (a * Math.PI) / 180; return [dx * Math.cos(r) - dy * Math.sin(r), dx * Math.sin(r) + dy * Math.cos(r)]; };
-export function efDefs(p, { dark = false } = {}) {
+// The flat materials of the earlier line drawings: hatched cut faces and a
+// stippled soil. Kept for the dimension drawings (engineering drawings by
+// nature) and the FlowSense screen, which draws a schematic as the software does.
+export function efDefsFlat(p, { dark = false } = {}) {
   const c = dark
     ? { soil: "#0b3532", stone: ["#0f403b", "#0d3b37"], cut: "#123f3b", line: "#1f5650", air: ["#021614", "#052421"] }
     : { soil: "#f2eee4", stone: ["#e3dbc9", "#e9e2d3"], cut: "#e6ebea", line: "#b4c2c0", air: ["#eaf1ef", "#fbfdfc"] };
@@ -578,29 +634,24 @@ export function efDefs(p, { dark = false } = {}) {
   <linearGradient id="${p}-gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f6dc96"/><stop offset=".55" stop-color="#d1a24b"/><stop offset="1" stop-color="#94681f"/></linearGradient>
   <linearGradient id="${p}-steel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f4f7f7"/><stop offset="1" stop-color="#97a4a3"/></linearGradient>`;
 }
+// The cutaway kit's materials (scene.mjs) under the names the E-Flow 3
+// drawings use: the textures at scale k, the metals, plastics and water,
+// and the old names (cut, air, body, face, gold, steel) mapped onto them.
+export function efDefs(p, { k = 0.75 } = {}) {
+  const h = (s) => [...s].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7);
+  const w = f1(92 * k), o = h(p);
+  return `${texDefs(p, k)}${matDefs(p)}${instDefs(p)}
+  <pattern id="${p}-cut" patternUnits="userSpaceOnUse" width="${w}" height="${w}" patternTransform="translate(${o % 61} ${(o >> 5) % 53})"><image href="@root/assets/img/tex/concrete.webp" width="${w}" height="${w}" preserveAspectRatio="none"/></pattern>
+  <linearGradient id="${p}-air" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3e4446"/><stop offset="1" stop-color="#5d6466"/></linearGradient>
+  <linearGradient id="${p}-body" href="#${p}-blk"/><linearGradient id="${p}-face" href="#${p}-glz"/><linearGradient id="${p}-gold" href="#${p}-brass"/><linearGradient id="${p}-steel" href="#${p}-ss"/>`;
+}
 // The sensor with its upstream end at the crown (x, y), scaled by s, and its
 // cable running on along `cable` (a path continuing from the gland).
-export function efSensor(p, x, y, s, { cable = "" } = {}) {
+export function efSensor(p, x, y, s, { cable: run = "", detail = 1 } = {}) {
   const at = ([u, v, dx, dy]) => [x + u * s, y + v * s, dx, dy];
   const draw = `
-  ${cable ? `<path class="ef-cable" d="M${f1(x + 83 * s)} ${f1(y + 9 * s)}${cable}"/>` : ""}
-  <g class="ef-sensor" transform="translate(${x} ${y}) scale(${s})">
-    <rect x="4" y="-3.4" width="70" height="3.6" rx=".8" fill="url(#${p}-steel)" class="ef-bracket"/>
-    <circle class="ef-bolt" cx="10" cy="-1.6" r="1.1"/><circle class="ef-bolt" cx="68" cy="-1.6" r="1.1"/>
-    <path d="${EF.body}" fill="url(#${p}-body)" class="ef-body"/>
-    <path class="ef-shine" d="M10 1.6H68"/>
-    <path d="M27.6 18L47.6 34.2L52 30.6L35.6 18Z" fill="url(#${p}-face)" class="ef-face"/>
-    <path class="ef-grille" d="M35 19.4l12.6 10.2M39 19.4l11 8.9"/>
-    <path d="M10.2 18A5.8 5.8 0 0 0 21.8 18Z" fill="url(#${p}-dome)" class="ef-dome"/>
-    <ellipse class="ef-glint" cx="14" cy="19.5" rx="1.7" ry=".8"/>
-    <rect class="ef-label" x="44.6" y="4.2" width="21.4" height="9.8" rx="1.2"/>
-    <rect class="ef-mark" x="44.6" y="4.2" width="2.8" height="9.8" rx="1"/>
-    <path class="ef-print" d="M49.6 7.4h9.4M49.6 9.7h13.4M49.6 11.8h7"/>
-    <path d="M48.2 33.8L51 43.4L53.6 42.4L50.9 32.8Z" fill="url(#${p}-gold)" class="ef-us"/>
-    <ellipse cx="59.5" cy="46.3" rx="3.3" ry="1.2" fill="url(#${p}-steel)" class="ef-port"/>
-    <rect class="ef-gland" x="77.6" y="4.8" width="6" height="8.4" rx="1.2"/>
-    <path class="ef-rib" d="M79.6 4.8v8.4M81.6 4.8v8.4"/>
-  </g>`;
+  ${run ? cable(`M${f1(x + 89.5 * s)} ${f1(y + 9 * s)}${run}`, { w: f1(Math.max(1.1, 1.6 * s)) }) : ""}
+  <g class="ef-sensor" transform="translate(${x} ${y}) scale(${s})">${eflow3(p, { detail })}</g>`;
   return { draw, depth: at(EF.depth), vel: at(EF.vel), us: at(EF.us), press: at(EF.press) };
 }
 // A beam from an element: a cone of the given half angle out to a level
@@ -649,7 +700,7 @@ const lumps = (list) => list.map(([x, y, k, d, cls = ""]) => `<path class="dg-so
 const efPin = (x, y, n, pair) => `<g class="dg-pin ${pair}"><circle cx="${f1(x)}" cy="${f1(y)}" r="9"/><text x="${f1(x)}" y="${f1(y + 4.2)}" text-anchor="middle">${n}</text></g>`;
 // What the sensor sees, as a lit status: amber for the radar pair, blue for
 // ultrasonic and pressure.
-const efStatus = (x, y, text, kind) => `<circle class="dg-led-g ${kind}" cx="${x + 5}" cy="${y - 4}" r="8"/><circle class="dg-led ${kind}" cx="${x + 5}" cy="${y - 4}" r="3.6"/>${label(x + 17, y, text, { cls: "dg-b dg-h" })}`;
+const efStatus = (x, y, text, kind) => `<g class="sc-tag b st" style="transform-origin:${x}px ${y}px"><rect x="${x}" y="${f1(y - 13.4)}" width="${f1(textW(text, 11, 600) + 30)}" height="18.6" rx="2"/><circle class="dg-led-g ${kind}" cx="${x + 11}" cy="${y - 4}" r="5.4"/><circle class="dg-led ${kind}" cx="${x + 11}" cy="${y - 4}" r="3"/><text x="${x + 21}" y="${y}">${esc(text)}</text></g>`;
 const flowMark = (x, y, label) => `<text x="${x}" y="${y}" class="dg-w">${esc(label)}</text><path class="dg-arrow w" d="M${x + 34} ${y - 4}h26m-6-4 6 4-6 4"/>`;
 
 // A sewer in long section with a manhole beside the sensor: road and soil,
@@ -659,31 +710,33 @@ const flowMark = (x, y, label) => `<text x="${x}" y="${y}" class="dg-w">${esc(la
 export const LS = { w: 480, h: 250, ground: 18, crown: 104, inv: 226, wall: 10, shaft: [326, 370] };
 export function efWater(p, level, full, g = LS) {
   const { w, crown, inv } = g, [s0, s1] = g.shaft;
-  const grad = `<linearGradient id="${p}-wg" gradientUnits="userSpaceOnUse" x1="0" y1="${f1(level)}" x2="0" y2="${inv}"><stop offset="0" class="ef-w0"/><stop offset=".18" class="ef-w1"/><stop offset="1" class="ef-w2"/></linearGradient>`;
+  const gid = `${p}-wg`;
+  const grad = `<linearGradient id="${gid}" href="#${p}-wtr" gradientUnits="userSpaceOnUse" x1="0" y1="${f1(level)}" x2="0" y2="${inv}"/>`;
+  const streaks = (y0, y1) => [0, 1, 2, 3].map((k) => { const yy = y0 + ((k + 0.6) * (y1 - y0)) / 4.2; const d = [[9, 31], [14, 40], [6, 27], [11, 36]][k]; return `<path class="sc-streak" style="--d:${(-k * 0.83).toFixed(2)}s;stroke-dasharray:${d[0]} ${d[1]};--len:-${d[0] + d[1]}" d="M0 ${f1(yy)}H${w}"/>`; }).join("");
   const body = full
-    ? `<path fill="url(#${p}-wg)" d="M0 ${crown}H${s0}V${f1(level)}H${s1}V${crown}H${w}V${inv}H0Z"/><path class="ef-surf-g" d="M${s0} ${f1(level)}H${s1}"/><path class="ef-surf" d="M${s0} ${f1(level)}H${s1}"/>`
-    : `<rect x="0" y="${f1(level)}" width="${w}" height="${f1(inv - level)}" fill="url(#${p}-wg)"/><path class="ef-surf-g" d="M0 ${f1(level)}H${w}"/><path class="ef-surf" d="M0 ${f1(level)}H${w}"/>`;
+    ? `<path fill="url(#${gid})" d="M0 ${crown}H${s0}V${f1(level)}H${s1}V${crown}H${w}V${inv}H0Z"/>${streaks(crown + 6, inv - 4)}<path class="sc-surf-lo" d="M${s0} ${f1(level + 1.6)}H${s1}"/><path class="sc-surf" d="M${s0} ${f1(level + 0.4)}H${s1}"/>`
+    : `<rect x="0" y="${f1(level)}" width="${w}" height="${f1(inv - level)}" fill="url(#${gid})"/>${inv - level > 14 ? streaks(level + 3, inv - 3) : ""}<path class="sc-surf-lo" d="M0 ${f1(level + 1.6)}H${w}"/><path class="sc-surf" d="M0 ${f1(level + 0.4)}H${w}"/>`;
   return { grad, body };
 }
 export function efSection(p, water, inner, g = LS) {
-  const { w, h, ground, crown, inv, wall } = g, [s0, s1] = g.shaft;
+  const { w, h, ground: G, crown, inv, wall } = g, [s0, s1] = g.shaft;
+  const open = (s1 - s0) * 0.86, oc = (s0 + s1) / 2;
+  const steps = [];
+  for (let y = G + 32; y < crown - 8; y += 18) steps.push(y);
+  const joints = [];
+  for (let x = 70; x < w - 20; x += 186) if (x < s0 - 30 || x > s1 + 30) joints.push(x);
   return `
-  <rect x="0" y="${ground}" width="${w}" height="${h - ground}" fill="url(#${p}-soil)"/>
-  <rect class="ef-road" x="0" y="${ground - 5}" width="${w}" height="5"/>
-  <rect x="0" y="${crown}" width="${w}" height="${inv - crown}" fill="url(#${p}-air)"/>
-  <rect x="${s0}" y="${ground}" width="${s1 - s0}" height="${crown - ground}" fill="url(#${p}-air)"/>
+  ${ground(p, { x0: 0, x1: w, y: G, bottom: h, holes: [[oc - open / 2 - 9, oc + open / 2 + 9]] })}
+  ${pipeLong(p, { x0: 0, x1: w, crown, inv, t: wall, joints, gaps: [[s0, s1]], bed: Math.max(0, Math.min(10, h - inv - wall)), stain: inv - (inv - crown) * 0.42 })}
+  ${shaft(p, { a: s0, b: s1, top: G, bottom: crown, t: wall, ring: 30, slab: 8, open, oc, steps, stepW: Math.min(18, (s1 - s0) * 0.42), wallTo: crown })}
+  <path class="sc-ao" d="M${s0 - wall} ${crown + 0.9}H${s0}M${s1} ${crown + 0.9}H${s1 + wall}"/>
+  ${hanger(p, s0, s0 + 13, G + 22)}${hawk(p, s0 + 13, G + 22, 12)}
   ${water}
-  <path fill="url(#${p}-cut)" d="M0 ${crown - wall}H${s0 - wall}V${ground}H${s0}V${crown}H0ZM${s1} ${ground}H${s1 + wall}V${crown - wall}H${w}V${crown}H${s1}ZM0 ${inv}H${w}V${inv + wall}H0Z"/>
-  <path class="ef-edge" d="M0 ${crown}H${s0}V${ground}M${s1} ${ground}V${crown}H${w}M0 ${inv}H${w}M0 ${crown - wall}H${s0 - wall}V${ground}M${s1 + wall} ${ground}V${crown - wall}H${w}M0 ${inv + wall}H${w}"/>
-  <rect class="ef-frame" x="${s0 - wall - 5}" y="${ground - 8}" width="${s1 - s0 + 2 * wall + 10}" height="4" rx="1"/>
-  <rect class="ef-lid" x="${s0 - 1}" y="${ground - 9.5}" width="${s1 - s0 + 2}" height="3.6" rx="1"/>
-  ${Array.from({ length: 10 }, (_, k) => ground + 18 + 16 * k).filter((y) => y < crown - 6).map((y) => `<path class="ef-step" d="M${s1} ${y}h-7v5h7"/>`).join("")}
-  <path class="ef-strap" d="M${s0} ${ground + 9}h7"/><rect class="ef-logger" x="${s0 + 5}" y="${ground + 6}" width="15" height="28" rx="4"/><rect class="ef-logger-cap" x="${s0 + 5}" y="${ground + 6}" width="15" height="6.5" rx="3"/>
   ${inner}`;
 }
 
 /* ---- eflowModes: radar in normal flow, ultrasonic and pressure in surcharge ---- */
-const LOGGER_CABLE = `C322 113 339 110 339 96V52`;
+const LOGGER_CABLE = `C322 113 339 110 339 96V66`;
 function eflowNormal(t) {
   const L = t.labels, p = "efn", level = 170;
   const ef = efSensor(p, 226, LS.crown, 1, { cable: LOGGER_CABLE });
@@ -697,11 +750,11 @@ function eflowNormal(t) {
   <path class="ef-foot r" d="M${f1(f0)} ${level}H${f1(f1x)}"/>
   ${ef.draw}
   ${efPin(f0 + 2, level - 30, 1, "radar")}${efPin(ef.depth[0] + 14, level - 16, 2, "radar")}
-  ${label(f1(f0 - 8), level - 8, L.surface, { a: "end", cls: "dg-h" })}
+  ${tag(f1(f0 - 10), level - 12, L.surface, { a: "end" })}
   ${label(16, level + 24, L.profile, { cls: "dg-w" })}
   ${label(f1(pr.mean + 6), LS.inv - 8, L.mean, { cls: "dg-w dg-b" })}
   ${flowMark(386, LS.inv - 10, L.flow)}
-  ${efStatus(16, 50, L.above, "r")}`), `${efDefs(p, { dark: true })}${w.grad}${bv.defs}${bd.defs}`);
+  ${efStatus(16, 50, L.above, "r")}`), `${efDefs(p)}${w.grad}${bv.defs}${bd.defs}`);
 }
 function eflowSurcharge(t) {
   const L = t.labels, p = "efs", level = 56;
@@ -715,7 +768,7 @@ function eflowSurcharge(t) {
   const head = `
   <path class="ef-ext" d="M${f1(px + 5)} ${f1(py)}H${dim + 6}M${LS.shaft[1] + 12} ${level}H${dim + 6}"/>
   <path class="ef-dim" d="M${dim} ${f1(py - 2)}V${level + 2}m-4 6 4-6 4 6M${dim - 4} ${f1(py - 8)}l4 6 4-6"/>
-  ${label(dim + 9, 68, L.head, { cls: "dg-b dg-h" })}`;
+  ${tag(dim + 9, 64, L.head, { bold: true })}`;
   const bits = `<g class="dg-bits">${[[20, 168, 0], [60, 192, -2.4], [8, 212, -4.6], [40, 182, -6.8], [14, 150, -8.4], [70, 130, -3.6]].map(([x, y, d]) => `<circle cx="${x}" cy="${y}" r="2.2" style="--d:${d}s"/>`).join("")}</g>`;
   return svg(LS.w, LS.h, efSection(p, w.body, `
   ${bits}${pr.draw}
@@ -725,50 +778,54 @@ function eflowSurcharge(t) {
   ${efPin(ef.us[0] - 46, ef.us[1] + 22, 3, "us")}${efPin(px + 18, py + 13, 4, "us")}
   ${label(16, 206, L.profile, { cls: "dg-w" })}
   ${flowMark(386, LS.inv - 10, L.flow)}
-  ${efStatus(16, 50, L.full, "u")}`), `${efDefs(p, { dark: true })}${w.grad}${bu.defs}${bu2.defs}`);
+  ${efStatus(16, 50, L.full, "u")}`), `${efDefs(p)}${w.grad}${bu.defs}${bu2.defs}`);
 }
 
 /* ---- eflowObvert: a sensor on the invert, against E-Flow 3 at the obvert ---- */
+// The same sewer twice, in long section. In the first a wetted sensor sits
+// on the invert and the flow has wound rag round it, caught grease in the
+// rag and banked grit against it; strands keep arriving and stopping there.
+// In the second E-Flow 3 is at the crown and the same strands, grease and
+// grit pass beneath it.
 const OB = { w: 480, h: 196, crown: 42, inv: 168, wall: 10, surf: 116 };
-function obvertScene(p, inner) {
+function obvertScene(p, inner, { moving }) {
   const { w, h, crown, inv, wall, surf } = OB;
   const water = efWater(p, surf, false, { ...LS, w, crown, inv });
   return { grad: water.grad, body: `
-  <rect width="${w}" height="${h}" fill="url(#${p}-soil)"/>
-  <rect x="0" y="${crown}" width="${w}" height="${inv - crown}" fill="url(#${p}-air)"/>
+  <rect width="${w}" height="${crown - wall}" fill="url(#${p}-soil)"/>
+  <rect y="${inv + wall}" width="${w}" height="${h - inv - wall}" fill="url(#${p}-soil)"/>
+  ${pipeLong(p, { x0: 0, x1: w, crown, inv, t: wall, joints: [96, 282, 468], bed: 0, stain: surf - 3 })}
   ${water.body}
-  <path fill="url(#${p}-cut)" d="M0 ${crown - wall}H${w}V${crown}H0ZM0 ${inv}H${w}V${inv + wall}H0Z"/>
-  <path class="ef-edge" d="M0 ${crown}H${w}M0 ${crown - wall}H${w}M0 ${inv}H${w}M0 ${inv + wall}H${w}"/>
+  ${moving}
   ${inner}` };
 }
+// strands of rag and lumps of grease carried along, each on its own delay
+const carried = (p, cls) => [[-40, 128, 0, 0], [-60, 146, 1, -2.6], [-30, 158, 2, -5.4], [-50, 138, 0, -8.1]].map(([x, y, k, d]) => `<g class="${cls}" style="--d:${d}s">${k === 1 ? grease(p, x + 8, y, 5.2, 3.2) : rag(x, y, 24, { seed: `${cls}${k}`, tone: k, bend: 2.4 })}</g>`).join("");
 function invertPanel(t) {
   const L = t.labels, p = "eoa", { inv, surf } = OB;
   const sc = obvertScene(p, `
-  ${lumps([[10, 150, 0, 0], [6, 134, 1, -2.2], [14, 158, 2, -4.4], [4, 142, 0, -6.6]].map(([x, y, k, d]) => [x, y, k, d, "stop"]))}
-  <path class="ef-cable" d="M0 ${inv - 3}H236"/>
-  <path class="dg-mound" d="M212 ${inv}q4-15 16-19q6-11 19-9q10-8 23-2q14-2 19 11q12 4 12 19z"/>
-  <path class="dg-mound-tx" d="M226 ${inv - 12}q10-6 20-3M244 ${inv - 20}q12-4 22 2M262 ${inv - 9}q10-5 22 0"/>
-  <path class="dg-rag" d="M298 ${inv - 10}q14 4 24-2t24 2M294 ${inv - 3}q12 2 22-2t22 3"/>
-  <path d="M234 ${inv}l9-9q3-3 8-3h24q6 0 6 6v6z" fill="url(#${p}-body)"/>
-  ${[[150, 0], [340, 1], [420, 2]].map(([x, k]) => `<ellipse class="dg-grease" cx="${x}" cy="${surf + 1}" rx="${7 + k * 2}" ry="2.2"/>`).join("")}
-  ${label(16, 70, L.invert, { cls: "dg-b dg-h" })}${leader(`M118 74L234 ${inv - 14}`)}
-  ${label(300, 70, L.fouled, { cls: "dg-h dg-m" })}${leader(`M318 92L286 ${inv - 20}`)}
-  ${flowMark(388, inv - 8, L.flow)}`);
-  return svg(OB.w, OB.h, sc.body, `${efDefs(p, { dark: true })}${sc.grad}`);
+  ${cable(`M0 ${inv - 2}H228`, { w: 1.3 })}
+  ${avSensor(p, 228, inv, 30)}
+  ${fouling(p, 214, inv, 74, 22, "eoa")}
+  ${[[150, 0], [340, 1], [420, 2]].map(([x, k]) => grease(p, x, surf + 1.2, 6 + k * 1.5, 1.8)).join("")}
+  ${tag(16, 70, L.invert, { bold: true })}${lead([[118, 74], [236, inv - 12]])}
+  ${tag(300, 70, L.fouled)}${lead([[318, 92], [284, inv - 16]])}
+  ${flowMark(388, inv - 8, L.flow)}`, { moving: carried(p, "sc-stop") });
+  return svg(OB.w, OB.h, sc.body, `${efDefs(p, { k: 0.8 })}${sc.grad}`);
 }
 function obvertPanel(t) {
   const L = t.labels, p = "eob", { crown, inv, surf } = OB;
   const ef = efSensor(p, 200, crown, 1.05, { cable: "H480" });
   const bv = efBeam(p, "bv", ef.vel, 12, { toY: surf }), bd = efBeam(p, "bd", ef.depth, 7, { toY: surf, waves: 3 });
   const sc = obvertScene(p, `
-  ${lumps([[10, 150, 0, 0], [6, 134, 1, -2.2], [14, 158, 2, -4.4], [4, 142, 0, -6.6]].map(([x, y, k, d]) => [x, y, k, d, "pass"]))}
+  ${silt(p, 60, 150, inv, 3)}${silt(p, 330, 410, inv, 2.6)}
   ${bv.draw}${bd.draw}
   <path class="ef-foot r" d="M${f1(bv.foot[0])} ${surf}H${f1(bv.foot[1])}"/>
   ${ef.draw}
-  ${label(16, 70, L.obvert, { cls: "dg-b dg-h" })}${leader("M152 64L198 56")}
-  ${label(330, 86, L.clear, { cls: "dg-h dg-m" })}
-  ${flowMark(388, inv - 8, L.flow)}`);
-  return svg(OB.w, OB.h, sc.body, `${efDefs(p, { dark: true })}${sc.grad}${bv.defs}${bd.defs}`);
+  ${tag(16, 70, L.obvert, { bold: true })}${lead([[152, 66], [204, 58]])}
+  ${tag(330, 92, L.clear)}
+  ${flowMark(388, inv - 8, L.flow)}`, { moving: carried(p, "sc-pass") });
+  return svg(OB.w, OB.h, sc.body, `${efDefs(p, { k: 0.8 })}${sc.grad}${bv.defs}${bd.defs}`);
 }
 
 /* ---- eflowProfile: from surface velocity and depth to flow ---- */
@@ -784,49 +841,65 @@ function profileLong(t) {
   const w = efWater(p, level, false, g);
   const [f0, f1x] = bv.foot, dim = 536;
   const body = `
-  <rect width="${g.w}" height="${g.h}" fill="url(#${p}-soil)"/>
-  <rect x="0" y="${g.crown}" width="${g.w}" height="${g.inv - g.crown}" fill="url(#${p}-air)"/>
+  <rect width="${g.w}" height="${g.crown - g.wall}" fill="url(#${p}-soil)"/>
+  <rect y="${g.inv + g.wall}" width="${g.w}" height="${g.h - g.inv - g.wall}" fill="url(#${p}-soil)"/>
+  ${pipeLong(p, { x0: 0, x1: g.w, crown: g.crown, inv: g.inv, t: g.wall, joints: [120, 470], bed: 0, stain: level - 4 })}
   ${w.body}
-  <path fill="url(#${p}-cut)" d="M0 ${g.crown - g.wall}H${g.w}V${g.crown}H0ZM0 ${g.inv}H${g.w}V${g.inv + g.wall}H0Z"/>
-  <path class="ef-edge" d="M0 ${g.crown}H${g.w}M0 ${g.crown - g.wall}H${g.w}M0 ${g.inv}H${g.w}M0 ${g.inv + g.wall}H${g.w}"/>
   ${pr.draw}${bv.draw}${bd.draw}
   <path class="ef-foot r" d="M${f1(f0)} ${level}H${f1(f1x)}"/>
   ${ef.draw}
   <path class="ef-ext" d="M${f1(ef.depth[0] + 10)} ${level}H${dim + 6}M${dim - 30} ${g.inv}H${dim + 6}"/>
   <path class="ef-dim d" d="M${dim} ${level + 2}V${g.inv - 2}m-4-6 4 6 4-6M${dim - 4} ${level + 8}l4-6 4 6"/>
   ${label(dim - 8, 236, L.depth, { a: "end", cls: "dg-w dg-b" })}
-  ${label(24, 76, L.surface, { cls: "dg-h" })}${leader(`M214 88L${f1(f0 + 6)} ${level - 2}`)}
+  ${tag(24, 78, L.surface)}${lead([[190, 90], [f1(f0 + 6), level - 2]])}
   ${label(24, 232, L.mean, { cls: "dg-w dg-b" })}${leader(`M180 248L${f1(pr.mean - 2)} 262`, "w")}
   ${flowMark(24, g.inv - 12, L.flow)}`;
-  return svg(g.w, g.h, body, `${efDefs(p, { dark: true })}${w.grad}${bv.defs}${bd.defs}`);
+  return svg(g.w, g.h, body, `${efDefs(p, { k: 1.2 })}${w.grad}${bv.defs}${bd.defs}`);
 }
 function profileCross(t) {
-  const L = t.labels, p = "epc", cx = 190, cy = 168, R = 126, wall = 11, surf = 152;
+  // Looking along the pipe, cut square across: the concrete ring and the
+  // bedding under it, the bore running away into the dark, and the water's
+  // cut face shaded by how fast it moves (lighter is faster), with the
+  // depth radar looking down from E-Flow 3 at the crown, seen end on.
+  const L = t.labels, p = "epc", cx = 190, cy = 168, R = 126, wall = 13, surf = 152;
   const half = Math.sqrt(R * R - (cy - surf) ** 2), xl = cx - half, xr = cx + half;
   const seg = `M${f1(xl)} ${surf}H${f1(xr)}A${R} ${R} 0 1 1 ${f1(xl)} ${surf}Z`;
-  const bands = [["#0d5049", 1.0], ["#126259", 0.82], ["#1b7a70", 0.64], ["#2c9789", 0.47], ["#55bdae", 0.31], ["#a3eee1", 0.16]];
+  const bands = [["#163b37", 1.0], ["#1d4f49", 0.82], ["#28675f", 0.64], ["#3c8578", 0.47], ["#66ad9f", 0.31], ["#b4e8dc", 0.16]];
   const iso = bands.map(([c, k]) => `<ellipse cx="${cx}" cy="${surf + 18}" rx="${f1(150 * k)}" ry="${f1(150 * k * 0.86)}" fill="${c}"/>`).join("");
   const lines = bands.slice(1).map(([, k]) => `<ellipse cx="${cx}" cy="${surf + 18}" rx="${f1(150 * k)}" ry="${f1(150 * k * 0.86)}"/>`).join("");
   const beamL = cx - Math.tan((10 * Math.PI) / 180) * (surf - 60), beamR = cx + (cx - beamL);
+  const ring = (r) => `M${cx - r} ${cy}a${r} ${r} 0 1 0 ${2 * r} 0a${r} ${r} 0 1 0 -${2 * r} 0Z`;
+  const by = cy - R; // the crown
   const body = `
   <rect width="380" height="330" fill="url(#${p}-soil)"/>
-  <path fill="url(#${p}-cut)" fill-rule="evenodd" d="M${cx - R - wall} ${cy}a${R + wall} ${R + wall} 0 1 0 ${2 * (R + wall)} 0a${R + wall} ${R + wall} 0 1 0 -${2 * (R + wall)} 0ZM${cx - R} ${cy}a${R} ${R} 0 1 0 ${2 * R} 0a${R} ${R} 0 1 0 -${2 * R} 0Z"/>
-  <circle cx="${cx}" cy="${cy}" r="${R}" fill="url(#${p}-air)"/>
+  <path fill="rgba(214, 190, 150, .22)" d="M${cx - R - wall - 26} 0H${cx + R + wall + 26}V${cy}H${cx - R - wall - 26}Z"/>
+  <path fill="url(#${p}-grav)" d="M${cx - R - wall - 26} ${cy}H${cx + R + wall + 26}V330H${cx - R - wall - 26}Z"/>
+  <path fill="rgba(150, 128, 98, .28)" d="M${cx - R - wall - 26} ${cy}H${cx + R + wall + 26}V330H${cx - R - wall - 26}Z"/>
+  <path class="sc-trench" d="M${cx - R - wall - 26} 0V330M${cx + R + wall + 26} 0V330M${cx - R - wall - 26} ${cy}H${cx + R + wall + 26}"/>
+  <path fill="url(#${p}-conc)" fill-rule="evenodd" d="${ring(R + wall)}${ring(R)}"/>
+  <circle cx="${cx}" cy="${cy}" r="${R}" fill="url(#${p}-tunnel)"/>
+  <circle cx="${cx}" cy="${cy}" r="${R * 0.34}" fill="url(#${p}-far)"/>
+  <path class="sc-cut-edge" d="${ring(R + wall)}${ring(R)}"/>
+  <path class="sc-ao" d="${ring(R - 1)}"/>
   <clipPath id="${p}-seg"><path d="${seg}"/></clipPath>
   <g clip-path="url(#${p}-seg)">${iso}<g class="dg-isovel">${lines}</g></g>
-  <path class="ef-surf-g" d="M${f1(xl)} ${surf}H${f1(xr)}"/><path class="ef-surf" d="M${f1(xl)} ${surf}H${f1(xr)}"/>
-  <path class="ef-edge" fill="none" d="M${cx - R} ${cy}a${R} ${R} 0 1 0 ${2 * R} 0a${R} ${R} 0 1 0 -${2 * R} 0M${cx - R - wall} ${cy}a${R + wall} ${R + wall} 0 1 0 ${2 * (R + wall)} 0a${R + wall} ${R + wall} 0 1 0 -${2 * (R + wall)} 0"/>
-  <path class="ef-beam r" fill="url(#${p}-xb)" d="M${cx} 60L${f1(beamL)} ${surf}H${f1(beamR)}Z"/>
+  <path class="sc-surf-lo" d="M${f1(xl)} ${surf + 1.6}H${f1(xr)}"/><path class="sc-surf" d="M${f1(xl)} ${surf + 0.4}H${f1(xr)}"/>
+  <path class="ef-beam r" fill="url(#${p}-xb)" d="M${cx} 62L${f1(beamL)} ${surf}H${f1(beamR)}Z"/>
   <path class="ef-foot r" d="M${f1(beamL)} ${surf}H${f1(beamR)}"/>
-  <rect x="${cx - 13}" y="${cy - R}" width="26" height="18" rx="5" fill="url(#${p}-body)"/>
-  <ellipse cx="${cx}" cy="${cy - R + 18}" rx="5" ry="2.4" fill="url(#${p}-dome)"/>
+  <rect x="${cx - 21}" y="${by - 0.6}" width="42" height="4.4" rx=".8" fill="url(#${p}-ss)"/>
+  <path d="M${cx - 13} ${by + 3.8}H${cx + 13}Q${cx + 16} ${by + 3.8} ${cx + 16} ${by + 8}V${by + 17}Q${cx + 16} ${by + 22} ${cx + 11} ${by + 22}H${cx - 11}Q${cx - 16} ${by + 22} ${cx - 16} ${by + 17}V${by + 8}Q${cx - 16} ${by + 3.8} ${cx - 13} ${by + 3.8}Z" fill="url(#${p}-blkv)"/>
+  <path class="sc-part" d="M${cx - 16} ${by + 12.6}H${cx + 16}"/>
+  <path d="M${cx - 5.6} ${by + 22}A5.6 5.6 0 0 0 ${cx + 5.6} ${by + 22}Z" fill="url(#${p}-dome)"/>
+  <ellipse cx="${cx - 2}" cy="${by + 23.2}" rx="1.6" ry=".7" fill="#fff" fill-opacity=".55"/>
   <path class="ef-ext" d="M${f1(xr - 6)} ${surf}H352M${cx + 30} ${cy + R}H352"/>
   <path class="ef-dim d" d="M346 ${surf + 2}V${cy + R - 2}m-4-6 4 6 4-6M342 ${surf + 8}l4-6 4 6"/>
-  ${label(338, 250, "h", { a: "end", cls: "dg-b dg-h dg-i" })}
+  ${tag(332, 250, "h", { a: "end", bold: true })}
   ${label(cx, 238, L.area, { a: "middle", cls: "dg-w dg-b" })}
-  <rect x="62" y="308" width="110" height="7" rx="3.5" fill="url(#${p}-key)"/>
-  ${label(56, 315, L.key[0], { a: "end", cls: "dg-m" })}${label(178, 315, L.key[1], { cls: "dg-m" })}`;
-  const defs = `${efDefs(p, { dark: true })}<linearGradient id="${p}-xb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="ef-g0 r"/><stop offset="1" class="ef-g1 r"/></linearGradient>
+  <rect x="62" y="308" width="110" height="7" rx="1" fill="url(#${p}-key)"/>
+  ${tag(54, 316, L.key[0], { a: "end" })}${tag(180, 316, L.key[1])}`;
+  const defs = `${efDefs(p, { k: 1 })}<linearGradient id="${p}-xb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="ef-g0 r"/><stop offset="1" class="ef-g1 r"/></linearGradient>
+  <radialGradient id="${p}-tunnel" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#0d1011"/><stop offset=".45" stop-color="#2c3133"/><stop offset=".8" stop-color="#5a6062"/><stop offset="1" stop-color="#6e7476"/></radialGradient>
+  <radialGradient id="${p}-far" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#000" stop-opacity=".9"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>
   <linearGradient id="${p}-key" x1="0" y1="0" x2="1" y2="0">${bands.map(([c], i) => `<stop offset="${(i / (bands.length - 1)).toFixed(2)}" stop-color="${c}"/>`).join("")}</linearGradient>`;
   return svg(380, 330, body, defs);
 }
@@ -838,41 +911,64 @@ function profileCross(t) {
 // the drawing (`items` on the page). Construction after the datasheet's
 // mechanical section; an illustration, not an engineering drawing.
 function xray(t) {
+  // E-Flow 3 large under the crown, its near side cut away: the composite
+  // shell (its cut edge pale), the potting that fills it, the main board
+  // along the body, the 24 GHz radar board behind the sloping window, the
+  // 120 GHz module over the dome, the two ultrasonic stacks behind the
+  // brass face, the stainless pressure capsule in the nose, and the cable's
+  // cores fanning out from the gland to the board.
   const p = "exr", s = 4.6, x0 = 236, crownY = 58, y0 = crownY + 16.6;
   const P = (u, v) => [x0 + u * s, y0 + v * s];
   const sens = { vel: [...P(40, 25.8), -0.77, 0.64], depth: [...P(16, 23.6), 0, 1], us: [...P(50.4, 38.4), -0.8, 0.6] };
   const water = 306;
   const bv = efBeam(p, "bv", sens.vel, 12, { toY: water }), bd = efBeam(p, "bd", sens.depth, 7, { toY: water, waves: 3 });
-  const pins = [[1, P(4, -2), [x0 - 12, crownY + 6]], [2, P(68, 30), [x0 + 68 * s + 30, y0 + 30 * s]], [3, P(22, 9), null], [4, P(59.5, 46.6), [x0 + 59.5 * s + 34, 300]], [5, P(50, 38), [x0 + 50 * s - 40, y0 + 38 * s + 14]], [6, P(83.6, 9), [x0 + 83.6 * s + 22, y0 + 9 * s + 30]]];
+  const pins = [[1, P(-4, -2), [x0 - 40, crownY + 8]], [2, P(67.2, 26), [x0 + 76 * s + 34, y0 + 26 * s]], [3, P(30, 6.9), [x0 + 22 * s, y0 - 4.5 * s + 8]], [4, P(59.5, 44.2), [x0 + 59.5 * s + 36, 296]], [5, P(51.2, 38), [x0 + 50 * s - 44, y0 + 38 * s + 12]], [6, P(81, 9), [x0 + 83.6 * s + 30, y0 + 9 * s + 32]]];
+  // the cut window: the shell 1.4 thick all round
+  const WIN = "M8 1.4H70A6.6 6.6 0 0 1 76.6 8V10A6.6 6.6 0 0 1 70 16.6H66.6V40Q66.6 44.6 62 44.6H55Q53.1 44.6 52.4 42.6L49.4 32.4L30.5 16.6H8A6.6 6.6 0 0 1 1.4 10V8A6.6 6.6 0 0 1 8 1.4Z";
+  // along the sloping window: unit vectors along it and into the body
+  const ax = 20 / Math.hypot(20, 16.2), ay = 16.2 / Math.hypot(20, 16.2), nx = ay, ny = -ax;
+  const onSlope = (k, d) => [27.6 + 20 * k + nx * d, 18 + 16.2 * k + ny * d];
+  const [r0x, r0y] = onSlope(0.16, 4.9), [r1x, r1y] = onSlope(0.86, 4.9), [r2x, r2y] = onSlope(0.86, 6.3), [r3x, r3y] = onSlope(0.16, 6.3);
+  const patches = [0.26, 0.38, 0.5, 0.62, 0.74].map((k) => { const [px, py] = onSlope(k, 4.5); return `<rect x="${f1(px - 0.7)}" y="${f1(py - 0.35)}" width="1.4" height=".7" fill="#d7b65a" transform="rotate(${f1((Math.atan2(16.2, 20) * 180) / Math.PI)} ${f1(px)} ${f1(py)})"/>`; }).join("");
+  const inside = `
+    <path d="${WIN}" fill="url(#${p}-pot)"/>
+    <rect x="6" y="6.1" width="56" height="1.5" fill="#2f6e3d"/><path d="M6.4 6.3H61.6" stroke="#c9a54e" stroke-width=".16" stroke-dasharray=".9 .6"/>
+    <rect x="11" y="4.2" width="5.4" height="1.9" rx=".2" fill="#151719"/><rect x="23" y="3.8" width="6.6" height="2.3" rx=".2" fill="#151719"/><rect x="38" y="4.6" width="4" height="1.5" rx=".2" fill="#151719"/>
+    <path d="M23.4 3.8v-.3M24.4 3.8v-.3M25.4 3.8v-.3M26.4 3.8v-.3M27.4 3.8v-.3M28.4 3.8v-.3M29.2 3.8v-.3" stroke="#b9c0c3" stroke-width=".2"/>
+    ${[[19.4, 7.6, 1.9], [33.5, 7.6, 1.6], [47, 7.6, 1.4], [52.6, 7.6, 2.2]].map(([x, y, h]) => `<rect x="${x - 0.6}" y="${y}" width="1.2" height="${h}" rx=".5" fill="url(#${p}-capg)"/>`).join("")}
+    <rect x="44" y="3.9" width="3" height="2.2" rx=".2" fill="#e8e3d4"/><rect x="55" y="4.4" width="5" height="1.7" fill="#d9dfe1"/>
+    <rect x="57.6" y="17.4" width="1.3" height="17" fill="#2f6e3d"/><rect x="58.9" y="20" width="1.4" height="3.4" rx=".2" fill="#151719"/><rect x="58.9" y="26" width="1.2" height="2.4" rx=".2" fill="#151719"/>
+    <path d="M${f1(r0x)} ${f1(r0y)}L${f1(r1x)} ${f1(r1y)}L${f1(r2x)} ${f1(r2y)}L${f1(r3x)} ${f1(r3y)}Z" fill="#2f6e3d"/>${patches}
+    <rect x="12.6" y="13.2" width="6.8" height="2.6" rx=".3" fill="#2f6e3d"/><rect x="14.6" y="12.2" width="2.8" height="1.1" rx=".2" fill="#151719"/>
+    ${[0, 1].map((k) => { const cx = 50.9 + k * 1.15 + 1.4, cy = 35.8 + k * 3.9 - 0.4; return `<g transform="rotate(-16 ${cx} ${cy})"><rect x="${f1(cx - 0.2)}" y="${f1(cy - 1.2)}" width="1.1" height="2.4" fill="#ecebe5"/><rect x="${f1(cx + 0.9)}" y="${f1(cy - 1.2)}" width="2.2" height="2.4" fill="#3b3833"/></g>`; }).join("")}
+    <rect x="57.6" y="38.4" width="3.8" height="6.4" rx=".6" fill="url(#${p}-ssv)"/><path d="M57.9 44.4h3.2" stroke="#7e898d" stroke-width=".3"/>
+    <path class="xr-wire" style="stroke:#b83226" d="M77.6 7.8C70 7.8 66 8.6 62 7.6"/><path class="xr-wire" style="stroke:#1a1c1d" d="M77.6 8.7C70 8.7 66 9.6 62 8.6"/><path class="xr-wire" style="stroke:#e4e6e2" d="M77.6 9.6C70 9.8 66 10.8 61 9.6"/><path class="xr-wire" style="stroke:#2f7d3e" d="M77.6 10.5C71 11 67 12.6 59.4 12"/>
+    <path class="xr-wire" style="stroke:#8f6a2d;stroke-width:.25" d="M53.2 34.2C55 30 57 26 57.6 24M60 38.4V35"/>`;
   const body = `
-  <rect x="0" y="${water}" width="900" height="${330 - water}" fill="url(#${p}-wg)"/><path class="ef-surf-g" d="M0 ${water}H900"/><path class="ef-surf" d="M0 ${water}H900"/>
-  <path fill="url(#${p}-cut)" d="M0 ${crownY - 22}H900V${crownY}H0Z"/><path class="ef-edge" d="M0 ${crownY}H900M0 ${crownY - 22}H900"/>
+  <rect width="900" height="${crownY - 22}" fill="url(#${p}-soil)"/>
+  <rect y="${crownY - 22}" width="900" height="22" fill="url(#${p}-conc)"/><path class="sc-cut-edge" d="M0 ${crownY - 22}H900M0 ${crownY}H900"/>
+  <rect y="${crownY}" width="900" height="${water - crownY}" fill="url(#${p}-wall)"/><rect y="${crownY}" width="900" height="${water - crownY}" fill="url(#${p}-inx)"/>
+  <path class="sc-ao" d="M0 ${crownY + 1.2}H900"/>
+  <path class="sc-bore-joint" d="M110 ${crownY}V${water}M790 ${crownY}V${water}"/>
+  <rect y="${water}" width="900" height="${330 - water}" fill="url(#${p}-wtx)"/><path class="sc-surf-lo" d="M0 ${water + 1.6}H900"/><path class="sc-surf" d="M0 ${water + 0.4}H900"/>
   ${bv.draw}${bd.draw}
-  <path class="ef-cable xr" d="M${f1(x0 + 83.6 * s)} ${f1(y0 + 9 * s)}C700 ${f1(y0 + 9 * s)} 700 ${crownY + 10} 760 ${crownY + 10}H900"/>
-  <rect x="${x0 + 4 * s}" y="${crownY}" width="${70 * s}" height="${16.6}" rx="3" fill="url(#${p}-steel)"/>
-  ${[10, 68].map((u) => `<circle class="ef-bolt" cx="${f1(x0 + u * s)}" cy="${crownY + 8}" r="3.4"/>`).join("")}
-  <clipPath id="${p}-in"><path transform="translate(${x0} ${y0}) scale(${s})" d="${EF.body}"/></clipPath>
-  <g clip-path="url(#${p}-in)">
-    <rect x="${x0}" y="${y0}" width="${84 * s}" height="${46 * s}" fill="url(#${p}-glass)"/>
-    <rect x="${x0}" y="${y0}" width="${84 * s}" height="${46 * s}" fill="url(#${p}-pot)"/>
-    <g class="xr-pcb" transform="translate(${x0} ${y0}) scale(${s})">
-      <rect class="xr-chip" x="14" y="5" width="9" height="5.5" rx=".6"/><rect class="xr-chip" x="30" y="4" width="7" height="7" rx=".6"/><rect class="xr-chip" x="56" y="20" width="8" height="9" rx=".6"/>
-      <path d="M6 8H14M23 7.6H30M37 7.6H50V20H56M23 9.6H27V15H45M60 29V36M64 24H66M10 12V15H22"/>
-    </g>
-  </g>
+  ${cable(`M${f1(x0 + 89.5 * s)} ${f1(y0 + 9 * s)}C700 ${f1(y0 + 9 * s)} 700 ${crownY + 10} 760 ${crownY + 10}H900`, { w: 6 })}
   <g transform="translate(${x0} ${y0}) scale(${s})">
-    <path class="xr-edge-g" d="${EF.body}"/><path class="xr-edge" d="${EF.body}"/>
-    <path class="xr-radar" d="M27.6 18L47.6 34.2L52 30.6L35.6 18Z"/>
-    <path class="xr-radar" d="M10.2 18A5.8 5.8 0 0 0 21.8 18Z"/>
-    <path class="xr-us" d="M48.2 33.8L51 43.4L53.6 42.4L50.9 32.8Z"/>
-    <ellipse class="xr-us" cx="59.5" cy="46.3" rx="3.3" ry="1.2"/>
-    <rect class="xr-gland" x="77.6" y="4.8" width="6" height="8.4" rx="1.2"/>
+    ${eflow3(p)}
+    <clipPath id="${p}-win"><path d="${WIN}"/></clipPath>
+    <g clip-path="url(#${p}-win)">${inside}</g>
+    <path class="xr-cut" d="${WIN}"/>
+    <path d="M27.6 18L47.6 34.2L52 30.6L35.6 18Z" fill="url(#${p}-glz)"/><path class="sc-glint" style="stroke-width:.25" d="M33 18.9L46.2 29.6"/>
+    <path d="M10.2 18A5.8 5.8 0 0 0 21.8 18Z" fill="url(#${p}-dome)"/>
+    <path d="M48.2 33.8L51 43.4L53.6 42.4L50.9 32.8Z" fill="url(#${p}-brass)"/>
+    <ellipse cx="59.5" cy="46.2" rx="3.4" ry="1.15" fill="url(#${p}-ss)"/>
   </g>
-  ${pins.map(([n, [tx, ty], at]) => (at ? `${leader(`M${f1(at[0])} ${f1(at[1])}L${f1(tx)} ${f1(ty)}`)}${efPin(at[0], at[1], n, "xr")}` : efPin(tx, ty, n, "xr"))).join("")}`;
-  const defs = `${efDefs(p, { dark: true })}${bv.defs}${bd.defs}
-  <linearGradient id="${p}-glass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7fd1c4" stop-opacity=".22"/><stop offset="1" stop-color="#7fd1c4" stop-opacity=".06"/></linearGradient>
-  <pattern id="${p}-pot" width="11" height="11" patternUnits="userSpaceOnUse"><circle cx="2" cy="3" r=".9" fill="#7fd1c4" fill-opacity=".22"/><circle cx="7.5" cy="8" r=".7" fill="#7fd1c4" fill-opacity=".16"/></pattern>
-  <linearGradient id="${p}-wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="ef-w0"/><stop offset="1" class="ef-w2"/></linearGradient>`;
+  ${pins.map(([n, [tx, ty], at]) => (at ? `${lead([[at[0], at[1]], [tx, ty]], { dot: false })}${efPin(at[0], at[1], n, "xr")}` : efPin(tx, ty, n, "xr"))).join("")}`;
+  const defs = `${efDefs(p, { k: 1.4 })}${bv.defs}${bd.defs}
+  <linearGradient id="${p}-inx" href="#${p}-in-pipe" gradientUnits="userSpaceOnUse" x1="0" y1="${crownY}" x2="0" y2="${water + 60}"/>
+  <linearGradient id="${p}-wtx" href="#${p}-wtr" gradientUnits="userSpaceOnUse" x1="0" y1="${water}" x2="0" y2="400"/>
+  <linearGradient id="${p}-pot" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a3328"/><stop offset=".5" stop-color="#2a251e"/><stop offset="1" stop-color="#1c1915"/></linearGradient>
+  <linearGradient id="${p}-capg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#5a3c1f"/><stop offset=".4" stop-color="#b78445"/><stop offset="1" stop-color="#5a3c1f"/></linearGradient>`;
   return `<div class="dg-xray">${svg(900, 330, body, defs).replace("<svg ", '<svg preserveAspectRatio="xMidYMid slice" ')}</div><ol class="dg-facts dg-numbered">${t.items.map(([title, line], i) => `<li><span class="dg-n xr" aria-hidden="true">${i + 1}</span><span><b>${esc(title)}</b> ${esc(line)}</span></li>`).join("")}</ol>`;
 }
 
@@ -881,28 +977,31 @@ function xray(t) {
 // at the crown, the cable up the shaft, the logger near the top, and the
 // phone or tablet at the surface that commissions it through the logger.
 const IN = { ground: 44, crown: 134, inv: 188, wall: 8, shaft: [108, 148], surf: 168 };
+// Four small scenes of the one manhole, the lid lifted, each adding the
+// next part: the sensor going in on its pole, the cable clipped up the
+// shaft, the logger hung under the slab, and a tablet at the surface talking
+// to the logger. A soft light falls on what each step adds.
 function installScene(step) {
-  const p = `ein${step}`, { ground, crown, inv, wall, surf } = IN, [s0, s1] = IN.shaft;
-  const ef = efSensor(p, 40, crown, 0.62);
+  const p = `ein${step}`, { ground: G, crown, inv, wall, surf } = IN, [s0, s1] = IN.shaft;
+  const oc = (s0 + s1) / 2, open = 30;
+  const ef = efSensor(p, 40, crown, 0.62, { detail: 0 });
+  const wt = efWater(p, surf, false, { ...IN, w: 240, shaft: IN.shaft });
   const part = (k, html) => (k <= step ? html : "");
-  const [hx, hy, hr] = [[70, crown + 16, 44], [112, 100, 34], [s0 + 12, ground + 15, 30], [201, ground - 26, 32]][step - 1];
+  const [hx, hy, hr] = [[70, crown + 16, 44], [124, 100, 34], [s0 + 10, G + 24, 26], [200, G - 26, 30]][step - 1];
+  const clips = [88, 104, 120].map((y) => `<rect x="${s0 + 2.6}" y="${y - 1.4}" width="3.4" height="2.8" rx=".6" fill="url(#${p}-ss)"/>`).join("");
   const body = `
-  <rect x="0" y="${ground}" width="240" height="${200 - ground}" fill="url(#${p}-soil)"/>
-  <rect class="ef-road" x="0" y="${ground - 4}" width="240" height="4"/>
-  <rect x="0" y="${crown}" width="240" height="${inv - crown}" fill="url(#${p}-air)"/>
-  <rect x="${s0}" y="${ground}" width="${s1 - s0}" height="${crown - ground}" fill="url(#${p}-air)"/>
-  <rect x="0" y="${surf}" width="240" height="${inv - surf}" fill="url(#${p}-wg)"/><path class="ef-surf" d="M0 ${surf}H240"/>
-  <path fill="url(#${p}-cut)" d="M0 ${crown - wall}H${s0 - wall}V${ground}H${s0}V${crown}H0ZM${s1} ${ground}H${s1 + wall}V${crown - wall}H240V${crown}H${s1}ZM0 ${inv}H240V${inv + wall}H0Z"/>
-  <path class="ef-edge" d="M0 ${crown}H${s0}V${ground}M${s1} ${ground}V${crown}H240M0 ${inv}H240"/>
-  <rect class="ef-frame" x="${s0 - wall - 4}" y="${ground - 7}" width="${s1 - s0 + 2 * wall + 8}" height="3.4" rx="1"/>
-  <ellipse class="ef-lid" cx="${s1 + 40}" cy="${ground - 3}" rx="18" ry="3"/>
+  ${ground(p, { x0: 0, x1: 240, y: G, bottom: 200, asph: 3.5, base: 5, holes: [[oc - open / 2 - 8, oc + open / 2 + 8]] })}
+  ${pipeLong(p, { x0: 0, x1: 240, crown, inv, t: wall, joints: [18, 220], gaps: [[s0, s1]], bed: 0, stain: surf - 3 })}
+  ${shaft(p, { a: s0, b: s1, top: G, bottom: crown, t: wall, ring: 26, slab: 6, open, oc, steps: [G + 24, G + 42, G + 60, G + 78], stepW: 13, wallTo: crown, lid: false })}
+  ${lidAside(p, s1 + 26, s1 + 26 + open + 2, G)}
+  ${wt.body}
   <circle cx="${hx}" cy="${hy}" r="${hr}" fill="url(#${p}-halo)"/>
-  ${step === 1 ? `<path class="ins-move" d="M${(s0 + s1) / 2} ${ground + 4}V${crown - 14}Q${(s0 + s1) / 2} ${crown} ${s0 - 6} ${crown + 4}H100m6-4-6 4 6 4"/>` : ""}
+  ${step === 1 ? `<path class="sc-pole" d="M${oc + 6} ${G - 26}L${oc - 2} ${crown - 4}Q${oc - 4} ${crown + 2} ${oc - 12} ${crown + 4}H96"/><path class="sc-pole-hi" d="M${oc + 6} ${G - 26}L${oc - 2} ${crown - 4}"/><path class="ins-move" d="M${oc - 14} ${G + 10}V${crown - 16}"/>` : ""}
   ${part(1, ef.draw)}
-  ${part(2, `<path class="ef-cable" d="M95.5 139.6H112V70H${s0 + 12}"/>${[86, 102, 118].map((y) => `<path class="ins-clip" d="M109 ${y}h6"/>`).join("")}`)}
-  ${part(3, `<path class="ef-strap" d="M${s0} ${ground + 6}h8"/><rect class="ef-logger" x="${s0 + 6}" y="${ground + 4}" width="12" height="22" rx="3"/><rect class="ef-logger-cap" x="${s0 + 6}" y="${ground + 4}" width="12" height="5" rx="2.5"/>${[0, 1, 2].map((n) => `<path class="ins-wave" style="--d:${n * 0.4}s" d="M${s0 + 4 - n * 6} ${ground - 14 - n * 6}q${8 + n * 6} -${6 + n * 4} ${16 + n * 12} 0"/>`).join("")}`)}
-  ${part(4, `<path class="ins-link" d="M${s0 + 12} ${ground + 4}C${s0 + 14} ${ground - 18} 190 ${ground - 26} 196 ${ground - 22}"/><rect class="ins-tablet" x="186" y="${ground - 36}" width="30" height="20" rx="3"/><rect class="ins-screen" x="189" y="${ground - 33}" width="24" height="14" rx="1.5"/>`)}`;
-  return svg(240, 200, body, `${efDefs(p, { dark: true })}<linearGradient id="${p}-wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="ef-w0"/><stop offset="1" class="ef-w2"/></linearGradient><radialGradient id="${p}-halo"><stop offset="0" stop-color="#9fe7da" stop-opacity=".34"/><stop offset="1" stop-color="#9fe7da" stop-opacity="0"/></radialGradient>`);
+  ${part(2, `${cable(`M95.6 ${crown + 5.6}H${s0 + 4.3}V${G + 30}`, { w: 1 })}${clips}`)}
+  ${part(3, `${hanger(p, s0, s0 + 11, G + 16)}${hawk(p, s0 + 11, G + 16, 9)}${[0, 1, 2].map((n) => `<path class="ins-wave" style="--d:${n * 0.4}s" d="M${s0 + 3 - n * 6} ${G - 12 - n * 6}q${8 + n * 6} -${6 + n * 4} ${16 + n * 12} 0"/>`).join("")}`)}
+  ${part(4, `<path class="ins-link" d="M${s0 + 11} ${G + 12}C${s0 + 14} ${G - 18} 182 ${G - 28} 188 ${G - 24}"/>${tablet(p, 186, G - 38, 32)}`)}`;
+  return svg(240, 200, body, `${efDefs(p, { k: 0.5 })}${wt.grad}<radialGradient id="${p}-halo"><stop offset="0" stop-color="#e6fffa" stop-opacity=".3"/><stop offset="1" stop-color="#e6fffa" stop-opacity="0"/></radialGradient>`);
 }
 const installSteps = (t) => `<ol class="dg-steps">${t.steps.map(([title, line], i) => `<li><p class="dg-step-h"><span class="dg-step-n">${i + 1}</span><b>${esc(title)}</b></p>${installScene(i + 1)}<p>${esc(line)}</p></li>`).join("")}</ol>`;
 
@@ -936,7 +1035,7 @@ function compareRow(kind, gap = "") {
 const KEY_EF = {
   radar: `<svg viewBox="0 0 16 10"><path d="M1 1L15 5L1 9Z" class="ef-key r"/></svg>`,
   us: `<svg viewBox="0 0 16 10"><path d="M1 4L15 5L1 6Z" class="ef-key u"/></svg>`,
-  solid: `<svg viewBox="0 0 16 10"><path d="M3 6q2-5 6-3q5-2 5 2q1 4-4 4q-6 1-7-3z" class="dg-solid"/></svg>`,
+  solid: `<svg viewBox="0 0 16 10"><path d="M1 6q3-3 6-1t8-1" fill="none" stroke="#8d7f67" stroke-width="2.2" stroke-linecap="round"/><path d="M1.5 5q3-3 6-1t7-1" fill="none" stroke="#c3b9a2" stroke-width=".8" stroke-linecap="round"/></svg>`,
   profile: `<svg viewBox="0 0 16 10"><path d="M1 2H13m-3-2 3 2-3 2M1 7H9m-3-2 3 2-3 2" class="ef-key p"/></svg>`,
   mean: `<svg viewBox="0 0 16 10"><path d="M1 5H15" class="ef-key m"/></svg>`,
   truth: `<svg viewBox="0 0 16 10"><path d="M1 5H15" class="dg-truth"/></svg>`,

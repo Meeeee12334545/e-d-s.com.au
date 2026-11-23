@@ -9,7 +9,8 @@ import { inflateSync } from "node:zlib";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import * as C from "./src/data/content.mjs";
-import { diagram, efDefs, efSensor, efSection, efBeam, sfMethod, sfSection, sfInstall, sfSite, sfDims, sfCatch } from "./diagrams.mjs";
+import { diagram, efDefs, efDefsFlat, efSensor, efSection, efBeam, sfMethod, sfSection, sfInstall, sfSite, sfDims, sfCatch } from "./diagrams.mjs";
+import * as K from "./scene.mjs";
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const DIST = path.join(ROOT, "dist");
@@ -693,40 +694,46 @@ const cardSide = (f) => (f ? `<span class="card-media photo-frame"${f.pos ? ` st
 // velocity arrows in it, and points the meter's beam at the surface.
 const f1 = (n) => Math.round(n * 10) / 10;
 function labPipe() {
-  const p = "lab", w = 280, h = 200, cx = 116, cy = 100, R = 80, wall = 9, oy = 168.5;
+  const p = "lab", w = 280, h = 200, cx = 116, cy = 100, R = 80, wall = 10, oy = 168.5;
   const half = (y) => Math.sqrt(R * R - (y - cy) ** 2);
   const circ = (r) => `M${cx - r} ${cy}a${r} ${r} 0 1 0 ${2 * r} 0a${r} ${r} 0 1 0 -${2 * r} 0Z`;
   // an alarm level: a dashed line across the pipe, out to a small tag in the soil
-  const level = (hr, cls, text, width) => { const y = 180 - hr * 160; return `<path class="lab-level ${cls}" d="M${f1(cx - half(y))} ${y}H${cx + R + wall + 6}"/><g class="lab-tag ${cls}" transform="translate(${cx + R + wall + 8} ${y})"><rect x="0" y="-8" width="${width}" height="16" rx="8"/><text x="7" y="3.8">${text}</text></g>`; };
+  const level = (hr, cls, text, width) => { const y = 180 - hr * 160; return `<path class="lab-level ${cls}" d="M${f1(cx - half(y))} ${y}H${cx + R + wall + 6}"/><g class="lab-tag ${cls}" transform="translate(${cx + R + wall + 8} ${y})"><rect x="0" y="-8" width="${width}" height="16" rx="2"/><text x="7" y="3.8">${text}</text></g>`; };
   // the velocity through the depth as the kit draws it: a power law from the bed
   const arrows = [0, 1, 2, 3, 4].map((i) => { const y = 82 + 9 * i, l = f1(60 * Math.pow(1 - i / 5.6, 1 / 6)), o = (1 - i * 0.11).toFixed(2); return `<path class="lab-arrow" stroke-opacity="${o}" d="M86 ${y}H${f1(86 + l)}"/><path class="lab-arrow-h" stroke-opacity="${o}" d="M${f1(86 + l - 4.4)} ${y - 2.8}L${f1(86 + l)} ${y}L${f1(86 + l - 4.4)} ${y + 2.8}"/>`; }).join("");
-  const corners = [[6, 6, 1, 1], [w - 6, 6, -1, 1], [6, h - 6, 1, -1], [w - 6, h - 6, -1, -1]].map(([x, y, sx, sy]) => `M${x} ${y + 12 * sy}V${y}H${x + 12 * sx}`).join("");
-  const defs = `${efDefs(p, { dark: true })}
-          <linearGradient id="${p}-wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="ef-w0"/><stop offset=".18" class="ef-w1"/><stop offset="1" class="ef-w2"/></linearGradient>
+  // the still part: ground, trench and bedding, the concrete ring and the
+  // bore running away into the dark, in a layer of its own
+  const pb = `${p}b`, T0 = cx - R - wall - 16, T1 = cx + R + wall + 16;
+  const back = `<svg class="lab-back" viewBox="0 0 ${w} ${h}" aria-hidden="true"><defs>${efDefs(pb, { k: 0.62 })}
+    <radialGradient id="${pb}-tunnel" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#0d1011"/><stop offset=".45" stop-color="#2c3133"/><stop offset=".8" stop-color="#5a6062"/><stop offset="1" stop-color="#6e7476"/></radialGradient></defs>
+    <rect width="${w}" height="${h}" fill="url(#${pb}-soil)"/>
+    <rect x="${T0}" y="0" width="${T1 - T0}" height="${cy}" fill="rgba(214, 190, 150, .22)"/>
+    <rect x="${T0}" y="${cy}" width="${T1 - T0}" height="${h - cy}" fill="url(#${pb}-grav)"/><rect x="${T0}" y="${cy}" width="${T1 - T0}" height="${h - cy}" fill="rgba(150, 128, 98, .28)"/>
+    <path class="sc-trench" d="M${T0} 0V${h}M${T1} 0V${h}M${T0} ${cy}H${T1}"/>
+    <path fill="url(#${pb}-conc)" fill-rule="evenodd" d="${circ(R + wall)}${circ(R)}"/>
+    <circle cx="${cx}" cy="${cy}" r="${R}" fill="url(#${pb}-tunnel)"/>
+    <path class="sc-cut-edge" d="${circ(R + wall)}${circ(R)}"/><path class="sc-ao" d="${circ(R - 1)}"/>
+  </svg>`;
+  const defs = `${efDefs(p, { k: 0.62 })}
+          <linearGradient id="${p}-wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9db4a8" stop-opacity=".95"/><stop offset=".03" stop-color="#7f9a8d" stop-opacity=".95"/><stop offset=".3" stop-color="#5f7c70"/><stop offset="1" stop-color="#344d45"/></linearGradient>
           <radialGradient id="${p}-ub" gradientUnits="userSpaceOnUse" cx="${cx}" cy="${oy}" r="150"><stop offset="0" class="ef-g0 u"/><stop offset="1" class="ef-g1 u"/></radialGradient>
-          <pattern id="${p}-grid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0H0V20" class="ef-gridline"/></pattern>
           <clipPath id="lab-clip"><circle cx="${cx}" cy="${cy}" r="${R}"/></clipPath>
           <clipPath id="lab-wclip"><rect id="lab-wclip-r" x="0" y="20" width="${w}" height="160"/></clipPath>`;
-  return `<svg id="lab-pipe" class="ef-dark" viewBox="0 0 ${w} ${h}" role="img" aria-label="Cross-section of a 600 mm sewer pipe, cut through the ground, showing the water depth against the high and high-high alarm levels. The area velocity meter sits on the invert, its ultrasonic beam looking up at the surface, and arrows in the water show the velocity through the depth.">
+  return `<div class="lab-stage">${back}<svg id="lab-pipe" class="ef-dark" viewBox="0 0 ${w} ${h}" role="img" aria-label="Cross-section of a 600 mm sewer pipe, cut through the ground, showing the water depth against the high and high-high alarm levels. The area velocity meter sits on the invert, its ultrasonic beam looking up at the surface, and arrows in the water show the velocity through the depth.">
           <defs>${defs}</defs>
-          <rect width="${w}" height="${h}" fill="url(#${p}-soil)"/>
-          <path fill="url(#${p}-cut)" fill-rule="evenodd" d="${circ(R + wall)}${circ(R)}"/>
-          <circle cx="${cx}" cy="${cy}" r="${R}" fill="url(#${p}-air)"/>
           <g clip-path="url(#lab-clip)">
-            <g id="lab-water-g"><rect x="0" y="20" width="${w}" height="160" fill="url(#${p}-wg)"/><path class="ef-surf-g" d="M0 20H${w}"/><path class="ef-surf" d="M0 20H${w}"/></g>
+            <g id="lab-water-g"><rect x="0" y="20" width="${w}" height="160" fill="url(#${p}-wg)"/><path class="sc-surf-lo" d="M0 21.6H${w}"/><path class="sc-surf" d="M0 20.4H${w}"/></g>
             <path id="lab-beam" class="ef-beam u" fill="url(#${p}-ub)"/>
             <g class="ef-waves" id="lab-waves">${[0, 1, 2, 3].map((k) => `<path class="ef-wave u" style="--d:${(k * 0.3).toFixed(1)}s"/>`).join("")}</g>
             <path id="lab-foot" class="lab-foot"/>
             <g clip-path="url(#lab-wclip)"><g id="lab-arrows" class="lab-arrows">${arrows}</g></g>
-            <path class="lab-base" fill="url(#${p}-body)" d="M96 ${cy + R + 1}H136V177.4H96Z"/>
-            <path class="lab-sensor" d="M96.5 177.4Q97.5 170 106 168.2H126Q134.5 170 135.5 177.4Z"/>
-            <ellipse class="ef-us" cx="${cx}" cy="168.4" rx="4.4" ry="1.4" fill="url(#${p}-gold)"/>
+            <path d="M88 ${cy + R - 0.5}Q${cx} ${cy + R + 3} 144 ${cy + R - 0.5}L144 ${cy + R + 4}H88Z" fill="url(#${p}-ss)"/>
+            <path d="M97 177.6Q98 170.4 106 168.6H126Q134 170.4 135 177.6Z" fill="url(#${p}-blk)"/>
+            <path class="sc-sheen" d="M104 170.2H128"/>
+            <ellipse cx="${cx}" cy="168.6" rx="4.6" ry="1.4" fill="url(#${p}-brass)"/>
           </g>
-          <rect width="${w}" height="${h}" fill="url(#${p}-grid)"/>
-          <path class="ef-edge" d="${circ(R + wall)}${circ(R)}"/>
           ${level(0.6, "h", "High", 38)}${level(0.85, "hh", "High-high", 64)}
-          <path class="ef-hud" d="${corners}"/>
-        </svg>`;
+        </svg></div>`;
 }
 
 const labSection = ({ eyebrow = "", title = "See what a storm does to a sewer.", lede = "Send a storm through a model catchment and watch the hydrograph respond. The gap between measured flow and the dry weather pattern is inflow and infiltration: water that should never have reached the sewer." } = {}) => `
@@ -799,64 +806,61 @@ const labSection = ({ eyebrow = "", title = "See what a storm does to a sewer.",
 // beam and its wavefronts, the footprint and the range dimension.
 const LID = { w: 480, h: 400, ground: 36, crown: 316, inv: 368, wall: 10, shaft: [165, 315], cx: 240, face: 133, depth: 4 };
 function lidottSvg() {
-  const p = "lid", { w, h, ground, crown, inv, wall, cx, face, depth } = LID, [s0, s1] = LID.shaft;
+  const p = "lid", { w, h, ground: G, crown, inv, wall, cx, face, depth } = LID, [s0, s1] = LID.shaft;
   const yOf = (m) => inv - (m / depth) * (inv - face);
-  const corners = [[6, 6, 1, 1], [w - 6, 6, -1, 1], [6, h - 6, 1, -1], [w - 6, h - 6, -1, -1]].map(([x, y, sx, sy]) => `M${x} ${y + 14 * sy}V${y}H${x + 14 * sx}`).join("");
-  // an alarm level: a dashed line across the shaft, out to a pill tag that
+  // an alarm level: a dashed line across the shaft, out to a plate that
   // sits against the right edge (it grows leftwards on a phone)
-  const level = (m, cls, text, width) => `<path class="lid-level ${cls}" d="M${s0} ${f1(yOf(m))}H${w - 12 - width - 2}"/><g transform="translate(${w - 12 - width} ${f1(yOf(m))})"><g class="lid-tag ${cls}"><rect x="0" y="-9.5" width="${width}" height="19" rx="9.5"/><circle cx="10" cy="0" r="3"/><text x="18" y="4">${text}</text></g></g>`;
-  const defs = `${efDefs(p, { dark: true })}
-    <linearGradient id="${p}-wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="ef-w0"/><stop offset=".18" class="ef-w1"/><stop offset="1" class="ef-w2"/></linearGradient>
-    <linearGradient id="${p}-red" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#e5584c"/><stop offset=".4" stop-color="#c8352b"/><stop offset="1" stop-color="#a32a22"/></linearGradient>
-    <radialGradient id="${p}-bg" gradientUnits="userSpaceOnUse" cx="${cx}" cy="${face}" r="${inv - face}"><stop offset="0" class="ef-g0 r"/><stop offset="1" class="ef-g1 r"/></radialGradient>
-    <pattern id="${p}-grid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0H0V20" class="ef-gridline"/></pattern>
-    <clipPath id="${p}-clip"><path d="M${s0} ${ground}H${s1}V${crown}H${w}V${inv}H0V${crown}H${s0}Z"/></clipPath>
-    <clipPath id="${p}-bclip"><rect id="lid-bclip-r" x="0" y="${crown}" width="${w}" height="${inv - crown}"/></clipPath>`;
+  const level = (m, cls, text, width) => `<path class="lid-level ${cls}" d="M${s0} ${f1(yOf(m))}H${w - 12 - width - 2}"/><g transform="translate(${w - 12 - width} ${f1(yOf(m))})"><g class="lid-tag ${cls}"><rect x="0" y="-9.5" width="${width}" height="19" rx="2"/><circle cx="10" cy="0" r="3"/><text x="18" y="4">${text}</text></g></g>`;
   const y0 = f1(yOf(1.1));
-  // the ground: road and soil, the shaft and the sewer cut and hatched, the
-  // benching behind the channel, cover and frame, step irons
-  const section = `
-    <rect x="0" y="${ground}" width="${w}" height="${h - ground}" fill="url(#${p}-soil)"/>
-    <rect class="ef-road" x="0" y="${ground - 5}" width="${w}" height="5"/>
-    <rect x="0" y="${crown}" width="${w}" height="${inv - crown}" fill="url(#${p}-air)"/>
-    <rect x="${s0}" y="${ground}" width="${s1 - s0}" height="${crown - ground}" fill="url(#${p}-air)"/>
-    <rect class="lid-bench" x="${s0}" y="${crown}" width="${s1 - s0}" height="${inv - crown}" fill="url(#${p}-cut)"/>
-    <path class="lid-bench-edge" d="M${s0} ${crown + 0.5}H${s1}"/>
-    <rect id="lid-water" x="0" y="${y0}" width="${w}" height="${f1(inv - y0)}" fill="url(#${p}-wg)" clip-path="url(#${p}-clip)"/>
-    <g clip-path="url(#${p}-bclip)" class="ef-bits">${[[30, 340, 0], [140, 356, -2.6], [90, 326, -4.4], [400, 348, -1.3], [250, 334, -5.6], [330, 360, -3.2]].map(([x, y, d]) => `<circle cx="${x}" cy="${y}" r="2" style="--d:${d}s"/>`).join("")}</g>
-    <path id="lid-surf-g" class="ef-surf-g" d="M0 ${y0}H${w}"/><path id="lid-surf" class="ef-surf" d="M0 ${y0}H${w}"/>
-    <path fill="url(#${p}-cut)" d="M0 ${crown - wall}H${s0 - wall}V${ground}H${s0}V${crown}H0ZM${s1} ${ground}H${s1 + wall}V${crown - wall}H${w}V${crown}H${s1}ZM0 ${inv}H${w}V${inv + wall}H0Z"/>
-    <path class="ef-edge" d="M0 ${crown}H${s0}V${ground}M${s1} ${ground}V${crown}H${w}M0 ${inv}H${w}M0 ${crown - wall}H${s0 - wall}V${ground}M${s1 + wall} ${ground}V${crown - wall}H${w}M0 ${inv + wall}H${w}"/>
-    <rect class="ef-frame" x="${s0 - wall - 5}" y="${ground - 8}" width="${s1 - s0 + 2 * wall + 10}" height="4" rx="1"/>
-    <rect class="ef-lid" x="${s0 - 1}" y="${ground - 9.5}" width="${s1 - s0 + 2}" height="3.6" rx="1"/>
-    ${Array.from({ length: 16 }, (_, k) => ground + 30 + 16 * k).filter((y) => y < crown - 8).map((y) => `<path class="ef-step" d="M${s1} ${y}h-7v5h7"/>`).join("")}`;
-  // the alarm itself, after its photograph: the rail across the shaft, the
-  // clamp and strap, the red body with its label, the LED and the radar face
+  const oc = (s0 + s1) / 2, open = 96;
+  // the still manhole, in a layer of its own under the moving one
+  const pb = `${p}b`;
+  const back = `<svg class="lid-back" viewBox="0 0 ${w} ${h}" aria-hidden="true"><defs>${efDefs(pb, { k: 0.7 })}</defs>
+    ${K.ground(pb, { x0: 0, x1: w, y: G, bottom: h, holes: [[oc - open / 2 - 9, oc + open / 2 + 9]] })}
+    ${K.pipeLong(pb, { x0: 0, x1: w, crown, inv, t: wall, joints: [60, 420], gaps: [[s0 - wall, s1 + wall]], open: [[s0, s1]], bed: 0, stain: inv - 14 })}
+    ${K.chamber(pb, { a: s0, b: s1, crown, inv, t: wall, base: 14 })}
+    ${K.shaft(pb, { a: s0, b: s1, top: G, bottom: crown, t: wall, ring: 44, slab: 10, open, oc, steps: Array.from({ length: 12 }, (_, k) => 96 + 18 * k).filter((y) => y < crown - 10), stepW: 24, wallTo: crown })}
+    ${K.chamberWalls(pb, { a: s0, b: s1, top: crown, crown, inv, t: wall, base: 14 })}
+  </svg>`;
+  const defs = `${efDefs(p, { k: 0.7 })}
+    <linearGradient id="${p}-wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9db4a8"/><stop offset=".03" stop-color="#7f9a8d"/><stop offset=".3" stop-color="#5f7c70"/><stop offset="1" stop-color="#344d45"/></linearGradient>
+    <radialGradient id="${p}-bg" gradientUnits="userSpaceOnUse" cx="${cx}" cy="${face}" r="${inv - face}"><stop offset="0" class="ef-g0 r"/><stop offset="1" class="ef-g1 r"/></radialGradient>
+    <clipPath id="${p}-clip"><path d="M${s0} ${G}H${s1}V${crown}H${w}V${inv}H0V${crown}H${s0}Z"/></clipPath>
+    <clipPath id="${p}-bclip"><rect id="lid-bclip-r" x="0" y="${crown}" width="${w}" height="${inv - crown}"/></clipPath>`;
+  // the alarm itself, after its photograph: the aluminium rail across the
+  // shaft under the slab, the dark grey bracket clamped to it, the red
+  // housing with its label (barcode, maker's mark, warning) and the black
+  // radar face underneath; a status lamp follows the alarm state
   const device = `
     <g class="lid-device">
-      <rect class="lid-rail" x="${s0}" y="46" width="${s1 - s0}" height="8" rx="1" fill="url(#${p}-steel)"/>
-      <rect class="lid-clamp" x="229" y="42" width="22" height="16" rx="2"/>
-      <circle class="ef-bolt" cx="234.5" cy="50" r="1.3"/><circle class="ef-bolt" cx="245.5" cy="50" r="1.3"/>
-      <path class="lid-strap" d="M235 58H245V65.5Q245 68.5 242 68.5H238Q235 68.5 235 65.5Z"/>
-      <path class="lid-body" fill="url(#${p}-red)" d="M228 68H252Q258 68 258.6 74L262 123Q262.4 130 255 130H225Q217.6 130 218 123L221.4 74Q222 68 228 68Z"/>
-      <path class="ef-shine" d="M225.6 76L223.2 118"/>
-      <rect class="ef-label" x="231" y="80" width="18" height="30" rx="1.5"/>
-      <rect class="ef-mark" x="231" y="80" width="2.6" height="30" rx="1"/>
-      <path class="ef-print" d="M236.2 85.5h9M236.2 89.5h10.5M236.2 93.5h6.5M236.2 100.5h10.5M236.2 104.5h8"/>
-      <circle class="lid-led-g" cx="240" cy="120" r="5.5"/><circle class="lid-led" cx="240" cy="120" r="2.6"/>
-      <ellipse class="lid-face" cx="240" cy="130.4" rx="13" ry="3" fill="url(#${p}-dome)"/>
-      <ellipse class="ef-glint" cx="235" cy="129.6" rx="2.2" ry=".7"/>
+      <rect x="${s0}" y="54" width="${s1 - s0}" height="8" fill="url(#${p}-ss)"/><path class="sc-edge-dk" d="M${s0} 62H${s1}"/>
+      <circle class="sc-bolt" cx="${s0 + 4}" cy="58" r="1.2"/><circle class="sc-bolt" cx="${s1 - 4}" cy="58" r="1.2"/>
+      <path d="M227 51H253V66H246V74H234V66H227Z" fill="#3a3f42"/><path class="sc-edge-hi" d="M227 51.5H253"/>
+      <circle class="sc-bolt" cx="232" cy="57.5" r="1.3"/><circle class="sc-bolt" cx="248" cy="57.5" r="1.3"/>
+      <path d="M227 72Q227 67 233 67H247Q253 67 253.6 72L258.6 117H221.4Z" fill="url(#${p}-redp)"/>
+      <path d="M219.6 117H260.4V130Q260.4 132 258.4 132H221.6Q219.6 132 219.6 130Z" fill="url(#${p}-redp)"/>
+      <path class="sc-edge-dk" d="M219.8 117H260.2"/>
+      <path class="sc-sheen" d="M227.6 74L223.8 114"/>
+      <rect x="229" y="77" width="22" height="34" rx=".8" fill="url(#${p}-label)"/>
+      <path class="lid-barcode" d="M231 79.5v4.6M232 79.5v4.6M233.4 79.5v4.6M234.2 79.5v4.6M235.6 79.5v4.6M237 79.5v4.6M237.8 79.5v4.6M239.4 79.5v4.6M240.6 79.5v4.6M241.4 79.5v4.6M242.8 79.5v4.6M244 79.5v4.6M245.2 79.5v4.6M246.4 79.5v4.6M247.8 79.5v4.6M248.6 79.5v4.6"/>
+      <path d="M232 87.4h3.2q2.2 0 2.2 2.2t-2.2 2.2H232Z" fill="#1d4f9c"/><path class="lid-arcs" d="M239 87.6q1.2 2 0 4M240.6 87q1.8 2.6 0 5.2M242.2 86.4q2.4 3.2 0 6.4"/>
+      <path d="M240 95.6l3.4 5.8h-6.8Z" fill="none" stroke="#2b2b2b" stroke-width=".6"/>
+      <path class="sc-lbl-r" d="M232 104h16M232 106h13M232 108h15"/>
+      <circle class="lid-led-g" cx="240" cy="124.6" r="3.4"/><circle class="lid-led" cx="240" cy="124.6" r="1.6"/>
+      <rect x="224" y="131.6" width="32" height="2" rx=".8" fill="#141618"/>
     </g>`;
   const inner = `
-    <rect width="${w}" height="${h}" fill="url(#${p}-grid)"/>
+    <rect id="lid-water" x="0" y="${y0}" width="${w}" height="${f1(inv - y0)}" fill="url(#${p}-wg)" clip-path="url(#${p}-clip)"/>
+    <g clip-path="url(#${p}-bclip)" class="ef-bits">${[[30, 340, 0], [140, 356, -2.6], [90, 326, -4.4], [400, 348, -1.3], [250, 334, -5.6], [330, 360, -3.2]].map(([x, y, d]) => `<circle cx="${x}" cy="${y}" r="1.3" style="--d:${d}s"/>`).join("")}</g>
+    <path id="lid-surf-g" class="sc-surf-lo" d="M0 ${y0}H${w}"/><path id="lid-surf" class="sc-surf" d="M0 ${y0}H${w}"/>
     ${level(2, "h", "High 2.0 m", 84)}${level(3, "hh", "High-high 3.0 m", 116)}
     <g class="lid-radar"><path id="lid-beam" class="ef-beam r" fill="url(#${p}-bg)"/><g class="ef-waves" id="lid-waves">${[0, 1, 2, 3].map((k) => `<path class="ef-wave r" style="--d:${(k * 0.3).toFixed(1)}s"/>`).join("")}</g><path id="lid-foot" class="ef-foot r"/></g>
     <g class="lid-range"><path id="lid-ext" class="lid-ext"/><path id="lid-dim" class="lid-dim"/><text id="lid-dim-t" class="lid-dim-t" x="106" y="${f1((face + y0) / 2 - 3)}" text-anchor="end"><tspan id="lid-dim-v">2.90 m</tspan><tspan class="lid-dim-l" x="106" dy="1.3em">radar range</tspan></text></g>
     ${device}
-    <g class="lid-txt"><text x="12" y="24">Ground</text><text x="${s1 + wall + 10}" y="78">LIDoTT Alarm</text><text x="12" y="${crown + 31}">Sewer</text></g>
-    <text class="lid-flow-l" x="${w - 42}" y="${crown + 31}" text-anchor="end">Flow</text><path class="lid-arrow" d="M${w - 34} ${crown + 27}h20m-5-3.6 5 3.6-5 3.6"/>
-    <path class="ef-hud" d="${corners}"/>`;
-  return `<svg id="lidott-svg" class="ef-dark" viewBox="0 0 ${w} ${h}" data-level="0" role="img" aria-label="A manhole in section, with a LIDoTT Alarm hung under the cover on its bracket and its radar beam measuring down the shaft to the water. Dashed lines mark the high and high-high alarm levels, and the radar range is dimensioned beside the shaft. The water level can be dragged from the sewer at the bottom up the shaft."><defs>${defs}</defs>${section}${inner}</svg>`;
+    ${K.tag(s1 + wall + 12, 84, "LIDoTT Alarm")}${K.lead([[s1 + wall + 8, 80], [258, 92]])}
+    ${K.tag(12, crown + 31, "Sewer")}
+    <text class="lid-flow-l" x="${w - 42}" y="${crown + 31}" text-anchor="end">Flow</text><path class="lid-arrow" d="M${w - 34} ${crown + 27}h20m-5-3.6 5 3.6-5 3.6"/>`;
+  return `<div class="lid-stage">${back}<svg id="lidott-svg" class="ef-dark" viewBox="0 0 ${w} ${h}" data-level="0" role="img" aria-label="A manhole in section, with a LIDoTT Alarm hung under the cover on its bracket and its radar beam measuring down the shaft to the water. Dashed lines mark the high and high-high alarm levels, and the radar range is dimensioned beside the shaft. The water level can be dragged from the sewer at the bottom up the shaft."><defs>${defs}</defs>${inner}</svg></div>`;
 }
 const lidottDemo = ({ link = "" } = {}) => `
 <div class="demo" data-reveal>
@@ -1178,7 +1182,7 @@ function fsScreen() {
       ${badge(x, 229, n, c, 4.6)}`;
     const ticks = [0, 0.5, 1, 1.5, 2, 2.5];
     return `<svg viewBox="0 0 480 270" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
-    <defs>${efDefs("psm")}
+    <defs>${efDefsFlat("psm")}
       <linearGradient id="psm-wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b2e3d9" stop-opacity=".9"/><stop offset=".2" stop-color="#7fc7b9" stop-opacity=".9"/><stop offset="1" stop-color="#2e8479" stop-opacity=".92"/></linearGradient>
       <linearGradient id="psm-beam" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#38bdf8" stop-opacity=".34"/><stop offset="1" stop-color="#38bdf8" stop-opacity=".06"/></linearGradient>
     </defs>
@@ -2376,11 +2380,11 @@ function eflowHero(pg) {
 <figure class="hero-product" data-reveal="scale" style="--i:2">
   <div class="hero-product-shot ef-hero">
     <div class="ef-hero-stage">
-      ${layer("ef-dark", `<rect width="400" height="400" fill="url(#${p}-soil)"/><rect y="68" width="400" height="332" fill="url(#${p}-air)"/><path fill="url(#${p}-cut)" d="M0 46H400V68H0ZM0 382H400V400H0Z"/><path class="ef-edge" d="M0 46H400M0 68H400M0 382H400"/><rect x="92" y="67" width="196" height="16" rx="2" fill="url(#${p}-steel)" fill-opacity=".7"/>`, efDefs(p, { dark: true }))}
+      ${layer("ef-dark", `<rect width="400" height="46" fill="url(#${p}-soil)"/><rect y="46" width="400" height="22" fill="url(#${p}-conc)"/><rect y="68" width="400" height="314" fill="url(#${p}-wall)"/><rect y="68" width="400" height="314" fill="url(#${p}-inh)"/><rect y="382" width="400" height="18" fill="url(#${p}-conc)"/><path class="sc-cut-edge" d="M0 46H400M0 68H400M0 382H400"/><path class="sc-ao" d="M0 69.2H400"/><path class="sc-bore-joint" d="M34 68V382M368 68V382"/><path class="sc-bore-joint l" d="M35 68V382M369 68V382"/><rect x="88" y="66" width="204" height="15" rx="1.5" fill="url(#${p}-ss)"/><path class="sc-edge-dk" d="M88 81H292"/>`, `${efDefs(p, { k: 0.9 })}<linearGradient id="${p}-inh" href="#${p}-in-pipe" gradientUnits="userSpaceOnUse" x1="0" y1="68" x2="0" y2="382"/>`)}
       ${layer("ef-dark ef-hero-radar", `${rv.draw}${rd.draw}`, `${rv.defs}${rd.defs}`)}
       ${layer("ef-dark ef-hero-us", `${u1.draw}${u2.draw}`, `${u1.defs}${u2.defs}`)}
       <img src="${pg.image}" alt="${esc(pg.name)}" width="963" height="471" fetchpriority="high">
-      ${layer("ef-hero-water", `<rect width="400" height="400" fill="url(#${p}-w)"/><rect width="400" height="7" fill="#9fe7da" fill-opacity=".28"/><rect width="400" height="2" fill="#d6fff7"/>${[[200, 30], [300, 54], [40, 196], [168, 256], [292, 214]].map(([x, y]) => `<path class="ef-hero-arrow" d="M${x} ${y}h44m-7-4.6 7 4.6-7 4.6"/>`).join("")}`, `<linearGradient id="${p}-w" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5fc4b4" stop-opacity=".62"/><stop offset=".5" stop-color="#1b8a7d" stop-opacity=".78"/><stop offset="1" stop-color="#0d6b62" stop-opacity=".9"/></linearGradient>`)}
+      ${layer("ef-hero-water", `<rect width="400" height="400" fill="url(#${p}-w)"/><rect width="400" height="6" fill="#fff" fill-opacity=".12"/><rect width="400" height="1.6" fill="#eef8f3" fill-opacity=".9"/>${[[200, 30], [300, 54], [40, 196], [168, 256], [292, 214]].map(([x, y]) => `<path class="ef-hero-arrow" d="M${x} ${y}h44m-7-4.6 7 4.6-7 4.6"/>`).join("")}`, `<linearGradient id="${p}-w" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9db4a8" stop-opacity=".72"/><stop offset=".04" stop-color="#7f9a8d" stop-opacity=".76"/><stop offset=".45" stop-color="#5f7c70" stop-opacity=".84"/><stop offset="1" stop-color="#344d45" stop-opacity=".94"/></linearGradient>`)}
     </div>
     <p class="ef-hero-tag" aria-hidden="true"><span class="n"><i></i>${esc(pg.hero.normal)}</span><span class="s"><i></i>${esc(pg.hero.surcharge)}</span></p>
   </div>
@@ -2396,32 +2400,33 @@ function eflowHero(pg) {
 const DEMO = { w: 560, h: 312, ground: 40, crown: 176, inv: 296, wall: 10, shaft: [400, 456] };
 function eflowDemo() {
   const p = "efd";
-  const ef = efSensor(p, 310, DEMO.crown, 1, { cable: "C404 185 412.5 182 412.5 168V74" });
+  const ef = efSensor(p, 310, DEMO.crown, 1, { cable: "C404 185 412.5 182 412.5 74" });
   const [ux, uy, udx, udy] = ef.us;
   const bu = efBeam(p, "bu", [ux - 0.8, uy - 2, udx, udy], 2.5, { len: 106, kind: "u", waves: 5 }), bu2 = efBeam(p, "bu2", [ux + 0.7, uy + 2.4, udx, udy], 2.5, { len: 98, kind: "u", waves: 5 });
   const rad = (id, [x, y], r) => `<radialGradient id="${p}-${id}" gradientUnits="userSpaceOnUse" cx="${x}" cy="${y}" r="${r}"><stop offset="0" class="ef-g0 r"/><stop offset="1" class="ef-g1 r"/></radialGradient>`;
-  const defs = `${efDefs(p, { dark: true })}${rad("bv", ef.vel, 112)}${rad("bd", ef.depth, 90)}${bu.defs}${bu2.defs}
-    <linearGradient id="${p}-wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="ef-w0"/><stop offset=".18" class="ef-w1"/><stop offset="1" class="ef-w2"/></linearGradient>
-    <pattern id="${p}-grid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0H0V20" class="ef-gridline"/></pattern>
+  // the still street, pipe and shaft in one layer; the water and everything
+  // that moves with it in a layer of its own on top (widgets.js), so a storm
+  // never repaints the textures underneath
+  const back = `<svg class="ef-back" viewBox="0 0 ${DEMO.w} ${DEMO.h}" aria-hidden="true"><defs>${efDefs(`${p}b`)}</defs>${efSection(`${p}b`, "", "", DEMO)}</svg>`;
+  const defs = `${efDefs(p)}${rad("bv", ef.vel, 112)}${rad("bd", ef.depth, 90)}${bu.defs}${bu2.defs}
+    <linearGradient id="${p}-wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9db4a8"/><stop offset=".04" stop-color="#7f9a8d"/><stop offset=".35" stop-color="#5f7c70"/><stop offset="1" stop-color="#344d45"/></linearGradient>
     <clipPath id="ef-clip"><path id="ef-clip-r" d="M0 266H560V296H0Z"/></clipPath>`;
-  const water = `<path id="ef-water" fill="url(#${p}-wg)" d="M0 266H560V296H0Z"/><path id="ef-surf-g" class="ef-surf-g" d="M0 266H560"/><path id="ef-surf" class="ef-surf" d="M0 266H560"/>`;
-  const corners = [[6, 6, 1, 1], [554, 6, -1, 1], [6, 306, 1, -1], [554, 306, -1, -1]].map(([x, y, sx, sy]) => `M${x} ${y + 14 * sy}V${y}H${x + 14 * sx}`).join("");
+  const water = `<path id="ef-water" fill="url(#${p}-wg)" d="M0 266H560V296H0Z"/><path id="ef-surf-g" class="sc-surf-lo" d="M0 266H560"/><path id="ef-surf" class="sc-surf" d="M0 266H560"/>`;
   const inner = `
-    <rect width="${DEMO.w}" height="${DEMO.h}" fill="url(#${p}-grid)"/>
-    <g clip-path="url(#ef-clip)" class="ef-bits">${[[30, 282, 0], [120, 290, -2], [210, 250, -4.5], [70, 236, -6], [160, 214, -1], [250, 288, -3.4], [20, 204, -5.2], [90, 262, -3]].map(([x, y, d]) => `<circle cx="${x}" cy="${y}" r="2" style="--d:${d}s"/>`).join("")}</g>
+    ${water}
+    <g clip-path="url(#ef-clip)" class="ef-bits">${[[30, 282, 0], [120, 290, -2], [210, 250, -4.5], [70, 236, -6], [160, 214, -1], [250, 288, -3.4], [20, 204, -5.2], [90, 262, -3]].map(([x, y, d]) => `<circle cx="${x}" cy="${y}" r="1.3" style="--d:${d}s"/>`).join("")}</g>
     <g class="ef-prof-g"><path id="ef-pf-base" class="ef-prof-base"/><path id="ef-pf-env" class="ef-prof-env"/><path id="ef-pf" class="ef-prof"/><path id="ef-pf-top" class="ef-prof-top"/><path id="ef-pf-mean" class="ef-prof-mean"/><text id="ef-vtag" class="ef-tag" x="0" y="0"></text></g>
     <g class="ef-radar"><path id="ef-bv" class="ef-beam r" fill="url(#${p}-bv)"/><path id="ef-bd" class="ef-beam r" fill="url(#${p}-bd)"/><g class="ef-waves" id="ef-wv">${'<path class="ef-wave r"/>'.repeat(4)}</g><g class="ef-waves" id="ef-wd">${'<path class="ef-wave r"/>'.repeat(3)}</g><path id="ef-foot" class="ef-foot r"/><text class="ef-tag r" x="12" y="196">Radar measuring</text></g>
     <g class="ef-uswrap">${bu.draw}${bu2.draw}<text class="ef-tag u" x="12" y="196">Ultrasonic measuring</text></g>
     ${ef.draw}
     <g id="ef-head" class="ef-head"><path id="ef-head-ext" class="ef-ext"/><path id="ef-head-dim" class="ef-dim"/><text id="ef-head-t" x="484" y="120"><tspan id="ef-head-v">0.00 m</tspan><tspan x="484" dy="1.2em">head</tspan></text></g>
-    <g class="ef-txt"><text x="12" y="26">Ground</text><text x="472" y="72">Logger</text><text x="300" y="166" text-anchor="end">E-Flow 3 at the obvert</text></g>
-    <text class="ef-flow-l" x="494" y="287">Flow</text><path class="dg-arrow w" d="M526 283h20m-5-3.6 5 3.6-5 3.6"/>
-    <path class="ef-hud" d="${corners}"/>`;
+    ${K.tag(470, 96, "Logger")}${K.tag(150, 196, "E-Flow 3 at the obvert")}<path class="sc-lead" d="M262 192L318 179"/><circle class="sc-lead-dot" cx="318" cy="179" r="1.9"/>
+    <text class="ef-flow-l" x="494" y="287">Flow</text><path class="dg-arrow w" d="M526 283h20m-5-3.6 5 3.6-5 3.6"/>`;
   return `
 <div class="demo ef-demo" data-reveal>
   <div class="panel">
     <div class="panel-head"><div class="panel-title">${icon("waves", false)} Drag the water level</div><button class="btn btn-ghost btn-sm" type="button" id="ef-play" aria-pressed="false">${icon("cloud-rain", false)} <span id="ef-play-l">Play a storm</span></button></div>
-    <svg id="ef-svg" class="ef-dark" viewBox="0 0 ${DEMO.w} ${DEMO.h}" data-pair="radar" role="img" aria-label="A sewer pipe and manhole in section, with E-Flow 3 at the top of the pipe and a logger near the top of the manhole. Arrows in the water show the velocity through the depth. The water level can be raised from low flow to a full surcharge up the manhole."><defs>${defs}</defs>${efSection(p, water, inner, DEMO)}</svg>
+    <div class="ef-stage">${back}<svg id="ef-svg" class="ef-dark" viewBox="0 0 ${DEMO.w} ${DEMO.h}" data-pair="radar" role="img" aria-label="A sewer pipe and manhole in section, with E-Flow 3 at the top of the pipe and a logger near the top of the manhole. Arrows in the water show the velocity through the depth. The water level can be raised from low flow to a full surcharge up the manhole."><defs>${defs}</defs>${inner}</svg></div>
     <label class="range"><span>Water level <output><span id="ef-level">0.20</span> m</output></span><input id="ef-range" type="range" min="0.05" max="2.6" step="0.01" value="0.2"></label>
     <div class="ef-trace">
       <p class="ef-trace-h"><b>The record</b><span><i class="r"></i>Radar <i class="u"></i>Ultrasonic and pressure</span></p>
