@@ -1532,7 +1532,9 @@ input[type="range"]:active::-moz-range-thumb { cursor: grabbing; box-shadow: 0 0
 
 /* the flow meter's pipe: the kit's cross-section on the deep teal (build.mjs:
    labPipe), the water a translated block, the beam and arrows set by lab.js */
-#lab-pipe { display: block; width: 100%; max-width: 300px; height: auto; margin: 4px auto 0; border-radius: var(--radius); box-shadow: 0 0 0 1px rgba(127, 209, 196, .14); }
+#lab-pipe { display: block; width: 100%; height: auto; will-change: transform; }
+.lab-stage { display: grid; width: 100%; max-width: 300px; margin: 4px auto 0; border-radius: var(--radius); overflow: hidden; box-shadow: 0 0 0 1px rgba(127, 209, 196, .14); }
+.lab-stage > svg { grid-area: 1 / 1; display: block; width: 100%; height: auto; }
 #lab-pipe text { font: 500 11px var(--font-body); }
 .lab-level { fill: none; stroke-width: 1.2; stroke-dasharray: 4 3; }
 .lab-level.h { stroke: #f6a04d; stroke-opacity: .8; }
@@ -1540,8 +1542,6 @@ input[type="range"]:active::-moz-range-thumb { cursor: grabbing; box-shadow: 0 0
 .lab-tag rect { fill: rgba(4, 33, 31, .78); }
 #lab-pipe .lab-tag.h text { fill: #f6a04d; }
 #lab-pipe .lab-tag.hh text { fill: #f87171; }
-.lab-base { stroke: #0f1716; stroke-width: .5; }
-.lab-sensor { fill: #e9e4d8; stroke: #8f8872; stroke-width: .6; }
 .lab-foot { fill: none; stroke: #8fdcff; stroke-width: 2.6; stroke-linecap: round; }
 .lab-pipe-cap { margin-top: 8px; text-align: center; font-size: var(--text-2); color: var(--on-dark-faint); text-wrap: balance; }
 .state { display: flex; align-items: center; gap: 12px; margin-top: 16px; padding: 12px 14px; border-radius: var(--radius); border: 1px solid var(--line-dark); font-weight: 500; color: #fff; font-size: var(--text-4); transition: border-color .3s var(--ease), background-color .3s var(--ease); }
@@ -1573,10 +1573,6 @@ input[type="range"]:active::-moz-range-thumb { cursor: grabbing; box-shadow: 0 0
 #lidott-svg .lid-flow-l { fill: #fff; }
 .lid-arrow { fill: none; stroke: #fff; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .lid-bench { fill-opacity: .55; }
-.lid-bench-edge { fill: none; stroke: #2f6b64; stroke-width: 1; stroke-dasharray: 2 3; }
-.lid-rail { stroke: #5c6b69; stroke-width: .6; }
-.lid-clamp { fill: #1b2423; stroke: #4e5d5a; stroke-width: .8; }
-.lid-strap { fill: #1b2423; }
 .lid-body { stroke: #5a1812; stroke-width: .8; }
 .lid-face { stroke: #9fc7c0; stroke-width: .6; }
 .lid-led { fill: #4ade80; transition: fill .3s var(--ease); }
@@ -2057,7 +2053,8 @@ main:has(> .alt:last-child) + .footer { background: var(--bg); }
 
 /* LIDoTT demo + EAS gauge */
 .demo { display: grid; grid-template-columns: minmax(0, 1fr) minmax(260px, .8fr); gap: 18px; align-items: stretch; }
-#lidott-svg { display: block; width: 100%; max-width: 560px; height: auto; margin-inline: auto; touch-action: none; border-radius: var(--radius); }
+#lidott-svg { display: block; width: 100%; height: auto; touch-action: none; }
+.lid-stage { width: 100%; max-width: 560px; margin-inline: auto; }
 .demo .panel { display: flex; flex-direction: column; }
 .demo .sms { flex: 1; }
 /* E-Flow 3 changeover demo: the kit's drawing on the deep teal, read like
@@ -2067,13 +2064,8 @@ main:has(> .alt:last-child) + .footer { background: var(--bg); }
 #ef-svg text { font: 400 11px var(--font-body); fill: rgba(255, 255, 255, .66); }
 #ef-svg .ef-tag { font: 500 11px var(--font-mono); fill: #9fe7da; paint-order: stroke; stroke: rgba(4, 32, 29, .5); stroke-width: 2.2px; stroke-linejoin: round; }
 #ef-svg .ef-head text { fill: #7dd3fc; font-weight: 500; }
-.ef-dark .ef-road { fill: #1d4c47; }
 .ef-dark .ef-edge { stroke: #2f6b64; }
 .ef-dark .ef-frame { fill: #2e4543; } .ef-dark .ef-lid { fill: #46605d; }
-.ef-dark .ef-step, .ef-dark .ef-strap { stroke: #3f6f69; }
-.ef-dark .ef-logger { fill: #dfeeeb; stroke: #5fb4a6; }
-.ef-dark .ef-cable { stroke: #8fa9a5; stroke-width: 1.4; }
-.ef-dark .ef-body { stroke: #9fc7c0; stroke-width: .9; }
 .ef-dark .ef-surf { stroke: #b4efe4; stroke-width: 1.5; }
 .ef-dark .ef-w0 { stop-color: #7fd1c4; stop-opacity: .9; } .ef-dark .ef-w1 { stop-color: #3fa596; stop-opacity: .85; } .ef-dark .ef-w2 { stop-color: #0d6b62; stop-opacity: .95; }
 .ef-dark .ef-g0.r { stop-color: #f6a04d; stop-opacity: .55; } .ef-dark .ef-g1.r { stop-color: #f6a04d; stop-opacity: .05; }
@@ -2790,22 +2782,12 @@ a.card:hover > .card-media img { scale: 1.04; }
 .diagram .dg-b { font-weight: 600; fill: var(--ink); }
 .diagram .dg-m { fill: var(--muted); }
 @container (max-width: 440px) { .diagram text { font-size: 15.5px; } .diagram .dg-tick { font-size: 13px; } }
-.dg-surface { stroke: #9fb3b0; stroke-width: 2; fill: none; }
-.dg-ground-water { fill: var(--water); fill-opacity: .07; }
-.dg-table { stroke: #2b9bd0; stroke-width: 1.2; stroke-dasharray: 6 5; fill: none; }
-.dg-table-mark { fill: #2b9bd0; }
-.dg-flow, .dg-main-flow { fill: none; stroke: var(--brand-dark); stroke-width: 1.6; stroke-linecap: round; stroke-dasharray: 2 12; animation: dg-flow 1.4s linear infinite; }
+.dg-main-flow { fill: none; stroke: var(--brand-dark); stroke-width: 1.6; stroke-linecap: round; stroke-dasharray: 2 12; animation: dg-flow 1.4s linear infinite; }
 .dg-fall { fill: none; stroke: var(--eds); stroke-width: 2; stroke-linecap: round; stroke-dasharray: 3 6; animation: dg-flow 1s linear infinite; }
 @keyframes dg-flow { to { stroke-dashoffset: -14; } }
-.dg-crack { fill: none; stroke: #6b7f7c; stroke-width: 1.6; stroke-linejoin: round; }
-.dg-seep path { fill: none; stroke: #2b9bd0; stroke-width: 1.6; stroke-linecap: round; stroke-dasharray: 3 5; animation: dg-flow 1.2s linear infinite; }
-.dg-drips ellipse { fill: #2b9bd0; fill-opacity: 0; animation: dg-drip 1.8s var(--d, 0s) ease-in infinite; }
 @keyframes dg-drip { 0% { translate: 0 0; fill-opacity: 0; } 15% { fill-opacity: 1; } 80% { fill-opacity: 1; } 100% { translate: 0 13px; fill-opacity: 0; } }
-.dg-cable { fill: none; stroke: #3f5654; stroke-width: 1.4; stroke-linejoin: round; }
 .dg-bead { fill: var(--brand-dark); stroke: #fff; stroke-width: 1.2; }
 .dg-bead.hot { fill: #2b9bd0; }
-.dg-antenna { fill: var(--brand-dark); }
-.dg-ping { fill: none; stroke: var(--eds); stroke-width: 1.4; stroke-opacity: 0; animation: dg-ping 2.6s ease-out infinite; transform-box: fill-box; transform-origin: center; }
 @keyframes dg-ping { 0% { scale: .4; stroke-opacity: .9; } 100% { scale: 1.6; stroke-opacity: 0; } }
 .dg-link { fill: none; stroke: var(--eds); stroke-width: 1.4; stroke-dasharray: 4 5; animation: dg-flow 1.6s linear infinite reverse; }
 .dg-leader { fill: none; stroke: #8a9c9a; stroke-width: 1; }
@@ -2818,62 +2800,25 @@ a.card:hover > .card-media img { scale: 1.04; }
 .dg-level.alarm path { stroke: #c27803; }
 .dg-water { animation: dg-cycle 14s ease-in-out infinite; }
 @keyframes dg-cycle { 0% { translate: 0 74px; } 74% { translate: 0 0; } 100% { translate: 0 74px; } }
-.dg-main { fill: none; stroke: #8fa5a2; stroke-width: 6; stroke-linejoin: round; }
 .dg-main-flow { stroke: #fff; stroke-width: 1.8; animation: dg-flow .9s linear infinite, dg-pumping 14s step-end infinite; }
 .dg-run { fill: var(--green); fill-opacity: .18; animation: dg-run 14s step-end infinite; }
 @keyframes dg-pumping { 0% { stroke-opacity: 0; } 74% { stroke-opacity: 1; } 100% { stroke-opacity: 0; } }
 @keyframes dg-run { 0% { fill-opacity: .18; } 74% { fill-opacity: 1; } 100% { fill-opacity: .18; } }
-.dg-window rect { fill: #dfe9e7; }
-.dg-hose { fill: none; stroke: #6f8481; stroke-width: 3; stroke-linecap: round; }
 .dg-hose-flow { fill: none; stroke: #fff; stroke-width: 1.2; stroke-dasharray: 2 9; animation: dg-flow 1.6s linear infinite; }
-.dg-fit { fill: none; stroke: var(--eds); stroke-width: 1.6; stroke-dasharray: 5 4; }
-.dg-pt { fill: var(--brand-dark); fill-opacity: .55; }
-.dg-pt.shift { fill: #c27803; fill-opacity: .85; }
 /* the light kit (diagrams.mjs): the E-Flow materials on a white plate,
    so the service figures and the instrument screens read as one family */
 .diagram:not(.dg-screen) .ef-g0.r { stop-opacity: .34; }
 .diagram:not(.dg-screen) .ef-beam.r { stroke-opacity: .45; }
 .diagram:not(.dg-screen) .ef-surf-g { stroke-opacity: .32; }
 .dg-gw0 { stop-color: #2b9bd0; stop-opacity: .03; } .dg-gw1 { stop-color: #2b9bd0; stop-opacity: .12; }
-.dg-joint { fill: none; stroke: #b7c4c1; stroke-width: 1.4; }
-.dg-inst { fill: #ece8df; stroke: #7d8a88; stroke-width: .9; stroke-linejoin: round; }
-.dg-inst-base { fill: #2f3b39; }
-.dg-inst-print { fill: none; stroke: #a9b3b1; stroke-width: .8; stroke-linecap: round; }
-.dg-cab { stroke: #6f7e7c; stroke-width: 1; }
-.dg-cab-seam { fill: none; stroke: #8f9c9a; stroke-width: .9; stroke-linecap: round; }
-.dg-cab-handle { fill: #4e5957; }
-.dg-cab-foot { fill: #3e4846; }
-.dg-lamp { fill: var(--green); stroke: #fff; stroke-width: .8; }
-.dg-led-ok { fill: var(--green); }
-.dg-pump-body { stroke: #6f8481; stroke-width: 1; }
-.dg-pump-cap { fill: #5d6866; }
-.dg-main-core { fill: none; stroke: #d6e0de; stroke-width: 2.4; stroke-linejoin: round; }
-.dg-sampler { fill: #d9e0e6; stroke: #6f7e8a; stroke-width: 1; }
-.dg-sampler-top { fill: #8f9faa; }
-.dg-sampler-win { fill: #fff; stroke: #9aa8b3; stroke-width: .8; }
-.dg-bottle { fill: #e6f1f7; stroke: #6f7e8a; stroke-width: .8; }
-.dg-probe { fill: #2f3b39; }
-.dg-probe-tip { fill: none; stroke: var(--eds); stroke-width: 2; stroke-linecap: round; }
 .dg-bead-g { fill: none; stroke: #2b9bd0; stroke-opacity: .25; stroke-width: 6; }
 .dg-band-cool { fill: #2b9bd0; fill-opacity: .1; }
 .dg-arrow { fill: none; stroke: var(--brand-dark); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-.diagram .dg-alarm { fill: #b45309; }
 /* a river station (wqstation): the turf of the bank, the guard pipe's cut
    wall, the post and solar panel; data out of FlowSense (connect): one-way
    links whose dashes only ever travel outward, to a filled head */
-.dg-turf { fill: none; stroke: #8fae8c; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
-.dg-gp { fill: #e3e9e8; stroke: #7d8a88; stroke-width: .9; }
-.dg-post { fill: #c9d2d0; stroke: #6f7e7c; stroke-width: .9; }
-.dg-solar { fill: #2f4f69; stroke: #4e5957; stroke-width: .9; stroke-linejoin: round; }
-.dg-solar-grid { fill: none; stroke: rgba(255, 255, 255, .45); stroke-width: .6; }
 .dg-send { fill: none; stroke: var(--eds); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 3 4; animation: dg-flow 1.4s linear infinite; }
 .dg-head { fill: var(--brand); }
-.dg-building .dg-wall { fill: #e9eeed; stroke: #9fb3b0; stroke-width: 1.2; stroke-linejoin: round; }
-.dg-building .dg-roof { fill: #d9e1df; stroke: #9fb3b0; stroke-width: 1.2; stroke-linejoin: round; }
-.dg-building .dg-glazing { fill: #cfe3ea; }
-.dg-building .dg-stack { fill: #c3cecb; stroke: #9fb3b0; stroke-width: 1; }
-.dg-building .dg-wall-line { fill: none; stroke: #9fb3b0; stroke-width: 1; }
-.dg-building .dg-door { fill: #b9c6c3; }
 /* two panels side by side, one above the other on a phone, with a key */
 .dg-panels { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px 20px; }
 .dg-panel-h { display: grid; gap: 2px; margin: 0 0 6px; font-size: var(--text-3); line-height: var(--lh-snug); color: var(--muted); }
@@ -2887,11 +2832,7 @@ a.card:hover > .card-media img { scale: 1.04; }
 .dg-meas { fill: none; stroke: var(--brand-dark); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
 .dg-area { fill: var(--aqua); fill-opacity: .14; }
 .dg-area[fill] { fill-opacity: 1; }
-.dg-meas-g { fill: none; stroke: var(--eds); stroke-opacity: .16; stroke-width: 7; stroke-linejoin: round; stroke-linecap: round; }
 .dg-fit-band { fill: var(--eds); fill-opacity: .09; }
-.dg-pt { stroke: #fff; stroke-width: .8; }
-.dg-pt-g { fill: none; stroke: #c27803; stroke-opacity: .22; stroke-width: 6; }
-.dg-axis-arrow { fill: #c9d4d2; }
 .dg-tick-mark { fill: none; stroke: #c9d4d2; stroke-width: 1; }
 .diagram .dg-tick { font-size: 10.5px; fill: var(--muted); }
 .dg-sample { fill: var(--eds); }
@@ -2906,71 +2847,32 @@ a.card:hover > .card-media img { scale: 1.04; }
 @media (max-width: 900px) { .dg-eflowProfile .dg-panels { grid-template-columns: minmax(0, 1fr); } .dg-eflowProfile .dg-panel:last-child svg { max-width: 420px; } }
 .dg-eflowModes svg, .dg-eflowObvert svg, .dg-eflowProfile svg { overflow: hidden; border-radius: var(--radius); }
 .diagram .dg-h { paint-order: stroke; stroke: rgba(255, 255, 255, .88); stroke-width: 3.2px; stroke-linejoin: round; }
-.diagram .dg-t { fill: var(--brand-dark); font-weight: 600; }
 .diagram .dg-w { fill: #fff; paint-order: stroke; stroke: rgba(9, 76, 70, .55); stroke-width: 3px; stroke-linejoin: round; }
 .dg-leader.w { stroke: rgba(255, 255, 255, .75); }
 .dg-arrow.w { stroke: #fff; }
 .diagram .dg-gap-t { fill: #9a4f46; font-weight: 600; font-size: 12px; }
-.diagram .dg-i { font-style: italic; font-size: 15px; }
 /* rainfall: rain falling on the catchment, the gauge on its post, inflow
    running in at the manhole, and the chart's fast and slow responses */
 .dg-shower path { fill: none; stroke: #2b9bd0; stroke-opacity: .38; stroke-width: 1.1; stroke-linecap: round; stroke-dasharray: 5 9; animation: dg-flow .7s linear infinite; }
 .dg-inflow { fill: none; stroke: #2b9bd0; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 4 10; animation: dg-flow .8s linear infinite; }
 .dg-inflow-head { fill: none; stroke: #1d84b8; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .dg-band-fast { fill: #2b9bd0; fill-opacity: .32; }
-.dg-post { stroke: #7d8a88; stroke-width: .8; }
-.dg-gauge { stroke: #6f7e7c; stroke-width: 1; }
-.dg-gauge-rim { stroke: #94681f; stroke-width: .8; stroke-linejoin: round; }
-.dg-gauge-mouth { fill: #6b4c17; }
-.dg-gauge-spout { fill: none; stroke: #94681f; stroke-width: 2; stroke-linecap: round; }
-.dg-bucket { fill: none; stroke: #94681f; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-.dg-pivot { fill: #3e4846; }
 /* fullpipe: coils and their field, electrodes, clamp-on transducers on
    their bands, and sound pulses with and against the flow */
 .dg-rule { fill: none; stroke: #e3e9e8; stroke-width: 1; }
-.dg-coil { stroke: #94681f; stroke-width: .8; }
 .dg-coil-wind { fill: none; stroke: #94681f; stroke-opacity: .7; stroke-width: .9; }
 .dg-field { fill: none; stroke: #7a5bc7; stroke-width: 1.2; stroke-dasharray: 3 2.5; }
 .dg-field-arrow { fill: none; stroke: #7a5bc7; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
 .dg-volt { fill: none; stroke: #1d2726; stroke-width: 1.4; }
 .dg-volt-end { fill: none; stroke: #1d2726; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
-.dg-electrode { fill: #2f3b39; stroke: #fff; stroke-width: .8; }
-.dg-strap-band { fill: #5d6866; }
-.dg-tx { fill: #e4e9ea; stroke: #7d8a88; stroke-width: .9; }
-.dg-tx-screen { fill: #2f3b39; }
-.dg-tx-keys { fill: none; stroke: #5d6866; stroke-width: 1.8; stroke-linecap: round; }
 .dg-sound { fill: none; stroke: #1d6fa0; stroke-opacity: .6; stroke-width: 1.2; stroke-linejoin: round; }
 .dg-sound.back { stroke: #49b3e6; stroke-opacity: .85; }
 .dg-sound-pulse { fill: none; stroke: #1d6fa0; stroke-width: 2.6; stroke-linecap: round; stroke-dasharray: 3 11; animation: dg-flow 1s linear infinite; }
 .dg-sound-pulse.back { stroke: #49b3e6; }
 .dg-sound-arrow { fill: none; stroke: #1d6fa0; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
 .dg-sound-arrow.back { stroke: #49b3e6; }
-.dg-particle { fill: #8f7859; stroke: #fff; stroke-width: .6; }
-.dg-bubble { fill: #fff; fill-opacity: .85; stroke: #2b9bd0; stroke-width: .8; }
-.ef-road { fill: #59625f; }
 .ef-edge { fill: none; stroke: #8ea19e; stroke-width: 1; }
-.ef-frame { fill: #3e4846; }
-.ef-lid { fill: #5d6866; }
-.ef-step { fill: none; stroke: #7c8b89; stroke-width: 1.6; stroke-linejoin: round; }
-.ef-strap { stroke: #7c8b89; stroke-width: 2; }
-.ef-logger { fill: #e9f0ef; stroke: #627371; stroke-width: 1.2; }
-.ef-logger-cap { fill: #2f3b39; }
-.ef-cable { fill: none; stroke: #1d2726; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-.ef-body { stroke: #0f1716; stroke-width: .7; }
-.ef-shine { fill: none; stroke: rgba(255, 255, 255, .3); stroke-width: 1; stroke-linecap: round; }
-.ef-face { stroke: #4d5856; stroke-width: .5; }
-.ef-grille { fill: none; stroke: rgba(255, 255, 255, .28); stroke-width: .6; }
-.ef-glint { fill: rgba(255, 255, 255, .55); }
-.ef-label { fill: #eef2f1; }
-.ef-mark { fill: var(--eds); }
-.ef-print { fill: none; stroke: #9aa6a4; stroke-width: .7; }
-.ef-us { stroke: #7a5418; stroke-width: .5; }
-.ef-port { stroke: #5c6a68; stroke-width: .5; }
-.ef-bolt { fill: #7f8d8b; }
-.ef-gland { fill: #101716; }
-.ef-rib { stroke: #33403e; stroke-width: .7; }
 .ef-surf { fill: none; stroke: #2a8a7f; stroke-width: 1.4; }
-.ef-surf-hi { fill: none; stroke: rgba(255, 255, 255, .7); stroke-width: 1; }
 .ef-w0 { stop-color: #b2e3d9; } .ef-w1 { stop-color: #7fc7b9; } .ef-w2 { stop-color: #2e8479; }
 .ef-g0.r { stop-color: #f08c2b; stop-opacity: .5; } .ef-g1.r { stop-color: #f08c2b; stop-opacity: .06; }
 .ef-g0.u { stop-color: #2b9bd0; stop-opacity: .7; } .ef-g1.u { stop-color: #2b9bd0; stop-opacity: .12; }
@@ -3022,7 +2924,7 @@ a.card:hover > .card-media img { scale: 1.04; }
 @keyframes efh-water { 0%, 26% { translate: 0 0; } 44%, 60% { translate: 0 -61%; } 78%, 100% { translate: 0 0; } }
 @keyframes efh-radar { 0%, 31.5% { opacity: 1; } 33.5%, 64.5% { opacity: 0; } 66.5%, 100% { opacity: 1; } }
 @keyframes efh-us { 0%, 31.5% { opacity: 0; } 33.5%, 64.5% { opacity: 1; } 66.5%, 100% { opacity: 0; } }
-.dg-screen .dg-panel > svg, .dg-screen .dg-xray > svg, .dg-screen .dg-row > svg { box-shadow: 0 0 0 1px rgba(127, 209, 196, .14); }
+.dg-screen .dg-panel > svg, .dg-screen .dg-panel > .dg-stack, .dg-screen .dg-xray > .dg-stack, .dg-screen .dg-row > svg { box-shadow: 0 0 0 1px rgba(127, 209, 196, .14); }
 .dg-screen .dg-panel-h b { color: #fff; }
 .dg-screen .dg-panel-h span, .dg-screen .dg-legend { color: var(--on-dark-faint); }
 .dg-screen .dg-legend { border-top-color: var(--line-dark); }
@@ -3065,14 +2967,6 @@ a.card:hover > .card-media img { scale: 1.04; }
 .dg-screen .dg-isovel ellipse { stroke: rgba(255, 255, 255, .22); }
 /* E-Flow 3 seen through its housing (eflowXray) */
 .dg-xray svg { display: block; width: 100%; height: auto; aspect-ratio: 900 / 330; border-radius: var(--radius); overflow: hidden; }
-.xr-edge { fill: none; stroke: #9fe7da; stroke-width: 1.6; vector-effect: non-scaling-stroke; }
-.xr-edge-g { fill: none; stroke: #9fe7da; stroke-opacity: .2; stroke-width: 8; vector-effect: non-scaling-stroke; }
-.xr-pcb path { fill: none; stroke: rgba(127, 209, 196, .45); stroke-width: .9; vector-effect: non-scaling-stroke; }
-.xr-chip { fill: rgba(127, 209, 196, .14); stroke: rgba(127, 209, 196, .5); stroke-width: .9; vector-effect: non-scaling-stroke; }
-.xr-radar { fill: rgba(246, 160, 77, .35); stroke: #f6a04d; stroke-width: 1.4; vector-effect: non-scaling-stroke; }
-.xr-us { fill: rgba(56, 189, 248, .35); stroke: #38bdf8; stroke-width: 1.4; vector-effect: non-scaling-stroke; }
-.xr-gland { fill: #0e1716; stroke: #9fe7da; stroke-width: 1.2; vector-effect: non-scaling-stroke; }
-.ef-cable.xr { stroke: #9fc7c0; stroke-width: 3; }
 .dg-pin.xr circle { fill: #0d7c72; stroke: #9fe7da; box-shadow: none; }
 .dg-n.xr { background: #0d7c72; box-shadow: inset 0 0 0 1px #9fe7da; }
 .dg-numbered { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px 28px; margin-top: 18px; }
@@ -3082,7 +2976,8 @@ a.card:hover > .card-media img { scale: 1.04; }
 /* installation, step by step (eflowInstall) */
 .dg-steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; margin: 0; padding: 0; list-style: none; counter-reset: none; }
 .dg-steps li { display: grid; align-content: start; gap: 10px; }
-.dg-steps svg { border-radius: var(--radius); box-shadow: 0 0 0 1px rgba(127, 209, 196, .14); }
+.dg-steps svg { border-radius: var(--radius); }
+.dg-steps .dg-stack { border-radius: var(--radius); box-shadow: 0 0 0 1px rgba(127, 209, 196, .14); overflow: hidden; }
 .dg-step-h { display: flex; align-items: center; gap: 10px; }
 .dg-step-h b { font-family: var(--font-display); font-weight: 620; font-size: var(--text-6); color: #fff; line-height: var(--lh-tight); }
 .dg-step-n { flex: none; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; font: 600 var(--text-2)/1 var(--font-mono); color: var(--on-aqua); background: var(--aqua); box-shadow: 0 0 14px rgba(95, 180, 166, .6); }
@@ -3090,11 +2985,8 @@ a.card:hover > .card-media img { scale: 1.04; }
 @media (max-width: 1100px) { .dg-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 18px; } }
 @media (max-width: 560px) { .dg-steps { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 22px 12px; } .dg-step-h { align-items: flex-start; } .dg-step-h b { font-size: var(--text-4); } .dg-steps li > p:last-child { font-size: var(--text-3); } }
 .ins-move { fill: none; stroke: #9fe7da; stroke-width: 1.4; stroke-dasharray: 4 3; stroke-linecap: round; stroke-linejoin: round; animation: dg-flow 1.2s linear infinite; }
-.ins-clip { stroke: #9fe7da; stroke-width: 2; stroke-linecap: round; }
 .ins-wave { fill: none; stroke: #7fd1c4; stroke-width: 1.4; stroke-linecap: round; stroke-opacity: 0; animation: ef-wave 1.6s var(--d, 0s) linear infinite; }
 .ins-link { fill: none; stroke: #9fe7da; stroke-width: 1.3; stroke-dasharray: 3 4; animation: dg-flow 1.4s linear infinite reverse; }
-.ins-tablet { fill: #10201f; stroke: #9fe7da; stroke-width: 1.2; }
-.ins-screen { fill: #5fb4a6; fill-opacity: .55; }
 /* field photographs beside the heading in the built-for-the-sewer band */
 .ef-tough { align-items: center; }
 .ef-tough .photo-row .photo { margin-top: 0; }
@@ -3138,16 +3030,10 @@ a.card:hover > .card-media img { scale: 1.04; }
 .dg-arrow { fill: none; stroke: var(--brand-dark); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .dg-ping-u path { fill: none; stroke: #1d78a8; stroke-width: 1.4; stroke-linecap: round; stroke-opacity: 0; animation: dg-ping-u 1.5s var(--d, 0s) ease-out infinite; }
 @keyframes dg-ping-u { 0% { translate: 0 0; stroke-opacity: .9; } 100% { translate: 0 12px; stroke-opacity: 0; } }
-.dg-solid { fill: #9b8466; stroke: #6f5d45; stroke-width: .8; }
-.dg-solid.pass { animation: dg-pass 11s var(--d, 0s) linear infinite; }
-.dg-solid.stop { animation: dg-stop 8.8s var(--d, 0s) linear infinite; }
 @keyframes dg-pass { from { translate: -30px 0; } to { translate: 500px 0; } }
 @keyframes dg-stop { 0% { translate: -30px 0; fill-opacity: 0; stroke-opacity: 0; } 6% { fill-opacity: 1; stroke-opacity: 1; } 78% { translate: 208px 0; fill-opacity: 1; stroke-opacity: 1; } 90%, 100% { translate: 216px 0; fill-opacity: 0; stroke-opacity: 0; } }
 .dg-bits circle { fill: #fff; fill-opacity: .75; animation: dg-pass 9s var(--d, 0s) linear infinite; }
-.dg-mound { fill: #8f7859; stroke: #6f5d45; stroke-width: 1; stroke-linejoin: round; }
-.dg-mound-tx { fill: none; stroke: #6f5d45; stroke-width: 1.2; stroke-linecap: round; }
 .dg-rag { fill: none; stroke: #7a6549; stroke-width: 2.2; stroke-linecap: round; }
-.dg-grease { fill: #efe3b8; stroke: #cdbb86; stroke-width: .7; }
 .dg-isovel ellipse { fill: none; stroke: rgba(255, 255, 255, .45); stroke-width: .8; }
 .dg-facts { display: grid; gap: 8px; margin: 14px 0 0; padding: 0; list-style: none; font-size: var(--text-5); line-height: var(--lh-snug); color: var(--ink-2); }
 .dg-facts li { display: grid; grid-template-columns: 22px 1fr; gap: 10px; align-items: start; }
@@ -4454,7 +4340,6 @@ body.is-touring { overscroll-behavior-y: contain; }
 .sfd-strip { fill: #8b9294; }
 .sfd-sheet { fill: #cfe6e2; stroke: #1b4e4a; stroke-width: 1.4; stroke-linejoin: round; }
 .sfd-edge { fill: none; stroke: #1b4e4a; stroke-opacity: .5; stroke-width: 1.2; stroke-linejoin: round; }
-.sfd-bench { fill: #e4e9e7; }
 .sfd-floor { fill: #1f6b64; }
 .sfd-floor.b { fill: #2f3736; }
 .sfd-route { fill: none; stroke: #d9f5f0; stroke-width: 1.6; stroke-dasharray: 5 4; stroke-linecap: round; }
@@ -4463,7 +4348,6 @@ body.is-touring { overscroll-behavior-y: contain; }
 .sfd-sensor.s { fill: none; stroke: var(--ink-2); stroke-width: 1.1; stroke-dasharray: 4 3; }
 .sfd-axis { fill: none; stroke: var(--ink-2); stroke-width: .8; stroke-dasharray: 9 3 2 3; }
 .sfd-tip { fill: #dfe5e4; stroke: #56605f; stroke-width: 1; stroke-linejoin: round; }
-.sfd-cable { fill: none; stroke: #232b2a; stroke-width: 9; }
 .sfd-tether { fill: none; stroke: #aab4b2; stroke-width: 2.4; }
 .sfd-rope { fill: none; stroke: #3f5654; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .sfd-lead { fill: none; stroke: #1b4e4a; stroke-width: 1.3; }
@@ -4473,13 +4357,11 @@ body.is-touring { overscroll-behavior-y: contain; }
 .sfd-dash { fill: none; stroke: #8a9c9a; stroke-width: 1; stroke-dasharray: 5 4; }
 .sfd-water { fill: #cfe6e2; }
 .sfd-outlet { fill: #f1f5f4; stroke: #9fb0ad; stroke-width: 1; stroke-dasharray: 4 3; }
-.diagram text.sfd-where { font-size: 12px; fill: var(--muted); }
 /* on a phone the long drawings keep a readable size and scroll sideways */
 .sf-site .sf-scroll, .sf-dims .sf-scroll { overflow-x: auto; overscroll-behavior-x: contain; }
 @container (max-width: 560px) {
   .sf-site .sf-scroll svg, .sf-dims .sf-scroll svg { min-width: 520px; }
   .sf-site .sf-scroll text, .sf-dims .sf-scroll text { font-size: 15.5px; }
-  .sf-go text.sfd-where { font-size: 24px; }
 }
 
 /* what a sewer does to a sensor, the four usual mounts, each drawn failing,
@@ -4494,6 +4376,7 @@ body.is-touring { overscroll-behavior-y: contain; }
 .sf-methods { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 36px 28px; margin: 0; padding: 0; list-style: none; }
 .sf-methods li { display: grid; align-content: start; }
 .sf-method-art svg { border: 1px solid var(--border-strong); border-top: 3px solid #b3261e; border-radius: var(--radius); background: #fff; }
+.sf-method-art .dg-fx { background: none; border-color: transparent; }
 /* the loop: rag arrives piece by piece and stays; the hung probe swings; the
    intake blocks and the flow stops */
 .sfm-x circle { fill: #b3261e; stroke: #fff; stroke-width: 2; }
@@ -4512,13 +4395,7 @@ body.is-touring { overscroll-behavior-y: contain; }
 @keyframes sfm-choke { 0%, 40% { stroke-opacity: 1; } 48%, 93% { stroke-opacity: 0; } 100% { stroke-opacity: 1; } }
 .sfm-led { fill: #22c55e; animation: sfm-led 12s linear infinite; }
 @keyframes sfm-led { 0%, 42% { fill: #22c55e; } 48%, 93% { fill: #dc2626; } 100% { fill: #22c55e; } }
-.dg-clamp, .dg-bracket { fill: #a9b6b4; stroke: #6f8481; stroke-width: .7; stroke-linejoin: round; }
-.dg-bolt { fill: #3f5654; }
-.dg-chain { fill: none; stroke: #5f7471; stroke-width: 2.4; stroke-dasharray: 3.6 2.2; stroke-linecap: round; }
-.dg-intake { fill: #6f8481; }
 .dg-foul { fill: #8f7859; fill-opacity: .55; transform-origin: 50% 100%; }
-.dg-cell { fill: #e3efed; stroke: #7d8a88; stroke-width: .9; }
-.dg-band-ring { fill: none; stroke: #6f8481; stroke-width: 3; }
 .sf-verdict { display: flex; align-items: center; gap: 7px; margin-top: 14px; font-size: var(--text-2); font-weight: 600; line-height: var(--lh-tight); color: #96483f; }
 .sf-verdict .icon { flex: none; font-size: 16px; stroke-width: 2.6; color: #b9645a; }
 .sf-methods h3 { margin-top: 6px; font-size: var(--text-7); line-height: var(--lh-tight); }
@@ -4917,6 +4794,162 @@ body.is-touring { overscroll-behavior-y: contain; }
   .hm-shelf .inst-body b { font-size: var(--text-6); }
 }
 
+/* ---- the cutaway kit (scene.mjs) ----
+   Drawings made to look like the real thing: cut faces carry photographic
+   materials (tools/textures.py), inside surfaces are lit as curves, and the
+   instruments are drawn from their photographs. These are the lines, the
+   small type on labels, and the plates that keep words legible over them. */
+.sc-road { fill: none; stroke: #232426; stroke-width: .9; }
+.sc-layer { fill: none; stroke: rgba(40, 28, 18, .35); stroke-width: .6; }
+.sc-turf { fill: none; stroke: #5b6b3a; stroke-width: 2.4; stroke-dasharray: 1 1.4; }
+.sc-table { fill: none; stroke: #2a86bf; stroke-width: 1.1; stroke-dasharray: 6 4; }
+.sc-table-mark { fill: #2a86bf; }
+.sc-table-tick { fill: none; stroke: #2a86bf; stroke-width: 1; }
+.sc-cut-edge { fill: none; stroke: rgba(36, 38, 38, .6); stroke-width: .7; stroke-linejoin: round; }
+.sc-ao { fill: none; stroke: rgba(0, 0, 0, .22); stroke-width: 1.8; }
+.sc-joint { fill: none; stroke: rgba(28, 28, 28, .7); stroke-width: .7; }
+.sc-ring { fill: #1b1d1e; }
+.sc-bore-joint { fill: none; stroke: rgba(0, 0, 0, .3); stroke-width: .8; }
+.sc-bore-joint.l { stroke: rgba(255, 255, 255, .16); }
+.sc-tide { fill: none; stroke: rgba(66, 58, 28, .34); stroke-width: 1.1; }
+.sc-mortar { stroke: #a9a69e; stroke-width: 1.4; }
+.sc-mortar-bed { fill: #a19e96; }
+.sc-ci-hi { fill: none; stroke: rgba(255, 255, 255, .22); stroke-width: .5; }
+.sc-ci-pat { fill: none; stroke: #454b4e; stroke-width: .9; }
+.sc-step-leg { stroke: #626966; stroke-width: 1.6; }
+.sc-step-lug { stroke: #a4aaa6; stroke-width: 1.1; stroke-linecap: round; }
+.sc-streak { fill: none; stroke: rgba(226, 240, 233, .2); stroke-width: .8; stroke-dasharray: 10 26; }
+.sc-surf { fill: none; stroke: rgba(236, 248, 242, .85); stroke-width: .9; }
+.sc-surf-lo { fill: none; stroke: rgba(255, 255, 255, .14); stroke-width: 2.2; }
+.sc-edge-dk { fill: none; stroke: rgba(0, 0, 0, .55); stroke-width: .35; }
+.sc-edge-hi { fill: none; stroke: rgba(255, 255, 255, .16); stroke-width: .5; }
+.sc-sheen { fill: none; stroke: rgba(255, 255, 255, .3); stroke-width: .7; stroke-linecap: round; }
+.sc-sheen-w { fill: none; stroke: rgba(255, 255, 255, .06); stroke-width: 3; stroke-linecap: round; }
+.sc-part { fill: none; stroke: rgba(0, 0, 0, .6); stroke-width: .45; }
+.sc-part-l { fill: none; stroke: rgba(255, 255, 255, .08); stroke-width: .4; }
+.sc-glint { fill: none; stroke: rgba(255, 255, 255, .28); stroke-width: .8; stroke-linecap: round; }
+.sc-port { fill: none; stroke: #394043; stroke-width: .7; stroke-linecap: round; }
+svg .sc-lbl-t { font: 700 2.5px "EDS Text", "Helvetica Neue", Arial, sans-serif; fill: #17302d; }
+svg .sc-lbl-s { font: 400 1.2px "EDS Text", "Helvetica Neue", Arial, sans-serif; fill: #4b5b59; }
+svg .sc-lbl-eds { font: 700 1.55px "EDS Text", "Helvetica Neue", Arial, sans-serif; fill: #3d9991; }
+.sc-lbl-r { fill: none; stroke: #8c9a98; stroke-width: .45; }
+.sc-lbl-logo { fill: none; stroke: #3d9991; stroke-width: .45; stroke-linecap: round; }
+.sc-gland-flat { stroke: rgba(255, 255, 255, .08); stroke-width: .4; }
+.sc-gland-rib { stroke: rgba(0, 0, 0, .65); stroke-width: .45; }
+.sc-cable { fill: none; stroke: #15181a; stroke-linecap: round; stroke-linejoin: round; }
+.sc-cable-hi { fill: none; stroke: rgba(255, 255, 255, .2); stroke-linecap: round; stroke-linejoin: round; translate: -.2px -.35px; }
+.sc-handle { fill: none; stroke: #121416; stroke-width: 1.3; stroke-linejoin: round; }
+.sc-mast { fill: none; stroke: #8f989c; stroke-width: 1.2; }
+.sc-seam { fill: none; stroke: rgba(70, 80, 84, .55); stroke-width: .5; }
+.sc-louvre { fill: none; stroke: rgba(60, 68, 72, .7); stroke-width: .7; }
+.sc-lamp { fill: #2fd46b; }
+/* words over a drawing: a plate under each label, so it reads over soil,
+   concrete or water alike, and leaders ending on a dot */
+.sc-tag rect { fill: rgba(255, 255, 255, .93); stroke: rgba(15, 43, 42, .18); stroke-width: .6; }
+svg .sc-tag text { font: 400 11px "EDS Text", "Helvetica Neue", Arial, sans-serif; fill: var(--ink); }
+svg .sc-tag.b text { font-weight: 600; }
+.sc-tag.alarm rect { stroke: rgba(180, 83, 9, .5); } svg .sc-tag.alarm text { fill: #9a4507; }
+.sc-lead { fill: none; stroke: rgba(15, 43, 42, .62); stroke-width: .8; }
+.sc-lead-dot { fill: #fff; stroke: var(--ink); stroke-width: .9; }
+svg .sc-flow text { font: 600 10.5px "EDS Text", "Helvetica Neue", Arial, sans-serif; fill: #fff; paint-order: stroke; stroke: rgba(20, 40, 36, .55); stroke-width: 2.4px; stroke-linejoin: round; }
+.sc-flow path { fill: none; stroke: #fff; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+@container (max-width: 440px) { .sc-tag, .sc-flow { scale: 1.36; } }
+.sc-bench-edge { fill: none; stroke: rgba(255, 255, 255, .45); stroke-width: .8; }
+.sc-dtc { fill: none; stroke: #e7b812; stroke-width: 1.9; stroke-linecap: round; }
+.sc-dtc-hi { fill: none; stroke: rgba(255, 246, 200, .7); stroke-width: .5; }
+.sc-sleeve-hi { fill: none; stroke: rgba(255, 255, 255, .55); stroke-width: .5; stroke-linecap: round; }
+.sc-hot { fill: #38bdf8; fill-opacity: .18; stroke: #2a86bf; stroke-width: .7; }
+.sc-hanger { fill: none; stroke: #b8c1c5; stroke-width: 1.6; stroke-linejoin: round; }
+.sc-hanger-hi { fill: none; stroke: rgba(255, 255, 255, .6); stroke-width: .4; }
+.sc-bolt { fill: #6f797d; }
+.sc-drip { fill: #9cc7dc; fill-opacity: 0; animation: dg-drip 1.8s var(--d, 0s) ease-in infinite; }
+.sc-trickle { fill: none; stroke: rgba(170, 210, 230, .55); stroke-width: 1; }
+.sc-joint-open { fill: none; stroke: #121516; stroke-width: 1.3; stroke-linejoin: round; }
+.sc-seep path { fill: none; stroke: #2a86bf; stroke-width: 1.5; stroke-linecap: round; stroke-dasharray: 3 5; animation: dg-flow 1.2s linear infinite; }
+.sc-guide path { fill: none; stroke: #2a86bf; stroke-width: 1; stroke-dasharray: 2 3; }
+.sc-rail { fill: none; stroke: #aeb8bc; stroke-width: 1.4; }
+.sc-rail-hi { fill: none; stroke: rgba(255, 255, 255, .55); stroke-width: .4; }
+.sc-chain { fill: none; stroke: #8b9295; stroke-width: 1.1; stroke-dasharray: 1.6 .8; }
+.sc-rib { fill: none; stroke: rgba(10, 18, 24, .45); stroke-width: .7; }
+.sc-hoop { fill: none; stroke: #2a3942; stroke-width: 1.6; stroke-linejoin: round; }
+.sc-stem { fill: none; stroke: #6d777b; stroke-width: 1; }
+.sc-wheel { fill: none; stroke: #b0361f; stroke-width: 1.3; }
+.sc-checker { fill: none; stroke: rgba(80, 90, 94, .7); stroke-width: .6; stroke-dasharray: 1.2 1.2; }
+.sc-gooseneck { fill: none; stroke: #9ea7ab; }
+.sc-conduit { fill: none; stroke: #9aa3a6; stroke-width: 3.6; stroke-linejoin: round; }
+.sc-conduit-hi { fill: none; stroke: rgba(255, 255, 255, .45); stroke-width: .7; translate: 0 -.8px; }
+.sc-screen-t { fill: none; stroke: #9fe7da; stroke-width: .6; }
+.sc-mullion { fill: none; stroke: #8f999c; stroke-width: .7; }
+.sc-slat { fill: none; stroke: rgba(60, 70, 74, .45); stroke-width: .5; }
+.sc-probe-cable { fill: none; stroke: #222a2d; stroke-width: 1; }
+.sc-hose { fill: none; stroke: rgba(210, 232, 240, .9); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.sc-hose-in { fill: none; stroke: rgba(120, 170, 190, .55); stroke-width: .8; stroke-linecap: round; }
+.dg-wetwell .dg-level path { stroke: #e6f7f2; stroke-width: 1.2; stroke-opacity: .9; }
+.dg-wetwell .dg-level.alarm path { stroke: #f6a04d; }
+.sc-rag path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.sc-rag-core { stroke-width: 1.5; }
+.sc-rag-th { stroke-width: .7; }
+.sc-fog-hi { fill: #fffbe8; fill-opacity: .55; }
+.sc-rag.pass, .sc-pass { animation: dg-pass 11s var(--d, 0s) linear infinite; }
+.sc-stop { animation: dg-stop 8.8s var(--d, 0s) linear infinite; }
+/* labels over a cutaway on the deep instrument screen */
+.dg-screen .sc-tag rect, .ef-dark .sc-tag rect { fill: rgba(5, 30, 28, .84); stroke: rgba(159, 231, 218, .32); }
+.diagram.dg-screen .sc-tag text, .ef-dark .sc-tag text { fill: #fff; }
+.dg-screen .sc-tag.st rect { fill: rgba(5, 30, 28, .9); }
+.dg-screen .sc-lead, .ef-dark .sc-lead { stroke: rgba(230, 255, 250, .72); }
+.dg-screen .sc-lead-dot, .ef-dark .sc-lead-dot { fill: #0a3532; stroke: #fff; }
+.sc-rag-core { stroke-width: 2.3; }
+.sc-rag-th { stroke-width: .9; }
+.sc-trench { fill: none; stroke: rgba(60, 44, 28, .4); stroke-width: .8; stroke-dasharray: 4 3; }
+.sc-fibre { fill: none; stroke: #4a4032; stroke-width: .7; stroke-linecap: round; stroke-opacity: .8; }
+.sc-fibre.l { stroke: #b1a58a; stroke-width: .5; stroke-opacity: .55; }
+.sc-fibre.o { stroke: #6c614e; stroke-width: .8; }
+/* the E-Flow 3 demo: the still scene underneath, the moving layer on top */
+.ef-stage { display: grid; border-radius: var(--radius); overflow: hidden; }
+.ef-stage > svg { grid-area: 1 / 1; display: block; width: 100%; height: auto; }
+.ef-stage #ef-svg { will-change: transform; border-radius: 0; }
+#ef-svg .ef-bits circle { fill: #d9c9a8; fill-opacity: .75; }
+.sc-pole { fill: none; stroke: #c9d0d3; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.sc-pole-hi { fill: none; stroke: rgba(255, 255, 255, .7); stroke-width: .6; stroke-linecap: round; }
+.sc-tab-tr { fill: none; stroke: #0d7c72; stroke-width: .9; stroke-linejoin: round; }
+.xr-cut { fill: none; stroke: #8d969a; stroke-width: .45; }
+.xr-wire { fill: none; stroke-width: .42; stroke-linecap: round; }
+/* the LIDoTT Alarm demo: still manhole underneath, moving layer on top */
+.lid-stage { display: grid; border-radius: var(--radius); overflow: hidden; }
+.lid-stage > svg { grid-area: 1 / 1; display: block; width: 100%; height: auto; }
+.lid-stage #lidott-svg { will-change: transform; }
+#lidott-svg .ef-bits circle { fill: #d9c9a8; fill-opacity: .75; }
+.lid-barcode { fill: none; stroke: #1b1b1b; stroke-width: .5; }
+.lid-arcs { fill: none; stroke: #1d4f9c; stroke-width: .7; stroke-linecap: round; }
+.lid-tag rect { stroke: rgba(255, 255, 255, .16); stroke-width: .6; }
+.sfd-boot-hi { fill: none; stroke: rgba(255, 255, 255, .2); stroke-width: 2; stroke-linecap: round; }
+.sfd-cheek-hi { fill: none; stroke: rgba(255, 255, 255, .35); stroke-width: 1.6; stroke-linecap: round; }
+.sfd-rim { fill: none; stroke: rgba(255, 255, 255, .4); stroke-width: 1.4; stroke-linecap: round; }
+.sm-chain { fill: none; stroke: #6f7678; stroke-width: 2.4; stroke-dasharray: 3 1.4; }
+.sm-chain.l { stroke: #c9cfd1; stroke-width: 1; stroke-dasharray: 3 1.4; }
+.sm-arrow { fill: none; stroke: #fff; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.sm-hose { fill: none; stroke: rgba(210, 232, 240, .95); stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
+/* charts drawn as the analysis software draws them */
+.ch-plot { fill: #fbfcfc; }
+.ch-grid { fill: none; stroke: #e3e9e8; stroke-width: 1; }
+.ch-grid-m { fill: none; stroke: #f0f3f3; stroke-width: 1; }
+.ch-tickm { fill: none; stroke: #b9c6c4; stroke-width: 1; }
+.ch-pts circle { fill: #0d7c72; fill-opacity: .42; }
+.ch-pts.shift circle { fill: #c27803; fill-opacity: .7; }
+.ch-fit { fill: none; stroke: #095f57; stroke-width: 1.6; }
+.dg-meas.ch-raw { stroke-width: 1.1; }
+.dg-sample rect { fill: var(--eds); }
+.dg-sample rect + rect { fill: #2b3533; }
+/* plates in the two demos keep their own size and scale as a whole on a
+   phone, rather than taking the demo's larger text inside a plate drawn
+   for the smaller */
+#ef-svg .sc-tag text, #lidott-svg .sc-tag text { font-size: 11px; }
+@media (max-width: 700px) { #ef-svg .sc-tag, #lidott-svg .sc-tag { scale: 1.45; } }
+/* a drawing in two layers: the still scene, and what moves on a layer of its own */
+.dg-stack { display: grid; }
+.dg-stack > svg { grid-area: 1 / 1; }
+.dg-fx { pointer-events: none; will-change: transform; }
+.sf-go .dg-stack { overflow: hidden; }
 /* ---------- open channel flow calculator (open-channel-flow-calculator.html, flow-calc.js) ----------
    One ruled sheet: what goes in on the left; the section drawn to scale and
    the answer on the right. The shapes and the velocity reading are option
@@ -4999,3 +5032,11 @@ body.is-touring { overscroll-behavior-y: contain; }
   .tool-card { grid-template-columns: minmax(0, 1fr); }
   .tool-art { border-left: 0; border-top: 1px solid var(--border); }
 }
+.sc-cell-grid { fill: none; stroke: rgba(190, 210, 235, .5); stroke-width: .35; }
+.sc-blade { fill: none; stroke: #5d7a3a; stroke-width: .7; stroke-linecap: round; }
+.sc-blade.l { stroke: #7e9b4c; }
+.dg-ping { fill: none; stroke: var(--eds); stroke-width: 1.4; stroke-opacity: 0; animation: dg-ping 2.6s ease-out infinite; transform-box: fill-box; transform-origin: center; }
+.dg-alarm2 .dg-level path, .dg-hawk .dg-level path { stroke: #e6f7f2; stroke-width: 1.2; stroke-opacity: .9; }
+.dg-alarm2 .dg-level.alarm path, .dg-hawk .dg-level.alarm path { stroke: #f6a04d; }
+.sc-stake { fill: none; stroke: #8f979a; stroke-width: 1.6; stroke-linecap: round; }
+.diagram .dg-t { fill: var(--brand-dark); font-weight: 600; }
