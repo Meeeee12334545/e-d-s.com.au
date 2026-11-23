@@ -68,7 +68,7 @@
   // Where on the page it was: the header, the footer, a named section…
   const AREAS = [
     [".header", "Header"], [".drawer", "Phone menu"], [".actionbar", "Phone action bar"], ["dialog.search", "Site search"],
-    ["dialog.qv", "Product quick view"], [".quote-toast", "Quote list message"], [".crumbs", "Breadcrumb trail"], [".hero-toc", "“On this page” list"],
+    ["dialog.qv", "Product quick view"], ["dialog.ask", "Enquiry panel"], [".quote-toast", "Quote list message"], [".crumbs", "Breadcrumb trail"], [".hero-toc", "“On this page” list"],
     [".footer", "Footer"], [".aside", "Sidebar"], ["#enquiry, .enquiry", "Enquiry form"], [".finder", "Instrument finder"],
   ];
   const areaOf = (el) => {
