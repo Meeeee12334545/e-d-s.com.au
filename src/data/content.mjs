@@ -2717,6 +2717,7 @@ export const productPages = [
     description: "How to install pH, EC and other water quality sensors in a gravity sewer. Sensor Fort goes in from the lid, parks in the chase and gives rag nothing to hold.",
     image: img("sensor-fort.jpg"),
     heroShape: "tall",
+    patent: true,
     heroCaption: "The SF 150, for 150 mm sewers. There's a version for every sewer size up to 350 mm.",
     docs: [
       { label: "Datasheet", note: "SF 150 specifications, sensor fit, sleeves, dimensions and site requirements.", href: localDoc("eds-sensor-fort-datasheet.pdf") },
@@ -2784,7 +2785,8 @@ export const productPages = [
         },
         eyebrow: "The answer",
         heading: "So EDS built Sensor Fort.",
-        lede: "Nothing on the market was built for the job. Sensor Fort is a passive mount, designed from the ground up to hold analytical sensors in a gravity sewer, drawing on more than 30 years of working in them. It's the only solution that puts sensors in a gravity sewer and gives rag nothing to hold.",
+        lede: "Nothing on the market was built for the job. Sensor Fort is a passive mount, designed from the ground up to hold analytical sensors in a gravity sewer, drawing on more than 30 years of working in them. It's the only solution that puts sensors in a gravity sewer and gives rag nothing to hold. The design is EDS's own, and patent pending.",
+        patent: true,
         points: [
           ["Rag", "No edge faces the flow, nothing spans the chase and no cable crosses the water."],
           ["Access", "One person lowers it from the lid. No pole and no confined space entry."],
@@ -2955,7 +2957,7 @@ export const productPages = [
         ["Does it need confined space entry?", "No. One person lowers it from the lid on its tether, and lifts it out the same way. Nothing is drilled or fixed in the chase."],
         ["How often do sensors in a sewer need servicing?", "Sensor Fort is designed for 12 months between visits. Lift it out, service the sensors at the surface and lower it back, or swap it for a prepared mount. No mount stops biofilm growing or a pH reference ageing, so sensor choice and data checks still apply."],
         ["Does it need power or a pump?", "No. Sensor Fort needs nothing to run except your sensors. It's passive, with no power, no moving parts and no electrical parts. The sensors connect to your own logger, or to an EDS Metalog 4G, which logs analogue and Modbus instruments and reports over 4G."],
-        ["Who makes Sensor Fort?", "EDS (Environmental Data Services) designed Sensor Fort and builds it in Brisbane, Queensland, drawing on more than 30 years of experience in sewer monitoring. Call about it and you talk to the people who designed it."],
+        ["Who makes Sensor Fort?", "EDS (Environmental Data Services) designed Sensor Fort and builds it in Brisbane, Queensland, drawing on more than 30 years of experience in sewer monitoring. The design is EDS's own, and patent pending. Call about it and you talk to the people who designed it."],
       ],
     },
     drawing: {
@@ -2971,6 +2973,7 @@ export const productPages = [
         ["Sewer", "DN150, straight-through maintenance hole"],
         ["Operation", "Passive: no power, moving or electrical parts"],
         ["Origin", "Designed and built by EDS in Brisbane, Queensland"],
+        ["Patent", "Pending. The design is owned by EDS"],
       ]],
       ["Dimensions and Weight", [
         ["Length", "345 mm, boot tip to stern block backs"],
