@@ -1896,7 +1896,7 @@ function bandsOf(s, r) {
     } else if (b.faq) {
       out.push({ id, cls: "band-split", html: `<div class="split-band">${bandHead(b)}<div data-reveal>${faqHtml(b.faq)}</div></div>` });
     } else if (isSteps(b)) {
-      out.push({ id, cls: "band-steps", html: `${bandHead(b)}<ol class="step-grid n${b.list.length}">${b.list.map((l, n) => `<li data-reveal style="--i:${n % 4}"><span>${String(n + 1).padStart(2, "0")}</span><p>${esc(l)}</p></li>`).join("")}</ol>` });
+      out.push({ id, cls: "band-steps", html: `${bandHead(b)}<ol class="step-grid n${b.list.length}">${b.list.map((l, n) => `<li data-reveal style="--i:${n % 4}"><span>${String(n + 1).padStart(2, "0")}</span><p>${esc(l)}</p></li>`).join("")}</ol>${bandShot(b)}` });
     } else if (out.at(-1)?.cls === "band-list") {
       // a checklist straight after another sits beside its heading
       out.push({ id, cls: "band-split", html: `<div class="split-band">${bandHead(b)}${checkList(b.list)}</div>` });

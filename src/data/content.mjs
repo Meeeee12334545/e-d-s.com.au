@@ -335,6 +335,7 @@ export const services = [
       },
       {
         heading: "What is included",
+        shot: { name: "flow-analytics", alt: "The FlowSense Flow Analytics page: a card for every site with its 24-hour trend, latest readings and status.", caption: "Every site's last 24 hours on one page in FlowSense, from the platform's demonstration account." },
         items: [
           ["Temporary and permanent flow monitoring", "For I&I studies, model calibration and compliance reporting."],
           ["Analysis and reporting", "Reports that are easy to read and act on, for planning and regulatory compliance."],
@@ -448,6 +449,7 @@ export const services = [
       },
       {
         heading: "From Data to Action",
+        shot: { name: "heat-map", alt: "The FlowSense I/I heat map: severity painted along the sewer network over aerial imagery, with the inspection priority list of the pipes most likely to be sources.", caption: "The I/I heat map in FlowSense, from the platform's demonstration account: severity along the pipes, and a ranked list of those worth sending a camera down." },
         nav: "Data to Action",
         lede: "In our experience, and across the water industry, about 20% of a sewer network typically carries 80% of its I&I. Finding that 20% is what makes a program pay back.",
         items: [
@@ -519,6 +521,7 @@ export const services = [
       },
       {
         heading: "How it runs, end to end",
+        shot: { name: "fleet-health", alt: "FlowSense Fleet Health: every logger on the account with its battery, delivery record and a replace-by date.", caption: "Fleet Health in FlowSense, from the platform's demonstration account: every logger's battery and delivery record, watched for you." },
         lede: "A managed fleet with continuous oversight, delivered with 99.95% data availability.",
         steps: true,
         list: [
@@ -576,6 +579,7 @@ export const services = [
       },
       {
         heading: "Calibration Scored Storm by Storm",
+        shot: { name: "rtk-calibration", alt: "A rainfall response (RTK) calibration scored in FlowSense: the fit score beside the best score available on this record, and each storm scored separately.", caption: "A calibration scored storm by storm in FlowSense, from the platform's demonstration account." },
         lede: "A single score across a whole record can look fine while the model misses every storm peak. EDS FlowSense scores each storm on its own, to the CIWEM UDG Code of Practice (2017).",
         items: [
           ["Published acceptance bands", "Peak flow within −15% to +25%, event volume within −10% to +20%, and peak timing within one hour. An event passes on peak and volume together."],
@@ -672,6 +676,7 @@ export const services = [
       },
       {
         heading: "Blockage Watch in FlowSense",
+        shot: { name: "blockage-watch", alt: "FlowSense Blockage Watch: the sites needing a decision first, each with its score, mechanism and case, and clear sites folded below.", caption: "Blockage Watch in FlowSense, from the platform's demonstration account: the sites needing a decision first." },
         nav: "Blockage Watch",
         lede: "Where flow meters are in, FlowSense reads the dry weather record and finds a blockage weeks before it overflows. It's included on every site. It tells you a line is blocking, not exactly where, so you still want a level alarm in the chamber.",
         items: [
@@ -825,6 +830,7 @@ export const services = [
       },
       {
         heading: "Choosing a Sampler",
+        diagram: "sampling",
         items: [
           ["ORI NEMO 1 M", "Mobile sampler approved under ATEX and IECEx for Zones 1 and 2. Inputs for up to 10 digital and 2 analogue sensors, and an optional LTE modem. Peristaltic, vacuum and hybrid pump versions."],
           ["ORI AquaSamp Mini", "A light portable sampler for spot and timed samples, with 6 m suction lift and up to 144 samples on one charge. An ATEX version is available."],
@@ -1025,6 +1031,7 @@ export const services = [
       },
       {
         heading: "How the data reaches you",
+        shot: { name: "overview", alt: "The FlowSense network overview: headline counts across the top, the sites needing attention listed worst first, and the network map beside them.", caption: "The network overview in FlowSense, from the platform's demonstration account: open alarms and quiet loggers first." },
         items: [
           ["4G from the field", "EDS and Detectronic loggers report over the mobile network. The battery-powered EDS Hawk lives inside the manhole, with no cabinet or mains power."],
           ["EDS FlowSense", "Every site on one map, refreshed every 60 seconds, worst first: open alarms, quiet loggers and sites outside their normal range."],
@@ -1204,6 +1211,7 @@ export const services = [
     blocks: [
       {
         heading: "What an assessment can show",
+        shot: { name: "scattergraph", alt: "A FlowSense scattergraph of depth against velocity, coloured by flow, with the correlation, ranges and sample count beneath it.", caption: "Depth against velocity in FlowSense, from the platform's demonstration account. A shift in this relationship can reveal a blockage, sediment or a sag." },
         items: [
           ["Where the inflow is worst", "Inflow severity mapped across catchments, so CCTV inspections and rehabilitation budgets go where they're needed."],
           ["Asset condition", "Shifts in the depth-to-velocity relationship that reveal blockages, sediment, sags, displaced joints and infiltration points before crews report them."],
@@ -1262,6 +1270,7 @@ export const services = [
       },
       {
         heading: "What an audit covers",
+        figure: { photo: "velocity-check-manhole", alt: "A technician kneeling at an open manhole beside a tripod winch, reading a handheld flow meter whose sensor is lowered into the sewer", caption: "A spot check of velocity with an FH950 handheld meter: an independent reading to set an installed meter against. Photo: Hach.", pos: "50% 60%" },
         list: [
           "The site: its hydraulics, access, and the condition of the installation",
           "The instrument's readings against an independent reference measurement",
@@ -1533,6 +1542,7 @@ export const solutions = [
     blocks: [
       {
         heading: "What we monitor",
+        shot: { name: "network-map", alt: "The FlowSense network map on aerial imagery, with the Layers panel narrowing it to alarms, telemetry, battery and hydraulic risk.", caption: "Every site on one map in FlowSense, from the platform's demonstration account." },
         items: [
           ["Flow", "Area velocity flow meters in sewers and channels, including the Detectronic MSFM, EDS E-Flow 3 and the Hach range."],
           ["Level and alarms", "Radar and pressure level sensors, and self-contained alarms that warn of blockages and surcharges."],
@@ -1585,6 +1595,7 @@ export const solutions = [
       },
       {
         heading: "Choosing the Right Sampler",
+        figure: { photo: "sampler-open-channel", alt: "A portable automatic sampler being set up beside a concrete channel, its intake line laid into the flow", caption: "A portable sampler beside an open channel, its intake in the flow. Photo: Hach.", pos: "40% 60%" },
         items: [
           ["Hazardous area", "The site's hazardous area classification, and the ATEX and IECEx approval it needs."],
           ["Sample type", "Spot, timed or composite samples, and how many bottles."],
@@ -1624,6 +1635,7 @@ export const solutions = [
       },
       {
         heading: "What we measure",
+        figure: { photo: "nitrate-analyser-river", alt: "The Aquamonitrix analyser cabinet on a timber stand beside a river, with sample troughs and a laptop on the bench and a stone bridge behind", caption: "Aquamonitrix measuring nitrate and nitrite beside a river. Photo: Aquamonitrix.", pos: "60% 50%" },
         items: [
           ["Water quality", "Multi-parameter sondes and sensors for rivers, stormwater and surface water, and Aquamonitrix for nitrate and nitrite."],
           ["Rainfall", "Tipping bucket rain gauges, logged at short intervals so storm peaks are captured."],
@@ -2021,6 +2033,30 @@ export const diagrams = {
     caption: "Illustration: level from a LIDoTT R and pump runs from the Pump Station Manager, sent in real time to SCADA and EDS FlowSense.",
     labels: { overflow: "Overflow", surcharge: "Surcharge", start: "Start", stop: "Stop", main: "Rising main", radar: ["LIDoTT R", "Radar and pressure"], inlet: "From the network", pumps: "Pump run signals", manager: "Pump Station Manager", data: "To SCADA and EDS FlowSense" },
   },
+  hawk: {
+    alt: "Illustration of a Hawk logger in a sewer manhole, in section. The Hawk hangs from its stainless wall bracket inside the shaft, below the lid. Its RS485 cable runs down the shaft wall to an E-Flow 3 at the crown of the pipe, whose radar beams reach the flow below. The Hawk reports over 4G LTE through the lid, and keeps logging if the chamber surcharges. There is nothing at the surface.",
+    caption: "Illustration: the Hawk in the manhole, reading an E-Flow 3 over RS485 and reporting over 4G. Not to scale.",
+    labels: {
+      hawk: ["Hawk", "On its wall bracket"],
+      cable: "RS485",
+      sensor: "E-Flow 3",
+      data: "4G LTE to FlowSense and your systems",
+      surcharge: ["Surcharge", "IP68, still logging"],
+      surface: "Nothing at the surface",
+      flow: "Flow",
+    },
+  },
+  alarm2: {
+    alt: "Illustration of an Alarm2 in a chamber, in section. The unit is fixed under the cover, looking straight down, and its radar beam reaches the water surface below. A high alarm level is dashed across the chamber above the water and a low alarm level below it. A cable runs from the unit to its external antenna under the cover, which sends levels and alarms over LoRaWAN or 4G.",
+    caption: "Illustration: Alarm2 reads the level by radar from above and alarms on high and low set-points. Not to scale.",
+    labels: {
+      unit: ["Alarm2", "All in one"],
+      radar: ["Radar, up to 20 m", "No deadband"],
+      high: "High alarm",
+      low: "Low alarm",
+      data: ["LoRaWAN or 4G", "to your monitoring platform"],
+    },
+  },
   tradewaste: {
     alt: "Illustration of a trade waste discharge point. A drain runs from an industrial site to a sampling pit on its way to the sewer. In the pit a flow sensor sits on the invert and a quality probe hangs in the flow; beside it a sampler draws through a hose, and a logger with an antenna sends the readings on for reporting.",
     caption: "Illustration: flow, sampling and quality at one discharge point, with a logger sending the readings on for reporting.",
@@ -2176,6 +2212,17 @@ export const alarm2 = {
     ["Real-time monitoring", "Data goes to your monitoring platform at each send interval, and straight away when a level changes state. A daily heartbeat confirms the unit is working, and a JSON API links it to cloud platforms and SCADA."],
     ["Low maintenance", "No external sensors or wiring. Battery life of over five years means fewer site visits."],
   ],
+  scene: {
+    heading: "One unit, looking down.",
+    diagram: "alarm2",
+    list: [
+      "Reads the level by radar from above, without touching the water",
+      "Measures 0 to 20 m with no deadband, accurate to ± 5 mm",
+      "High and low set-points, rate of change and profile alarms",
+      "Alarms go out immediately, then hourly while the condition lasts",
+      "A daily heartbeat confirms it's working",
+    ],
+  },
   specs: [
     ["Sensor type", "Contactless radar"],
     ["Range", "0 to 20 m"],
@@ -2426,6 +2473,18 @@ export const productPages = [
       ["Every reading kept", "32 MB on board holds 10 years of data, so a missed report in patchy coverage doesn't mean lost data."],
       ["More than one destination", "Up to four data centres. Send the same data to FlowSense and to your SCADA or historian, or run them as primary and standby."],
     ],
+    scene: {
+      nav: "In the manhole",
+      heading: "Everything below the lid.",
+      diagram: "hawk",
+      list: [
+        "Hangs from its stainless wall bracket inside the shaft",
+        "Powers each sensor only while it reads it",
+        "Three RS485 ports, for E-Flow 3 and other Modbus RTU sensors",
+        "Reports over 4G LTE, every 1 minute to 24 hours",
+        "Keeps logging when the chamber is underwater",
+      ],
+    },
     specs: [
       ["Telemetry", [
         ["Mobile network", "4G LTE"],

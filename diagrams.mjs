@@ -954,6 +954,95 @@ const efPanels = (t, drawings) => `<div class="dg-panels">${drawings.map((d, i) 
 const efSum = (t) => `<div class="dg-sum">${t.sum.map(([sym, name, note], i) => `${i ? `<span class="dg-op" aria-hidden="true">${i === t.sum.length - 1 ? "=" : "×"}</span>` : ""}<div><i>${esc(sym)}</i><b>${esc(name)}</b><span>${esc(note)}</span></div>`).join("")}</div>`;
 const efRows = (t) => `<div class="dg-rows">${t.rows.map(([kind, title, verdict]) => `<div class="dg-row ${kind}"><p class="dg-row-h"><b>${esc(title)}</b><span>${esc(verdict)}</span></p>${compareRow(kind, t.gap)}</div>`).join("")}</div>`;
 
+/* ---- hawk: a 4G logger that lives inside the manhole ---- */
+// The Hawk on its wall bracket near the top of the shaft, an E-Flow 3 at
+// the pipe crown on its RS485 cable, and the 4G link out through the lid.
+// Nothing above the road: that is the point of the drawing.
+function hawk(t) {
+  const L = t.labels, p = "lth";
+  const G = 74, S0 = 296, S1 = 344, CROWN = 230, INV = 302, LEVEL = 278, SURCH = 168;
+  const ef = efSensor(p, 150, CROWN, 0.86, { cable: `H${S0 + 9}V${G + 74}` });
+  const bv = efBeam(p, "bv", ef.vel, 11, { toY: LEVEL }), bd = efBeam(p, "bd", ef.depth, 7, { toY: LEVEL, waves: 3 });
+  const hx = S0 + 4, hy = G + 26, hw = 24, hh = 44; // the canister
+  const body = `
+  <rect x="0" y="${G}" width="480" height="${336 - G}" fill="url(#${p}-soil)"/>
+  <rect class="ef-road" x="0" y="${G - 5}" width="480" height="5"/>
+  ${ltPipe(p, 0, 480, CROWN, INV, { gaps: [[S0 - LW, S1 + LW]] })}
+  ${ltShaft(p, S0, S1, G, CROWN, INV, { steps: "right" })}
+  ${ltWater(p, 0, 480, LEVEL, INV)}
+  <g class="dg-level alarm"><path d="M${S0 - 30} ${SURCH}H${S1}"/></g>
+  ${label(S0 - 36, SURCH - 3, L.surcharge, { a: "end", cls: "dg-alarm dg-h" })}
+  ${bd.draw}${bv.draw}
+  ${ef.draw}
+  <rect class="ef-bracket" x="${S0}" y="${hy - 6}" width="3" height="34" rx="1" fill="url(#${p}-steel)"/>
+  <path class="ef-strap" d="M${S0 + 3} ${hy + 1}h5"/>
+  <rect x="${hx + 2}" y="${hy}" width="${hw - 4}" height="${hh}" rx="3" fill="url(#${p}-body)" class="ef-body"/>
+  <rect x="${hx}" y="${hy - 4}" width="${hw}" height="5" rx="1.4" fill="url(#${p}-body)" class="ef-body"/>
+  <path class="ef-shine" d="M${hx + 6} ${hy + 6}V${hy + hh - 6}"/>
+  <path class="ef-cable" d="M${hx + 7} ${hy - 4}v-5h10v5"/>
+  <rect class="ef-gland" x="${hx + 10.5}" y="${hy - 16}" width="3" height="12" rx="1.2"/>
+  <circle class="dg-ping" cx="${hx + 12}" cy="${hy - 18}" r="9"/>
+  <path class="dg-link" d="M${hx + 12} ${hy - 26}V${G - 30}"/>
+  ${label(hx + 12, G - 40, L.data, { a: "middle", cls: "dg-b" })}
+  ${label(S0 - 18, hy + 10, L.hawk, { a: "end", cls: "dg-b dg-h" })}${leader(`M${S0 - 14} ${hy + 6}L${hx + 1} ${hy + 14}`)}
+  ${label(S0 - 18, 214, L.cable, { a: "end", cls: "dg-b dg-h" })}${leader(`M${S0 - 14} 210L${S0 + 7} 210`)}
+  ${label(24, 214, L.sensor, { cls: "dg-b dg-h" })}${leader("M84 214L166 236")}
+  ${label(472, G - 14, L.surface, { a: "end", cls: "dg-m" })}
+  ${ltFlow(18, 268, L.flow || "Flow")}`;
+  return svg(480, 336, body, `${efDefs(p)}${ltWaterGrad(p)}${bd.defs}${bv.defs}`);
+}
+
+/* ---- alarm2: a radar level alarm at the top of a chamber ---- */
+// Alarm2 looking down from under the cover, its beam reaching the water, the
+// alarm set-points dashed across the chamber and the link out through its
+// external antenna.
+function alarm2(t) {
+  const L = t.labels, p = "lta";
+  const G = 74, WL = 204, WR = 348, FLOOR = 318, PIPE = [256, 290], LEVEL = 274;
+  const lv = { high: 176, low: 302 };
+  const ax = 254, ay = G + 10, aw = 46, ah = 20; // the unit, lens down
+  const lens = [ax + aw - 15, ay + ah + 1, 0, 1];
+  const beam = efBeam(p, "bm", lens, 9, { toY: LEVEL, waves: 4 });
+  const body = `
+  <rect x="0" y="${G}" width="480" height="${336 - G}" fill="url(#${p}-soil)"/>
+  <rect class="ef-road" x="0" y="${G - 5}" width="480" height="5"/>
+  <rect x="${WL}" y="${G}" width="${WR - WL}" height="${FLOOR - G}" fill="url(#${p}-air)"/>
+  ${ltPipe(p, 0, WL, PIPE[0], PIPE[1], { w: 5 })}
+  ${ltPipe(p, WR, 480, PIPE[0], PIPE[1], { w: 5 })}
+  <rect x="${WL}" y="${LEVEL}" width="${WR - WL}" height="${FLOOR - LEVEL}" fill="url(#${p}-wg)"/>
+  <rect x="0" y="${LEVEL}" width="480" height="${PIPE[1] - LEVEL}" fill="url(#${p}-wg)"/>
+  <path class="ef-surf-g" d="M0 ${LEVEL}H480"/><path class="ef-surf" d="M0 ${LEVEL}H480"/>
+  <path class="dg-flow" d="M14 ${PIPE[1] - 7}H${WL - 10}M${WR + 10} ${PIPE[1] - 7}H466"/>
+  <path fill="url(#${p}-cut)" d="M${WL - LW} ${G}H${WL}V${PIPE[0] - 5}H${WL - LW}ZM${WL - LW} ${PIPE[1] + 5}H${WL}V${FLOOR}H${WL - LW}ZM${WR} ${G}H${WR + LW}V${PIPE[0] - 5}H${WR}ZM${WR} ${PIPE[1] + 5}H${WR + LW}V${FLOOR}H${WR}ZM${WL - LW} ${FLOOR}H${WR + LW}V${FLOOR + LW}H${WL - LW}ZM${WL - 26} ${G - 8}H${WR + 26}V${G}H${WL - 26}Z"/>
+  <path class="ef-edge" d="M${WL - LW} ${G}V${PIPE[0] - 5}M${WL - LW} ${PIPE[1] + 5}V${FLOOR + LW}H${WR + LW}V${PIPE[1] + 5}M${WR + LW} ${PIPE[0] - 5}V${G}M${WL} ${G}V${PIPE[0]}M${WL} ${PIPE[1]}V${FLOOR}H${WR}V${PIPE[1]}M${WR} ${PIPE[0]}V${G}M${WL - 26} ${G - 8}H${WR + 26}M${WL - 26} ${G}H${WR + 26}"/>
+  <rect class="ef-frame" x="${WL + 6}" y="${G - 14}" width="${WR - WL - 12}" height="3.4" rx="1"/>
+  <rect class="ef-lid" x="${WL + 12}" y="${G - 15.6}" width="${WR - WL - 24}" height="3.2" rx="1"/>
+  ${[1, 2, 3, 4].map((k) => `<path class="ef-step" d="M${WR} ${G + 30 + 18 * k}h-6v4h6"/>`).join("")}
+  <g class="dg-level alarm"><path d="M${WL} ${lv.high}H${WR + 18}"/></g>
+  <g class="dg-level"><path d="M${WL} ${lv.low}H${WR + 18}"/></g>
+  ${label(WR + 24, lv.high + 4, L.high, { cls: "dg-alarm" })}
+  ${label(WR + 24, lv.low + 4, L.low, { cls: "dg-b dg-h" })}
+  ${beam.draw}
+  <rect class="ef-bracket" x="${ax - 4}" y="${G}" width="${aw + 8}" height="3" rx="1" fill="url(#${p}-steel)"/>
+  <circle class="ef-bolt" cx="${ax}" cy="${G + 1.5}" r="1.1"/><circle class="ef-bolt" cx="${ax + aw}" cy="${G + 1.5}" r="1.1"/>
+  <path class="ef-strap" d="M${ax + 4} ${G + 3}V${ay}M${ax + aw - 4} ${G + 3}V${ay}"/>
+  <rect x="${ax}" y="${ay}" width="${aw}" height="${ah}" rx="3" fill="url(#${p}-body)" class="ef-body"/>
+  <path class="ef-shine" d="M${ax + 4} ${ay + 3}H${ax + aw - 4}"/>
+  <rect class="ef-label" x="${ax + 5}" y="${ay + 6}" width="18" height="9" rx="1"/>
+  <rect class="ef-mark" x="${ax + 5}" y="${ay + 6}" width="2.6" height="9" rx="1"/>
+  <path d="M${lens[0] - 9} ${ay + ah}A9 5 0 0 0 ${lens[0] + 9} ${ay + ah}Z" fill="url(#${p}-dome)" class="ef-dome"/>
+  <path class="ef-cable" d="M${ax} ${ay + 8}H${ax - 22}V${G + 3}"/>
+  <rect class="ef-bracket" x="${ax - 27}" y="${G}" width="10" height="3" rx="1" fill="url(#${p}-steel)"/>
+  <rect class="ef-gland" x="${ax - 24}" y="${G + 3}" width="4" height="15" rx="1.6"/>
+  <circle class="dg-ping" cx="${ax - 22}" cy="${G + 20}" r="9"/>
+  <path class="dg-link" d="M${ax - 22} ${G - 18}V${G - 54}"/>
+  ${label(ax - 12, G - 46, L.data, { cls: "dg-b" })}
+  ${label(WL - 18, ay + 10, L.unit, { a: "end", cls: "dg-b dg-h" })}${leader(`M${WL - 14} ${ay + 6}L${ax - 2} ${ay + 10}`)}
+  ${label(WL - 18, 200, L.radar, { a: "end", cls: "dg-b dg-h" })}${leader(`M${WL - 14} 196L${lens[0] - 4} 196`)}
+`;
+  return svg(480, 336, body, `${efDefs(p)}${ltWaterGrad(p)}${beam.defs}`);
+}
+
 /* ---- two-panel charts: HTML titles and legend, a small SVG each ---- */
 // Hydrographs over two days: dry weather flow with a daily pattern, and the
 // response to one storm.
@@ -1025,6 +1114,8 @@ const DRAW = {
   scatter: (t) => scatter(t),
   beforeafter: (t) => panels(t, [[t.panels[0][0], t.panels[0][1], hydro(1.05, 0.28)], [t.panels[1][0], t.panels[1][1], hydro(0.26, 0.06)]]),
   sampling: (t) => panels(t, [[t.panels[0][0], t.panels[0][1], sampling("time")], [t.panels[1][0], t.panels[1][1], sampling("flow")]]),
+  hawk: (t) => hawk(t),
+  alarm2: (t) => alarm2(t),
   eflowModes: (t) => efPanels(t, [eflowNormal(t), eflowSurcharge(t)]) + efLegend(t),
   eflowObvert: (t) => efPanels(t, [invertPanel(t), obvertPanel(t)]) + efLegend(t),
   eflowProfile: (t) => efPanels(t, [profileLong(t), profileCross(t)]) + efSum(t) + efLegend(t),
