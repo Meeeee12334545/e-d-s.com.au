@@ -1,6 +1,6 @@
 // The quote list: "Add to quote" on any product collects it here, the header
-// shows how many are waiting, and the enquiry form (enquire.html, and on
-// contact.html) lists them
+// shows how many are waiting, and the enquiry form (on enquire.html and
+// contact.html, and in the enquiry panel on every other page) lists them
 // with a quantity each and sends them with the enquiry. Kept in this browser
 // only (localStorage), so nothing is stored or sent until the visitor sends
 // the enquiry themselves.
@@ -91,8 +91,8 @@
     const foot = dlg && $(".cmp-foot", dlg);
     const top = tray ? tray.offsetTop : foot ? foot.getBoundingClientRect().top : 0;
     toastEl.style.bottom = top ? `${Math.round(innerHeight - top + 12)}px` : "";
-    // Where the form is on the page the list is already there, so no link.
-    $("a", toastEl).hidden = !link || !!$("[data-quote-box]");
+    // Where the form is part of the page the list is already there, so no link.
+    $("a", toastEl).hidden = !link || !!$("main [data-quote-box]");
     const say = () => {
       $("span", toastEl).textContent = text;
       toastEl.classList.add("show");
@@ -123,12 +123,15 @@
   });
 
   /* ---- the list inside the enquiry form ---- */
-  const box = $("[data-quote-box]");
-  const rowTpl = $("template[data-quote-row]");
-  const field = box && $("textarea[name=Products]");
-
+  // The form may be part of the page or arrive later, in the enquiry panel
+  // (enquiry.js), so the list is looked for each time and its buttons are
+  // heard from the document.
   function renderBox(list) {
+    const box = $("[data-quote-box]");
     if (!box) return;
+    const form = box.closest("form");
+    const rowTpl = $("template[data-quote-row]", form);
+    const field = $("textarea[name=Products]", form);
     box.hidden = !list.length;
     $("[data-quote-summary]", box).textContent = `${list.length} ${list.length === 1 ? "product" : "products"}`;
     const ul = $("[data-quote-items]", box);
@@ -160,43 +163,41 @@
     field.value = list.length ? `\n${list.map((x) => `- ${x.qty} × ${x.name} (${x.brand})`).join("\n")}` : "";
   }
 
-  if (box) {
-    const setQty = (id, qty) => {
-      const list = load();
-      const item = list.find((x) => x.id === id);
-      if (!item) return;
-      item.qty = Math.min(999, Math.max(1, Math.round(Number(qty)) || 1));
-      save(list);
-    };
-    box.addEventListener("click", (e) => {
-      const li = e.target.closest("li[data-id]");
-      const step = e.target.closest("[data-step]");
-      if (li && step) setQty(li.dataset.id, Number($("input", li).value) + Number(step.dataset.step));
-      if (li && e.target.closest(".quote-remove")) {
-        // Keep focus in the list: on the next row's remove button, or on the
-        // details box once the list is empty.
-        const next = (li.nextElementSibling || li.previousElementSibling)?.dataset.id;
-        remove(li.dataset.id);
-        (next ? $(`li[data-id="${CSS.escape(next)}"] .quote-remove`, box) : $("textarea[name=Message]"))?.focus();
-      }
-    });
-    box.addEventListener("change", (e) => {
-      const li = e.target.closest("li[data-id]");
-      if (li && e.target.matches("input")) setQty(li.dataset.id, e.target.value);
-    });
-    $("[data-quote-clear]", box).addEventListener("click", () => {
+  const setQty = (id, qty) => {
+    const list = load();
+    const item = list.find((x) => x.id === id);
+    if (!item) return;
+    item.qty = Math.min(999, Math.max(1, Math.round(Number(qty)) || 1));
+    save(list);
+  };
+  document.addEventListener("click", (e) => {
+    const box = e.target.closest("[data-quote-box]");
+    if (!box) return;
+    const message = box.closest("form").elements.Message;
+    if (e.target.closest("[data-quote-clear]")) {
       save([]);
-      $("textarea[name=Message]")?.focus();
-    });
-
-    // Arriving with products in the list and no topic chosen: ask for pricing.
-    const params = new URLSearchParams(location.search);
-    if (load().length && !params.get("topic")) window.EDS?.enquiry?.setTopic("Product pricing");
-  }
+      message.focus();
+      return;
+    }
+    const li = e.target.closest("li[data-id]");
+    const step = e.target.closest("[data-step]");
+    if (li && step) setQty(li.dataset.id, Number($("input", li).value) + Number(step.dataset.step));
+    if (li && e.target.closest(".quote-remove")) {
+      // Keep focus in the list: on the next row's remove button, or on the
+      // message box once the list is empty.
+      const next = (li.nextElementSibling || li.previousElementSibling)?.dataset.id;
+      remove(li.dataset.id);
+      (next ? $(`li[data-id="${CSS.escape(next)}"] .quote-remove`, box) : message).focus();
+    }
+  });
+  document.addEventListener("change", (e) => {
+    const li = e.target.closest("[data-quote-box] li[data-id]");
+    if (li && e.target.matches("input")) setQty(li.dataset.id, e.target.value);
+  });
 
   // Another tab added or removed something.
   window.addEventListener("storage", (e) => e.key === KEY && refresh());
 
-  window.EDS = Object.assign(window.EDS || {}, { quote: { refresh, clear: () => save([]), addMany } });
+  window.EDS = Object.assign(window.EDS || {}, { quote: { refresh, clear: () => save([]), addMany, count: () => load().length } });
   refresh();
 })();

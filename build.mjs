@@ -265,7 +265,7 @@ function header(r, current, menuTab, file) {
         <button class="header-search" type="button" data-search-open aria-label="Search the site" aria-keyshortcuts="Control+K Meta+K /">${icon("search")}<kbd data-kbd>Ctrl K</kbd></button>
         <a class="header-phone" href="${site.phoneHref}" aria-label="Call EDS on ${site.phone}">${icon("phone")}<span>${site.phone}</span></a>
         <a class="header-quote" href="${r}enquire.html" data-quote-link hidden>${icon("clipboard-list")}<span class="sr-only">Products in your quote list: </span><b data-quote-count>0</b></a>
-        <a class="btn btn-primary" href="${r}contact.html">Contact us</a>
+        <a class="btn btn-primary" href="${r}contact.html" data-ask>Contact us</a>
       </div>
       <button class="burger" aria-label="Open menu" aria-expanded="false" aria-controls="drawer-panel" data-track-label="Menu">${icon("menu", false)}</button>
     </div>
@@ -284,7 +284,7 @@ function header(r, current, menuTab, file) {
       <a class="drawer-link" href="${r}about.html"${here("about.html")}>About</a>
       <a class="drawer-link" href="${r}resources.html"${here("resources.html")}>Resources</a>
       <a class="drawer-link" href="${r}enquire.html" data-quote-link hidden>Your quote list <b class="count" data-quote-count>0</b></a>
-      <a class="btn btn-primary btn-lg" href="${r}contact.html">Contact us</a>
+      <a class="btn btn-primary btn-lg" href="${r}contact.html" data-ask>Contact us</a>
       <a class="btn btn-ghost btn-lg" href="${site.phoneHref}">${icon("phone", false)}${site.phone}</a>
     </div>
   </div>`;
@@ -556,10 +556,11 @@ ${html}
 </main>
 ${footer(r)}
 ${actionBar(r, current)}
-${searchDialog()}
+${searchDialog()}${["contact", "enquire"].includes(current) ? "" : askPanel(r)}
 <script src="${asset(r, "js/site.js")}" defer onerror="document.documentElement.classList.remove('js')"></script>
 <script src="${asset(r, "js/search.js")}" defer></script>
 <script src="${asset(r, "js/quote.js")}" defer></script>
+<script src="${asset(r, "js/enquiry.js")}" defer></script>
 ${scripts.map((s) => `<script src="${asset(r, `js/${s}`)}" defer></script>`).join("\n")}${tracker(r, file)}
 </body>
 </html>
@@ -2808,99 +2809,83 @@ ${ctaSection(r, { title: "Can't find a manual or driver?", lede: "Our service de
 });
 
 /* ---- contact ---- */
-// The enquiry form's first question, as tiles. Each one is a topic the old
-// "I am interested in" list offered (`subject` is that option); the
-// monitoring tile opens the list of services and solutions to narrow it
-// down. `prompt` is the hint in the details box once a tile is picked.
+// The enquiry form's first question, as a ruled sheet of six. Each is a
+// topic the old "I am interested in" list offered (`subject` is that
+// option); "Monitoring service" opens the list of services and solutions to
+// narrow it down. `prompt` is the hint in the message box once one is picked.
 const enquiryTopics = [
-  { id: "monitoring", icon: "activity", title: "A monitoring service", hint: "Flow, water quality, real-time data", prompt: "Your site or network, what you need to measure, and for how long" },
-  { id: "pricing", icon: "tag", title: "Product pricing", subject: "Product pricing", hint: "Instruments to buy", prompt: "Which instruments, how many, and where they will be installed" },
-  { id: "hire", icon: "calendar-clock", title: "Equipment hire", subject: "Equipment Rental", hint: "For a study or a season", prompt: "What you need to measure, where, and the dates you need it for" },
-  { id: "service", icon: "wrench", title: "Service or calibration", subject: "Equipment service or calibration", hint: "Repairs and calibration", prompt: "The instrument, its serial number if you have it, and what it is doing" },
-  { id: "flowsense", icon: "waves", title: "EDS FlowSense", subject: "EDS FlowSense", hint: "A walkthrough of the platform", prompt: "The sites you monitor now, and what you'd like to see" },
-  { id: "general", icon: "message-circle-more", title: "Something else", subject: "General enquiry", hint: "Any other question", prompt: "Tell us about your site, network or project" },
+  { id: "monitoring", icon: "activity", title: "Monitoring service", prompt: "Your site or network, what you need to measure, and for how long" },
+  { id: "pricing", icon: "tag", title: "Product pricing", subject: "Product pricing", prompt: "Which instruments, how many, and where they'll be installed" },
+  { id: "hire", icon: "calendar-clock", title: "Equipment hire", subject: "Equipment Rental", prompt: "What you need to measure, where, and the dates you need it for" },
+  { id: "service", icon: "wrench", title: "Service or calibration", subject: "Equipment service or calibration", prompt: "The instrument, its serial number if you have it, and what it's doing" },
+  { id: "flowsense", icon: "waves", title: "EDS FlowSense", subject: "EDS FlowSense", prompt: "The sites you monitor now, and what you'd like to see" },
+  { id: "general", icon: "message-circle-more", title: "Something else", subject: "General enquiry", prompt: "Tell us about your site, network or project" },
 ];
+// The ways of working a ?mode= link can name (the Buy, hire or Data as a
+// Service cards). The form notes it beside the product rather than asking.
+const enquiryModes = { ...Object.fromEntries(C.ways.items.map((w) => [w.mode, w.title === "Data as a Service" ? "Managed by EDS (DaaS)" : w.title])), unsure: "Not sure yet" };
 
-// The enquiry form, on its own page (enquire.html) and beside the contact
-// details on contact.html. site.js runs it; quote.js fills the quote list.
-const enquiryForm = (r, reveal) => `
-  <form class="form" id="enquiry" ${formSend} data-track="Enquiry form" data-reveal="${reveal}" novalidate>
+// The enquiry form: one short form wherever it is, on its own page
+// (enquire.html), beside the contact details (contact.html) and, on every
+// other page, in the panel that slides in over the page (askPanel()).
+// enquiry.js runs it; quote.js fills the quote list. A topic, the message,
+// then who to reply to: only the message, name and email are needed.
+const enquiryForm = (r, { heading = "", panel = false } = {}) => `
+  <form class="enquiry" id="enquiry" ${formSend} data-track="Enquiry form" data-modes='${esc(JSON.stringify(enquiryModes))}' ${heading ? 'aria-labelledby="enquiry-title"' : 'aria-label="Enquiry"'} novalidate>
     <div class="form-fields">
-      <div class="form-head">
-        <h2>Start an Enquiry</h2>
-        <p>Three quick steps, and it goes straight to our team.</p>
-        <ol class="form-progress" aria-hidden="true">
-          ${[["topic", "Topic"], ["project", "Project"], ["you", "Contact"]].map(([k, t], i) => `<li data-progress="${k}"><span><b>${i + 1}</b>${icon("check", false)}</span>${t}</li>`).join("")}
-        </ol>
+      ${heading ? `<h2 id="enquiry-title">${esc(heading)}</h2>` : ""}
+      <fieldset class="topics">
+        <legend>What's it about?</legend>
+        <div class="topic-grid">
+          ${enquiryTopics.map((t) => `<label class="topic"><input type="radio" name="Topic" value="${esc(t.title)}" data-topic="${t.id}" data-subject="${esc(t.subject || "")}" data-prompt="${esc(t.prompt)}">${icon(t.icon, false)}<span>${esc(t.title)}</span></label>`).join("")}
+        </div>
+      </fieldset>
+      <label class="field topic-detail" data-topic-detail hidden><span>Which service or solution? <i>Optional</i></span><select>
+        <option value="">Not sure yet, or more than one</option>
+        ${C.serviceGroups.map((g) => `<optgroup label="${esc(g.title)}">${C.services.filter((s) => s.group === g.id).map((s) => `<option>${esc(s.title)}</option>`).join("")}</optgroup>`).join("")}
+        <optgroup label="Solutions">${C.solutions.map((s) => `<option>${esc(s.title)}</option>`).join("")}</optgroup>
+      </select></label>
+      <input type="hidden" name="subject" value="General enquiry">
+      <div class="form-context" data-context hidden>
+        ${icon("package", false)}
+        <p><small data-context-label>Enquiring about</small><b data-context-product></b><span data-context-way></span></p>
+        <button type="button" data-context-clear aria-label="Take this off the enquiry">${icon("x", false)}</button>
+        <input type="hidden" name="Product">
+        <input type="hidden" name="Way of working">
       </div>
-      <fieldset class="form-part" data-part="topic">
-        <legend><span class="part-no"><b>1</b>${icon("check", false)}</span>What can we help with?</legend>
-        <div class="topic-tiles">
-          ${enquiryTopics.map((t) => `<label class="topic-tile holder"><input type="radio" name="Topic" value="${esc(t.title)}" data-topic="${t.id}" data-subject="${esc(t.subject || "")}" data-prompt="${esc(t.prompt)}"><span class="card-icon">${icon(t.icon)}</span><b>${esc(t.title)}</b><small>${esc(t.hint)}</small></label>`).join("")}
+      <div class="quote-box" data-quote-box hidden>
+        <div class="quote-box-head">
+          ${icon("clipboard-list", false)}
+          <p><small>Your quote list</small><b data-quote-summary></b></p>
+          <button type="button" class="quote-clear" data-quote-clear>${icon("trash-2", false)}<span>Clear</span></button>
         </div>
-        <label class="field topic-detail" data-topic-detail hidden>Which service or solution?<select>
-          <option value="">Not sure yet, or more than one</option>
-          ${C.serviceGroups.map((g) => `<optgroup label="${esc(g.title)}">${C.services.filter((s) => s.group === g.id).map((s) => `<option>${esc(s.title)}</option>`).join("")}</optgroup>`).join("")}
-          <optgroup label="Solutions">${C.solutions.map((s) => `<option>${esc(s.title)}</option>`).join("")}</optgroup>
-        </select></label>
-        <input type="hidden" name="subject" value="General enquiry">
-      </fieldset>
-      <fieldset class="form-part" data-part="project">
-        <legend><span class="part-no"><b>2</b>${icon("check", false)}</span>Tell us about your project</legend>
-        <div class="form-context" hidden>
-          <span class="card-icon">${icon("package", false)}</span>
-          <div><small>Enquiring about</small><b></b></div>
-          <button type="button" data-context-clear aria-label="Remove this product from the enquiry">${icon("x", false)}</button>
-          <input type="hidden" name="Product">
-        </div>
-        <div class="quote-box" data-quote-box hidden>
-          <div class="quote-box-head">
-            <span class="card-icon">${icon("clipboard-list", false)}</span>
-            <div><small>Your quote list</small><b data-quote-summary></b></div>
-            <button type="button" class="quote-clear" data-quote-clear>${icon("trash-2", false)}<span>Clear</span></button>
-          </div>
-          <ul class="quote-items" data-quote-items></ul>
-          <a class="quote-more" href="${r}products/index.html#finder">${icon("plus", false)} Add more products</a>
-        </div>
-        <template data-quote-row>
-          <li>
-            <img alt="" width="48" height="48" loading="lazy">
-            <span><a></a><small></small></span>
-            <span class="qty"><button type="button" data-step="-1">${icon("minus", false)}</button><input type="number" min="1" max="999" value="1" inputmode="numeric"><button type="button" data-step="1">${icon("plus", false)}</button></span>
-            <button type="button" class="quote-remove" aria-label="Remove">${icon("x", false)}</button>
-          </li>
-        </template>
-        <fieldset class="field modes">
-          <legend><span>How would you like to work? <i>Optional</i></span></legend>
-          <div class="mode-chips">
-            ${[...C.ways.items.map((w) => [w.mode, w.title === "Data as a Service" ? "Managed by EDS (DaaS)" : w.title]), ["unsure", "Not sure yet"]].map(([m, label]) => `<label class="mode-chip"><input type="radio" name="Way of working" value="${esc(label)}" data-mode="${m}"><span>${esc(label)}</span></label>`).join("")}
-          </div>
-        </fieldset>
-        <label class="field">Details<textarea name="Message" required placeholder="${esc(enquiryTopics.at(-1).prompt)}" data-prompt="${esc(enquiryTopics.at(-1).prompt)}"></textarea></label>
-        <textarea name="Products" hidden disabled></textarea>
-      </fieldset>
-      <fieldset class="form-part" data-part="you">
-        <legend><span class="part-no"><b>3</b>${icon("check", false)}</span>How can we reach you?</legend>
-        <div class="field-row">
-          <label class="field">Name<input name="Name" autocomplete="name" required></label>
-          <label class="field"><span>Organisation <i>Optional</i></span><input name="Organisation" autocomplete="organization"></label>
-        </div>
-        <div class="field-row">
-          <label class="field">Email<input name="Email" type="email" autocomplete="email" required pattern="[^@\\s]+@[^@\\s]+\\.[^@\\s]+"></label>
-          <label class="field" data-phone-field><span>Phone <i>Optional</i></span><input name="Phone" type="tel" autocomplete="tel"></label>
-        </div>
-        <fieldset class="field modes">
-          <legend><span>How should we reply?</span></legend>
-          <div class="mode-chips">
-            <label class="mode-chip"><input type="radio" name="Reply by" value="Email" checked><span>By email</span></label>
-            <label class="mode-chip"><input type="radio" name="Reply by" value="Phone call" data-needs-phone><span>Give me a call</span></label>
-          </div>
-        </fieldset>
-      </fieldset>
+        <ul class="quote-items" data-quote-items></ul>
+        <a class="quote-more" href="${r}products/index.html#finder">${icon("plus", false)} Add more products</a>
+      </div>
+      <template data-quote-row>
+        <li>
+          <img alt="" width="48" height="48" loading="lazy">
+          <span><a></a><small></small></span>
+          <span class="qty"><button type="button" data-step="-1">${icon("minus", false)}</button><input type="number" min="1" max="999" value="1" inputmode="numeric"><button type="button" data-step="1">${icon("plus", false)}</button></span>
+          <button type="button" class="quote-remove" aria-label="Remove">${icon("x", false)}</button>
+        </li>
+      </template>
+      <label class="field">Your message<textarea name="Message" required rows="4" placeholder="${esc(enquiryTopics.at(-1).prompt)}" data-prompt="${esc(enquiryTopics.at(-1).prompt)}"></textarea></label>
+      <textarea name="Products" hidden disabled></textarea>
+      <div class="field-row">
+        <label class="field">Name<input name="Name" autocomplete="name" required></label>
+        <label class="field">Email<input name="Email" type="email" autocomplete="email" required pattern="[^@\\s]+@[^@\\s]+\\.[^@\\s]+"></label>
+      </div>
+      <div class="field-row">
+        <label class="field" data-phone-field><span>Phone <i>Optional</i></span><input name="Phone" type="tel" autocomplete="tel"></label>
+        <label class="field"><span>Organisation <i>Optional</i></span><input name="Organisation" autocomplete="organization"></label>
+      </div>
+      <label class="check"><input type="checkbox" data-wants-call><span>Call me rather than email</span></label>
+      <input type="hidden" name="Reply by" value="Email">
       ${botcheck}
       <div class="form-submit">
-        <button class="btn btn-brand btn-lg" type="submit"><span>Submit enquiry</span>${icon("arrow-right")}<i class="spin" aria-hidden="true"></i></button>
-        <p class="note">${icon("lock", false)}Your enquiry goes straight to our team. <a href="${r}privacy.html">Privacy policy</a></p>
+        <button class="btn btn-brand btn-lg" type="submit"><span>Send enquiry</span><i class="spin" aria-hidden="true"></i></button>
+        <p class="note">${icon("lock", false)}Goes straight to our team. <a href="${r}privacy.html">Privacy policy</a></p>
       </div>
       <p class="form-error" role="alert" data-done="error" hidden>${icon("circle-alert", false)}<span>Your enquiry didn't go through. Please try again in a moment, or call <a href="${site.phoneHref}">${site.phone}</a>.</span></p>
     </div>
@@ -2915,11 +2900,39 @@ const enquiryForm = (r, reveal) => `
       </dl>
       <p>For anything urgent, call <a href="${site.phoneHref}">${site.phone}</a>.</p>
       <div class="btn-row">
-        <button class="btn btn-outline" type="button" data-form-edit>${icon("plus", false)}Start another enquiry</button>
-        <a class="link-arrow" href="${r}products/index.html">Browse products ${icon("arrow-right")}</a>
+        ${panel ? `<button class="btn btn-brand" type="button" data-ask-close>Done</button>` : ""}
+        <button class="btn btn-outline" type="button" data-form-edit>Send another enquiry</button>
+        ${panel ? "" : `<a class="link-arrow" href="${r}products/index.html">Browse products ${icon("arrow-right")}</a>`}
       </div>
     </div>
   </form>`;
+
+// The panel every enquiry link opens on pages without the form of their
+// own (enquiry.js), so asking never means leaving the page. The header's
+// "Contact us" (data-ask) opens it too, so its top carries the phone number
+// and a way to the offices. The form waits in a template until the panel
+// first opens. Without enquiry.js the links simply go to their pages.
+const askPanel = (r) => `
+<dialog class="ask" aria-labelledby="ask-title">
+  <div class="ask-head">
+    <h2 id="ask-title">How can we help?</h2>
+    <button class="ask-close" type="button" data-ask-close aria-label="Close">${icon("x", false)}</button>
+    <p>Prefer to talk? Call <a href="${site.phoneHref}">${site.phone}</a>, or find <a href="${r}contact.html">our offices</a>.</p>
+    ${openStatus()}
+  </div>
+  <div class="ask-body">
+    <div data-ask-slot></div>
+  </div>
+  <template data-ask-form>${enquiryForm(r, { panel: true })}</template>
+</dialog>`;
+
+// Other ways to reach us, under the title on enquire.html.
+const askWays = (r) => `
+  <ul class="ask-ways" data-reveal style="--i:2">
+    <li><a href="${site.phoneHref}">${icon("phone", false)}<span><b>${site.phone}</b><small>${site.hours}, from anywhere in Australia</small>${openStatus()}</span></a></li>
+    <li><div>${icon("mail", false)}<span><b>${site.email}</b><small>Or email us direct</small></span></div></li>
+    <li><a href="${r}contact.html">${icon("map-pin", false)}<span><b>Offices in four states</b><small>Head office in ${site.address[1].replace(/ \d{4}$/, "")}</small></span>${icon("arrow-right", false)}</a></li>
+  </ul>`;
 
 add({
   file: "contact.html",
@@ -2928,7 +2941,7 @@ add({
   current: "contact",
   scripts: ["widgets.js"],
   body: (r) => `
-${pageHero(r, { crumbs: [["Contact"]], title: "Give us a call or drop\u00a0in. We'd love to hear about your project.", lede: `${site.hours}, with one number for every state.`, visual: heroPanel("Quickest ways to reach us", `
+${pageHero(r, { crumbs: [["Contact"]], title: "Give us a call or drop in. We'd love to hear about your project.", lede: `${site.hours}, with one number for every state.`, visual: heroPanel("Quickest ways to reach us", `
   <a class="hero-call" href="${site.phoneHref}">${icon("phone")}<span><small>Call from anywhere in Australia</small><b>${site.phone}</b></span></a>
   <ul class="hero-links">
     <li><a href="#enquiry">${icon("message-square-text")}<span>Start an enquiry</span>${icon("arrow-down")}</a></li>
@@ -2943,7 +2956,7 @@ ${pageHero(r, { crumbs: [["Contact"]], title: "Give us a call or drop\u00a0in. W
     <a class="contact-card" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent("13/20-22 Ellerslie Road, Meadowbrook QLD 4131")}" rel="noopener" data-reveal><span class="card-icon">${icon("map-pin")}</span><span><b>Head office</b><span>${site.address.join(", ")}</span></span></a>
     <div class="contact-card" data-reveal><span class="card-icon">${icon("clock", false)}</span><span><b>Opening hours</b><span>${site.hours}. Closed Saturday and Sunday.</span>${openStatus()}</span></div>
   </div>
-  ${enquiryForm(r, "right")}
+  <div class="ask-card" data-reveal="right">${enquiryForm(r, { heading: "Start an Enquiry" })}</div>
 </div></section>
 <section class="section dark" id="offices"><div class="wrap aus">
   <svg id="ausmap" data-offices='${JSON.stringify(C.offices)}' role="img" aria-label="Map of Australia showing EDS offices" data-reveal="scale"></svg>
@@ -2953,31 +2966,17 @@ ${pageHero(r, { crumbs: [["Contact"]], title: "Give us a call or drop\u00a0in. W
 });
 
 /* ---- enquiry ---- */
-// The enquiry form on a page of its own: where "Start an enquiry", "Request
-// pricing" and the quote list lead from every other page.
+// The enquiry form as a page of its own, where every enquiry link leads
+// when enquiry.js is not running (and so the page a shared link opens). The
+// form is the hero: it starts at the top of the screen, with the title and
+// the other ways to reach us beside it (above it on a phone, the ways under).
 add({
   file: "enquire.html",
   title: "Start an Enquiry | EDS",
   description: "Ask EDS about monitoring, product pricing, equipment hire, service and calibration, or EDS FlowSense. Your enquiry goes straight to our team.",
   current: "enquire",
   body: (r) => `
-${pageHero(r, { compact: true, crumbs: [["Contact", "contact.html"], ["Start an Enquiry"]], title: "Tell us what you need.", lede: "Monitoring, pricing, hire, service or a question about FlowSense. A real person from our team will come back to you." })}
-<section class="section alt enquire-section"><div class="wrap enquire-grid">
-  ${enquiryForm(r, "")}
-  <aside class="enquire-aside">
-    <div class="aside-card brand" data-reveal="right">
-      <h2>Prefer to talk?</h2>
-      <a class="hero-call" href="${site.phoneHref}">${icon("phone")}<span><small>Call from anywhere in Australia</small><b>${site.phone}</b></span></a>
-      <p>${site.hours}.</p>
-      ${openStatus()}
-    </div>
-    <div class="aside-card" data-reveal="right" style="--i:1">
-      <h2>Head Office</h2>
-      <address>${site.address.join("<br>")}</address>
-      <a class="link-arrow" href="${r}contact.html">All contact details ${icon("arrow-right")}</a>
-    </div>
-  </aside>
-</div></section>`,
+${pageHero(r, { compact: true, cls: "ask-hero", crumbs: [["Contact", "contact.html"], ["Start an Enquiry"]], title: "Tell us what you need.", lede: "Pick a topic, add a few words, and a real person from our team will come back to you.", after: askWays(r), visual: `<div class="ask-card" data-reveal="right" style="--i:1">${enquiryForm(r)}</div>` })}`,
 });
 
 /* ---- not found ---- */
