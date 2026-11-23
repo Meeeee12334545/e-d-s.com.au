@@ -314,6 +314,8 @@ export const services = [
     group: "sewer",
     process: true,
     featured: true,
+    // lists the open channel flow calculator in its related links
+    calculator: true,
     summary: "Temporary and permanent flow monitoring for councils and water authorities, installed by trained crews Australia-wide.",
     description: "Temporary and permanent sewer flow monitoring for councils and water authorities, with Detectronic MSFM meters installed by our crews Australia-wide.",
     tags: ["Detectronic MSFM meters", "ATEX and IECEx"],
@@ -335,6 +337,7 @@ export const services = [
       },
       {
         heading: "What is included",
+        shot: { name: "flow-analytics", alt: "The FlowSense Flow Analytics page: a card for every site with its 24-hour trend, latest readings and status.", caption: "Every site's last 24 hours on one page in FlowSense, from the platform's demonstration account." },
         items: [
           ["Temporary and permanent flow monitoring", "For I&I studies, model calibration and compliance reporting."],
           ["Analysis and reporting", "Reports that are easy to read and act on, for planning and regulatory compliance."],
@@ -448,6 +451,7 @@ export const services = [
       },
       {
         heading: "From Data to Action",
+        shot: { name: "heat-map", alt: "The FlowSense I/I heat map: severity painted along the sewer network over aerial imagery, with the inspection priority list of the pipes most likely to be sources.", caption: "The I/I heat map in FlowSense, from the platform's demonstration account: severity along the pipes, and a ranked list of those worth sending a camera down." },
         nav: "Data to Action",
         lede: "In our experience, and across the water industry, about 20% of a sewer network typically carries 80% of its I&I. Finding that 20% is what makes a program pay back.",
         items: [
@@ -519,6 +523,7 @@ export const services = [
       },
       {
         heading: "How it runs, end to end",
+        shot: { name: "fleet-health", alt: "FlowSense Fleet Health: every logger on the account with its battery, delivery record and a replace-by date.", caption: "Fleet Health in FlowSense, from the platform's demonstration account: every logger's battery and delivery record, watched for you." },
         lede: "A managed fleet with continuous oversight, delivered with 99.95% data availability.",
         steps: true,
         list: [
@@ -576,6 +581,7 @@ export const services = [
       },
       {
         heading: "Calibration Scored Storm by Storm",
+        shot: { name: "rtk-calibration", alt: "A rainfall response (RTK) calibration scored in FlowSense: the fit score beside the best score available on this record, and each storm scored separately.", caption: "A calibration scored storm by storm in FlowSense, from the platform's demonstration account." },
         lede: "A single score across a whole record can look fine while the model misses every storm peak. EDS FlowSense scores each storm on its own, to the CIWEM UDG Code of Practice (2017).",
         items: [
           ["Published acceptance bands", "Peak flow within −15% to +25%, event volume within −10% to +20%, and peak timing within one hour. An event passes on peak and volume together."],
@@ -672,6 +678,7 @@ export const services = [
       },
       {
         heading: "Blockage Watch in FlowSense",
+        shot: { name: "blockage-watch", alt: "FlowSense Blockage Watch: the sites needing a decision first, each with its score, mechanism and case, and clear sites folded below.", caption: "Blockage Watch in FlowSense, from the platform's demonstration account: the sites needing a decision first." },
         nav: "Blockage Watch",
         lede: "Where flow meters are in, FlowSense reads the dry weather record and finds a blockage weeks before it overflows. It's included on every site. It tells you a line is blocking, not exactly where, so you still want a level alarm in the chamber.",
         items: [
@@ -757,6 +764,7 @@ export const services = [
     blocks: [
       {
         heading: "What we measure",
+        diagram: "wqstation",
         items: [
           ["pH, EC and turbidity", "EDS-made sensors for continuous measurement in water and wastewater."],
           ["Several parameters at once", "The iLab 901 measures up to seven at once, from a list including pH, ORP, conductivity, turbidity, dissolved oxygen, ammonia and nitrate. The handheld iLab Sonde covers field checks."],
@@ -825,6 +833,7 @@ export const services = [
       },
       {
         heading: "Choosing a Sampler",
+        diagram: "sampling",
         items: [
           ["ORI NEMO 1 M", "Mobile sampler approved under ATEX and IECEx for Zones 1 and 2. Inputs for up to 10 digital and 2 analogue sensors, and an optional LTE modem. Peristaltic, vacuum and hybrid pump versions."],
           ["ORI AquaSamp Mini", "A light portable sampler for spot and timed samples, with 6 m suction lift and up to 144 samples on one charge. An ATEX version is available."],
@@ -907,6 +916,7 @@ export const services = [
     blocks: [
       {
         heading: "The Technologies",
+        diagram: "fullpipe",
         items: [
           ["Magnetic", "Measures the voltage a conductive liquid creates as it moves through a magnetic field. Nothing blocks the flow and there are no moving parts, but the liquid must be conductive."],
           ["Ultrasonic transit time", "Times sound pulses with and against the flow. Suits clean liquids, and comes inline, as an insertion meter or clamped to the outside of the pipe."],
@@ -958,6 +968,7 @@ export const services = [
     blocks: [
       {
         heading: "What is included",
+        diagram: "rainfall",
         items: [
           ["Tipping bucket rain gauges", "RIMCO 7499 gauges sited within the catchment being monitored."],
           ["High-resolution logging", "Rain recorded typically every 1 to 5 minutes, to capture storm peaks."],
@@ -1025,6 +1036,7 @@ export const services = [
       },
       {
         heading: "How the data reaches you",
+        shot: { name: "overview", alt: "The FlowSense network overview: headline counts across the top, the sites needing attention listed worst first, and the network map beside them.", caption: "The network overview in FlowSense, from the platform's demonstration account: open alarms and quiet loggers first." },
         items: [
           ["4G from the field", "EDS and Detectronic loggers report over the mobile network. The battery-powered EDS Hawk lives inside the manhole, with no cabinet or mains power."],
           ["EDS FlowSense", "Every site on one map, refreshed every 60 seconds, worst first: open alarms, quiet loggers and sites outside their normal range."],
@@ -1120,6 +1132,7 @@ export const services = [
       },
       {
         heading: "From FlowSense to Your Systems",
+        diagram: "connect",
         lede: "Validated data can flow back out of EDS FlowSense to the SCADA, historian or reporting tools your teams already use.",
         items: [
           ["Scheduled files", "CSV files delivered to your server over SFTP or FTPS, for SCADA file importers and historians."],
@@ -1204,6 +1217,7 @@ export const services = [
     blocks: [
       {
         heading: "What an assessment can show",
+        shot: { name: "scattergraph", alt: "A FlowSense scattergraph of depth against velocity, coloured by flow, with the correlation, ranges and sample count beneath it.", caption: "Depth against velocity in FlowSense, from the platform's demonstration account. A shift in this relationship can reveal a blockage, sediment or a sag." },
         items: [
           ["Where the inflow is worst", "Inflow severity mapped across catchments, so CCTV inspections and rehabilitation budgets go where they're needed."],
           ["Asset condition", "Shifts in the depth-to-velocity relationship that reveal blockages, sediment, sags, displaced joints and infiltration points before crews report them."],
@@ -1244,6 +1258,7 @@ export const services = [
     icon: "clipboard-check",
     group: "field",
     featured: true,
+    calculator: true,
     summary: "Audits and calibration of your monitoring equipment where it's installed, by experienced EDS technicians, so your data holds up.",
     intro: [
       "A drifting instrument costs you twice: once in readings you can't trust, and again in the decisions made on them. Our technicians audit and calibrate equipment where it's installed: closed channel, open channel, level, pressure, rainfall and analytical.",
@@ -1262,6 +1277,7 @@ export const services = [
       },
       {
         heading: "What an audit covers",
+        figure: { photo: "velocity-check-manhole", alt: "A technician kneeling at an open manhole beside a tripod winch, reading a handheld flow meter whose sensor is lowered into the sewer", caption: "A spot check of velocity with an FH950 handheld meter: an independent reading to set an installed meter against. Photo: Hach.", pos: "50% 60%" },
         list: [
           "The site: its hydraulics, access, and the condition of the installation",
           "The instrument's readings against an independent reference measurement",
@@ -1386,6 +1402,7 @@ export const services = [
     blocks: [
       {
         heading: "How we help",
+        screen: { name: "ems-flow-wizard", alt: "The EMS-Flow setup wizard on its first step, zeroing the depth with the sensor held in air, with the five steps across the top: zero depth, site details, averaging, verify and commission.", caption: "Step one of the EMS-Flow setup wizard, from its user manual." },
         items: [
           ["Monitoring and modelling practice", "Training for your staff in the practices behind network monitoring and hydraulic models."],
           ["Software and drivers", "FSDATA Desktop and USB-serial drivers to download, with EDS (EMS2001, EMS4000), Hach Flo-Ware and Dynaflox software on request."],
@@ -1533,6 +1550,7 @@ export const solutions = [
     blocks: [
       {
         heading: "What we monitor",
+        shot: { name: "network-map", alt: "The FlowSense network map on aerial imagery, with the Layers panel narrowing it to alarms, telemetry, battery and hydraulic risk.", caption: "Every site on one map in FlowSense, from the platform's demonstration account." },
         items: [
           ["Flow", "Area velocity flow meters in sewers and channels, including the Detectronic MSFM, EDS E-Flow 3 and the Hach range."],
           ["Level and alarms", "Radar and pressure level sensors, and self-contained alarms that warn of blockages and surcharges."],
@@ -1585,6 +1603,7 @@ export const solutions = [
       },
       {
         heading: "Choosing the Right Sampler",
+        figure: { photo: "sampler-open-channel", alt: "A portable automatic sampler being set up beside a concrete channel, its intake line laid into the flow", caption: "A portable sampler beside an open channel, its intake in the flow. Photo: Hach.", pos: "40% 60%" },
         items: [
           ["Hazardous area", "The site's hazardous area classification, and the ATEX and IECEx approval it needs."],
           ["Sample type", "Spot, timed or composite samples, and how many bottles."],
@@ -1624,6 +1643,7 @@ export const solutions = [
       },
       {
         heading: "What we measure",
+        figure: { photo: "nitrate-analyser-river", alt: "The Aquamonitrix analyser cabinet on a timber stand beside a river, with sample troughs and a laptop on the bench and a stone bridge behind", caption: "Aquamonitrix measuring nitrate and nitrite beside a river. Photo: Aquamonitrix.", pos: "60% 50%" },
         items: [
           ["Water quality", "Multi-parameter sondes and sensors for rivers, stormwater and surface water, and Aquamonitrix for nitrate and nitrite."],
           ["Rainfall", "Tipping bucket rain gauges, logged at short intervals so storm peaks are captured."],
@@ -2011,6 +2031,16 @@ export const productTypes = [
 // grow a step on phones), `alt` describes the whole drawing for screen
 // readers, and two-panel drawings take `panels` and a `legend`.
 export const diagrams = {
+  wqstation: {
+    alt: "Illustration of a water quality station on a riverbank, in section. A multi-parameter sonde sits under the surface in a slotted guard pipe fixed down the bank, measuring pH, EC, turbidity and dissolved oxygen. Its cable runs up the bank to a cabinet on a post with a solar panel and an antenna, which sends the readings to EDS FlowSense or your own SCADA.",
+    caption: "Illustration: one sonde in a river measures several parameters at once, and its readings go straight to EDS FlowSense or your own SCADA.",
+    labels: { data: "To EDS FlowSense or your SCADA", sensors: ["pH", "EC", "Turbidity", "Dissolved oxygen"], more: "Up to seven at once" },
+  },
+  connect: {
+    alt: "Illustration of data flowing out of EDS FlowSense. Flow meters and loggers at a manhole and a pump station send their readings over 4G to EDS FlowSense. From there, four one-way links carry the data out to your SCADA, historian and reporting tools: scheduled files, MQTT, the read API and webhooks. There's no control path back into your systems.",
+    caption: "Illustration: readings arrive over 4G, and validated data flows one way out of EDS FlowSense to the tools your teams already use.",
+    labels: { platform: "EDS FlowSense", g4: "4G", links: ["Scheduled files", "MQTT", "Read API", "Webhooks"], none: ["No control", "path back"], yours: ["Your SCADA, historian", "and reporting tools"], sites: "Flow meters and loggers" },
+  },
   thermal: {
     alt: "Illustration of a sewer in section between two manholes. A thermistor string runs along the invert from a logger, and a flow meter sits at the downstream manhole. Groundwater seeps in through a cracked joint, and a chart beneath shows the temperature along the pipe changing at the sensors nearest the crack.",
     caption: "Illustration: a thermistor string along the pipe and a flow meter downstream. The temperature changes at the sensors nearest the defect.",
@@ -2020,6 +2050,30 @@ export const diagrams = {
     alt: "Illustration of a sewage pump station in section. Sewage arrives from the network into the wet well, two pumps at the bottom lift it into the rising main, and the level rises and falls between the start and stop levels, below the surcharge and overflow levels. A LIDoTT R at the top of the well reads the level, the pump run signals go to the Pump Station Manager in a cabinet at the surface, and its readings go on to SCADA and EDS FlowSense.",
     caption: "Illustration: level from a LIDoTT R and pump runs from the Pump Station Manager, sent in real time to SCADA and EDS FlowSense.",
     labels: { overflow: "Overflow", surcharge: "Surcharge", start: "Start", stop: "Stop", main: "Rising main", radar: ["LIDoTT R", "Radar and pressure"], inlet: "From the network", pumps: "Pump run signals", manager: "Pump Station Manager", data: "To SCADA and EDS FlowSense" },
+  },
+  hawk: {
+    alt: "Illustration of a Hawk logger in a sewer manhole, in section. The Hawk hangs from its stainless wall bracket inside the shaft, below the lid. Its RS485 cable runs down the shaft wall to an E-Flow 3 at the crown of the pipe, whose radar beams reach the flow below. The Hawk reports over 4G LTE through the lid, and keeps logging if the chamber surcharges. There is nothing at the surface.",
+    caption: "Illustration: the Hawk in the manhole, reading an E-Flow 3 over RS485 and reporting over 4G. Not to scale.",
+    labels: {
+      hawk: ["Hawk", "On its wall bracket"],
+      cable: "RS485",
+      sensor: "E-Flow 3",
+      data: "4G LTE to FlowSense and your systems",
+      surcharge: ["Surcharge", "IP68, still logging"],
+      surface: "Nothing at the surface",
+      flow: "Flow",
+    },
+  },
+  alarm2: {
+    alt: "Illustration of an Alarm2 in a chamber, in section. The unit is fixed under the cover, looking straight down, and its radar beam reaches the water surface below. A high alarm level is dashed across the chamber above the water and a low alarm level below it. A cable runs from the unit to its external antenna under the cover, which sends levels and alarms over LoRaWAN or 4G.",
+    caption: "Illustration: Alarm2 reads the level by radar from above and alarms on high and low set-points. Not to scale.",
+    labels: {
+      unit: ["Alarm2", "All in one"],
+      radar: ["Radar, up to 20 m", "No deadband"],
+      high: "High alarm",
+      low: "Low alarm",
+      data: ["LoRaWAN or 4G", "to your monitoring platform"],
+    },
   },
   tradewaste: {
     alt: "Illustration of a trade waste discharge point. A drain runs from an industrial site to a sampling pit on its way to the sewer. In the pit a flow sensor sits on the invert and a quality probe hangs in the flow; beside it a sampler draws through a hose, and a logger with an antenna sends the readings on for reporting.",
@@ -2107,6 +2161,16 @@ export const diagrams = {
     gap: "No reading",
     legend: [["truth", "What actually flowed"], ["band", "Pipe running full"], ["recr", "Recorded by radar"], ["recu", "Recorded by ultrasonic and pressure"], ["recw", "Recorded by a wetted sensor"]],
   },
+  rainfall: {
+    alt: "Illustration of a catchment in section during a storm. A tipping bucket rain gauge on a post records the rain, with a logger strapped to the post. Below ground, rain reaches the sewer two ways: quickly, straight in at a manhole, and slowly, through the groundwater and a cracked joint. A flow meter sits on the invert. A chart beneath shows the storm's rainfall above the flow: inflow arrives quickly, in a sharp peak soon after the rain, then infiltration builds slowly and lingers above dry weather flow.",
+    caption: "Illustration: a wet weather response read against the rain that caused it. Inflow arrives quickly. Infiltration builds slowly and lingers.",
+    labels: { gauge: ["RIMCO 7499", "rain gauge"], groundwater: "Groundwater", inflow: "Inflow", infiltration: "Infiltration", meter: "Flow meter", flow: "Flow", rain: "Rainfall", fast: ["Inflow", "arrives quickly"], slow: ["Infiltration builds", "slowly and lingers"], measured: "Flow", dry: "Dry weather flow" },
+  },
+  fullpipe: {
+    alt: "Illustration of three full pipes in long section, flow left to right. Magnetic: coils above and below the pipe set up a magnetic field across it, and seen end on, two electrodes in the pipe wall pick up the voltage a conductive liquid creates as it moves through the field. Ultrasonic transit time: two transducers strapped to the outside of the pipe time sound pulses across it, with the flow and against it. Ultrasonic Doppler: one transducer on the outside of the pipe sends sound into the liquid, and it bounces back off particles and bubbles.",
+    caption: "Illustration: three ways to measure flow in a full pipe. Not to scale.",
+    labels: { magnetic: "Magnetic", field: "Magnetic field", voltage: "Voltage", transit: "Ultrasonic transit time", with: "With the flow", against: "Against the flow", doppler: "Ultrasonic Doppler", bounce: ["Bounces sound off", "particles and bubbles"], flow: "Flow" },
+  },
 };
 
 export const lidott = {
@@ -2176,6 +2240,17 @@ export const alarm2 = {
     ["Real-time monitoring", "Data goes to your monitoring platform at each send interval, and straight away when a level changes state. A daily heartbeat confirms the unit is working, and a JSON API links it to cloud platforms and SCADA."],
     ["Low maintenance", "No external sensors or wiring. Battery life of over five years means fewer site visits."],
   ],
+  scene: {
+    heading: "One unit, looking down.",
+    diagram: "alarm2",
+    list: [
+      "Reads the level by radar from above, without touching the water",
+      "Measures 0 to 20 m with no deadband, accurate to ± 5 mm",
+      "High and low set-points, rate of change and profile alarms",
+      "Alarms go out immediately, then hourly while the condition lasts",
+      "A daily heartbeat confirms it's working",
+    ],
+  },
   specs: [
     ["Sensor type", "Contactless radar"],
     ["Range", "0 to 20 m"],
@@ -2426,6 +2501,18 @@ export const productPages = [
       ["Every reading kept", "32 MB on board holds 10 years of data, so a missed report in patchy coverage doesn't mean lost data."],
       ["More than one destination", "Up to four data centres. Send the same data to FlowSense and to your SCADA or historian, or run them as primary and standby."],
     ],
+    scene: {
+      nav: "In the manhole",
+      heading: "Everything below the lid.",
+      diagram: "hawk",
+      list: [
+        "Hangs from its stainless wall bracket inside the shaft",
+        "Powers each sensor only while it reads it",
+        "Three RS485 ports, for E-Flow 3 and other Modbus RTU sensors",
+        "Reports over 4G LTE, every 1 minute to 24 hours",
+        "Keeps logging when the chamber is underwater",
+      ],
+    },
     specs: [
       ["Telemetry", [
         ["Mobile network", "4G LTE"],
@@ -3474,6 +3561,131 @@ export const clients = [
   ["Veolia", "client-veolia.png"],
 ].map(([name, file]) => ({ name, src: img(file) }));
 export const homeClients = ["Sydney Water", "Urban Utilities", "Yarra Valley Water", "Water Corporation", "Transurban", "Veolia", "Downer", "Aurecon"];
+
+/* ------------------------------------------------------------------ */
+/* Open channel flow calculator (open-channel-flow-calculator.html)    */
+/* ------------------------------------------------------------------ */
+// The words of the calculator and its page. The sums are in
+// src/js/flow-calc.js. `example` is the first calculation on the page,
+// drawn into it at build time; each shape keeps its own sizes (`value`, in
+// millimetres) when the visitor switches between them.
+export const flowCalc = {
+  title: "Open Channel Flow Calculator",
+  pageTitle: "Open Channel and Part-Full Pipe Flow Calculator | EDS",
+  description: "Work out the flow in an open channel or part-full pipe from depth and velocity. Circular, egg-shaped, rectangular, trapezoidal, U and V shapes.",
+  lede: "Pick a shape, enter its size, the depth and the velocity, and the flow is worked out as you type.",
+  card: "The flow in a pipe or channel from depth and velocity, for six shapes, drawn to scale as you type.",
+  example: { shape: "circle", depth: 120, velocity: 0.8 },
+  shapes: [
+    { id: "circle", name: "Circular pipe", alt: "circular pipe", fields: [
+      { k: "d", label: "Diameter", hint: "Inside diameter", value: 300 },
+    ] },
+    { id: "egg", name: "Egg-shaped pipe", alt: "egg-shaped pipe", fields: [
+      { k: "w", label: "Width", hint: "A standard egg, 1.5 times as high as it is wide", value: 600 },
+    ] },
+    { id: "rect", name: "Rectangular", alt: "rectangular channel", closed: "Closed top, like a box culvert", fields: [
+      { k: "b", label: "Width", value: 600 },
+      { k: "h", label: "Height", optional: true, hint: "Leave blank for an open channel" },
+    ] },
+    { id: "trap", name: "Trapezoidal", alt: "trapezoidal channel", fields: [
+      { k: "b", label: "Bottom width", value: 500 },
+      { k: "z", label: "Side slope", unit: "H : 1 V", rule: "slope", zero: true, step: 0.1, hint: "1.5 means 1.5 across for every 1 up", value: 1.5 },
+      { k: "h", label: "Channel depth", optional: true },
+    ] },
+    { id: "u", name: "U-shaped", alt: "U-shaped channel", fields: [
+      { k: "w", label: "Width", hint: "Across the sides, and across the round bottom", value: 450 },
+      { k: "h", label: "Channel depth", optional: true },
+    ] },
+    { id: "v", name: "V-shaped", alt: "V-shaped channel", fields: [
+      { k: "z", label: "Side slope", unit: "H : 1 V", rule: "slope", step: 0.1, hint: "2 means 2 across for every 1 up", value: 2 },
+      { k: "h", label: "Channel depth", optional: true },
+    ] },
+  ],
+  legends: { shape: "Shape", size: "Size", flow: "Depth and velocity", kind: "Velocity reading" },
+  depth: { label: "Depth of water", hint: "From the bottom of the pipe or channel (the invert)" },
+  kinds: [["mean", "Mean"], ["surface", "Surface"]],
+  meanVelocity: "Mean velocity",
+  surfaceVelocity: "Surface velocity",
+  meanHint: "The average across the flow, as an area velocity meter reports it.",
+  surfaceHint: "The speed at the surface, from radar or a float. It's multiplied by the factor below to give the mean.",
+  factor: { label: "Surface to mean factor", hint: "About 0.85 is a common starting point. A factor from your own site is better." },
+  results: {
+    flow: "Flow",
+    rows: [
+      ["A", "Wetted area", "m²"],
+      ["P", "Wetted perimeter", "m"],
+      ["R", "Hydraulic radius", "m"],
+      ["T", "Surface width", "m"],
+      ["depthShare", "Depth", ""],
+      ["areaShare", "Flow area", ""],
+      ["vMean", "Mean velocity", "m/s"],
+      ["Fr", "Froude number", ""],
+    ],
+    note: "A guide for planning and checking. It's only as good as the depth and velocity you enter.",
+  },
+  caption: "Drawn to scale from the figures you enter.",
+  copy: "Copy link",
+  copied: "Link copied",
+  copyFailed: "Copy the address bar instead",
+  reset: "Start again",
+  // the words the script writes (flow-calc.js)
+  script: {
+    depth: "depth",
+    high: "high",
+    slope: "side slope",
+    full: "Full",
+    surcharged: "surcharged",
+    ofHeight: "{n} of the height",
+    ofFull: "{n} of full",
+    sub: "subcritical",
+    near: "near critical",
+    super: "supercritical",
+    fullNote: "Running full. The water is above the top of the pipe, so the flow area is the whole pipe.",
+    reverseNote: "The velocity is below zero, so the flow is running backwards.",
+    alt: "A cross-section of the {shape}, drawn to scale, with water {depth} deep.",
+    altFull: "A cross-section of the {shape}, drawn to scale, running full.",
+    live: "Flow is {q} litres a second.",
+    errors: {
+      empty: "Enter a number.",
+      empty_d: "Enter the diameter.",
+      empty_w: "Enter the width.",
+      empty_b: "Enter the width.",
+      empty_z: "Enter the side slope.",
+      empty_depth: "Enter the depth of water.",
+      empty_v: "Enter the velocity.",
+      empty_k: "Enter the factor.",
+      number: "Enter a number, like 300 or 0.85.",
+      size: "Enter a size above zero.",
+      slope: "Enter a slope above zero.",
+      slopeZero: "Enter a slope of zero or more.",
+      depth: "The depth can't be below zero.",
+      factor: "Enter a factor above zero and up to 1.5.",
+      culvert: "Enter the height of the culvert.",
+      uHeight: "Make it at least half the width deep, so the round bottom fits.",
+      over: "That's deeper than the channel. Check the depth or the channel depth.",
+    },
+  },
+  method: {
+    nav: "How it works",
+    heading: "How it's worked out",
+    lede: "Flow is the wetted area times the mean velocity.",
+    equation: [["Q", "Flow"], ["A", "Wetted area"], ["v", "Mean velocity"]],
+    items: [
+      ["Wetted area", "The area of water in the section at the depth you enter, worked out from the shape and its size."],
+      ["Mean velocity", "Water runs faster at the surface than near the bed. A radar or a float reads the surface, so its reading is multiplied by a factor, often about 0.85."],
+      ["Running full", "Once the water reaches the top of a pipe or culvert, the area stops growing. The flow is then the full area times the velocity."],
+      ["Hydraulic radius", "The wetted area divided by the wetted perimeter, the figure Manning's equation uses."],
+      ["Froude number", "Velocity against the speed of a wave on the surface. Under 1 the flow is subcritical, deeper and calmer. Over 1 it's supercritical, fast and shallow."],
+      ["Egg-shaped pipes", "The standard egg is 1.5 times as high as it is wide. Its top radius is half the width, its bottom radius a quarter and its sides 1.5 times the width."],
+    ],
+    measure: "Measuring Flow",
+  },
+  cta: {
+    title: "Need the flow measured?",
+    lede: "Our crews install and look after area velocity flow meters in sewers, drains and channels Australia-wide.",
+    topic: "Sewer Flow Monitoring",
+  },
+};
 
 /* ------------------------------------------------------------------ */
 /* Resources                                                           */

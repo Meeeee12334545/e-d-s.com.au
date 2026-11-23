@@ -14,7 +14,7 @@
 // a layer of their own over the still drawing (stack()), so the textures are
 // painted once.
 
-import { texDefs, matDefs, instDefs, ground, waterTable, pipeLong, chamber, chamberWalls, shaft, water, eflow3, cable, hawk, coverFrame, stepIron, avSensor, lidottR, kiosk, d605, dtc, hanger, frameSpan, tag, lead, flowArrow, subPump, riser, pipeRun, hatch, vent, sampler, building, sonde, rag, grease, silt, fouling, textW, lidAside, tablet } from "./scene.mjs";
+import { texDefs, matDefs, instDefs, ground, waterTable, pipeLong, chamber, chamberWalls, shaft, water, eflow3, cable, hawk as hawkLogger, coverFrame, stepIron, avSensor, lidottR, kiosk, d605, dtc, hanger, frameSpan, tag, lead, flowArrow, subPump, riser, pipeRun, hatch, vent, sampler, building, sonde, rag, grease, silt, fouling, textW, lidAside, tablet, alarm2Unit, rainGauge, solarPanel, transmitter, turf } from "./scene.mjs";
 
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 const f1 = (n) => Math.round(n * 10) / 10;
@@ -71,7 +71,7 @@ function thermal(t) {
   <path class="sc-dtc" d="M47 ${G + 30}V${INV - 3}Q47 ${INV - 1.6} 49 ${INV - 1.6}H${beads[0] - 4}"/>
   ${d605(p, 40, G + 14, 14)}
   ${hanger(p, MB[1], 434, G + 22)}
-  ${hawk(p, 434, G + 22, 11)}
+  ${hawkLogger(p, 434, G + 22, 11)}
   ${cable(`M375 ${INV - 2}H431Q436 ${INV - 2} 436 ${INV - 7}V${G + 46}`, { w: 1.2 })}
   ${water(p, { x0: 0, x1: W, level, bottom: INV })}
   ${dtc(p, 47, beads[beads.length - 1] + 4, INV - 1.6, beads, { hot })}
@@ -215,6 +215,144 @@ function tradewaste(t) {
   ${tag(470, 202, L.sewer, { a: "end" })}
   ${flowArrow(372, 222, "", { len: 30 })}`;
   return svg(480, 304, body, `${texDefs(p, 0.55)}${matDefs(p)}${instDefs(p)}${fadeDef(p)}`);
+}
+
+/* ---- wqstation: a sonde in a river, reporting from the bank ---- */
+// The river in cross-section with its bank on the left: grass on the bank
+// top, the soil cut, gravel and silt on the bed under the water. A slotted
+// PVC guard pipe pegged down the bank holds a multi-parameter sonde under
+// the surface, and its cable runs up to a stainless cabinet on a galvanised
+// post with a solar panel and an antenna. The pipe and sonde are drawn in
+// their own frame along the slope (`th` degrees): u down the pipe from its
+// top end, y across it. The data link runs from the antenna in its own layer.
+function wqstation(t) {
+  const L = t.labels, p = "rtq";
+  const G = 150, WL = 194, H = 318, th = 40;
+  const c = Math.cos((th * Math.PI) / 180), s = Math.sin((th * Math.PI) / 180);
+  const R = 13, r = 10.6, U0 = -2, U1 = 164; // the guard pipe: outer and inner radius, its ends
+  const S = [152, 158]; // the top of the bank's straight slope
+  const O = [S[0] + (R + 2) * s, S[1] - (R + 2) * c]; // the pipe's axis, resting on the bank
+  const W = (u, y = 0) => [f1(O[0] + u * c - y * s), f1(O[1] + u * s + y * c)];
+  const wx = f1(S[0] + ((WL - S[1]) / s) * c); // where the surface meets the bank
+  const E = [f1(S[0] + 170 * c), f1(S[1] + 170 * s)]; // the toe of the bank
+  const slope = `L${E[0]} ${E[1]}C${f1(E[0] + 16 * c)} ${f1(E[1] + 16 * s)} 312 289 340 290S440 291 480 286`;
+  const land = `M0 ${G}H118C132 ${G} 141 149 ${S[0]} ${S[1]}`;
+  // the bed: a skin of gravel and silt along the slope under the water
+  const bed = `M${wx} ${WL}${slope}L480 ${H}H${wx}Z`;
+  const segs = [];
+  let a0 = U0;
+  for (const s0 of [100, 112, 124, 136, 148]) { segs.push([a0, s0]); a0 = s0 + 3.5; }
+  segs.push([a0, U1]);
+  const walls = segs.map(([x0, x1]) => `M${x0} ${-R}H${x1}V${-r}H${x0}ZM${x0} ${r}H${x1}V${R}H${x0}Z`).join("");
+  const top = W(-6), tip = W(150);
+  const sx = 322;
+  const body = `
+  <rect x="190" y="${WL}" width="${480 - 190}" height="${300 - WL}" fill="url(#${p}-rv)"/>
+  <path class="sc-surf-lo" d="M${wx} ${WL + 1.6}H480"/><path class="sc-surf" d="M${wx} ${WL + 0.4}H480"/>
+  <path fill="url(#${p}-soil)" d="${land}${slope}L480 ${H}H0Z"/>
+  <path fill="url(#${p}-humus)" d="M0 ${G}H118C132 ${G} 141 149 ${S[0]} ${S[1]}L${S[0]} ${S[1] + 14}L0 ${G + 14}Z"/>
+  <clipPath id="${p}-bedc"><path d="${bed}"/></clipPath>
+  <g clip-path="url(#${p}-bedc)"><path fill="none" stroke="url(#${p}-grav)" stroke-width="12" d="M${wx} ${WL}${slope}"/><path fill="none" stroke="rgba(120, 104, 80, .35)" stroke-width="12" d="M${wx} ${WL}${slope}"/></g>
+  <path class="sc-cut-edge" d="M${wx} ${WL}${slope}"/>
+  ${turf(0, S[0], (x) => (x <= 118 ? G : G + ((x - 118) / (S[0] - 118)) * (S[1] - G) * 0.6), { seed: "wq" })}
+  <rect x="68" y="${G - 1}" width="22" height="26" fill="url(#${p}-conc)"/><path class="sc-cut-edge" d="M68 ${G - 1}V${G + 25}H90V${G - 1}"/>
+  <rect x="76" y="38" width="6" height="${G + 22 - 38}" fill="url(#${p}-galvv)"/>
+  ${solarPanel(p, 79, 34, 44, -20)}
+  ${kiosk(p, 56, 76, 46, 48, { antenna: 0 })}
+  <path class="sc-mast" d="M97 76V58"/><rect x="95.9" y="49" width="2.2" height="10" rx="1.1" fill="#1b1f22"/>
+  ${cable(`M${top[0]} ${top[1]}C150 146 146 147.5 140 147.5H86V125`, { w: 1.4 })}
+  <g transform="translate(${f1(O[0])} ${f1(O[1])}) rotate(${th})">
+    ${[24, 84].map((u) => `<path class="sc-stake" d="M${u} ${R}V${R + 16}"/><rect x="${u - 1.4}" y="${-R - 1.2}" width="2.8" height="${2 * R + 2.4}" rx=".6" fill="url(#${p}-galv)"/>`).join("")}
+    <rect x="${U0}" y="${-r}" width="${U1 - U0}" height="${2 * r}" fill="#24302d" fill-opacity=".35"/>
+    ${cable("M-6 0H93", { w: 2.2 })}
+    <rect x="93" y="-3.4" width="6" height="6.8" rx="1" fill="url(#${p}-blkv)"/>
+    <rect x="98" y="-7.6" width="44" height="15.2" rx="3.2" fill="url(#${p}-blk)"/>
+    <rect x="104" y="-6" width="16" height="12" rx=".5" fill="url(#${p}-label)"/>
+    <path class="sc-lbl-r" d="M106 -2.6h11M106 0h8M106 2.6h10"/>
+    <rect x="141" y="-8.2" width="14" height="16.4" rx="2" fill="url(#${p}-ssv)"/>
+    ${[-4.6, -1.6, 1.6, 4.6].map((y) => `<rect x="143" y="${f1(y - 0.7)}" width="10" height="1.4" rx=".5" fill="#1f2629"/>`).join("")}
+    <path fill="url(#${p}-pvc)" d="${walls}"/><path class="sc-edge-dk" d="${walls}"/>
+    <rect x="${U0 - 3}" y="${-R}" width="3.6" height="${2 * R}" rx="1" fill="#3a4246"/>
+    <rect x="${U1}" y="${-R}" width="3.6" height="${2 * R}" rx="1" fill="#3a4246"/>
+  </g>
+  ${label(212, 64, L.data, { cls: "dg-b" })}
+  <text x="${sx}" y="98">${L.sensors.map((l, i) => `<tspan class="dg-b"${i ? ` x="${sx}" dy="1.25em"` : ""}>${esc(l)}</tspan>`).join("")}<tspan class="dg-m" x="${sx}" dy="1.45em">${esc(L.more)}</tspan></text>
+  ${lead([[sx - 6, 122], [tip[0], tip[1]]])}`;
+  const fx = `<circle class="dg-ping" cx="97" cy="48" r="9"/><path class="dg-link" d="M204 60H112"/>`;
+  return stack(480, H, body, fx, `${texDefs(p, 0.6)}${matDefs(p)}${instDefs(p)}<linearGradient id="${p}-rv" href="#${p}-river" gradientUnits="userSpaceOnUse" x1="0" y1="${WL}" x2="0" y2="300"/>`);
+}
+
+/* ---- connect: readings in over 4G, validated data out one way ---- */
+// The network in section on the left (a manhole with a flow meter on the
+// invert and a Hawk logger, a pump station's wet well with a LIDoTT R and
+// a kiosk), its readings rising over 4G to EDS FlowSense, and four one-way
+// links on to your own building, seen in section with its rack and screen.
+// Arrowheads only on the way out; the dashes run in their own layer.
+function connect(t) {
+  const L = t.labels, p = "rtc";
+  const G = 232, CROWN = G + 48, INV = G + 74, T = 6;
+  const MA = [36, 70]; // the manhole, inside faces
+  const WA = 172, WB = 228, WW = 8, FLOOR = G + 94, WLV = G + 68; // the wet well
+  const H = FLOOR + WW + 29;
+  const F = { x: 172, y: 30, w: 100, h: 92 }; // EDS FlowSense
+  const outs = [44, 68, 92, 116], turns = [452, 432, 412, 392], IN = 88;
+  const ROOF = G - 78, rows = [0, 1, 2, 3, 4].map((k) => G - 46 + 9 * k);
+  const beam = efBeam(p, "bm", [200, G + 36.5, 0, 1], 6, { toY: WLV - 1, waves: 3 });
+  const day = (x) => { const u = (x - 182) / 40; return 0.5 + 0.28 * Math.sin(2 * Math.PI * u - 1.9) + 0.1 * Math.sin(4 * Math.PI * u - 0.6); };
+  const trace = smooth(sample(182, 262, 4, (x) => f1(102 - 36 * day(x))));
+  const oc = (MA[0] + MA[1]) / 2;
+  const body = `
+  ${ground(p, { x0: 0, x1: 480, y: G, bottom: H, holes: [frameSpan(22, oc), [WA - WW - 4, WB + WW + 4]] })}
+  ${pipeLong(p, { x0: 0, x1: WA - WW, crown: CROWN, inv: INV, t: T, joints: [110], gaps: [[MA[0], MA[1]]], bed: 6, stain: INV - 12 })}
+  ${shaft(p, { a: MA[0], b: MA[1], top: G, bottom: CROWN, t: T, ring: 22, slab: 6, open: 22, oc, steps: [G + 24, G + 38], stepW: 11, wallTo: CROWN })}
+  ${water(p, { x0: 0, x1: WA - WW, level: INV - 10, bottom: INV })}
+  <linearGradient id="${p}-ww" href="#${p}-in-shaft" gradientUnits="userSpaceOnUse" x1="${WA}" y1="0" x2="${WB}" y2="0"/>
+  <rect x="${WA}" y="${G}" width="${WB - WA}" height="${FLOOR - G}" fill="url(#${p}-wall)"/><rect x="${WA}" y="${G}" width="${WB - WA}" height="${FLOOR - G}" fill="url(#${p}-ww)"/>
+  ${water(p, { x0: WA, x1: WB, level: WLV, bottom: FLOOR, streaks: false })}
+  <path fill="url(#${p}-conc)" d="M${WA - WW} ${G}H${WA}V${CROWN}H${WA - WW}ZM${WA - WW} ${INV}H${WA}V${FLOOR}H${WA - WW}ZM${WB} ${G}H${WB + WW}V${FLOOR}H${WB}ZM${WA - WW} ${FLOOR}H${WB + WW}V${FLOOR + WW}H${WA - WW}Z"/>
+  <path class="sc-cut-edge" d="M${WA - WW} ${G}V${CROWN}M${WA - WW} ${INV}V${FLOOR + WW}H${WB + WW}V${G}M${WA} ${G}V${CROWN}M${WA} ${INV}V${FLOOR}H${WB}V${G}"/>
+  ${hatch(p, WA - 2, WB + 2, G - 1.8)}
+  ${avSensor(p, 92, INV, 16)}
+  ${cable(`M108 ${INV - 2}H62Q60 ${INV - 2} 60 ${INV - 6}V${G + 30}`, { w: 1 })}
+  ${hanger(p, MA[1], 58, G + 12)}${hawkLogger(p, 58, G + 12, 8)}
+  ${cable(`M138 ${G + 1}V${G + 8}H200V${G + 14}`, { w: 1 })}
+  <path class="sc-hanger" d="M200 ${G + 6}V${G + 14}"/>
+  ${lidottR(p, 200, G + 14, 15)}
+  ${kiosk(p, 116, G - 40, 34, 40, { antenna: 14 })}
+  <rect x="${F.x}" y="${F.y}" width="${F.w}" height="${F.h}" rx="2" fill="#1f2a2c"/>
+  <rect x="${F.x + 3.5}" y="${F.y + 3.5}" width="${F.w - 7}" height="${F.h - 7}" rx="1" fill="#f7faf9"/>
+  <rect x="${F.x + 3.5}" y="${F.y + 3.5}" width="${F.w - 7}" height="9" fill="#0d7c72"/>
+  <path d="M${F.x + 9} ${F.y + 8}h18" stroke="#bfe6df" stroke-width="1.2"/>
+  <path class="dg-grid" d="M182 58H262M182 78H262M182 98H262"/>
+  <path d="${trace}L262 104H182Z" fill="#5fb4a6" fill-opacity=".22"/>
+  <path class="dg-trace" d="${trace}"/>
+  <path d="M182 112h34M222 112h22" stroke="#c3cdcc" stroke-width="1.2"/>
+  ${outs.map((y, k) => `<path class="dg-head" d="M${turns[k] - 4.5} ${ROOF - 8}L${turns[k]} ${ROOF - 1}L${turns[k] + 4.5} ${ROOF - 8}Z"/>`).join("")}
+  ${[...outs.map((y) => [F.x + F.w, y]), [F.x, IN]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="2.2" fill="#095f57"/>`).join("")}
+  <circle cx="133" cy="${IN}" r="2.4" fill="#095f57"/>
+  ${L.links.map((l, k) => label(282, outs[k] - 6, l, { cls: "dg-b" })).join("")}
+  ${label(222, 20, L.platform, { a: "middle", cls: "dg-b" })}
+  ${label(280, 139, L.none, { cls: "dg-m" })}
+  ${label(143, IN - 7, L.g4, { cls: "dg-b" })}
+  <rect x="366" y="${ROOF + 8}" width="104" height="${G - ROOF - 8}" fill="#e9eeee"/>
+  <rect x="366" y="${ROOF + 8}" width="104" height="${G - ROOF - 8}" fill="url(#${p}-room)"/>
+  <path fill="url(#${p}-conc)" d="M360 ${ROOF}H476V${ROOF + 8}H360ZM360 ${ROOF + 8}H366V${G}H360ZM470 ${ROOF + 8}H476V${G}H470Z"/>
+  <path class="sc-cut-edge" d="M360 ${G}V${ROOF}H476V${G}M366 ${G}V${ROOF + 8}H470V${G}"/>
+  <rect x="376" y="${G - 56}" width="24" height="56" rx="1" fill="url(#${p}-blkv)"/>
+  ${rows.map((y) => `<rect x="379" y="${y - 2}" width="18" height="5" rx=".4" fill="#2f363a"/><circle class="sc-lamp" cx="394" cy="${y + 0.5}" r=".9"/>`).join("")}
+  <rect x="408" y="${G - 22}" width="56" height="2.6" fill="#8a6f52"/><rect x="410" y="${G - 19.4}" width="2.4" height="19.4" fill="#6e5841"/><rect x="459.6" y="${G - 19.4}" width="2.4" height="19.4" fill="#6e5841"/>
+  <rect x="418" y="${G - 52}" width="38" height="24" rx="1.4" fill="#1c2224"/>
+  <rect x="420" y="${G - 50}" width="34" height="19" fill="#f2f6f5"/>
+  ${[[424, 8], [431, 13], [438, 6], [445, 11]].map(([x, h]) => `<rect x="${x}" y="${G - 33 - h}" width="4" height="${h}" fill="#0d7c72"/>`).join("")}
+  <rect x="434" y="${G - 28}" width="6" height="6" fill="#30373a"/>
+  ${tag(470, G + 34, L.yours, { a: "end", bold: true })}
+  ${tag(12, H - 12, L.sites, { bold: true })}`;
+  const fx = `
+  ${beam.draw}
+  <path class="dg-send" d="M60 ${G - 4}V${IN}H${F.x - 3}"/>
+  <path class="dg-send" d="M144 ${G - 54}V${IN}H133"/>
+  ${outs.map((y, k) => `<path class="dg-send" d="M${F.x + F.w + 4} ${y}H${turns[k]}V${ROOF - 6}"/>`).join("")}`;
+  return stack(480, H, body, fx, `${texDefs(p, 0.55)}${matDefs(p)}${instDefs(p)}${beam.defs}<linearGradient id="${p}-room" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity=".08"/><stop offset="1" stop-color="#000" stop-opacity="0"/></linearGradient>`);
 }
 
 /* ---- Sensor Fort: the four usual ways to hold a sensor in a sewer ---- */
@@ -548,6 +686,191 @@ function scatter(t) {
   return svg(480, 300, body);
 }
 
+/* ---- rainfall: a wet weather response read against the rain ---- */
+// Above, a catchment in section during a storm: a tipping bucket gauge on
+// its post with a logger strapped to it, rain reaching the sewer two ways
+// (straight in at a manhole, and later through the ground and an open
+// joint), and the flow meter upstream of the manhole with its logger in the
+// shaft. Beneath, the same storm as a chart: rain bars at the top, and the
+// flow over dry weather flow split into the fast inflow peak and the slow
+// infiltration that lingers. Rain, seepage and inflow move in their own layer.
+function rainfall(t) {
+  const L = t.labels, p = "rtr";
+  const G = 112, TABLE = 140, CROWN = 166, INV = 196, LVL = 182, SOIL = 232, T = 6;
+  const SA = [290, 334], oc = (SA[0] + SA[1]) / 2, open = 34;
+  const GX = 52, GT = 14;
+  const crack = 168;
+  const shower = Array.from({ length: 36 }, (_, k) => {
+    const x = -26 + k * 14.2 + ((k * 7) % 5), y0 = 2 + ((k * 11) % 9);
+    return `<path d="M${f1(x)} ${y0}L${f1(x + 0.2 * (G - 8 - y0))} ${G - 8}" style="animation-delay:-${((k * 0.29) % 0.7).toFixed(2)}s"/>`;
+  }).join("");
+  const RT = 248, AX = 396;
+  const CX = (u) => 14 + u * 452, CY = (v) => AX - v * 46;
+  const base = (u) => 0.62 + 0.15 * Math.sin(2 * Math.PI * 3 * u - 1.1);
+  const inflow = (u) => 1.25 * pulse(u, 0.165, 0.034);
+  const infil = (u) => { const s0 = u - 0.17; return s0 <= 0 ? 0 : 0.8 * (1 - Math.exp(-s0 / 0.09)) * Math.exp(-s0 / 0.75); };
+  const us = sample(0, 1, 0.005, (u) => u).map(([u]) => u);
+  const line = (fn) => us.map((u) => [CX(u), CY(fn(u))]);
+  const back = (pts) => pts.slice().reverse().map(([x, y]) => `${f1(x)} ${f1(y)}`).join("L");
+  const meas = line((u) => base(u) + infil(u) + inflow(u)), slow = line((u) => base(u) + infil(u)), dry = line(base);
+  const rain = [3, 6, 10, 17, 27, 31, 24, 28, 19, 13, 9, 11, 7, 4, 3, 2];
+  const tk = [[0, "0 h"], [1 / 3, "24 h"], [2 / 3, "48 h"], [1, "72 h"]];
+  const drips = [0, 1, 2].map((n) => `<ellipse class="sc-drip" cx="${crack + 1 + n * 1.6}" cy="${CROWN + 2}" rx="1.2" ry="1.9" style="--d:${n * 0.55}s"/>`).join("");
+  const body = `
+  ${ground(p, { x0: 0, x1: 480, y: G, bottom: SOIL, holes: [frameSpan(open, oc)] })}
+  ${waterTable(p, { x0: 0, x1: 480, y: TABLE, bottom: SOIL })}
+  ${pipeLong(p, { x0: 0, x1: 480, crown: CROWN, inv: INV, t: T, joints: [52, 110, crack, 226, 384, 442], gaps: [[SA[0], SA[1]]], bed: 8, stain: LVL - 3 })}
+  <ellipse cx="${crack + 1}" cy="${CROWN + 9}" rx="12" ry="11" fill="url(#${p}-wetwall)"/>
+  ${shaft(p, { a: SA[0], b: SA[1], top: G, bottom: CROWN, t: T, ring: 26, slab: 7, open, oc, steps: [G + 26, G + 42], stepW: 14, wallTo: CROWN })}
+  ${water(p, { x0: 0, x1: 480, level: LVL, bottom: INV })}
+  <path class="sc-joint-open" d="M${crack - 0.6} ${CROWN - T - 0.4}l1.2 ${T * 0.45}-1 .9 1.6 ${T * 0.6}"/>
+  ${avSensor(p, 238, INV, 18)}
+  ${cable(`M256 ${INV - 2}H${SA[0] + 6}Q${SA[0] + 3} ${INV - 2} ${SA[0] + 3} ${INV - 6}V${G + 44}`, { w: 1 })}
+  ${hanger(p, SA[0], SA[0] + 9, G + 16)}${hawkLogger(p, SA[0] + 9, G + 16, 8)}
+  <rect x="${f1(SA[0] + 2)}" y="${G + 34}" width="2" height="12" fill="#15181a"/>
+  ${rainGauge(p, GX, GT, G + 4, 30)}
+  <rect x="${GX - 3}" y="${GT + 64}" width="6" height="2" fill="url(#${p}-ss)"/>
+  ${hawkLogger(p, GX + 9, GT + 58, 7)}
+  <rect x="0" y="${SOIL - 18}" width="480" height="19" fill="url(#${p}-fade)"/>
+  ${tag(GX + 30, GT + 16, L.gauge, { bold: true })}
+  ${tag(104, TABLE - 5, L.groundwater)}<path class="sc-table-mark" d="M86 ${TABLE - 9}h11l-5.5 7.5z"/>
+  ${tag(crack + 32, CROWN - T - 8, L.infiltration, { bold: true })}${lead([[crack + 30, CROWN - T - 11], [crack + 1, CROWN - T + 1]])}
+  ${tag(206, G - 16, L.inflow, { bold: true })}
+  ${tag(256, SOIL - 6, L.meter, { a: "middle", bold: true })}${lead([[256, SOIL - 19], [248, INV - 3]])}
+  ${flowArrow(400, LVL + 11, L.flow || "Flow")}
+  <path class="dg-grid" d="${[1, 2].map((v) => `M14 ${f1(CY(v))}H466`).join("")}"/>
+  <g class="dg-rain">${rain.map((h, n) => `<rect x="${f1(CX(0.15) + n * 3.2)}" y="${RT}" width="2.3" height="${h}" rx=".8"/>`).join("")}</g>
+  ${label(f1(CX(0.15) + rain.length * 3.2 + 8), RT + 12, L.rain, { cls: "dg-m" })}
+  <path class="dg-band-slow" fill="url(#${p}-slow)" d="${smooth(slow)}L${back(dry)}Z"/>
+  <path class="dg-band-fast" d="${smooth(meas)}L${back(slow)}Z"/>
+  <path class="dg-axis" d="M14 ${AX}H466"/>
+  <path class="dg-tick-mark" d="${tk.map(([u]) => `M${f1(CX(u))} ${AX}v4`).join("")}"/>
+  ${tk.map(([u, s0], i) => `<text class="dg-tick" x="${f1(CX(u))}" y="${AX + 15}"${i === 0 ? "" : ` text-anchor="${i === tk.length - 1 ? "end" : "middle"}"`}>${s0}</text>`).join("")}
+  <path class="dg-dwf" d="${smooth(dry)}"/>
+  <path class="dg-meas" d="${smooth(meas)}"/>
+  ${label(144, 300, L.fast[0], { cls: "dg-b" })}${label(144, 316, L.fast[1], { cls: "dg-m" })}${leader(`M140 306L${f1(CX(0.22))} ${f1(CY(base(0.22) + infil(0.22) + inflow(0.22) * 0.45))}`)}
+  ${label(274, 300, L.slow[0], { cls: "dg-b" })}${label(274, 316, L.slow[1], { cls: "dg-m" })}${leader(`M310 322L${f1(CX(0.62))} ${f1(CY(base(0.62) + infil(0.62) * 0.5))}`)}
+  ${label(466, 346, L.measured, { a: "end", cls: "dg-m" })}
+  ${label(466, 388, L.dry, { a: "end", cls: "dg-m" })}`;
+  const fx = `
+  <g clip-path="url(#${p}-sky)"><g class="dg-shower">${shower}</g></g>
+  <g class="sc-seep"><path d="M${crack - 24} ${TABLE + 6}q12 8 22 ${CROWN - T - TABLE - 6}"/><path d="M${crack + 28} ${TABLE + 6}q-12 8 -22 ${CROWN - T - TABLE - 6}"/></g>
+  <g class="sc-drips">${drips}</g>
+  <path class="dg-inflow" d="M206 ${G - 3}H${SA[0] - 10}Q${SA[0] + 4} ${G - 3} ${SA[0] + 6} ${G + 8}V${LVL - 1}"/>
+  <path class="dg-inflow-head" d="M${SA[0] - 22} ${G - 6.5}l5 3.5-5 3.5"/>`;
+  const defs = `${texDefs(p, 0.6)}${matDefs(p)}${instDefs(p)}${fadeDef(p)}<radialGradient id="${p}-wetwall"><stop offset="0" stop-color="#1d2a24" stop-opacity=".5"/><stop offset=".55" stop-color="#1d2a24" stop-opacity=".22"/><stop offset="1" stop-color="#1d2a24" stop-opacity="0"/></radialGradient>
+  <pattern id="${p}-slow" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="5" height="5" fill="#2b9bd0" fill-opacity=".1"/><path d="M0 0V5" stroke="#2b9bd0" stroke-opacity=".55" stroke-width="1.1"/></pattern>`;
+  return stack(480, 414, body, fx, defs, `<clipPath id="${p}-sky"><rect width="480" height="${G}"/></clipPath>`);
+}
+
+/* ---- fullpipe: three ways to meter a full pipe ---- */
+// Three full steel pipes in long section, one above the other, flow left to
+// right, each with its flanged joints. A magnetic meter: the flanged spool
+// with its painted housing cut away to show the coils above and below and
+// the field across the flow, and beside it the pipe seen end on with its
+// liner, the electrodes and the voltage across them. A clamp-on transit
+// time pair on stainless straps, timing pulses with and against the flow,
+// and its transmitter. One Doppler transducer, its sound bouncing back off
+// particles and bubbles. Pulses, echoes and what the water carries move in
+// their own layer.
+function fullpipe(t) {
+  const L = t.labels, p = "rtf";
+  const D = 44, W = 5, ROW = 118;
+  const crownOf = (y0) => y0 + 36;
+  const pipe = (x0, x1, c, { end = false, flanges = [] } = {}) => `
+  <rect x="${x0}" y="${c}" width="${x1 - x0}" height="${D}" fill="url(#${p}-fw)"/>
+  <path class="sc-streak" style="stroke-dasharray:14 30" d="M${x0} ${c + 14}H${x1}M${x0} ${c + 30}H${x1}"/>
+  <rect x="${x0}" y="${c - W}" width="${x1 - x0}" height="${W}" fill="url(#${p}-ss)"/>
+  <rect x="${x0}" y="${c + D}" width="${x1 - x0}" height="${W}" fill="url(#${p}-ss)"/>
+  <path class="sc-cut-edge" d="M${x0} ${c - W}H${x1}M${x0} ${c}H${x1}M${x0} ${c + D}H${x1}M${x0} ${c + D + W}H${x1}"/>
+  ${flanges.map((x) => `<rect x="${x - 2.4}" y="${c - W - 4}" width="4.8" height="${D + 2 * W + 8}" rx=".6" fill="url(#${p}-ssv)"/><path class="sc-edge-dk" d="M${x} ${c - W - 4}V${c + D + W + 4}"/>`).join("")}
+  ${end ? `<ellipse cx="${x1}" cy="${c + D / 2}" rx="6" ry="${D / 2 + W}" fill="url(#${p}-ssv)"/><ellipse cx="${x1}" cy="${c + D / 2}" rx="4.6" ry="${D / 2}" fill="url(#${p}-fw)"/>` : ""}`;
+  const coil = (x, y, w) => `<rect x="${x}" y="${y}" width="${w}" height="12" rx="1.5" fill="url(#${p}-brass)"/><path class="dg-coil-wind" d="${Array.from({ length: Math.floor((w - 6) / 3.2) + 1 }, (_, k) => `M${f1(x + 3 + k * 3.2)} ${y + 2}v8`).join("")}"/>`;
+  const field = (xs, y0, y1, ya = (y0 + y1) / 2) => `<path class="dg-field" d="${xs.map((x) => `M${x} ${y0}V${y1}`).join("")}"/><path class="dg-field-arrow" d="${xs.map((x) => `M${x - 3} ${ya - 2}l3 4 3-4`).join("")}"/>`;
+  // a clamp-on transducer: an aluminium block on the pipe, its strap round
+  // the pipe (seen again under it) and its cable leaving through a gland
+  const xdcr = (x, c, gland = "right") => `
+  <path d="M${x} ${c - W}V${c - W - 9}Q${x} ${c - W - 10} ${x + 1} ${c - W - 10}H${x + 19}Q${x + 20} ${c - W - 10} ${x + 20} ${c - W - 9}V${c - W}Z" fill="url(#${p}-brushed)"/>
+  <path class="sc-edge-dk" d="M${x} ${c - W}V${c - W - 9}Q${x} ${c - W - 10} ${x + 1} ${c - W - 10}H${x + 19}Q${x + 20} ${c - W - 10} ${x + 20} ${c - W - 9}V${c - W}"/>
+  <rect x="${x + 8}" y="${c - W - 10.6}" width="4" height="${10.6}" fill="url(#${p}-ssv)"/>
+  <rect x="${x + 8}" y="${c + D + W}" width="4" height="2.4" rx=".6" fill="url(#${p}-ssv)"/>
+  <rect x="${gland === "right" ? x + 20 : x - 4}" y="${c - W - 7.5}" width="4" height="5" rx="1" fill="#1b1f22"/>`;
+  const chev = (x, y, dx, dy) => { const n = Math.hypot(dx, dy), ux = dx / n, uy = dy / n; return `M${f1(x - 6 * ux - 4 * uy)} ${f1(y - 6 * uy + 4 * ux)}L${f1(x)} ${f1(y)}L${f1(x - 6 * ux + 4 * uy)} ${f1(y - 6 * uy - 4 * ux)}`; };
+  const flowM = (x, c) => flowArrow(x, c + 39, L.flow);
+  const rule = (y0) => `<path class="dg-rule" d="M0 ${y0 - 10}H480"/>`;
+  const A = 160, B = 284, ax = A + 10, bx = B + 10, m = (ax + bx) / 2;
+
+  // magnetic
+  const c1 = crownOf(0), EX = 380, EY = c1 + D / 2, R = D / 2, X1 = 306;
+  const mag = `
+  ${label(0, 13, L.magnetic, { cls: "dg-t" })}
+  ${pipe(0, X1, c1, { end: true, flanges: [36, 106, 196, 276] })}
+  <path d="M110 ${c1 - W - 18}H192V${c1 - W}H110Z" fill="url(#${p}-magb)"/><path d="M110 ${c1 + D + W}H192V${c1 + D + W + 18}H110Z" fill="url(#${p}-magb)"/>
+  <rect x="113" y="${c1}" width="76" height="${D}" fill="#eef1ee" fill-opacity=".22"/>
+  ${coil(120, c1 - W - 14, 62)}${coil(120, c1 + D + W + 2, 62)}
+  <path class="sc-edge-dk" d="M110 ${c1 - W - 18}H192V${c1 - W}M110 ${c1 + D + W + 18}H192V${c1 + D + W}M110 ${c1 - W - 18}V${c1 - W}M110 ${c1 + D + W}V${c1 + D + W + 18}"/>
+  <rect x="139" y="${c1 - W - 38}" width="24" height="20" rx="1.5" fill="url(#${p}-magb)"/><rect x="143" y="${c1 - W - 34}" width="16" height="7" fill="#22343a"/><path class="sc-screen-t" d="M145 ${c1 - W - 31}h10"/>
+  ${tag(198, c1 - W - 9, L.field, { bold: true })}${lead([[196, c1 - W - 13], [173, c1 + 5]])}
+  ${flowM(18, c1)}
+  <circle cx="${EX}" cy="${EY}" r="${R}" fill="url(#${p}-fwr)"/>
+  <circle cx="${EX}" cy="${EY}" r="${R + W / 2}" fill="none" stroke="url(#${p}-ss)" stroke-width="${W}"/>
+  <circle cx="${EX}" cy="${EY}" r="${R - 1}" fill="none" stroke="#eef1ee" stroke-width="2"/>
+  <circle class="sc-cut-edge" cx="${EX}" cy="${EY}" r="${R + W}"/>
+  ${coil(EX - 24, c1 - W - 14, 48)}${coil(EX - 24, c1 + D + W + 2, 48)}
+  <path class="dg-volt" d="M${EX - R + 3} ${EY}H${EX + R - 3}"/>
+  <path class="dg-volt-end" d="M${EX - R + 7} ${EY - 3}l-4 3 4 3M${EX + R - 7} ${EY - 3}l4 3-4 3"/>
+  <rect x="${EX - R - W - 2}" y="${EY - 3}" width="${W + 4}" height="6" rx="1.2" fill="url(#${p}-ss)"/>
+  <rect x="${EX + R - 2}" y="${EY - 3}" width="${W + 4}" height="6" rx="1.2" fill="url(#${p}-ss)"/>
+  ${tag(EX + R + W + 8, EY + 4, L.voltage, { bold: true })}`;
+  const magFx = `${field([132, 145, 158, 171], c1 - W - 2, c1 + D + W + 2)}${field([EX - 11, EX, EX + 11], c1 - W - 2, c1 + D + W + 2, EY + 11)}`;
+
+  // transit time
+  const y2 = ROW, c2 = crownOf(y2), bed = c2 + D, top2 = c2 - W + 1;
+  const withP = [[ax - 4, top2], [m - 3, bed], [bx - 4, top2]], against = [[bx + 4, top2], [m + 3, bed], [ax + 4, top2]];
+  const pth = (pts) => `M${pts.map(([x, y]) => `${f1(x)} ${f1(y)}`).join("L")}`;
+  const at = (q, r0, k) => [q[0] + (r0[0] - q[0]) * k, q[1] + (r0[1] - q[1]) * k];
+  const arrowOn = ([q, r0]) => { const [x, y] = at(q, r0, 0.6); return chev(x, y, r0[0] - q[0], r0[1] - q[1]); };
+  const cables = (y0, both) => cable(`M${A + 24} ${crownOf(y0) - W - 5}C${A + 34} ${crownOf(y0) - W - 5} ${A + 34} ${y0 + 13} ${A + 44} ${y0 + 13}H${m - 15}${both ? `M${B - 4} ${crownOf(y0) - W - 5}C${B - 14} ${crownOf(y0) - W - 5} ${B - 14} ${y0 + 13} ${B - 24} ${y0 + 13}H${m + 15}` : ""}`, { w: 1.2 });
+  const transit = `
+  ${rule(y2)}
+  ${label(0, y2 + 13, L.transit, { cls: "dg-t" })}
+  ${pipe(0, 480, c2, { flanges: [60, 420] })}
+  <path class="dg-sound" d="${pth(withP)}"/><path class="dg-sound back" d="${pth(against)}"/>
+  <path class="dg-sound-arrow" d="${arrowOn(withP)}"/><path class="dg-sound-arrow back" d="${arrowOn(against)}"/>
+  ${xdcr(A, c2, "right")}${xdcr(B, c2, "left")}
+  ${cables(y2, true)}${transmitter(p, m - 15, y2 + 1, 30)}
+  ${tag(ax + 2, c2 + 26, L.with, { a: "end", bold: true })}
+  ${tag(bx - 14, c2 + 26, L.against, { bold: true })}
+  ${flowM(410, c2)}`;
+  const transitFx = `<path class="dg-sound-pulse" d="${pth(withP)}"/><path class="dg-sound-pulse back" d="${pth(against)}"/>`;
+
+  // Doppler
+  const y3 = 2 * ROW, c3 = crownOf(y3);
+  const beam = efBeam(p, "dp", [ax, c3, 0.5, 0.866], 13, { toY: c3 + D - 2, kind: "u", waves: 3 });
+  const hits = [[ax + 12, c3 + 19, "p"], [ax + 25, c3 + 33, "b"]];
+  const arc = ([x, y], r0) => { const a0 = Math.atan2(c3 - y, ax - x), sp = 0.75; return `M${f1(x + r0 * Math.cos(a0 - sp))} ${f1(y + r0 * Math.sin(a0 - sp))}A${r0} ${r0} 0 0 1 ${f1(x + r0 * Math.cos(a0 + sp))} ${f1(y + r0 * Math.sin(a0 + sp))}`; };
+  const solids = [...hits, [30, c3 + 13, "b"], [62, c3 + 31, "p"], [100, c3 + 9, "b"], [124, c3 + 35, "p"], [378, c3 + 11, "b"], [394, c3 + 22, "p"], [440, c3 + 9, "b"], [470, c3 + 17, "p"]];
+  const dop = `
+  ${rule(y3)}
+  ${label(0, y3 + 13, L.doppler, { cls: "dg-t" })}
+  ${pipe(0, 480, c3, { flanges: [60, 420] })}
+  ${solids.map(([x, y, k]) => (k === "p" ? `<circle cx="${x}" cy="${y}" r="2.1" fill="#8a7454"/>` : `<circle cx="${x}" cy="${y}" r="2.4" fill="#eef7fa" fill-opacity=".8" stroke="#bcd7e0" stroke-width=".6"/>`)).join("")}
+  ${xdcr(A, c3, "right")}
+  ${cables(y3, false)}${transmitter(p, m - 15, y3 + 1, 30)}
+  ${tag(ax + 54, c3 + 17, L.bounce, { bold: true })}${lead([[ax + 50, c3 + 25], [ax + 30, c3 + 32]])}
+  ${flowM(410, c3)}`;
+  const dopFx = `
+  <g clip-path="url(#${p}-bore)"><g class="dg-bits">${[[20, c3 + 22, 0], [60, c3 + 40, -2.4], [8, c3 + 6, -4.6], [40, c3 + 28, -6.8]].map(([x, y, d]) => `<circle cx="${x}" cy="${y}" r="1.6" style="--d:${d}s"/>`).join("")}</g></g>
+  ${beam.draw}
+  <g class="ef-waves">${hits.map((e, i) => [5.5, 10].map((r0, k) => `<path class="ef-wave u" style="--d:${(i * 0.45 + k * 0.25).toFixed(2)}s" d="${arc(e, r0)}"/>`).join("")).join("")}</g>`;
+  const defs = `${texDefs(p, 0.6, ["conc"])}${matDefs(p)}${instDefs(p)}
+  <linearGradient id="${p}-fw" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8fae9f"/><stop offset=".45" stop-color="#6c8d7f"/><stop offset="1" stop-color="#4a685c"/></linearGradient>
+  <radialGradient id="${p}-fwr" cx=".45" cy=".4" r=".6"><stop offset="0" stop-color="#8fae9f"/><stop offset="1" stop-color="#4a685c"/></radialGradient>
+  <linearGradient id="${p}-magb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5c87b8"/><stop offset=".5" stop-color="#3a6596"/><stop offset="1" stop-color="#2a4c74"/></linearGradient>`;
+  const fxDefs = `${beam.defs}<clipPath id="${p}-bore"><rect x="0" y="${c3}" width="480" height="${D}"/></clipPath>`;
+  return stack(480, 2 * ROW + 92, `${mag}${transit}${dop}`, `${magFx}${transitFx}${dopFx}`, defs, fxDefs);
+}
+
 /* ---- E-Flow 3: a drawing kit ---- */
 // Shared by the E-Flow 3 drawings and the changeover demo (build.mjs):
 // gradients and section hatching for cut concrete and soil (ids prefixed per
@@ -674,7 +997,7 @@ export function efSection(p, water, inner, g = LS) {
   ${pipeLong(p, { x0: 0, x1: w, crown, inv, t: wall, joints, gaps: [[s0, s1]], bed: Math.max(0, Math.min(10, h - inv - wall)), stain: inv - (inv - crown) * 0.42 })}
   ${shaft(p, { a: s0, b: s1, top: G, bottom: crown, t: wall, ring: 30, slab: 8, open, oc, steps, stepW: Math.min(18, (s1 - s0) * 0.42), wallTo: crown })}
   <path class="sc-ao" d="M${s0 - wall} ${crown + 0.9}H${s0}M${s1} ${crown + 0.9}H${s1 + wall}"/>
-  ${hanger(p, s0, s0 + 13, G + 22)}${hawk(p, s0 + 13, G + 22, 12)}
+  ${hanger(p, s0, s0 + 13, G + 22)}${hawkLogger(p, s0 + 13, G + 22, 12)}
   ${water}
   ${inner}`;
 }
@@ -942,7 +1265,7 @@ function installScene(step) {
   ${step === 1 ? `<path class="sc-pole" d="M${oc + 6} ${G - 26}L${oc - 2} ${crown - 4}Q${oc - 4} ${crown + 2} ${oc - 12} ${crown + 4}H96"/><path class="sc-pole-hi" d="M${oc + 6} ${G - 26}L${oc - 2} ${crown - 4}"/><path class="ins-move" d="M${oc - 14} ${G + 10}V${crown - 16}"/>` : ""}
   ${part(1, ef.draw)}
   ${part(2, `${cable(`M95.6 ${crown + 5.6}H${s0 + 4.3}V${G + 30}`, { w: 1 })}${clips}`)}
-  ${part(3, `${hanger(p, s0, s0 + 11, G + 16)}${hawk(p, s0 + 11, G + 16, 9)}${[0, 1, 2].map((n) => `<path class="ins-wave" style="--d:${n * 0.4}s" d="M${s0 + 3 - n * 6} ${G - 12 - n * 6}q${8 + n * 6} -${6 + n * 4} ${16 + n * 12} 0"/>`).join("")}`)}
+  ${part(3, `${hanger(p, s0, s0 + 11, G + 16)}${hawkLogger(p, s0 + 11, G + 16, 9)}${[0, 1, 2].map((n) => `<path class="ins-wave" style="--d:${n * 0.4}s" d="M${s0 + 3 - n * 6} ${G - 12 - n * 6}q${8 + n * 6} -${6 + n * 4} ${16 + n * 12} 0"/>`).join("")}`)}
   ${part(4, `<path class="ins-link" d="M${s0 + 11} ${G + 12}C${s0 + 14} ${G - 18} 182 ${G - 28} 188 ${G - 24}"/>${tablet(p, 186, G - 38, 32)}`)}`;
   return stack(240, 200, body, fx, `${efDefs(p, { k: 0.5 })}${wt.grad}<radialGradient id="${p}-halo"><stop offset="0" stop-color="#e6fffa" stop-opacity=".3"/><stop offset="1" stop-color="#e6fffa" stop-opacity="0"/></radialGradient>`);
 }
@@ -995,6 +1318,73 @@ const efPanels = (t, drawings) => `<div class="dg-panels">${drawings.map((d, i) 
 // The profile figure ends in the sum it shows: mean velocity times area is flow.
 const efSum = (t) => `<div class="dg-sum">${t.sum.map(([sym, name, note], i) => `${i ? `<span class="dg-op" aria-hidden="true">${i === t.sum.length - 1 ? "=" : "×"}</span>` : ""}<div><i>${esc(sym)}</i><b>${esc(name)}</b><span>${esc(note)}</span></div>`).join("")}</div>`;
 const efRows = (t) => `<div class="dg-rows">${t.rows.map(([kind, title, verdict]) => `<div class="dg-row ${kind}"><p class="dg-row-h"><b>${esc(title)}</b><span>${esc(verdict)}</span></p>${compareRow(kind, t.gap)}</div>`).join("")}</div>`;
+
+/* ---- hawk: a 4G logger that lives inside the manhole ---- */
+// The Hawk on its stainless wall bracket under the cover slab, an E-Flow 3
+// at the pipe crown on its RS485 cable, and the 4G link out through the
+// lid. Nothing above the road: that is the point of the drawing.
+function hawkFig(t) {
+  const L = t.labels, p = "rth";
+  const G = 74, S0 = 296, S1 = 344, CROWN = 230, INV = 302, LEVEL = 278, SURCH = 168, T = 9;
+  const oc = (S0 + S1) / 2, open = 40, hx = S0 + 14, hy = G + 26;
+  const ef = efSensor(p, 150, CROWN, 0.86, { cable: `H${S0 + 5}Q${S0 + 3} ${CROWN + 7.7} ${S0 + 3} ${CROWN - 4}V${hy + 34}Q${S0 + 3} ${hy + 30} ${hx - 2} ${hy + 30}` });
+  const bv = efBeam(p, "bv", ef.vel, 11, { toY: LEVEL }), bd = efBeam(p, "bd", ef.depth, 7, { toY: LEVEL, waves: 3 });
+  const body = `
+  ${ground(p, { x0: 0, x1: 480, y: G, bottom: 336, holes: [frameSpan(open, oc)] })}
+  ${pipeLong(p, { x0: 0, x1: 480, crown: CROWN, inv: INV, t: T, joints: [70, 430], gaps: [[S0, S1]], bed: 10, stain: LEVEL - 3 })}
+  ${shaft(p, { a: S0, b: S1, top: G, bottom: CROWN, t: T, ring: 30, slab: 8, open, oc, steps: [G + 72, G + 92, G + 112, G + 132], stepW: 16, wallTo: CROWN })}
+  ${water(p, { x0: 0, x1: 480, level: LEVEL, bottom: INV })}
+  <g class="dg-level alarm"><path d="M${S0 - 30} ${SURCH}H${S1}"/></g>
+  ${tag(S0 - 36, SURCH - 9, L.surcharge, { a: "end", cls: "alarm" })}
+  ${ef.draw}
+  ${hanger(p, S0, hx, hy)}${hawkLogger(p, hx, hy, 12)}
+  ${tag(S0 - 18, hy + 6, L.hawk, { a: "end", bold: true })}${lead([[S0 - 14, hy + 3], [hx - 6, hy + 14]])}
+  ${tag(S0 - 18, 214, L.cable, { a: "end", bold: true })}${lead([[S0 - 14, 210], [S0 + 3, 210]])}
+  ${tag(24, 214, L.sensor, { bold: true })}${lead([[84, 214], [166, 236]])}
+  ${label(472, G - 14, L.surface, { a: "end", cls: "dg-m" })}
+  ${label(hx, G - 40, L.data, { a: "middle", cls: "dg-b" })}
+  ${flowArrow(18, 295, L.flow || "Flow")}`;
+  const fx = `${bd.draw}${bv.draw}<circle class="dg-ping" cx="${hx + 2.6}" cy="${hy - 9}" r="9"/><path class="dg-link" d="M${hx + 2.6} ${hy - 12}V${G - 30}"/>`;
+  return stack(480, 336, body, fx, `${texDefs(p, 0.7)}${matDefs(p)}${instDefs(p)}${bd.defs}${bv.defs}`);
+}
+
+/* ---- alarm2: a radar level alarm at the top of a chamber ---- */
+// Alarm2 looking down from under the cover on its bracket, its beam
+// reaching the water, the alarm set-points dashed across the chamber, and
+// the link out through its external antenna in the frame.
+function alarm2(t) {
+  const L = t.labels, p = "rta";
+  const G = 74, WL = 204, WR = 348, T = 9, CROWN = 256, INV = 290, LEVEL = 274;
+  const lv = { high: 176, low: 302 };
+  const oc = (WL + WR) / 2, open = 96;
+  const unit = alarm2Unit(p, 248, G + 22, 52);
+  const [lx, ly] = unit.lens;
+  const beam = efBeam(p, "bm", [lx, ly, 0, 1], 9, { toY: LEVEL, waves: 4 });
+  const FLOOR = 318;
+  const body = `
+  ${ground(p, { x0: 0, x1: 480, y: G, bottom: 336, holes: [frameSpan(open, oc)] })}
+  ${pipeLong(p, { x0: 0, x1: WL - T, crown: CROWN, inv: INV, t: 6, joints: [60], bed: 8, stain: LEVEL - 3 })}
+  ${pipeLong(p, { x0: WR + T, x1: 480, crown: CROWN, inv: INV, t: 6, joints: [420], bed: 8, stain: LEVEL - 3 })}
+  ${shaft(p, { a: WL, b: WR, top: G, bottom: FLOOR, t: T, ring: 34, slab: 9, open, oc, steps: [G + 52, G + 72, G + 92, G + 112, G + 132, G + 152], stepW: 22, wallTo: CROWN })}
+  <path fill="url(#${p}-conc)" d="M${WL - T} ${INV}H${WL}V${FLOOR + T}H${WL - T}ZM${WR} ${INV}H${WR + T}V${FLOOR + T}H${WR}ZM${WL - T} ${FLOOR}H${WR + T}V${FLOOR + T}H${WL - T}Z"/>
+  <path class="sc-cut-edge" d="M${WL - T} ${INV}V${FLOOR + T}H${WR + T}V${INV}M${WL} ${INV}V${FLOOR}H${WR}V${INV}"/>
+  ${water(p, { x0: 0, x1: WL, level: LEVEL, bottom: INV })}${water(p, { x0: WR, x1: 480, level: LEVEL, bottom: INV })}
+  ${water(p, { x0: WL, x1: WR, level: LEVEL, bottom: FLOOR, streaks: false })}
+  <path class="sc-hanger" d="M${f1(lx - 18)} ${G + 14.5}V${G + 22}M${f1(lx + 4)} ${G + 14.5}V${G + 22}"/>
+  <rect x="${f1(lx - 26)}" y="${G + 13.6}" width="38" height="2.6" fill="url(#${p}-ss)"/>
+  ${unit.draw}
+  ${cable(`M248 ${G + 28}H226V${G + 15}`, { w: 1 })}
+  <rect x="223.4" y="${G + 3}" width="5.2" height="12" rx="2" fill="#16191b"/>
+  <g class="dg-level alarm"><path d="M${WL} ${lv.high}H${WR + 18}"/></g>
+  <g class="dg-level"><path d="M${WL} ${lv.low}H${WR + 18}"/></g>
+  ${tag(WR + 24, lv.high + 4, L.high, { cls: "alarm" })}
+  ${tag(WR + 24, lv.low + 4, L.low, { bold: true })}
+  ${tag(WL - 18, G + 32, L.unit, { a: "end", bold: true })}${lead([[WL - 14, G + 28], [250, G + 30]])}
+  ${tag(WL - 18, 200, L.radar, { a: "end", bold: true })}${lead([[WL - 14, 196], [f1(lx - 4), 196]])}
+  ${label(240, G - 46, L.data, { cls: "dg-b" })}`;
+  const fx = `${beam.draw}<circle class="dg-ping" cx="226" cy="${G + 4}" r="9"/><path class="dg-link" d="M226 ${G - 14}V${G - 54}"/>`;
+  return stack(480, 336, body, fx, `${texDefs(p, 0.66)}${matDefs(p)}${instDefs(p)}${beam.defs}`);
+}
 
 /* ---- two-panel charts: HTML titles and legend, a small SVG each ---- */
 // Hydrographs over two days as a logger records them: five-minute flow with
@@ -1072,9 +1462,15 @@ const DRAW = {
   thermal: (t) => thermal(t),
   wetwell: (t) => wetwell(t),
   tradewaste: (t) => tradewaste(t),
+  wqstation: (t) => wqstation(t),
+  connect: (t) => connect(t),
   scatter: (t) => scatter(t),
+  rainfall: (t) => rainfall(t),
+  fullpipe: (t) => fullpipe(t),
   beforeafter: (t) => panels(t, [[t.panels[0][0], t.panels[0][1], hydro(1.05, 0.28, 17)], [t.panels[1][0], t.panels[1][1], hydro(0.26, 0.06, 23)]]),
   sampling: (t) => panels(t, [[t.panels[0][0], t.panels[0][1], sampling("time")], [t.panels[1][0], t.panels[1][1], sampling("flow")]]),
+  hawk: (t) => hawkFig(t),
+  alarm2: (t) => alarm2(t),
   eflowModes: (t) => efPanels(t, [eflowNormal(t), eflowSurcharge(t)]) + efLegend(t),
   eflowObvert: (t) => efPanels(t, [invertPanel(t), obvertPanel(t)]) + efLegend(t),
   eflowProfile: (t) => efPanels(t, [profileLong(t), profileCross(t)]) + efSum(t) + efLegend(t),

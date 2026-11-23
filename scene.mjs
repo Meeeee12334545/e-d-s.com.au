@@ -138,7 +138,7 @@ export function pipeLong(p, { x0, x1, crown, inv, t = 8, joints = [], gaps = [],
     <rect class="sc-ring" x="${f1(jx + 0.15)}" y="${f1(dir > 0 ? y - t * 0.42 : y + t * 0.12)}" width="1.6" height="${f1(t * 0.3)}" rx=".6"/>`;
     return `${top ? one(crown - t, -1) : ""}${one(inv + t, 1)}`;
   };
-  const gid = `${p}-inp-${f1(crown)}`;
+  const gid = `${p}-inp-${f1(x0)}-${f1(crown)}`;
   return `
   <linearGradient id="${gid}" href="#${p}-in-pipe" gradientUnits="userSpaceOnUse" x1="0" y1="${f1(crown)}" x2="0" y2="${f1(inv)}"/>
   ${bed ? `<rect x="${x0}" y="${f1(inv + t)}" width="${w}" height="${bed}" fill="url(#${p}-grav)"/><path class="sc-layer" d="M${x0} ${f1(inv + t + bed)}H${x1}"/>` : ""}
@@ -270,7 +270,7 @@ export const stepIron = (p, cx, y, w = 24) => `
 // streaks drifting downstream (CSS: .sc-streak). `x0`..`x1` across.
 export function water(p, { x0, x1, level, bottom, id = "", streaks = true, alpha = false, cls = "" }) {
   const w = x1 - x0, h = bottom - level;
-  const gid = `${p}-wt-${f1(level)}-${f1(bottom)}`;
+  const gid = `${p}-wt-${f1(x0)}-${f1(level)}-${f1(bottom)}`;
   const lines = [];
   if (streaks && h > 8) {
     for (let k = 0; k < Math.min(5, Math.floor(h / 7)); k++) {
@@ -545,6 +545,69 @@ export function sonde(p, x, y0, y1, d = 7) {
   ${slots.join("")}`;
 }
 
+// Detectronic Alarm2, from its photograph: a black composite box with its
+// label on the side and the big round radar lens on a flange underneath,
+// hung from a stainless bracket. (x, y): top left of the box; w long. The
+// lens is at its downstream end. Returns the drawing and the lens centre.
+export function alarm2Unit(p, x, y, w = 46) {
+  const h = w * 0.42, lx = x + w * 0.7, lr = w * 0.24;
+  return {
+    lens: [lx, y + h + 2.6],
+    draw: `
+  <rect x="${f1(x)}" y="${f1(y)}" width="${f1(w)}" height="${f1(h)}" rx="${f1(w * 0.05)}" fill="url(#${p}-blk)"/>
+  <path class="sc-part" d="M${f1(x + 1)} ${f1(y + h * 0.3)}H${f1(x + w - 1)}"/>
+  <path class="sc-sheen" d="M${f1(x + 2)} ${f1(y + 1)}H${f1(x + w - 2)}"/>
+  <rect x="${f1(x + w * 0.07)}" y="${f1(y + h * 0.38)}" width="${f1(w * 0.42)}" height="${f1(h * 0.48)}" rx=".5" fill="url(#${p}-label)"/>
+  <path d="M${f1(x + w * 0.09)} ${f1(y + h * 0.44)}h${f1(w * 0.05)}q${f1(w * 0.03)} 0 ${f1(w * 0.03)} ${f1(h * 0.08)}t${f1(-w * 0.03)} ${f1(h * 0.08)}h${f1(-w * 0.05)}z" fill="#1d4f9c"/>
+  <path class="sc-lbl-r" d="M${f1(x + w * 0.2)} ${f1(y + h * 0.5)}h${f1(w * 0.24)}M${f1(x + w * 0.09)} ${f1(y + h * 0.66)}h${f1(w * 0.35)}M${f1(x + w * 0.09)} ${f1(y + h * 0.76)}h${f1(w * 0.3)}"/>
+  <rect x="${f1(lx - lr * 1.25)}" y="${f1(y + h - 0.4)}" width="${f1(lr * 2.5)}" height="2.4" rx=".6" fill="#202427"/>
+  <circle class="sc-bolt" cx="${f1(lx - lr * 1.05)}" cy="${f1(y + h + 0.8)}" r=".7"/><circle class="sc-bolt" cx="${f1(lx + lr * 1.05)}" cy="${f1(y + h + 0.8)}" r=".7"/>
+  <path d="M${f1(lx - lr)} ${f1(y + h + 2)}A${f1(lr)} ${f1(lr * 0.36)} 0 0 0 ${f1(lx + lr)} ${f1(y + h + 2)}Z" fill="url(#${p}-dome)"/>`,
+  };
+}
+// A tipping bucket rain gauge (RIMCO 7499 type), after its photograph: a
+// brushed stainless cylinder under a bronze collar round the funnel, a black
+// cast base with its feet, on a galvanised post set in concrete. (cx, top):
+// the top of the collar; `ground` where the post meets the ground.
+export function rainGauge(p, cx, top, ground, w = 30) {
+  const x = cx - w / 2, neck = top + w * 0.3, foot = top + w * 1.55;
+  return `
+  <rect x="${f1(cx - 2.2)}" y="${f1(foot + 2)}" width="4.4" height="${f1(ground - foot - 2)}" fill="url(#${p}-galvv)"/>
+  <rect x="${f1(cx - 7)}" y="${f1(ground - 1)}" width="14" height="6" fill="url(#${p}-conc)"/><path class="sc-cut-edge" d="M${f1(cx - 7)} ${f1(ground - 1)}h14v6h-14z"/>
+  <path d="M${f1(x)} ${f1(neck)}H${f1(x + w)}V${f1(foot)}H${f1(x)}Z" fill="url(#${p}-ssv)"/>
+  <path d="M${f1(x - 2.5)} ${f1(top)}H${f1(x + w + 2.5)}L${f1(x + w)} ${f1(neck)}H${f1(x)}Z" fill="url(#${p}-brass)"/>
+  <path class="sc-edge-dk" d="M${f1(x - 2.5)} ${f1(top)}H${f1(x + w + 2.5)}"/>
+  <ellipse cx="${f1(cx)}" cy="${f1(top + 0.2)}" rx="${f1(w / 2 + 2.4)}" ry="1.2" fill="#6b4c17"/>
+  <path d="M${f1(x - 1.6)} ${f1(foot)}H${f1(x + w + 1.6)}V${f1(foot + 3)}H${f1(x - 1.6)}Z" fill="#26292b"/>
+  <path d="M${f1(x - 4)} ${f1(foot + 3)}h6v-1.6h-6zM${f1(x + w - 2)} ${f1(foot + 3)}h6v-1.6h-6z" fill="#26292b"/>
+  <circle cx="${f1(x + w - 4)}" cy="${f1(neck + 3)}" r=".6" fill="#7d878b"/><circle cx="${f1(x + w - 4)}" cy="${f1(foot - 3)}" r=".6" fill="#7d878b"/>`;
+}
+// A solar panel on its arm: an aluminium frame round dark blue cells with
+// their grid, tilted to the sun. (x, y) the arm's top; w across.
+export const solarPanel = (p, x, y, w = 40, tilt = -20) => `
+  <g transform="translate(${f1(x)} ${f1(y)}) rotate(${tilt})">
+    <rect x="${f1(-w / 2)}" y="-4.5" width="${f1(w)}" height="9" rx=".6" fill="#c3cacd"/>
+    <rect x="${f1(-w / 2 + 1)}" y="-3.5" width="${f1(w - 2)}" height="7" fill="url(#${p}-cells)"/>
+    <path class="sc-cell-grid" d="${Array.from({ length: 5 }, (_, k) => `M${f1(-w / 2 + 1 + ((w - 2) * (k + 1)) / 6)} -3.5v7`).join("")}M${f1(-w / 2 + 1)} 0h${f1(w - 2)}"/>
+    <path class="sc-glint" d="M${f1(-w / 2 + 3)} -2.6l${f1(w * 0.3)} 0"/>
+  </g>`;
+// A transmitter on its bracket: a grey wall box with its display and keys.
+export const transmitter = (p, x, y, w = 30) => `
+  <rect x="${f1(x)}" y="${f1(y)}" width="${f1(w)}" height="${f1(w * 0.76)}" rx="1.6" fill="url(#${p}-brushed)"/>
+  <rect x="${f1(x + w * 0.12)}" y="${f1(y + w * 0.12)}" width="${f1(w * 0.76)}" height="${f1(w * 0.24)}" rx=".6" fill="#22343a"/>
+  <path class="sc-screen-t" d="M${f1(x + w * 0.18)} ${f1(y + w * 0.2)}h${f1(w * 0.36)}M${f1(x + w * 0.18)} ${f1(y + w * 0.28)}h${f1(w * 0.24)}"/>
+  ${[0, 1, 2, 3].map((k) => `<rect x="${f1(x + w * (0.16 + k * 0.19))}" y="${f1(y + w * 0.47)}" width="${f1(w * 0.12)}" height="${f1(w * 0.08)}" rx=".5" fill="#5f6b70"/><rect x="${f1(x + w * (0.16 + k * 0.19))}" y="${f1(y + w * 0.6)}" width="${f1(w * 0.12)}" height="${f1(w * 0.08)}" rx=".5" fill="#5f6b70"/>`).join("")}`;
+// Grass along a surface: short blades in two greens over a turf line.
+export function turf(x0, x1, yOf, { seed = "g", step = 1.6 } = {}) {
+  const r = rng(seed), blades = [];
+  for (let x = x0; x <= x1; x += step * (0.6 + r() * 0.8)) {
+    const y = yOf(x), h = 2 + r() * 3.4, lean = (r() - 0.4) * 2;
+    blades.push(`M${f1(x)} ${f1(y + 0.6)}q${f1(lean * 0.3)} ${f1(-h * 0.6)} ${f1(lean)} ${f1(-h)}`);
+  }
+  const half = Math.floor(blades.length / 2);
+  return `<path class="sc-blade" d="${blades.filter((_, i) => i % 2).join("")}"/><path class="sc-blade l" d="${blades.filter((_, i) => !(i % 2)).join("")}"/>`;
+}
+
 // A stainless steel kiosk on its concrete plinth, as telemetry and samplers
 // live in: brushed panels, a roof cap, double doors with hinges and a
 // T-handle, louvres, and the status lamp behind its window. (x, y): top left
@@ -589,6 +652,8 @@ export function instDefs(p) {
     lin(`${p}-pvcv`, 1, 0, [[0, "#a9b0ae"], [0.3, "#e9edeb"], [0.55, "#d3d9d7"], [1, "#9aa19f"]]),
     `<radialGradient id="${p}-fog" cx=".4" cy=".35" r=".75">${stops([[0, "#f6efd2"], [0.55, "#e2d3a4"], [1, "#a8956a"]])}</radialGradient>`,
     `<radialGradient id="${p}-foul" cx=".45" cy=".3" r=".8">${stops([[0, "#8e8068"], [0.6, "#6a5d48"], [1, "#4a4134"]])}</radialGradient>`,
+    lin(`${p}-cells`, 1, 1, [[0, "#38557c"], [0.5, "#1c2f4d"], [1, "#2b4466"]]),
+    lin(`${p}-river`, 0, 1, [[0, "#9aab8e"], [0.06, "#7d9273"], [0.4, "#5d7357"], [1, "#3b4a36"]]),
     lin(`${p}-pipe-extv`, 1, 0, [[0, "#4d5559"], [0.3, "#a7b0b4"], [0.5, "#d3d9dc"], [0.72, "#8f999d"], [1, "#4d5559"]]),
   ].join("");
 }
