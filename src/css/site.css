@@ -2846,6 +2846,16 @@ a.card:hover > .card-media img { scale: 1.04; }
 .dg-band-cool { fill: #2b9bd0; fill-opacity: .1; }
 .dg-arrow { fill: none; stroke: var(--brand-dark); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .diagram .dg-alarm { fill: #b45309; }
+/* a river station (wqstation): the turf of the bank, the guard pipe's cut
+   wall, the post and solar panel; data out of FlowSense (connect): one-way
+   links whose dashes only ever travel outward, to a filled head */
+.dg-turf { fill: none; stroke: #8fae8c; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.dg-gp { fill: #e3e9e8; stroke: #7d8a88; stroke-width: .9; }
+.dg-post { fill: #c9d2d0; stroke: #6f7e7c; stroke-width: .9; }
+.dg-solar { fill: #2f4f69; stroke: #4e5957; stroke-width: .9; stroke-linejoin: round; }
+.dg-solar-grid { fill: none; stroke: rgba(255, 255, 255, .45); stroke-width: .6; }
+.dg-send { fill: none; stroke: var(--eds); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 3 4; animation: dg-flow 1.4s linear infinite; }
+.dg-head { fill: var(--brand); }
 .dg-building .dg-wall { fill: #e9eeed; stroke: #9fb3b0; stroke-width: 1.2; stroke-linejoin: round; }
 .dg-building .dg-roof { fill: #d9e1df; stroke: #9fb3b0; stroke-width: 1.2; stroke-linejoin: round; }
 .dg-building .dg-glazing { fill: #cfe3ea; }

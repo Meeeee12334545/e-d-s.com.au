@@ -248,6 +248,146 @@ function tradewaste(t) {
   return svg(480, 300, body, `${efDefs(p)}${ltWaterGrad(p)}`);
 }
 
+/* ---- wqstation: a sonde in a river, reporting from the bank ---- */
+// The river in cross-section with its bank on the left. A slotted guard
+// pipe laid down the bank holds a multi-parameter sonde under the surface,
+// and its cable runs up to a cabinet on a post with a solar panel and an
+// antenna. The pipe and sonde are drawn in their own frame along the slope
+// (`th` degrees): u down the pipe from its top end, y across it. The data
+// link is drawn from its far end: .dg-link runs its dashes back toward a
+// path's start, so here they travel away from the antenna.
+function wqstation(t) {
+  const L = t.labels, p = "ltq";
+  const G = 150, WL = 194, H = 318, th = 40;
+  const c = Math.cos((th * Math.PI) / 180), s = Math.sin((th * Math.PI) / 180);
+  const R = 13, r = 10, U0 = -2, U1 = 164; // the guard pipe: outer and inner radius, its ends
+  const S = [152, 158]; // the top of the bank's straight slope
+  const O = [S[0] + (R + 2) * s, S[1] - (R + 2) * c]; // the pipe's axis, resting on the bank
+  const W = (u, y = 0) => [f1(O[0] + u * c - y * s), f1(O[1] + u * s + y * c)];
+  const wx = f1(S[0] + ((WL - S[1]) / s) * c); // where the surface meets the bank
+  const E = [f1(S[0] + 170 * c), f1(S[1] + 170 * s)]; // the toe of the bank
+  const slope = `L${E[0]} ${E[1]}C${f1(E[0] + 16 * c)} ${f1(E[1] + 16 * s)} 312 289 340 290S440 291 480 286`;
+  const land = `M0 ${G}H118C132 ${G} 141 149 ${S[0]} ${S[1]}`;
+  // the pipe's cut walls, open at the slots below the surface
+  const segs = [];
+  let a = U0;
+  for (const s0 of [100, 112, 124, 136, 148]) { segs.push([a, s0]); a = s0 + 3.5; }
+  segs.push([a, U1]);
+  const walls = segs.map(([a0, b0]) => `M${a0} ${-R}H${b0}V${-r}H${a0}ZM${a0} ${r}H${b0}V${R}H${a0}Z`).join("");
+  // the sonde's sensors: a rod each, with its own tip
+  const probes = [[-5.4, 12, `fill="url(#${p}-gold)"`], [-1.8, 14, 'class="dg-bottle"'], [1.8, 11, `fill="url(#${p}-steel)"`], [5.4, 13, 'class="ef-mark"']]
+    .map(([y, l, tip]) => `<rect class="dg-probe" x="139" y="${f1(y - 1.1)}" width="${l}" height="2.2" rx="1"/><rect ${tip} x="${f1(139 + l - 3.4)}" y="${f1(y - 1.1)}" width="3.4" height="2.2" rx="1"/>`).join("");
+  const top = W(-6), tip = W(150);
+  const sx = 322; // the list of sensors
+  const body = `
+  <rect x="190" y="${WL}" width="${480 - 190}" height="${300 - WL}" fill="url(#${p}-wg)"/>
+  <path fill="url(#${p}-soil)" d="${land}${slope}L480 ${H}H0Z"/>
+  <path class="ef-edge" d="M${wx} ${WL}${slope}"/>
+  <path class="dg-turf" d="${land}L${wx} ${WL}"/>
+  <path class="ef-surf-g" d="M${wx} ${WL}H480"/><path class="ef-surf" d="M${wx} ${WL}H480"/>
+  <path fill="url(#${p}-cut)" d="M70 ${G}H88V${G + 24}H70Z"/><path class="ef-edge" d="M70 ${G}V${G + 24}H88V${G}"/>
+  <rect class="dg-post" x="76" y="40" width="6" height="${G + 20 - 40}" rx="1"/>
+  <path class="dg-solar" d="M58 40L98 25L101 33L61 48Z"/>
+  <path class="dg-solar-grid" d="M71.3 35L74.3 43M84.7 30L87.7 38M59.5 44L99.5 29"/>
+  ${ltCabinet(p, 56, 76, 46, 48)}
+  ${ltAntenna(97, 76, 14)}
+  <path class="ef-cable" d="M${top[0]} ${top[1]}C150 146 146 147.5 140 147.5H86V125"/>
+  <g transform="translate(${f1(O[0])} ${f1(O[1])}) rotate(${th})">
+    <path class="ef-cable" d="M-6 0H95"/>
+    <rect class="ef-gland" x="92" y="-3.6" width="7" height="7.2" rx="1.2"/>
+    <rect class="dg-cab" x="97" y="-8" width="35" height="16" rx="4.5" fill="url(#${p}-steel)"/>
+    <rect class="ef-mark" x="103" y="-5.6" width="2.6" height="11.2" rx="1"/>
+    <path class="dg-inst-print" d="M110 -2.6h16M110 1h11"/>
+    <rect class="ef-lid" x="130" y="-8.6" width="10" height="17.2" rx="2"/>
+    <path class="ef-shine" d="M132 -6.4h6"/>
+    ${probes}
+    <path class="dg-gp" d="${walls}"/>
+    <rect class="ef-logger-cap" x="${U0 - 3}" y="${-R}" width="3.6" height="${2 * R}" rx="1"/>
+    <rect class="ef-logger-cap" x="${U1}" y="${-R}" width="3.6" height="${2 * R}" rx="1"/>
+    ${[24, 84].map((u) => `<path class="ef-strap" d="M${u} ${R}V${R + 15}"/><rect class="dg-cab-foot" x="${u - 1.2}" y="${-R - 1}" width="2.4" height="${2 * R + 2}" rx="1"/>`).join("")}
+  </g>
+  <path class="dg-link" d="M204 60H112"/>
+  ${label(212, 64, L.data, { cls: "dg-b" })}
+  <text x="${sx}" y="98">${L.sensors.map((l, i) => `<tspan class="dg-b"${i ? ` x="${sx}" dy="1.25em"` : ""}>${esc(l)}</tspan>`).join("")}<tspan class="dg-m" x="${sx}" dy="1.45em">${esc(L.more)}</tspan></text>
+  ${leader(`M${sx - 6} 122L${tip[0]} ${tip[1]}`)}`;
+  return svg(480, H, body, `${efDefs(p)}${ltWaterGrad(p)}`);
+}
+
+/* ---- connect: readings in over 4G, validated data out one way ---- */
+// The network in section on the left (a manhole with a flow meter on the
+// invert and its logger, a pump station's wet well with a level radar and a
+// cabinet), its readings rising over 4G to EDS FlowSense, and four one-way
+// links on to your own building. Arrowheads only on the way out.
+function connect(t) {
+  const L = t.labels, p = "ltc";
+  const G = 232, CROWN = G + 48, INV = G + 74;
+  const MA = [40, 66]; // the manhole, inside faces
+  const WA = 172, WB = 224, WW = 7, FLOOR = G + 94, WLV = G + 68; // the wet well
+  const H = FLOOR + WW + 29;
+  const F = { x: 172, y: 30, w: 100, h: 92 }; // EDS FlowSense
+  const outs = [44, 68, 92, 116], turns = [452, 432, 412, 392], IN = 88; // links out and in
+  const ROOF = G - 78, rows = [0, 1, 2, 3, 4].map((k) => G - 46 + 9 * k); // your building
+  const beam = efBeam(p, "bm", [198, G + 36, 0, 1], 6, { toY: WLV - 1, waves: 3 });
+  // two days of flow on the screen, a morning and an evening peak each day
+  const day = (x) => { const u = (x - 182) / 40; return 0.5 + 0.28 * Math.sin(2 * Math.PI * u - 1.9) + 0.1 * Math.sin(4 * Math.PI * u - 0.6); };
+  const trace = smooth(sample(182, 262, 4, (x) => f1(102 - 36 * day(x))));
+  const body = `
+  <rect x="0" y="${G}" width="480" height="${H - G}" fill="url(#${p}-soil)"/>
+  <rect class="ef-road" x="0" y="${G - 5}" width="480" height="5"/>
+  ${ltPipe(p, 0, WA - WW, CROWN, INV, { gaps: [[MA[0] - LW, MA[1] + LW]], w: 5 })}
+  ${ltShaft(p, MA[0], MA[1], G, CROWN, INV, { steps: "right" })}
+  ${ltWater(p, 0, WA, INV - 10, INV)}
+  <rect x="${WA}" y="${G}" width="${WB - WA}" height="${FLOOR - G}" fill="url(#${p}-air)"/>
+  <rect x="${WA}" y="${WLV}" width="${WB - WA}" height="${FLOOR - WLV}" fill="url(#${p}-wg)"/>
+  <path class="ef-surf-g" d="M${WA} ${WLV}H${WB}"/><path class="ef-surf" d="M${WA} ${WLV}H${WB}"/>
+  <path fill="url(#${p}-cut)" d="M${WA - WW} ${G}H${WA}V${CROWN}H${WA - WW}ZM${WA - WW} ${INV}H${WA}V${FLOOR}H${WA - WW}ZM${WB} ${G}H${WB + WW}V${FLOOR}H${WB}ZM${WA - WW} ${FLOOR}H${WB + WW}V${FLOOR + WW}H${WA - WW}Z"/>
+  <path class="ef-edge" d="M${WA - WW} ${G}V${CROWN - 5}M${WA - WW} ${INV + 5}V${FLOOR + WW}H${WB + WW}V${G}M${WA} ${G}V${CROWN}M${WA} ${INV}V${FLOOR}H${WB}V${G}"/>
+  <rect class="ef-frame" x="${WA - WW - 4}" y="${G - 7}" width="${WB - WA + 2 * WW + 8}" height="3.4" rx="1"/>
+  <rect class="ef-lid" x="${WA - 1}" y="${G - 8.6}" width="${WB - WA + 2}" height="3.2" rx="1"/>
+  ${beam.draw}
+  ${ltRadar(p, 198, G + 17)}
+  ${ltAv(84, INV)}
+  ${ltLogger(MA[0] + 4, G + 8)}
+  <path class="ef-cable" d="M86 ${INV - 3}H52V${G + 36}"/>
+  <path class="ef-cable" d="M56 ${G + 8}V${G - 2}H73V${G - 7}"/>
+  ${ltAntenna(73, G - 7, 12)}
+  <path class="ef-cable" d="M136 ${G}V${G + 6}H198V${G + 17}"/>
+  ${ltCabinet(p, 112, G - 40, 34, 40)}
+  ${ltAntenna(122, G - 40, 14)}
+  <path class="dg-send" d="M73 ${G - 26}V${IN}H${F.x - 3}"/>
+  <path class="dg-send" d="M122 ${G - 60}V${IN}"/>
+  <circle class="dg-antenna" cx="122" cy="${IN}" r="2.4"/>
+  ${label(132, IN - 7, L.g4, { cls: "dg-b" })}
+  <rect class="ef-logger-cap" x="${F.x}" y="${F.y}" width="${F.w}" height="${F.h}" rx="4"/>
+  <rect class="dg-sampler-win" x="${F.x + 3.5}" y="${F.y + 3.5}" width="${F.w - 7}" height="${F.h - 7}" rx="2"/>
+  <rect class="ef-mark" x="${F.x + 3.5}" y="${F.y + 3.5}" width="${F.w - 7}" height="9" rx="2"/>
+  <path class="ef-print" d="M${F.x + 9} ${F.y + 8}h18"/>
+  <path class="dg-grid" d="M182 58H262M182 78H262M182 98H262"/>
+  <path class="dg-area" d="${trace}L262 104H182Z"/>
+  <path class="dg-trace" d="${trace}"/>
+  <path class="dg-inst-print" d="M182 112h34M222 112h22"/>
+  ${outs.map((y, k) => `<path class="dg-send" d="M${F.x + F.w + 4} ${y}H${turns[k]}V${ROOF - 6}"/><path class="dg-head" d="M${turns[k] - 4.5} ${ROOF - 8}L${turns[k]} ${ROOF - 1}L${turns[k] + 4.5} ${ROOF - 8}Z"/>`).join("")}
+  ${[...outs.map((y) => [F.x + F.w, y]), [F.x, IN]].map(([x, y]) => `<circle class="dg-antenna" cx="${x}" cy="${y}" r="2.2"/>`).join("")}
+  ${L.links.map((l, k) => label(282, outs[k] - 6, l, { cls: "dg-b" })).join("")}
+  ${label(222, 20, L.platform, { a: "middle", cls: "dg-b" })}
+  ${label(280, 139, L.none, { cls: "dg-m" })}
+  <rect x="366" y="${ROOF + 8}" width="104" height="${G - ROOF - 8}" fill="url(#${p}-air)"/>
+  <path fill="url(#${p}-cut)" d="M360 ${ROOF}H476V${ROOF + 8}H360ZM360 ${ROOF + 8}H366V${G}H360ZM470 ${ROOF + 8}H476V${G}H470Z"/>
+  <path class="ef-edge" d="M360 ${G}V${ROOF}H476V${G}M366 ${G}V${ROOF + 8}H470V${G}"/>
+  <rect class="ef-logger-cap" x="376" y="${G - 54}" width="22" height="54" rx="2"/>
+  <path class="ef-print" d="${rows.map((y) => `M381 ${y}h10`).join("")}"/>
+  ${rows.map((y) => `<circle class="dg-led-ok" cx="394" cy="${y}" r="1.2"/>`).join("")}
+  <rect class="ef-logger-cap" x="414" y="${G - 50}" width="42" height="27" rx="2.5"/>
+  <rect class="dg-sampler-win" x="417" y="${G - 47}" width="36" height="20" rx="1.5"/>
+  ${[[422, 9], [429, 14], [436, 6], [443, 12]].map(([x, h]) => `<rect class="ef-mark" x="${x}" y="${G - 30 - h}" width="4" height="${h}" rx=".8"/>`).join("")}
+  <rect class="dg-cab-foot" x="432" y="${G - 23}" width="6" height="4"/>
+  <rect class="dg-cab-foot" x="406" y="${G - 19}" width="58" height="2.6" rx="1"/>
+  <path class="dg-cab-seam" d="M410 ${G - 16}V${G}M460 ${G - 16}V${G}"/>
+  ${label(474, G + 34, L.yours, { a: "end", cls: "dg-b dg-h" })}
+  ${label(12, H - 10, L.sites, { cls: "dg-b dg-h" })}`;
+  return svg(480, H, body, `${efDefs(p)}${ltWaterGrad(p)}${beam.defs}`);
+}
+
 /* ---- Sensor Fort: the four usual ways to hold a sensor in a sewer ---- */
 // One long section each, flow left to right, shown failing over a twelve
 // second loop: rag drifts in with the flow and catches, one piece after
@@ -1022,6 +1162,8 @@ const DRAW = {
   thermal: (t) => thermal(t),
   wetwell: (t) => wetwell(t),
   tradewaste: (t) => tradewaste(t),
+  wqstation: (t) => wqstation(t),
+  connect: (t) => connect(t),
   scatter: (t) => scatter(t),
   beforeafter: (t) => panels(t, [[t.panels[0][0], t.panels[0][1], hydro(1.05, 0.28)], [t.panels[1][0], t.panels[1][1], hydro(0.26, 0.06)]]),
   sampling: (t) => panels(t, [[t.panels[0][0], t.panels[0][1], sampling("time")], [t.panels[1][0], t.panels[1][1], sampling("flow")]]),
