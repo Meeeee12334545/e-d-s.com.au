@@ -8,6 +8,7 @@ import { createHash } from "node:crypto";
 import { inflateSync } from "node:zlib";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import vm from "node:vm";
 import * as C from "./src/data/content.mjs";
 import { diagram, efDefs, efSensor, efSection, efBeam, sfMethod, sfSection, sfInstall, sfSite, sfDims, sfCatch } from "./diagrams.mjs";
 
@@ -319,6 +320,7 @@ function footer(r) {
             <li><a href="${r}flowsense.html">EDS FlowSense</a></li>
             <li><a href="${r}solutions/index.html">Solutions</a></li>
             <li><a href="${r}resources.html">Resources</a></li>
+            <li><a href="${r}open-channel-flow-calculator.html">Flow calculator</a></li>
             <li><a href="${r}contact.html">Contact</a></li>
             <li><a href="${site.remoteDataUrl}" rel="noopener">Remote data access</a></li>
           </ul>
@@ -397,7 +399,7 @@ const headOffice = () => {
   const [, suburb, state, postcode] = locality.match(/^(.*) ([A-Z]{2,3}) (\d{4})$/) || [];
   return { "@type": "PostalAddress", streetAddress: street, addressLocality: suburb, addressRegion: state, postalCode: postcode, addressCountry: "AU" };
 };
-function jsonLd(file, crumbs, { description, service, image }) {
+function jsonLd(file, crumbs, { description, service, image, app }) {
   const blocks = [];
   const { w, h } = pngSize(site.logo.replace("@root/", ""));
   const logo = { "@type": "ImageObject", url: absolute(site.logo), width: w, height: h };
@@ -471,6 +473,21 @@ function jsonLd(file, crumbs, { description, service, image }) {
       areaServed: AUSTRALIA,
     });
   }
+  if (app) {
+    blocks.push({
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      name: app,
+      description,
+      url: pageUrl(file),
+      applicationCategory: "UtilitiesApplication",
+      operatingSystem: "Any",
+      inLanguage: "en-AU",
+      isAccessibleForFree: true,
+      offers: { "@type": "Offer", price: "0", priceCurrency: "AUD" },
+      publisher: { "@type": "Organization", "@id": ORG_ID, name: site.name, url: `${SITE_URL}/` },
+    });
+  }
   if (crumbs?.length) {
     const trail = [["Home", "index.html"], ...crumbs.map(([label, href]) => [label, href || file])];
     blocks.push({
@@ -504,7 +521,7 @@ function shareImage(file, html) {
   return { ...OG_CARD, alt: esc(OG_CARD.alt) };
 }
 
-function layout({ file, title, description, current, menuTab, body, scripts = [], service, preload = [] }) {
+function layout({ file, title, description, current, menuTab, body, scripts = [], service, app, preload = [] }) {
   const depth = file.split("/").length - 1;
   // The not-found page can be served at any depth, so it links from the root.
   const r = file === "404.html" ? "/" : "../".repeat(depth);
@@ -547,7 +564,7 @@ function layout({ file, title, description, current, menuTab, body, scripts = []
 <link rel="preload" href="${r}assets/fonts/saira-semiexpanded-latin.woff2" as="font" type="font/woff2" crossorigin>${preload.map((src) => `\n<link rel="preload" href="${src}" as="image" fetchpriority="high">`).join("")}
 <script>document.documentElement.classList.add("js");setTimeout(function(){if(!window.EDS_READY)document.documentElement.classList.remove("js")},4000)</script>
 <link rel="stylesheet" href="${asset(r, "css/site.css")}">
-${jsonLd(file, crumbs, { description, service, image })}
+${jsonLd(file, crumbs, { description, service, image, app })}
 </head>
 <body id="top">
 ${header(r, current, menuTab, file)}
@@ -1950,7 +1967,7 @@ for (const s of C.services) {
 ${pageHero(r, { crumbs: [["Services", "services/index.html"], [s.short || s.title]], title: s.title, lede: s.summary, compact: true, actions: `<a class="btn btn-primary btn-lg" href="${contactHref(r, { topic: s.title })}">Start an enquiry</a>${s.widget === "lab" ? `<a class="btn btn-ghost btn-lg" href="#flow-lab">${icon("cloud-rain")} Try the flow lab</a>` : ""}${s.widget === "lidott" ? `<a class="btn btn-ghost btn-lg" href="#alarm-demo">${icon("bell")} Try the alarm</a>` : ""}`, visual: glanceOf(s) })}
 <div class="secbar-scope">${sectionBar(r, s)}
 ${detailBody(r, s, {
-  related: [["Services", svcLinks(r, s.related)], ["Solutions", solLinks(r, s.solutions)], ["Instruments We Use", brandLinks(r, s.products)], ["White Papers", paperLinks(s.papers)], ["Downloads", (s.downloads || []).map(([href, label]) => (href.startsWith("@root/") ? [href, label, "download", true] : [`${r}${href}`, label]))]],
+  related: [["Services", svcLinks(r, s.related)], ["Solutions", solLinks(r, s.solutions)], ["Instruments We Use", brandLinks(r, s.products)], ["White Papers", paperLinks(s.papers)], ["Downloads", (s.downloads || []).map(([href, label]) => (href.startsWith("@root/") ? [href, label, "download", true] : [`${r}${href}`, label]))], ["Tools", s.calculator ? [[`${r}open-channel-flow-calculator.html`, C.flowCalc.title]] : []]],
   demo: s.widget === "lab" ? labSection({ title: s.slug.startsWith("inflow") ? "Watch inflow and infiltration happen." : "What the flow meter sees in a storm." })
     : s.widget === "lidott" ? `<section class="section dark band" id="alarm-demo"><div class="wrap"><div class="section-head"><h2 class="h-lg" data-reveal>Raise the water. Watch the alarm.</h2></div>${lidottDemo({ link: `${r}products/lidott-alarm.html` })}</div></section>` : "",
 })}</div>
@@ -2774,7 +2791,7 @@ add({
   current: "resources",
   scripts: ["library.js"],
   body: (r) => `
-${pageHero(r, { crumbs: [["Resources"]], title: "White papers, downloads and support.", lede: "What we've learnt in the field, and the files you need to keep instruments running.", visual: heroToc([["papers", "White Papers", C.papers.length], ["downloads", "Datasheets, Manuals and Software", library.length], ["support", "Passwords, RMA Forms and Data Access"]]) })}
+${pageHero(r, { crumbs: [["Resources"]], title: "White papers, downloads and support.", lede: "What we've learnt in the field, and the files you need to keep instruments running.", visual: heroToc([["papers", "White Papers", C.papers.length], ["tools", "Tools"], ["downloads", "Datasheets, Manuals and Software", library.length], ["support", "Passwords, RMA Forms and Data Access"]]) })}
 <section class="section" id="papers"><div class="wrap">
   <div class="section-head"><p class="eyebrow">White papers</p><h2 class="h-lg" data-reveal>EDS Publications</h2></div>
   <div class="grid ${C.papers.length % 3 ? "c2" : "c3"}">
@@ -2785,7 +2802,14 @@ ${pageHero(r, { crumbs: [["Resources"]], title: "White papers, downloads and sup
     </a>`).join("")}
   </div>
 </div></section>
-<section class="section alt library" id="downloads"><div class="wrap">
+<section class="section alt" id="tools"><div class="wrap">
+  <div class="section-head"><h2 class="h-lg" data-reveal>Tools</h2></div>
+  <a class="card tool-card" href="${r}open-channel-flow-calculator.html" data-reveal>
+    <span class="tool-copy"><span class="card-icon">${icon("calculator")}</span><h3>${esc(FC.title)}</h3><p>${esc(FC.card)}</p><span class="go" aria-hidden="true">${icon("arrow-right")}</span></span>
+    <span class="tool-art diagram" aria-hidden="true"><svg viewBox="0 0 ${flowCalc.VB.w} ${flowCalc.VB.h}"><defs><pattern id="fc-cut" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="#e6ebea"/><path d="M0 0V6" stroke="#b4c2c0" stroke-width="1.1"/></pattern><linearGradient id="fc-air" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eaf1ef"/><stop offset="1" stop-color="#fbfdfc"/></linearGradient></defs>${fcExample.svg}</svg></span>
+  </a>
+</div></section>
+<section class="section library" id="downloads"><div class="wrap">
   <div class="section-head"><h2 class="h-lg" data-reveal>Datasheets, Manuals and Software</h2><p class="lede" data-reveal style="--i:1">Every document EDS publishes, with its file type and size shown before you download.</p></div>
   <div class="lib-bar" data-reveal style="--i:2">
     <label class="finder-search">${icon("search", false)}<input type="search" placeholder="Search ${library.length} documents" aria-label="Search documents" autocomplete="off" spellcheck="false"></label>
@@ -2806,11 +2830,150 @@ ${pageHero(r, { crumbs: [["Resources"]], title: "White papers, downloads and sup
   <p class="lib-more"><button class="btn btn-outline" type="button" data-lib-more>Show all ${library.length} documents ${icon("chevron-down")}</button></p>
   <p class="note" style="margin-top:18px;font-size:.9rem;max-width:72ch">${C.downloads.find((g) => g.note).note}</p>
 </div></section>
-<section class="section" id="support"><div class="wrap"><div class="section-head"><h2 class="h-lg" data-reveal>Passwords, RMA Forms and Data Access</h2></div><div class="grid c2">
+<section class="section alt" id="support"><div class="wrap"><div class="section-head"><h2 class="h-lg" data-reveal>Passwords, RMA Forms and Data Access</h2></div><div class="grid c2">
   <a class="card" href="${contactHref(r, { topic: "Equipment service or calibration" })}" data-reveal><span class="card-icon">${icon("lock")}</span><h3>Software Passwords and RMA Forms</h3><p>Request a software password, an EDS or Hach Marsh RMA form, or EDS safety policies and procedures.</p><span class="go" aria-hidden="true">${icon("arrow-right")}</span></a>
   <a class="card" href="${site.remoteDataUrl}" rel="noopener" data-reveal style="--i:1"><span class="card-icon">${icon("globe")}</span><h3>Remote Data Access</h3><p>Sign in to DetectData to view data from your Detectronic instruments.</p><span class="go" aria-hidden="true">${icon("arrow-up-right")}</span></a>
 </div></div></section>
 ${ctaSection(r, { title: "Can't find a manual or driver?", lede: "Our service department will send you what you need.", topic: "Equipment service or calibration" })}`,
+});
+
+/* ---- open channel flow calculator ---- */
+// The calculator: the shape on a ruled sheet, its size, the depth and the
+// velocity on the left; the section drawn to scale, the flow and the rest of
+// the working on the right. The sums and the drawing are src/js/flow-calc.js,
+// which also runs here, so the page is built showing its first example
+// (`flowCalc.example`) worked out and drawn, and the script takes over from
+// it. The words are `flowCalc` in content.mjs.
+const FC = C.flowCalc;
+const flowCalc = (() => {
+  const ctx = { window: {} };
+  vm.runInNewContext(readFileSync(path.join(ROOT, "src/js/flow-calc.js"), "utf8"), ctx);
+  return ctx.window.EDSFlowCalc;
+})();
+// Lucide has no pipe or channel sections, so these are drawn in its style:
+// each outline with its water line.
+const FC_ICONS = {
+  circle: '<circle cx="12" cy="12" r="9"/><path d="M3.5 15h17"/>',
+  egg: '<path d="M12 3a6 6 0 0 1 6 6 18 18 0 0 1-3.6 10.8 3 3 0 0 1-4.8 0A18 18 0 0 1 6 9a6 6 0 0 1 6-6Z"/><path d="M7 15h10"/>',
+  rect: '<path d="M4 5v14h16V5"/><path d="M4 14h16"/>',
+  trap: '<path d="m2 6 5 13h10l5-13"/><path d="M5.1 14h13.8"/>',
+  u: '<path d="M5 4v8a7 7 0 0 0 14 0V4"/><path d="M5.3 14h13.4"/>',
+  v: '<path d="m3 5 9 15 9-15"/><path d="M8.4 14h7.2"/>',
+};
+const fcIcon = (id) => `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${FC_ICONS[id]}</svg>`;
+const fcWords = { ...FC.script, shapes: Object.fromEntries(FC.shapes.map((s) => [s.id, s.alt])), ...Object.fromEntries(["meanVelocity", "surfaceVelocity", "meanHint", "surfaceHint", "copy", "copied", "copyFailed"].map((k) => [k, FC[k]])) };
+const fcSig = new Intl.NumberFormat("en-AU", { minimumSignificantDigits: 3, maximumSignificantDigits: 3 });
+const fcNum = (n) => (n === 0 ? "0" : fcSig.format(n));
+const fcExample = (() => {
+  const ex = FC.example, shape = FC.shapes.find((s) => s.id === ex.shape);
+  const s = Object.fromEntries(shape.fields.map((f) => [f.k, f.value == null ? 0 : f.unit ? f.value : f.value / 1000]));
+  const y = ex.depth / 1000, r = flowCalc.solve(ex.shape, s, y, ex.velocity);
+  const alt = fcWords.alt.replace("{shape}", shape.alt).replace("{depth}", `${ex.depth} mm`);
+  const pct = (n) => `${Math.round(n * 100)}%`;
+  const rows = { A: r.A, P: r.P, R: r.R, T: r.T, depthShare: r.depthShare == null ? null : fcWords.ofHeight.replace("{n}", pct(r.depthShare)), areaShare: r.areaShare == null ? null : fcWords.ofFull.replace("{n}", pct(r.areaShare)), vMean: null, Fr: r.Fr == null ? "—" : `${r.Fr.toFixed(2)}, ${r.Fr < 0.95 ? fcWords.sub : r.Fr <= 1.05 ? fcWords.near : fcWords.super}` };
+  return { ...ex, r, rows, alt, svg: flowCalc.draw(ex.shape, s, y, fcWords) };
+})();
+// A number field: its label with the unit beside it, a line of help, and
+// the error under it (flow-calc.js). `rule` says what it takes.
+const fcField = (id, { k, label, labelHtml, unit = "mm", optional, hint, hintId, value, rule, zero, step = 1, min = 0, cls = "", attrs = "" }) => {
+  const iid = `fc-${id}`;
+  const desc = [hint ? `${iid}-hint` : hintId, `${iid}-err`].filter(Boolean).join(" ");
+  return `
+      <div class="field fc-field${cls ? ` ${cls}` : ""}"${attrs}>
+        <label for="${iid}">${labelHtml || esc(label)}${unit || optional ? ` <i>${esc([unit, optional && "optional"].filter(Boolean).join(", "))}</i>` : ""}</label>
+        <input id="${iid}" type="number" ${min == null ? "" : `inputmode="decimal" min="${min}" `}step="${step}" value="${value ?? ""}" data-k="${k}" data-rule="${rule || (optional ? "optional" : "size")}"${unit === "mm" ? ' data-unit="mm"' : ""}${zero ? ' data-zero="1"' : ""} aria-describedby="${desc}" autocomplete="off">
+        ${hint ? `<small class="fc-hint" id="${iid}-hint">${esc(hint)}</small>` : ""}
+        <span class="field-error" id="${iid}-err" hidden></span>
+      </div>`;
+};
+const fcCalculator = () => {
+  const ex = fcExample;
+  const row = ([k, label, unit]) => {
+    const v = ex.rows[k];
+    const shown = v == null ? "—" : typeof v === "number" ? `${fcNum(v)}${unit ? ` ${unit}` : ""}` : v;
+    return `<div${v == null && k !== "Fr" ? " hidden" : ""}><dt>${esc(label)}</dt><dd data-fc="${k}"${unit ? ` data-unit="${unit}"` : ""}>${esc(shown)}</dd></div>`;
+  };
+  return `
+<div class="fc" data-flowcalc="${esc(JSON.stringify(fcWords))}">
+  <div class="fc-in">
+    <fieldset class="topics fc-shapes">
+      <legend>${FC.legends.shape}</legend>
+      <div class="topic-grid">${FC.shapes.map((sh) => `<label class="topic"><input type="radio" name="fc-shape" value="${sh.id}"${sh.id === ex.shape ? " checked" : ""}>${fcIcon(sh.id)}<span>${esc(sh.name)}</span></label>`).join("")}</div>
+    </fieldset>
+    ${FC.shapes.map((sh) => `
+    <fieldset class="fc-group" data-fields="${sh.id}"${sh.id === ex.shape ? "" : " hidden"}>
+      <legend>${FC.legends.size}</legend>
+      <div class="fc-row">${sh.fields.map((f) => fcField(`${sh.id}-${f.k}`, f)).join("")}</div>
+      ${sh.closed ? `<label class="check"><input type="checkbox" data-k="c">${esc(sh.closed)}</label>` : ""}
+    </fieldset>`).join("")}
+    <fieldset class="fc-group">
+      <legend>${FC.legends.flow}</legend>
+      <div class="fc-row">${fcField("depth", { k: "depth", label: FC.depth.label, hint: FC.depth.hint, value: ex.depth, rule: "depth" })}</div>
+      <fieldset class="topics fc-kind">
+        <legend>${FC.legends.kind}</legend>
+        <div class="topic-grid">${FC.kinds.map(([v, label]) => `<label class="topic"><input type="radio" name="fc-kind" value="${v}"${v === "mean" ? " checked" : ""}><span>${esc(label)}</span></label>`).join("")}</div>
+        <p class="fc-hint" id="fc-kind-hint" data-fc-kind-hint>${esc(FC.meanHint)}</p>
+      </fieldset>
+      <div class="fc-row">
+        ${fcField("vel", { k: "v", labelHtml: `<span data-fc-vel-label>${esc(FC.meanVelocity)}</span>`, unit: "m/s", hintId: "fc-kind-hint", value: ex.velocity, rule: "velocity", step: 0.01, min: null })}
+        ${fcField("factor", { k: "k", label: FC.factor.label, unit: "", hint: FC.factor.hint, value: 0.85, rule: "factor", step: 0.01, attrs: " data-fc-factor hidden" })}
+      </div>
+    </fieldset>
+  </div>
+  <div class="fc-out">
+    <figure class="diagram fc-figure">
+      <svg viewBox="0 0 ${flowCalc.VB.w} ${flowCalc.VB.h}" role="img" aria-label="${esc(ex.alt)}">
+        <defs>
+          <pattern id="fc-cut" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="#e6ebea"/><path d="M0 0V6" stroke="#b4c2c0" stroke-width="1.1"/></pattern>
+          <linearGradient id="fc-air" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eaf1ef"/><stop offset="1" stop-color="#fbfdfc"/></linearGradient>
+        </defs>
+        <g data-fc-draw>${ex.svg}</g>
+      </svg>
+      <figcaption>${esc(FC.caption)}</figcaption>
+    </figure>
+    <div class="fc-flow">
+      <p class="fc-flow-h">${esc(FC.results.flow)}</p>
+      <p class="fc-q"><b data-fc="q">${fcNum(ex.r.Q * 1000)}</b><small>L/s</small></p>
+      <p class="fc-units"><span><b data-fc="m3s">${fcNum(ex.r.Q)}</b> m³/s</span><span><b data-fc="m3h">${fcNum(ex.r.Q * 3600)}</b> m³/h</span><span><b data-fc="mld">${fcNum(ex.r.Q * 86.4)}</b> ML/d</span></p>
+    </div>
+    <p class="fc-state" data-fc-state hidden>${icon("info", false)}<span></span></p>
+    <dl class="fc-sheet">${FC.results.rows.map(row).join("")}</dl>
+    <p class="note fc-note">${esc(FC.results.note)}</p>
+    <div class="fc-actions">
+      <button class="btn btn-outline btn-sm" type="button" data-fc-copy>${icon("link", false)}<span>${esc(FC.copy)}</span></button>
+      <button class="btn btn-ghost btn-sm" type="button" data-fc-reset>${icon("rotate-ccw", false)}<span>${esc(FC.reset)}</span></button>
+    </div>
+    <p class="sr-only" aria-live="polite" data-fc-live></p>
+  </div>
+</div>`;
+};
+const fcMeasure = (r) => [
+  [`services/sewer-flow-monitoring.html`, svc("sewer-flow-monitoring").title, "Meters installed and looked after by our crews"],
+  ...["e-flow-3"].map((slug) => { const pg = C.productPages.find((p) => p.slug === slug); return [`products/${slug}.html`, pg.name, pg.tag]; }),
+  ...["detectronic", "hach-flow"].map((slug) => [`products/${slug}.html`, brand(slug).title, brand(slug).tag]),
+].map(([href, t, d]) => `<li><a href="${r}${href}"><span>${esc(t)}<small>${esc(d)}</small></span>${icon("arrow-right")}</a></li>`).join("");
+
+add({
+  file: "open-channel-flow-calculator.html",
+  title: FC.pageTitle,
+  description: FC.description,
+  current: "resources",
+  scripts: ["flow-calc.js"],
+  app: FC.title,
+  body: (r) => `
+${pageHero(r, { crumbs: [["Resources", "resources.html"], [FC.title]], iconName: "calculator", title: FC.title, lede: FC.lede, compact: true })}
+<section class="section fc-section" id="calculator"><div class="wrap">
+  ${fcCalculator()}
+</div></section>
+<section class="section alt fc-method" id="how-it-works"><div class="wrap split">
+  <div>
+    <div class="section-head"><h2 class="h-lg" data-reveal>${esc(FC.method.heading)}</h2><p class="lede" data-reveal style="--i:1">${esc(FC.method.lede)}</p></div>
+    <p class="fc-eq" data-reveal style="--i:2"><span class="sr-only">Q equals A times v.</span><span aria-hidden="true">${FC.method.equation.map(([sym, word], i) => `${["", "<i>=</i>", "<i>×</i>"][i]}<span><b>${sym}</b><small>${esc(word)}</small></span>`).join("")}</span></p>
+    ${flatItems(FC.method.items)}
+  </div>
+  <aside class="aside"><div class="aside-card" data-reveal="right"><h2>${esc(FC.method.measure)}</h2><ul class="aside-links docs">${fcMeasure(r)}</ul></div></aside>
+</div></section>
+${ctaSection(r, FC.cta)}`,
 });
 
 /* ---- contact ---- */
@@ -3067,6 +3230,7 @@ function searchIndex() {
   put("Pages", "EDS FlowSense", "Sewer network intelligence: flow analytics and engineering insight.", "flowsense.html", { i: "waves", b: text(C.flowsense.lede, C.flowsense.tour.flatMap((t) => [[t.heading, t.lede], ...t.points]), [[C.flowsense.psm.heading, C.flowsense.psm.lede], ...C.flowsense.psm.points], C.flowsense.apart.items, C.flowsense.standards.items.map(([, t, d]) => [t, d]), C.flowsense.faq) });
   put("Pages", "About EDS", "Australian owned and operated since 1991.", "about.html", { i: "building-2", b: text(C.about.intro, C.about.mission, C.about.approach.items.map(([, t, d]) => [t, d]), C.about.timeline, "history founders story") });
   put("Pages", "Resources", "White papers, downloads and support.", "resources.html", { i: "book-open", b: "manuals software drivers datasheets passwords rma" });
+  put("Pages", C.flowCalc.title, C.flowCalc.card, "open-channel-flow-calculator.html", { i: "calculator", b: text(C.flowCalc.shapes.map((x) => x.name), C.flowCalc.method.items, "calculator flow rate discharge depth velocity area velocity partially part full pipe sewer culvert wetted area perimeter hydraulic radius froude litres per second") });
   put("Pages", "Contact EDS", `${site.hours}. ${site.phone} from anywhere in Australia.`, "contact.html", { i: "messages-square", b: text(site.address, "enquiry form quote") });
   put("Pages", "All services", "Specialised services for water and wastewater networks.", "services/index.html", { i: "layout-grid" });
   put("Pages", "All solutions", "Monitoring applied to the problem in front of you.", "solutions/index.html", { i: "layout-grid" });
@@ -3228,6 +3392,10 @@ ${C.productPages.map((pg) => llmsLink(`products/${pg.slug}.html`, pg.name)).join
 ## About EDS
 
 ${[["flowsense.html", "EDS FlowSense"], ["about.html", "About EDS"], ["resources.html", "Resources: white papers, downloads and manuals"], ["contact.html", "Contact EDS"]].map(([f, n]) => llmsLink(f, n)).join("\n")}
+
+## Tools
+
+${llmsLink("open-channel-flow-calculator.html", C.flowCalc.title)}
 `
 );
 // The IndexNow key, which shows the search engines that the pings from the

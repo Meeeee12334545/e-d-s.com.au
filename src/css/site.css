@@ -4851,3 +4851,86 @@ body.is-touring { overscroll-behavior-y: contain; }
   .hm-shelf .inst { grid-template-rows: 124px auto; padding: 18px var(--cell-x) 16px; }
   .hm-shelf .inst-body b { font-size: var(--text-6); }
 }
+
+/* ---------- open channel flow calculator (open-channel-flow-calculator.html, flow-calc.js) ----------
+   One ruled sheet: what goes in on the left; the section drawn to scale and
+   the answer on the right. The shapes and the velocity reading are option
+   sheets like the enquiry form's topics. The drawing is the light kit on a
+   white plate, and the flow is set large in the heading face, a readout. */
+.fc-section { padding-top: clamp(4px, 1vw, 12px); }
+.fc { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr); gap: 1px; background: var(--border-strong); border: 1px solid var(--border-strong); border-radius: var(--radius); }
+.fc-in, .fc-out { min-width: 0; padding: clamp(20px, 2.4vw, 32px); background: #fff; }
+.fc-in { display: grid; gap: 28px; align-content: start; container-type: inline-size; }
+.fc-out { display: flex; flex-direction: column; gap: 18px; }
+.fc-group { min-width: 0; display: grid; gap: 14px; margin: 0; padding: 0; border: 0; }
+.fc-group[hidden], .fc-field[hidden] { display: none; }
+.fc-group > legend, .fc-shapes > legend { padding: 0; margin-bottom: 12px; font-family: var(--font-display); font-size: var(--text-6); font-weight: 620; color: var(--ink); }
+.fc-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(176px, 1fr)); gap: 14px; align-items: start; }
+.fc-field label { line-height: var(--lh-tight); }
+.fc-hint { font-size: var(--text-2); font-weight: 400; line-height: var(--lh-snug); color: var(--muted); }
+.fc input[type="number"] { -moz-appearance: textfield; appearance: textfield; font-variant-numeric: tabular-nums; }
+.fc input[type="number"]::-webkit-inner-spin-button, .fc input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.fc-shapes .topic { flex-direction: column; align-items: flex-start; gap: 10px; min-height: 86px; padding: 14px 14px 12px; }
+.fc-shapes .topic .icon { font-size: 28px; stroke-width: 1.5; }
+.fc-kind .topic-grid { grid-template-columns: 1fr 1fr; }
+.fc-kind .topic { justify-content: center; min-height: 44px; }
+.fc-kind .fc-hint { margin-top: 8px; }
+.fc .check { font-size: var(--text-4); }
+
+.fc-figure svg { max-height: 400px; border: 1px solid var(--border); border-radius: var(--radius); background: #fff; }
+.fc-figure figcaption { margin-top: 10px; }
+.fc-dim { fill: none; stroke: #5d706e; stroke-width: 1; }
+.fc-ext { fill: none; stroke: #9fb0ad; stroke-width: .8; }
+/* the drawing shrinks to about half on a phone, so its labels grow more
+   than the illustrations' do; the margins beside the section leave room */
+@container (max-width: 440px) { .fc-figure text { font-size: 19px; } }
+.fc-flow { display: grid; gap: 4px; }
+.fc-flow-h { font-size: var(--text-3); font-weight: 500; color: var(--muted); }
+.fc-q { display: flex; align-items: baseline; gap: 10px; font-family: var(--font-display); line-height: 1; color: var(--ink); }
+.fc-q b { font-size: clamp(2.4rem, 4.2vw, 3.3rem); font-weight: 560; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.fc-q small { font-size: var(--text-8); font-weight: 600; color: var(--brand); }
+.fc-units { display: flex; flex-wrap: wrap; gap: 4px 18px; margin-top: 6px; font-family: var(--font-mono); font-size: var(--text-3); color: var(--muted); }
+.fc-units b { font-weight: 500; color: var(--ink-2); }
+.fc-state { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; border: 1px solid var(--border-strong); border-left: 3px solid var(--eds); border-radius: var(--radius); background: var(--foam); font-size: var(--text-4); line-height: var(--lh-snug); color: var(--ink-2); }
+.fc-state[hidden] { display: none; }
+.fc-state .icon { flex: none; margin-top: 1px; font-size: 18px; color: var(--brand); }
+.fc-sheet { margin: 0; border-top: 1px solid var(--border-strong); }
+.fc-sheet > div { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding: 9px 0; border-bottom: 1px solid var(--border); }
+.fc-sheet > div[hidden] { display: none; }
+.fc-sheet dt { font-size: var(--text-4); color: var(--ink-2); }
+.fc-sheet dd { margin: 0; text-align: right; font-size: var(--text-4); font-weight: 500; color: var(--ink); font-variant-numeric: tabular-nums; }
+.fc-note { margin-top: -4px; }
+.fc-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+/* a figure that doesn't add up yet: the last good answer stays, faded */
+.fc :is(.fc-figure svg, .fc-flow, .fc-sheet) { transition: opacity .2s var(--ease); }
+.fc.is-off :is(.fc-figure svg, .fc-flow, .fc-sheet) { opacity: .4; }
+
+.fc-method .aside-card { background: #fff; border-color: var(--border); }
+.fc-eq { display: flex; margin-bottom: 30px; font-family: var(--font-display); color: var(--ink); }
+.fc-eq > span[aria-hidden] { display: flex; align-items: flex-start; gap: 16px; }
+.fc-eq span span { display: grid; justify-items: center; gap: 8px; }
+.fc-eq b { font-size: 2.4rem; font-weight: 520; line-height: 1; }
+.fc-eq small { font-family: var(--font-body); font-size: var(--text-2); font-weight: 400; color: var(--muted); }
+.fc-eq i { font-style: normal; font-size: 2rem; line-height: 1.15; color: var(--eds); }
+.fc-method .flat-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 32px; }
+
+/* the calculator's card on Resources, with its first example drawn */
+.tool-card { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 0; padding: 0; }
+.tool-copy { position: relative; display: flex; flex-direction: column; gap: 12px; padding: 28px; }
+.tool-copy h3 { padding-right: 44px; }
+.tool-copy .card-icon { width: auto; height: 32px; border-radius: 0; background: none; font-size: 30px; justify-content: start; }
+.tool-copy .card-icon .icon { stroke-width: 1.5; }
+.tool-art { display: block; padding: 10px 16px; border-left: 1px solid var(--border); background: var(--foam); }
+.tool-art svg { width: 100%; height: auto; max-height: 250px; }
+
+@media (max-width: 980px) {
+  .fc { grid-template-columns: minmax(0, 1fr); }
+  /* in one column the answer comes straight after the figures */
+  .fc-flow, .fc-state { order: -1; }
+}
+@media (max-width: 700px) {
+  .fc-in, .fc-out { padding: 20px 18px; }
+  .fc-method .flat-list { grid-template-columns: minmax(0, 1fr); }
+  .tool-card { grid-template-columns: minmax(0, 1fr); }
+  .tool-art { border-left: 0; border-top: 1px solid var(--border); }
+}
