@@ -1821,6 +1821,18 @@ input[type="range"]:active::-moz-range-thumb { cursor: grabbing; box-shadow: 0 0
 /* a link card, so its icon is drawn plain, level with the download arrow */
 .paper-top .card-icon { width: auto; height: 32px; border-radius: 0; background: none; font-size: 30px; justify-content: start; }
 .paper .go { top: 28px; right: 28px; }
+/* with its cover: the first page beside the words, like a paper on a desk */
+.paper.has-cover { display: grid; grid-template-columns: 132px minmax(0, 1fr); align-items: start; }
+.paper-cover { margin: 28px 0 28px 28px; border: 1px solid var(--border); background: #fff; aspect-ratio: 640 / 905; overflow: hidden; }
+.paper-cover img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top; }
+.paper.has-cover .paper-body { padding: 28px 64px 28px 24px; }
+.paper.has-cover .paper-body .tag { align-self: start; }
+@media (max-width: 560px) {
+  .paper.has-cover { grid-template-columns: minmax(0, 1fr); }
+  .paper-cover { width: 88px; margin: 22px 0 0 20px; }
+  .paper.has-cover .paper-body { padding: 16px 20px 22px; }
+  .paper .go { top: 22px; right: 20px; }
+}
 
 /* ---------- CTA + footer ---------- */
 /* The close is the brand: the FlowSense teal, lit from the top right, with
@@ -2846,6 +2858,16 @@ a.card:hover > .card-media img { scale: 1.04; }
 .dg-band-cool { fill: #2b9bd0; fill-opacity: .1; }
 .dg-arrow { fill: none; stroke: var(--brand-dark); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .diagram .dg-alarm { fill: #b45309; }
+/* a river station (wqstation): the turf of the bank, the guard pipe's cut
+   wall, the post and solar panel; data out of FlowSense (connect): one-way
+   links whose dashes only ever travel outward, to a filled head */
+.dg-turf { fill: none; stroke: #8fae8c; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.dg-gp { fill: #e3e9e8; stroke: #7d8a88; stroke-width: .9; }
+.dg-post { fill: #c9d2d0; stroke: #6f7e7c; stroke-width: .9; }
+.dg-solar { fill: #2f4f69; stroke: #4e5957; stroke-width: .9; stroke-linejoin: round; }
+.dg-solar-grid { fill: none; stroke: rgba(255, 255, 255, .45); stroke-width: .6; }
+.dg-send { fill: none; stroke: var(--eds); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 3 4; animation: dg-flow 1.4s linear infinite; }
+.dg-head { fill: var(--brand); }
 .dg-building .dg-wall { fill: #e9eeed; stroke: #9fb3b0; stroke-width: 1.2; stroke-linejoin: round; }
 .dg-building .dg-roof { fill: #d9e1df; stroke: #9fb3b0; stroke-width: 1.2; stroke-linejoin: round; }
 .dg-building .dg-glazing { fill: #cfe3ea; }
@@ -2890,6 +2912,41 @@ a.card:hover > .card-media img { scale: 1.04; }
 .dg-arrow.w { stroke: #fff; }
 .diagram .dg-gap-t { fill: #9a4f46; font-weight: 600; font-size: 12px; }
 .diagram .dg-i { font-style: italic; font-size: 15px; }
+/* rainfall: rain falling on the catchment, the gauge on its post, inflow
+   running in at the manhole, and the chart's fast and slow responses */
+.dg-shower path { fill: none; stroke: #2b9bd0; stroke-opacity: .38; stroke-width: 1.1; stroke-linecap: round; stroke-dasharray: 5 9; animation: dg-flow .7s linear infinite; }
+.dg-inflow { fill: none; stroke: #2b9bd0; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 4 10; animation: dg-flow .8s linear infinite; }
+.dg-inflow-head { fill: none; stroke: #1d84b8; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.dg-band-fast { fill: #2b9bd0; fill-opacity: .32; }
+.dg-post { stroke: #7d8a88; stroke-width: .8; }
+.dg-gauge { stroke: #6f7e7c; stroke-width: 1; }
+.dg-gauge-rim { stroke: #94681f; stroke-width: .8; stroke-linejoin: round; }
+.dg-gauge-mouth { fill: #6b4c17; }
+.dg-gauge-spout { fill: none; stroke: #94681f; stroke-width: 2; stroke-linecap: round; }
+.dg-bucket { fill: none; stroke: #94681f; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.dg-pivot { fill: #3e4846; }
+/* fullpipe: coils and their field, electrodes, clamp-on transducers on
+   their bands, and sound pulses with and against the flow */
+.dg-rule { fill: none; stroke: #e3e9e8; stroke-width: 1; }
+.dg-coil { stroke: #94681f; stroke-width: .8; }
+.dg-coil-wind { fill: none; stroke: #94681f; stroke-opacity: .7; stroke-width: .9; }
+.dg-field { fill: none; stroke: #7a5bc7; stroke-width: 1.2; stroke-dasharray: 3 2.5; }
+.dg-field-arrow { fill: none; stroke: #7a5bc7; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+.dg-volt { fill: none; stroke: #1d2726; stroke-width: 1.4; }
+.dg-volt-end { fill: none; stroke: #1d2726; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+.dg-electrode { fill: #2f3b39; stroke: #fff; stroke-width: .8; }
+.dg-strap-band { fill: #5d6866; }
+.dg-tx { fill: #e4e9ea; stroke: #7d8a88; stroke-width: .9; }
+.dg-tx-screen { fill: #2f3b39; }
+.dg-tx-keys { fill: none; stroke: #5d6866; stroke-width: 1.8; stroke-linecap: round; }
+.dg-sound { fill: none; stroke: #1d6fa0; stroke-opacity: .6; stroke-width: 1.2; stroke-linejoin: round; }
+.dg-sound.back { stroke: #49b3e6; stroke-opacity: .85; }
+.dg-sound-pulse { fill: none; stroke: #1d6fa0; stroke-width: 2.6; stroke-linecap: round; stroke-dasharray: 3 11; animation: dg-flow 1s linear infinite; }
+.dg-sound-pulse.back { stroke: #49b3e6; }
+.dg-sound-arrow { fill: none; stroke: #1d6fa0; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+.dg-sound-arrow.back { stroke: #49b3e6; }
+.dg-particle { fill: #8f7859; stroke: #fff; stroke-width: .6; }
+.dg-bubble { fill: #fff; fill-opacity: .85; stroke: #2b9bd0; stroke-width: .8; }
 .ef-road { fill: #59625f; }
 .ef-edge { fill: none; stroke: #8ea19e; stroke-width: 1; }
 .ef-frame { fill: #3e4846; }
@@ -3819,6 +3876,12 @@ html:has(.secbar) .band[id] { scroll-margin-top: calc(16px - var(--band-pad)); }
 .split-band { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: clamp(32px, 5vw, 80px); align-items: start; }
 .split-band > .band-head { position: sticky; top: calc(68px + 58px + 28px); margin-bottom: 0; }
 .split-band .flat-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 26px 40px; }
+/* a band with its own picture: the heading and points beside the drawing or
+   photo, which stays in view while the points are read */
+.fig-band { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: clamp(32px, 5vw, 80px); align-items: start; }
+.fig-band > .diagram, .fig-band > .photo, .fig-band > .screen { margin: 0; position: sticky; top: calc(68px + 58px + 28px); }
+.fig-band .band-head { margin-bottom: clamp(20px, 3vw, 28px); }
+.fig-band .flat-list { gap: 20px; }
 .split-band .checks { gap: 14px; }
 /* Rows always fill: four to a row, three when that leaves no gap, and the
    last row of seven shares the width three ways. */
@@ -3919,7 +3982,9 @@ html:has(.secbar) .band[id] { scroll-margin-top: calc(16px - var(--band-pad)); }
   .band-results .result.more { grid-column: 1 / -1; }
   .band-results .result.more ul { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 28px; }
   .related-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .split-band > .band-head, .intro > .photo, .intro > .aside-figure, .intro > .diagram, .intro > .screen { position: static; }
+  .split-band > .band-head, .intro > .photo, .intro > .aside-figure, .intro > .diagram, .intro > .screen, .fig-band > .diagram, .fig-band > .photo, .fig-band > .screen { position: static; }
+  .fig-band { grid-template-columns: 1fr; gap: 28px; }
+  .fig-band > .diagram { max-width: 620px; }
   /* a drawing's labels scale with it, so it stops short of the full width */
   .intro > .diagram, .intro > .screen.tall { max-width: 620px; }
   .intro { gap: 24px; }

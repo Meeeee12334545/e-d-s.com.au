@@ -113,18 +113,38 @@ const photoFigure = (f, { i, sizes, cls = "" } = {}) => `
 // brochures into src/assets/img/flowsense as <name>-<w>x<h>.jpg with a WebP
 // twin, at one or two widths, laid out like the photographs above. Shown
 // in their own colours: they are the platform, not a photograph.
-const SHOTS = {};
-for (const f of readdirSync(path.join(ROOT, "src/assets/img/flowsense"))) {
+// Screens of EDS's own software (EMS-Flow), lifted out of its manuals by
+// tools/software_screens.py into src/assets/img/software, are shown the same way.
+const SHOTS = {}, SHOT_DIR = {};
+for (const dir of ["flowsense", "software"]) for (const f of readdirSync(path.join(ROOT, "src/assets/img", dir))) {
   const m = f.match(/^(.+)-(\d+)x(\d+)\.jpg$/);
-  if (m) (SHOTS[m[1]] ||= []).push({ w: +m[2], h: +m[3] });
+  if (m) { (SHOTS[m[1]] ||= []).push({ w: +m[2], h: +m[3] }); SHOT_DIR[m[1]] = dir; }
 }
 for (const list of Object.values(SHOTS)) list.sort((a, b) => b.w - a.w);
 function shot(name, alt, { sizes = "(max-width: 980px) calc(100vw - 40px), 700px", eager = false } = {}) {
   const v = SHOTS[name];
-  if (!v) throw new Error(`No FlowSense screen named "${name}" in src/assets/img/flowsense (see tools/flowsense_screens.py)`);
-  const set = (ext) => v.map((s) => `@root/assets/img/flowsense/${name}-${s.w}x${s.h}.${ext} ${s.w}w`).join(", ");
+  if (!v) throw new Error(`No screen named "${name}" in src/assets/img/flowsense or software (see tools/flowsense_screens.py, tools/software_screens.py)`);
+  const dir = SHOT_DIR[name];
+  const set = (ext) => v.map((s) => `@root/assets/img/${dir}/${name}-${s.w}x${s.h}.${ext} ${s.w}w`).join(", ");
   const [big] = v;
-  return `<picture><source type="image/webp" srcset="${set("webp")}" sizes="${sizes}"><img src="@root/assets/img/flowsense/${name}-${big.w}x${big.h}.jpg" srcset="${set("jpg")}" sizes="${sizes}" width="${big.w}" height="${big.h}" alt="${esc(alt)}"${eager ? ' fetchpriority="high"' : ' loading="lazy"'} decoding="async"></picture>`;
+  return `<picture><source type="image/webp" srcset="${set("webp")}" sizes="${sizes}"><img src="@root/assets/img/${dir}/${name}-${big.w}x${big.h}.jpg" srcset="${set("jpg")}" sizes="${sizes}" width="${big.w}" height="${big.h}" alt="${esc(alt)}"${eager ? ' fetchpriority="high"' : ' loading="lazy"'} decoding="async"></picture>`;
+}
+// White paper covers: the first page of each paper, rendered by
+// tools/doc_covers.py into src/assets/img/covers as <id>-<w>x<h>.jpg with a
+// WebP twin, at two widths. Shown on the paper's card as it will look when
+// it is downloaded.
+const COVERS = {};
+for (const f of readdirSync(path.join(ROOT, "src/assets/img/covers"))) {
+  const m = f.match(/^(.+)-(\d+)x(\d+)\.jpg$/);
+  if (m) (COVERS[m[1]] ||= []).push({ w: +m[2], h: +m[3] });
+}
+for (const list of Object.values(COVERS)) list.sort((a, b) => b.w - a.w);
+function cover(id, { sizes = "(max-width: 560px) 88px, 132px" } = {}) {
+  const v = COVERS[id];
+  if (!v) return "";
+  const set = (ext) => v.map((s) => `@root/assets/img/covers/${id}-${s.w}x${s.h}.${ext} ${s.w}w`).join(", ");
+  const [big] = v;
+  return `<span class="paper-cover"><picture><source type="image/webp" srcset="${set("webp")}" sizes="${sizes}"><img src="@root/assets/img/covers/${id}-${big.w}x${big.h}.jpg" srcset="${set("jpg")}" sizes="${sizes}" width="${big.w}" height="${big.h}" alt="" loading="lazy" decoding="async"></picture></span>`;
 }
 // A FlowSense screen on a service page, captioned like a photograph:
 // { name, alt, caption }. `tall` keeps the top of a long screen (a report)
@@ -1873,6 +1893,15 @@ const flatItems = (items) => `<ul class="flat-list">${items.map(([t, d], n) => `
 const checkList = (list) => `<ul class="checks" data-reveal>${list.map((l) => `<li>${icon("check", false)}<span>${esc(l)}</span></li>`).join("")}</ul>`;
 const blockBody = (b) => (b.items ? flatItems(b.items) : b.list ? checkList(b.list) : "");
 // A block's FlowSense screen (`shot`), across the page under its items.
+// A block with its own illustration (`diagram`) or photograph (`figure`):
+// its heading and points in one column, the picture beside them, as the
+// opening text sits beside a page's first picture. Product pages use it for
+// an instrument in place (`scene`).
+const figBand = (b) => {
+  const sizes = "(max-width: 980px) calc(100vw - 40px), 620px";
+  const visual = b.diagram ? diagram(b.diagram, C.diagrams[b.diagram]) : b.screen ? screenFigure(b.screen, { sizes }) : photoFigure(b.figure, { sizes });
+  return `<div class="fig-band"><div class="fig-band-text">${bandHead(b)}${blockBody(b)}</div>${visual}</div>`;
+};
 const bandShot = (b) => (b.shot ? screenFigure(b.shot, { sizes: "(max-width: 1240px) calc(100vw - 40px), 1200px" }) : "");
 const band = (tone, inner, { id, cls = "" } = {}) => `
 <section class="section band${tone === "alt" ? " alt" : ""}${cls ? ` ${cls}` : ""}"${id ? ` id="${id}"` : ""}><div class="wrap">${inner}</div></section>`;
@@ -1883,6 +1912,13 @@ function bandsOf(s, r) {
   let cards = false;
   for (const b of blocks) {
     const id = slugify(b.heading);
+    if (b.diagram || b.figure || b.screen) {
+      // a block with its own illustration or photograph: the heading and
+      // its points in one column, the picture beside them, as the opening
+      // text sits beside the page's first picture
+      out.push({ id, cls: "band-fig", html: `${figBand(b)}${bandShot(b)}` });
+      continue;
+    }
     if (b.products) {
       out.push({ id, cls: "band-products", html: `${bandHead(b)}<div class="shelf n${b.products.length}" data-reveal="scale">${b.products.map((it) => `
       <a class="inst" href="${r}${it.href}">
@@ -1905,7 +1941,7 @@ function bandsOf(s, r) {
     } else if (b.faq) {
       out.push({ id, cls: "band-split", html: `<div class="split-band">${bandHead(b)}<div data-reveal>${faqHtml(b.faq)}</div></div>` });
     } else if (isSteps(b)) {
-      out.push({ id, cls: "band-steps", html: `${bandHead(b)}<ol class="step-grid n${b.list.length}">${b.list.map((l, n) => `<li data-reveal style="--i:${n % 4}"><span>${String(n + 1).padStart(2, "0")}</span><p>${esc(l)}</p></li>`).join("")}</ol>` });
+      out.push({ id, cls: "band-steps", html: `${bandHead(b)}<ol class="step-grid n${b.list.length}">${b.list.map((l, n) => `<li data-reveal style="--i:${n % 4}"><span>${String(n + 1).padStart(2, "0")}</span><p>${esc(l)}</p></li>`).join("")}</ol>${bandShot(b)}` });
     } else if (out.at(-1)?.cls === "band-list") {
       // a checklist straight after another sits beside its heading
       out.push({ id, cls: "band-split", html: `<div class="split-band">${bandHead(b)}${checkList(b.list)}</div>` });
@@ -1929,7 +1965,9 @@ function bandsOf(s, r) {
     resultsBand = { id: "results", cls: "band-results", html: `${resultsHead}${resultCards(results, more)}` };
   }
   if (resultsBand) {
-    const after = out.findIndex((b) => b.cls === "band-cards");
+    // the first block with feature points, laid out as cards or beside its
+    // picture (each block is one band, in order)
+    const after = blocks.findIndex((b) => b.items);
     out.splice(after < 0 ? out.length : after + 1, 0, resultsBand);
   }
   return out;
@@ -2186,6 +2224,7 @@ ${pageHero(r, { crumbs: [["Products", "products/index.html"], ["Detectronic", "p
     <div class="aside-card" data-reveal="right"><h2>Documents</h2><ul class="aside-links docs">${[["Alarm2 datasheet", C.alarm2.datasheet], ["Alarm2 4G manual", C.alarm2.manual]].map(([t, href]) => `<li><a href="${href}" rel="noopener"><span>${t}<small>${docType(href)}</small></span>${icon("download")}</a></li>`).join("")}</ul></div>
   </aside>
 </div></section>
+${C.alarm2.scene ? `<section class="section band alt" id="in-place"><div class="wrap">${figBand(C.alarm2.scene)}</div></section>` : ""}
 ${ctaSection(r, { title: "Deploy Alarm2 across your network.", lede: "Tell us about your sites and how you want to be alerted. We'll come back with pricing and support.", topic: "Product pricing", product: "Alarm2 (Detectronic)" })}`,
 });
 
@@ -2471,6 +2510,7 @@ for (const pg of C.productPages) {
   // optional bands between the overview (white) and the specifications: the
   // light ones alternate grey and white, and the demo sits on the deep teal
   const extra = [
+    pg.scene && ["in-place", pg.scene.nav, figBand(pg.scene)],
     pg.problem && ["the-problem", pg.problem.nav, problemBand(pg.problem)],
     pg.works && ["how-it-works", pg.works.nav, worksBand(pg.works)],
     pg.rag && ["rag", pg.rag.nav, ragBand(pg.rag)],
@@ -2796,9 +2836,9 @@ ${pageHero(r, { crumbs: [["Resources"]], title: "White papers, downloads and sup
   <div class="section-head"><p class="eyebrow">White papers</p><h2 class="h-lg" data-reveal>EDS Publications</h2></div>
   <div class="grid ${C.papers.length % 3 ? "c2" : "c3"}">
     ${C.papers.map((p, n) => `
-    <a class="card paper" href="${p.href}" rel="noopener" data-reveal style="--i:${n}">
-      <div class="paper-top"><span class="card-icon">${icon("file-text")}</span><span class="tag">${p.date}</span></div>
-      <div class="paper-body"><h3>${esc(p.title)}</h3><p>${esc(p.text)}</p><span class="go" aria-hidden="true">${icon("download")}</span></div>
+    <a class="card paper${COVERS[p.id] ? " has-cover" : ""}" href="${p.href}" rel="noopener" data-reveal style="--i:${n}">
+      ${cover(p.id) || `<div class="paper-top"><span class="card-icon">${icon("file-text")}</span><span class="tag">${p.date}</span></div>`}
+      <div class="paper-body">${COVERS[p.id] ? `<span class="tag">${p.date}</span>` : ""}<h3>${esc(p.title)}</h3><p>${esc(p.text)}</p><span class="go" aria-hidden="true">${icon("download")}</span></div>
     </a>`).join("")}
   </div>
 </div></section>
