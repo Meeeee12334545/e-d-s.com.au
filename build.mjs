@@ -1948,7 +1948,9 @@ function bandsOf(s, r) {
     resultsBand = { id: "results", cls: "band-results", html: `${resultsHead}${resultCards(results, more)}` };
   }
   if (resultsBand) {
-    const after = out.findIndex((b) => b.cls === "band-cards");
+    // the first block with feature points, laid out as cards or beside its
+    // picture (each block is one band, in order)
+    const after = blocks.findIndex((b) => b.items);
     out.splice(after < 0 ? out.length : after + 1, 0, resultsBand);
   }
   return out;
