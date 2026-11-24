@@ -2212,7 +2212,7 @@ export const lidott = {
     ["Designed for convenience", "Simple to install, and zero maintenance by design. The enclosure is a tough, naturally self-cleaning polymer, and it's submersible."],
     ["Widespread deployment", "Suits every part of a sewer network, including domestic and lateral sewers, and other watercourses too. It offers up to three level states, such as normal, high and high-high (green, amber, red), and keeps reporting as levels return to normal."],
     ["Easy to mount", "During installation, a laser pointer clips onto the fixing pole to mark the measuring point. The LIDoTT Alarm then replaces the pointer and locks in place. It lifts out and goes back in exactly the same position."],
-    ["Data communications", "Uses NB-IoT / Cat M1 with 2G fallback. Each threshold crossed sends an alarm with the current level, going high and returning to normal. Alarms come through Detectronic Cloud by SMS, email and website, with GIS options and optional weather-managed filtering."],
+    ["Data communications", "Reports over 4G LTE. Each threshold crossed sends an alarm with the current level, going high and returning to normal. Alarms come through Detectronic Cloud by SMS, email and website, with GIS options and optional weather-managed filtering."],
   ],
   specs: [
     ["Sensor type", "Pulsed coherent microwave radar (PCR)"],
@@ -2221,7 +2221,7 @@ export const lidott = {
     ["Operating temperature", "−20 to 70 °C"],
     ["Protection", "IP68 / NEMA 6P"],
     ["Dimensions", "92 × 196 × 122 mm (W × H × D)"],
-    ["Communications", "Internal hi-gain NB-IoT / Cat M / 2G antenna"],
+    ["Communications", "4G LTE (LTE-M and NB-IoT), internal hi-gain antenna"],
     ["Approvals", "ATEX Zone 0, IECEx Zone 0"],
   ],
 };
