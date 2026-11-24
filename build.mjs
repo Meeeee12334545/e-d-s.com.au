@@ -1528,16 +1528,18 @@ const add = (p) => pages.push(p);
 
 /* ---- home ---- */
 // A city ref is a service (`s:`), a solution (`o:`), a product range (`p:`),
-// or one of the two pages with no prefix, "flowsense" and "lidott".
+// or one of the three pages with no prefix, "flowsense", "lidott" and "msfm".
 function cityHref(r, ref) {
   if (ref === "flowsense") return `${r}flowsense.html`;
   if (ref === "lidott") return `${r}products/lidott-alarm.html`;
+  if (ref === "msfm") return `${r}products/msfm-s2-5t.html`;
   const [k, slug] = ref.split(":");
   return `${r}${{ s: "services", o: "solutions", p: "products" }[k]}/${slug}.html`;
 }
 function cityLabel(ref) {
   if (ref === "flowsense") return "EDS FlowSense";
   if (ref === "lidott") return "LIDoTT Alarm";
+  if (ref === "msfm") return "MSFM S2.5T";
   const [k, slug] = ref.split(":");
   if (k === "p") return esc(brand(slug).name);
   const item = k === "s" ? svc(slug) : sol(slug);
@@ -2509,13 +2511,14 @@ function eflowDemo() {
 }
 
 for (const pg of C.productPages) {
-  const b = brand("eds");
+  const b = brand(pg.brand || "eds");
   const pricing = { topic: "Product pricing", product: `${pg.name} (${b.name})` };
   const datasheet = pg.docs.find((d) => d.label === "Datasheet");
   // optional bands between the overview (white) and the specifications: the
   // light ones alternate grey and white, and the demo sits on the deep teal
   const extra = [
     pg.scene && ["in-place", pg.scene.nav, figBand(pg.scene)],
+    pg.field && ["installation", pg.field.nav, figBand(pg.field)],
     pg.problem && ["the-problem", pg.problem.nav, problemBand(pg.problem)],
     pg.works && ["how-it-works", pg.works.nav, worksBand(pg.works)],
     pg.rag && ["rag", pg.rag.nav, ragBand(pg.rag)],
@@ -3265,7 +3268,7 @@ function searchIndex() {
   for (const s of C.solutions) put("Solutions", s.title, s.summary, `solutions/${s.slug}.html`, { i: s.icon, b: text(s.intro, blockText(s.blocks)) });
   put("Products", "LIDoTT Alarm", `Detectronic · ${C.lidott.lede}`, "products/lidott-alarm.html", { img: plain(C.lidott.image), b: text("level radar alarm", C.lidott.description, C.lidott.sections, C.lidott.specs) });
   put("Products", "Alarm2", `Detectronic · ${C.alarm2.tag}`, "products/alarm2.html", { img: plain(C.alarm2.image), b: text("radar level alarm LoRaWAN 4G", C.alarm2.description, C.alarm2.sections, C.alarm2.highlights.map(([, t, d]) => [t, d]), C.alarm2.specs) });
-  for (const pg of C.productPages) put("Products", pg.name, `EDS · ${pg.tag}`, `products/${pg.slug}.html`, { img: plain(pg.image), b: text(pg.lede, pg.intro, pg.features, [pg.modes, pg.why, pg.accuracy, pg.upkeep, pg.install, pg.tough, pg.system, pg.problem, pg.works, pg.flow, pg.fit, pg.fastening, pg.service, pg.range].map((x) => x && [x.heading, x.lede, x.items, x.methods, x.rules, x.steps, x.notes]), pg.faq?.items, pg.specs.map(([g, rows]) => [g, rows])) });
+  for (const pg of C.productPages) put("Products", pg.name, `${brand(pg.brand || "eds").name} · ${pg.tag}`, `products/${pg.slug}.html`, { img: plain(pg.image), b: text(pg.keywords, pg.lede, pg.intro, pg.features, [pg.scene, pg.field, pg.modes, pg.why, pg.accuracy, pg.upkeep, pg.install, pg.tough, pg.system, pg.problem, pg.works, pg.flow, pg.fit, pg.fastening, pg.service, pg.range].map((x) => x && [x.heading, x.lede, x.items, x.list, x.methods, x.rules, x.steps, x.notes]), pg.faq?.items, pg.specs.map(([g, rows]) => [g, rows])) });
   for (const p of products) {
     if (p.href) continue; // has a page of its own, listed above
     put("Products", p.name, `${p.brand.name} · ${p.note || p.range || typeOf(p.type).label}`, `products/${p.brand.slug}.html#${p.id}`, { img: plain(p.image), b: text(typeOf(p.type).label, p.group) });

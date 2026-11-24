@@ -98,7 +98,7 @@ export const shelf = {
   heading: "The instruments our crews put their name to.",
   lede: "We build our own loggers and flow meters, and represent Detectronic, Hach, ORI, Beadedstream and others. Buy or hire, and we'll install and service them.",
   items: [
-    { name: "MSFM S2 with LIDoTT", kind: "Area velocity flow meter", maker: "Detectronic", href: "products/detectronic.html", image: img("detectronic-msfm-s2-lidott.png"), fit: 100,
+    { name: "MSFM S2 with LIDoTT", kind: "Area velocity flow meter", maker: "Detectronic", href: "products/msfm-s2-5t.html", image: img("detectronic-msfm-s2-lidott.png"), fit: 100,
       text: "The area velocity meter our sewer fleet runs on, with the level sensor that keeps measuring as the chamber surcharges.", specs: ["ATEX and IECEx Zone 0", "LIDoTT level to ± 2 mm"] },
     { name: "LIDoTT Alarm", kind: "Radar level alarm", maker: "Detectronic", href: "products/lidott-alarm.html", image: img("lidott-alarm-cut.png"), fit: 90,
       text: "Radar level sensor, battery, modem and antenna in one device, for early warning of blockages and overflows.", specs: ["Radar level to ± 5 mm", "Up to seven years on battery"] },
@@ -1317,7 +1317,7 @@ export const services = [
         heading: "In the Hire Fleet",
         lede: "Flow meters, loggers and samplers, with analytical instruments for water quality programs.",
         products: [
-          { name: "MSFM flow meters", maker: "Detectronic", href: "products/detectronic.html#msfm-s2-5t", image: img("detectronic-msfm-s2-lidott.png"), fit: 100,
+          { name: "MSFM flow meters", maker: "Detectronic", href: "products/msfm-s2-5t.html", image: img("detectronic-msfm-s2-lidott.png"), fit: 100,
             text: "Area velocity flow meters for temporary flow surveys. The fleet runs on the MSFM S2.5T, intrinsically safe and certified under ATEX and IECEx." },
           { name: "Hawk 4G loggers", maker: "EDS", href: "products/hawk.html", image: img("hawk.png"), fit: 88,
             text: "Battery-powered 4G loggers for temporary flow surveys, made by EDS." },
@@ -1753,7 +1753,7 @@ export const brands = [
       {
         name: "Flow, Level and Logging",
         items: [
-          { name: "MSFM S2.5T", type: "flow", note: "Rugged 4G area velocity flow meter", image: img("s2.5-04-small-766x1024.png"), docs: [{ label: "Datasheet", href: localDoc("detectronic-msfm-s2-5t-datasheet.pdf") }, { label: "Manual", href: localDoc("detectronic-msfm-s2-5t-manual.pdf") }] },
+          { name: "MSFM S2.5T", type: "flow", note: "Rugged 4G area velocity flow meter", image: img("s2.5-04-small-766x1024.png"), href: "products/msfm-s2-5t.html", docs: [{ label: "Datasheet", href: localDoc("detectronic-msfm-s2-5t-datasheet.pdf") }, { label: "Manual", href: localDoc("detectronic-msfm-s2-5t-manual.pdf") }] },
           { name: "LIDoTT Smart", type: "level", note: "LIDoTT Sensor and Smart logger: a long-life, rugged, patented 4G level monitor", image: img("dete01-01.24-600x452.png"), docs: [{ label: "LIDoTT Sensor datasheet", href: localDoc("detectronic-lidott-sensor-datasheet.pdf") }] },
           { name: "LIDoTT Alarm", type: "level", note: "Self-contained level measurement and alarm device", image: img("lidott-alarm-3.png"), href: "products/lidott-alarm.html", docs: [{ label: "Datasheet", href: localDoc("detectronic-lidott-alarm-datasheet.pdf") }] },
           { name: "Alarm2", type: "level", note: "All-in-one radar level monitor with alarms, up to 20 m, LoRaWAN or 4G", image: img("detectronic-alarm2.png"), href: "products/alarm2.html", docs: [{ label: "Datasheet", href: localDoc("detectronic-alarm2-datasheet.pdf") }, { label: "4G manual", href: localDoc("detectronic-alarm2-4g-manual.pdf") }] },
@@ -2075,6 +2075,18 @@ export const diagrams = {
       data: ["LoRaWAN or 4G", "to your monitoring platform"],
     },
   },
+  msfm: {
+    alt: "Illustration of an MSFM S2.5T flow meter in a sewer manhole, in section. The meter, in its yellow protection frame, is fixed to the step irons high in the shaft. Its two sensor cables run down the shaft wall and along the bottom of the incoming pipe to an area velocity sensor on a stainless ring, facing upstream, whose ultrasonic beam reaches up into the flow. The meter sends its readings over the mobile network through the lid, and is sealed to IP68 if the manhole surcharges.",
+    caption: "Illustration: the MSFM S2.5T high in the manhole, its sensor on a ring at the bottom of the pipe. Not to scale.",
+    labels: {
+      unit: ["MSFM S2.5T", "On the step irons"],
+      cables: "Sensor cables",
+      sensor: ["Area velocity sensor", "On a stainless ring"],
+      surcharge: ["Surcharge", "Sealed to IP68"],
+      data: "2G, LTE-M or NB-IoT",
+      flow: "Flow",
+    },
+  },
   tradewaste: {
     alt: "Illustration of a trade waste discharge point. A drain runs from an industrial site to a sampling pit on its way to the sewer. In the pit a flow sensor sits on the invert and a quality probe hangs in the flow; beside it a sampler draws through a hose, and a logger with an antenna sends the readings on for reporting.",
     caption: "Illustration: flow, sampling and quality at one discharge point, with a logger sending the readings on for reporting.",
@@ -2267,10 +2279,12 @@ export const alarm2 = {
 };
 
 /* ------------------------------------------------------------------ */
-/* EDS instruments with a page of their own                            */
+/* Instruments with a page of their own                                */
 /* ------------------------------------------------------------------ */
 // Each is built at products/<slug>.html. `name` matches the product card in
-// the EDS range, which links here. `specs` is [[group, [[label, value]]]],
+// its range, which links here: the EDS range unless `brand` names another
+// (the MSFM S2.5T is Detectronic's). `keywords` adds words the search
+// should find the page by. `specs` is [[group, [[label, value]]]],
 // and `worksWith` is [[href, title, line]]. Optional: `terminals` draws the
 // terminal block, its groups in the order they sit on the block, each with
 // its pins as [[pin, name, function]] and a note, numbered from the pin 1
@@ -3118,6 +3132,151 @@ export const productPages = [
     ],
     cta: { title: "Tell us about your sewer and your sensors.", lede: "Give us the sewer diameter, the chase width, wall height and obvert height, and the sensors you want to use. We'll confirm which size suits, the fit and the sleeves, and we're happy to talk about a trial." },
   },
+  {
+    slug: "msfm-s2-5t",
+    brand: "detectronic",
+    name: "MSFM S2.5T",
+    icon: "gauge",
+    tag: "Area velocity flow meter",
+    keywords: "MSFM 2.5 S2.5 MSFM S2.5 area velocity sewer flow meter Detectronic",
+    title: "MSFM S2.5T Area Velocity Flow Meter by Detectronic | EDS",
+    lede: "The area velocity flow meter our fleet runs on: battery powered, certified for Zone 0 and built for raw sewage.",
+    description: "Detectronic MSFM S2.5T area velocity flow meter: velocity, depth, temperature and on-board flow, ATEX and IECEx Zone 0. Supplied, hired and installed by EDS.",
+    image: img("s2.5-04-small-766x1024.png"),
+    docs: [
+      { label: "Datasheet", note: "Sensors, logging, power and approvals.", href: localDoc("detectronic-msfm-s2-5t-datasheet.pdf") },
+      { label: "Manual", note: "Set-up, installation in pipes and channels, and maintenance.", href: localDoc("detectronic-msfm-s2-5t-manual.pdf") },
+    ],
+    highlights: [
+      ["gauge", "Area velocity", "Velocity 0.03 to 4 m/s, depth to 3.5 m"],
+      ["thermometer", "Water temperature", "0 to 50 °C, a clue to infiltration"],
+      ["calculator", "Flow on board", "And a pulse to run a sampler"],
+      ["signal", "2G, LTE-M or NB-IoT", "Logs every 1 to 60 minutes"],
+      ["battery-full", "15+ weeks a charge", "At 2-minute logging"],
+      ["shield-check", "Zone 0", "ATEX and IECEx certified"],
+    ],
+    intro: [
+      "The MSFM S2.5T is a self-contained, battery-powered flow meter for raw sewage, industrial effluent and stormwater. It works in combined sewers, storm sewers and open channels, with no weir or flume.",
+      "One sensor at the bottom of the pipe measures velocity, depth and water temperature. The meter works out the flow, logs every 1 to 60 minutes and sends its readings over 2G, LTE-M or NB-IoT.",
+      "It's the meter our sewer flow fleet runs on, so the advice comes from the people who install it. Buy it, hire it, or have us run it for you.",
+    ],
+    features: [
+      ["Three readings, one sensor", "Velocity from dual piezoelectric elements, depth from hydrostatic pressure, and water temperature, which also corrects the other two."],
+      ["Flow worked out on board", "A second processor calculates flow from depth, velocity and the shape of the pipe or channel."],
+      ["Samples in proportion to flow", "Each time a set volume has passed, it sends a pulse to an automatic sampler."],
+      ["Temperature finds infiltration", "Groundwater or tidal water getting into a sewer changes its temperature as well as its flow."],
+      ["A second depth, if you want one", "Add a LIDoTT ultrasonic level sensor and depth is measured two ways, each logged on its own channel."],
+      ["Built for the manhole", "Sealed to IP68 with Mil-spec connectors, in a protection frame that fixes to the step irons."],
+    ],
+    scene: {
+      nav: "In the manhole",
+      heading: "High in the shaft, low in the pipe.",
+      diagram: "msfm",
+      list: [
+        "The meter hangs high in the shaft, on the step irons or a fixing spike",
+        "Its sensor sits on a stainless ring at the bottom of the pipe, facing into the flow",
+        "One sensor measures velocity, depth and water temperature",
+        "Flow is worked out in the meter and logged every 1 to 60 minutes",
+        "Readings go out over 2G, LTE-M or NB-IoT, as often as every 15 minutes",
+      ],
+    },
+    field: {
+      nav: "Installation",
+      heading: "How it goes in",
+      lede: "Good data starts with the right spot in the pipe and a careful install.",
+      figure: { photo: "msfm-sensor-flow", alt: "An MSFM area velocity sensor on its band at the bottom of an incoming sewer line, its yellow cable running out through the flow", caption: "An MSFM sensor installed by EDS at the bottom of an incoming line, measuring depth and velocity.", pos: "50% 45%" },
+      list: [
+        "Sited away from bends and side inlets, where the flow runs straight",
+        "In a round pipe, the sensor rides a stainless ring locked inside the pipe, with a scissor expander in larger pipes",
+        "In a rectangular channel, it sits on a bracket about a third of the way across",
+        "The cables are tied along the ring and taped smooth, so rag has nothing to catch on",
+        "Once it's in, the readings are checked against a reference velocity meter and a dip with a ruler",
+      ],
+    },
+    applications: {
+      nav: "Uses",
+      heading: "Where it works.",
+      items: [
+        ["waves", "Sewer Flow Surveys", "Short I&I studies and long-term programs in gravity sewers."],
+        ["thermometer", "Inflow and Infiltration", "Flow and water temperature together show where water gets in."],
+        ["triangle-alert", "Combined Sewer Overflows", "Flow in the sewer, with an ultrasonic level sensor at the overflow."],
+        ["test-tubes", "Trade Waste and Sampling", "A pulse to a sampler each time a set volume has passed."],
+      ],
+    },
+    faq: {
+      nav: "Questions",
+      heading: "Common Questions",
+      items: [
+        ["Do I need a weir or flume?", "No. The MSFM S2.5T measures velocity and depth in the pipe or channel as it is, and keeps up as storms or production change the flow."],
+        ["What pipes and channels does it suit?", "Round pipes, and rectangular and trapezoidal channels. The meter works out the flow from its depth, velocity and the size you enter. For other shapes, ask us."],
+        ["How long does the battery last?", "The sensors run off a 12 V rechargeable lithium-ion pack: more than 15 weeks at 2-minute logging, or 30 weeks or more at 5-minute logging. The pack's voltage is logged, so a swap can be planned before it runs low, and it changes on site with an Allen key. The logger has its own internal battery, with a typical life of five years."],
+        ["Can it run a sampler?", "Yes. It works out the flow on board and sends a pulse to an automatic sampler each time a set volume has passed, for flow-proportional sampling. In a hazardous area, the sampler must be certified too."],
+        ["Where does the data go?", "On an EDS program, the readings arrive in EDS FlowSense. The meter can also report to Detectronic's own DetecData portal. It sends every 15 minutes, hourly, daily, weekly or monthly."],
+        ["Can I hire one?", "Yes. The MSFM S2.5T is in our hire fleet for temporary flow surveys. Or take Data as a Service: we choose the sites, install and maintain the meters, and deliver validated data."],
+      ],
+    },
+    specs: [
+      ["Velocity", [
+        ["Type", "Dual piezoelectric elements"],
+        ["Range", "0.03 to 4.00 m/s"],
+        ["Resolution", "1 mm/s"],
+        ["Linearity", "± 1 %"],
+        ["Accuracy", "± 2.5 % FS; ± 1 % in the calibrated range, 0.05 to 2.00 m/s"],
+      ]],
+      ["Depth", [
+        ["Type", "Hydrostatic pressure"],
+        ["Range", "0 to 3.5 m"],
+        ["Resolution", "1 mm"],
+        ["Linearity", "0.1 % BSL"],
+        ["Accuracy", "± 0.2 % FS; ± 0.1 % in the calibrated range, 0.03 to 2.00 m"],
+      ]],
+      ["Temperature", [
+        ["Type", "Current derived resistance bridge"],
+        ["Range", "0 to 50 °C"],
+        ["Accuracy", "± 1 °C"],
+      ]],
+      ["Optional LIDoTT Level", [
+        ["Type", "Piezo-ceramic ultrasonic, temperature compensated"],
+        ["Range", "0 to 1.5 m"],
+        ["Accuracy", "± 2 mm"],
+      ]],
+      ["Logging and Communications", [
+        ["Logging interval", "1 to 60 minutes"],
+        ["Memory", "512k solid state, up to 60k per channel"],
+        ["Storage", "Rotating, or until full"],
+        ["Networks", "2G, LTE-M and NB-IoT"],
+        ["Reporting", "Every 15 minutes, hourly, daily, weekly or monthly"],
+        ["Flow calculation", "On board: circular, rectangular or trapezoidal channels"],
+        ["Pulse output", "Flow proportional, for an automatic sampler"],
+      ]],
+      ["Power", [
+        ["Sensor battery", "12 V ATEX lithium-ion pack, rechargeable"],
+        ["Battery life", "30+ weeks at 5-minute logging; 15+ weeks at 2-minute"],
+        ["Battery pack life", "5 years typical"],
+        ["Logger battery", "Internal lithium pack, user replaceable, 5 years typical"],
+      ]],
+      ["Enclosure and Environment", [
+        ["Operating temperature", "−20 to 60 °C"],
+        ["Protection", "IP68 / NEMA 6P"],
+        ["Connectors", "IP68 Mil-spec"],
+        ["Dimensions", "530 × 213 × 150 mm maximum, with battery pack and frame"],
+        ["Weight", "8.5 kg with battery pack, frame and sensors on 10 m cables"],
+      ]],
+      ["Approvals", [
+        ["ATEX", "Sira 19ATEX2255X"],
+        ["Marking", "II 1G Ex ia IIB T4 Ga, Ta −40 to 60 °C"],
+        ["IECEx", "IECEx SIR 19.0078X"],
+      ]],
+    ],
+    specNote: "Figures from Detectronic's datasheet. Battery life depends on the logging and reporting intervals.",
+    worksWith: [
+      ["services/sewer-flow-monitoring.html", "Sewer flow monitoring", "Temporary and permanent programs, run by our crews."],
+      ["services/equipment-rental.html", "Equipment rental", "The MSFM S2.5T is in our hire fleet."],
+      ["flowsense.html", "EDS FlowSense", "Hosted data, hydrographs, alarms and export."],
+      ["open-channel-flow-calculator.html", "Open channel flow calculator", "Flow from depth and velocity, for six shapes."],
+    ],
+    cta: { title: "Put an MSFM in your sewer.", lede: "Buy it, hire it, or have our crews run it for you. Tell us about your sites and we'll come back with pricing and a plan." },
+  },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -3812,9 +3971,9 @@ export const city = [
     icon: "waves",
     blurb: "Under every street, flow and depth are measured at the manhole and sent in over 4G.",
     services: ["s:sewer-flow-monitoring", "s:inflow-infiltration-studies", "s:blockage-overflow-alarms", "s:sewer-model-calibration"],
-    products: [["Detectronic MSFM flow meter", "p:detectronic"], ["LIDoTT Alarm", "lidott"], ["Hach Flo-Dar", "p:hach-flow"]],
+    products: [["Detectronic MSFM flow meter", "msfm"], ["LIDoTT Alarm", "lidott"], ["Hach Flo-Dar", "p:hach-flow"]],
     sensors: [
-      { id: "msfm", layer: "below", name: "Detectronic MSFM", instrument: "Area velocity flow meter", ref: "p:detectronic", icon: "gauge", at: [6.78, 3.05, 0], major: true,
+      { id: "msfm", layer: "below", name: "Detectronic MSFM", instrument: "Area velocity flow meter", ref: "msfm", icon: "gauge", at: [6.78, 3.05, 0], major: true,
         reads: [{ label: "Depth", unit: "mm", base: 212, swing: 6, storm: 1480, decimals: 0 }, { label: "Velocity", unit: "m/s", base: 0.76, swing: 0.03, storm: 1.9, decimals: 2 }, { label: "Flow", unit: "L/s", base: 41.8, swing: 1.2, storm: 310, decimals: 1 }] },
       { id: "lidott", layer: "below", name: "LIDoTT Alarm", instrument: "Level alarm, MH 14", ref: "lidott", icon: "siren", at: [8.13, 3.05, 0], major: true, alarm: true,
         reads: [{ label: "Level", unit: "m", base: 0.91, swing: 0.02, storm: 3.04, decimals: 2 }, { label: "State", unit: "", text: "normal" }] },
@@ -3833,13 +3992,13 @@ export const city = [
       caption: "How the Detectronic MSFM is installed: the sensor rides a ring locked inside the pipe, and the logger is fixed to the step irons.",
       parts: [
         { id: "cover", name: "Cover and frame", note: "At road level. The only part a passer-by sees." },
-        { id: "unit", name: "MSFM S2.5T logger", eds: true, ref: "p:detectronic", note: "Fixed to the step irons. Logs every 1 to 60 minutes and sends over 2G, LTE-M or NB-IoT." },
-        { id: "battery", name: "ATEX battery pack", eds: true, ref: "p:detectronic", note: "12 V rechargeable lithium-ion: 30 weeks or more at a 5-minute logging rate." },
+        { id: "unit", name: "MSFM S2.5T logger", eds: true, ref: "msfm", note: "Fixed to the step irons. Logs every 1 to 60 minutes and sends over 2G, LTE-M or NB-IoT." },
+        { id: "battery", name: "ATEX battery pack", eds: true, ref: "msfm", note: "12 V rechargeable lithium-ion: 30 weeks or more at a 5-minute logging rate." },
         { id: "shaft", name: "Shaft rings and step irons", note: "The way down for the crew, and the fixing for the logger." },
         { id: "base", name: "Base and benching", note: "Shapes the flow through the chamber." },
         { id: "pipe", name: "Sewer pipe", note: "The flow being measured." },
-        { id: "ring", name: "Stainless fixing ring", eds: true, ref: "p:detectronic", note: "A scissor expander locks it inside the pipe; the cable is tied along its trailing edge." },
-        { id: "sensor", name: "Area velocity sensor", eds: true, ref: "p:detectronic", sensor: "msfm", note: "Velocity from dual piezoelectric elements, depth from hydrostatic pressure, and temperature." },
+        { id: "ring", name: "Stainless fixing ring", eds: true, ref: "msfm", note: "A scissor expander locks it inside the pipe; the cable is tied along its trailing edge." },
+        { id: "sensor", name: "Area velocity sensor", eds: true, ref: "msfm", sensor: "msfm", note: "Velocity from dual piezoelectric elements, depth from hydrostatic pressure, and temperature." },
       ],
     },
   },
@@ -4320,7 +4479,7 @@ export const oldPages = {
   metalog: "products/metalog-4g.html",
   "flowsense-1": "flowsense.html",
   detectronics: "products/detectronic.html",
-  msfm: "products/detectronic.html",
+  msfm: "products/msfm-s2-5t.html",
   lidott: "products/detectronic.html",
   "lidott-r": "products/detectronic.html",
   "multi-channel-data-loggers": "products/detectronic.html",
