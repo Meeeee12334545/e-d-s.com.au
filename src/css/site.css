@@ -1778,14 +1778,22 @@ input[type="range"]:active::-moz-range-thumb { cursor: grabbing; box-shadow: 0 0
 
 /* ---------- offices map ---------- */
 .aus { display: grid; grid-template-columns: 1.25fr 1fr; gap: clamp(24px, 4vw, 64px); align-items: center; }
-#ausmap { width: 100%; height: auto; overflow: visible; }
-#ausmap .land { fill: rgba(95, 180, 166, .36); }
-#ausmap .land.coast { fill: rgba(159, 231, 218, .6); }
+/* Australia from Natural Earth (tools/ausmap.py): shaded relief tinted to the
+   band, the coast drawn over it, state borders dashed, the neighbours'
+   coasts faint at the top, and the offices on a layer of their own above */
+.aus-map { display: grid; width: 100%; }
+.aus-map > svg { grid-area: 1 / 1; display: block; width: 100%; height: auto; overflow: visible; }
+#ausmap { will-change: transform; }
+.map-other { fill: #12403b; }
+.map-land { fill: #1f5d56; }
+.map-states { fill: none; stroke: rgba(191, 240, 231, .34); stroke-width: .8; stroke-dasharray: 3 2.4; stroke-linejoin: round; }
+.map-coast { fill: none; stroke: rgba(196, 245, 236, .62); stroke-width: .7; stroke-linejoin: round; }
+.map-names text { font: 600 9.5px var(--font-display); letter-spacing: .18em; fill: rgba(230, 255, 250, .62); text-anchor: middle; paint-order: stroke; stroke: rgba(8, 44, 41, .55); stroke-width: 2.4px; stroke-linejoin: round; }
 #ausmap .pin .halo { fill: var(--aqua); fill-opacity: .1; transition: fill-opacity .3s var(--ease); }
 #ausmap .pin.active .halo { fill-opacity: .2; }
-#ausmap .arc { fill: none; stroke: var(--aqua); stroke-width: 1.2; stroke-dasharray: 3 6; opacity: .55; animation: dash-flow 1.4s linear infinite; }
+#ausmap .arc { fill: none; stroke: #e6fffa; stroke-width: 1.3; stroke-dasharray: 3 6; opacity: .75; animation: dash-flow 1.4s linear infinite; }
 #ausmap .pin { cursor: pointer; }
-#ausmap .pin circle.core { fill: var(--aqua); stroke: var(--on-aqua); stroke-width: 2; transition: r .25s var(--ease-spring); }
+#ausmap .pin circle.core { fill: #9fe7da; stroke: var(--on-aqua); stroke-width: 2; transition: r .25s var(--ease-spring); }
 #ausmap .pin .ring { fill: none; stroke: var(--aqua); stroke-width: 1.4; transform-box: fill-box; transform-origin: center; animation: ping 2.8s var(--ease-out) infinite; }
 #ausmap .pin text { fill: #fff; font: 500 13px var(--font-body); opacity: .8; transition: opacity .2s; paint-order: stroke; stroke: var(--deep); stroke-width: 5px; stroke-linejoin: round; }
 #ausmap .pin.active text { opacity: 1; }
@@ -1793,11 +1801,12 @@ input[type="range"]:active::-moz-range-thumb { cursor: grabbing; box-shadow: 0 0
 /* Stacked, the map is capped so the heading is not a screen away, and the
    labels grow as the map shrinks so they stay readable on a phone. */
 @media (max-width: 980px) {
-  #ausmap { max-width: 520px; justify-self: center; }
+  .aus-map { max-width: 520px; justify-self: center; }
   #ausmap .pin text { font-size: 20px; }
 }
 @media (max-width: 700px) {
   #ausmap .pin text { font-size: 18px; }
+  .map-names text { font-size: 13px; }
 }
 .office-list { display: grid; gap: 8px; }
 .aus .hero-actions { margin-top: 28px; }
