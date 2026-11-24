@@ -342,7 +342,7 @@
     ] },
     { id: "enquiries", title: "Enquiries", note: "People getting in touch from the site", tabs: [
       { label: "Email and phone", key: "contacts", head: "Address or number clicked", name: (r) => contact(r.target), sub: onPage, cols: [["count", "Clicks", num]] },
-      { label: "Forms", key: "forms", head: "Form and topic", name: (r) => r.name, sub: onPage, cols: [["count", "Sent", num]] },
+      { label: "Forms", key: "forms", head: "Form and topic", name: (r) => r.name, sub: (r) => join(r.type === "form-failed" ? "Not sent" : "Sent", onPage(r)), cols: [["count", "Count", num]] },
     ] },
     { id: "outbound", title: "Links to other sites", tabs: [
       { label: "Outbound", key: "outbound", head: "Link", name: (r) => site(r.target), sub: (r) => join(r.label, onPage(r)), cols: [["count", "Clicks", num]] },
@@ -468,6 +468,8 @@
           : { tag: "Email", cls: "t-goal", icon: "mail", what: ["Clicked the email address ", b(contact(st.target))], where: [area] };
       case "form":
         return { tag: "Form sent", cls: "t-goal", icon: "send", what: ["Sent the form ", q(st.label)], where: [area] };
+      case "form-failed":
+        return { tag: "Form not sent", cls: "t-warn", icon: "send", what: ["Could not send the form ", q(st.label)], where: [area] };
       case "outbound":
         return { tag: "Left the site", cls: "t-leave", icon: "external-link", what: ["Followed a link to another site: ", b(site(st.target))], where: [st.label && `the link ${quoted(st.label)}`, area] };
       case "search":
@@ -508,6 +510,7 @@
       choices: of("choice"),
       downloads: uniq(of("download").map((st) => fileName(st.target))),
       forms: of("form"),
+      failedForms: of("form-failed"),
       phones: uniq(of(isPhone).map((st) => contact(st.target))),
       emails: uniq(of(isEmail).map((st) => contact(st.target))),
       outbound: uniq(of("outbound").map((st) => site(st.target).split("/")[0])),
@@ -536,6 +539,7 @@
       some(p.searches.map(quoted), "searched for", (n) => `ran ${n} searches`),
       some(p.downloads, "downloaded", (n) => `downloaded ${n} documents`),
       some(p.forms.map((st) => quoted(st.label)), "sent the form", (n) => `sent ${n} forms`),
+      some(p.failedForms.map((st) => quoted(st.label)), "could not send the form", (n) => `could not send ${n} forms`),
       p.phones.length && "clicked the phone number",
       some(p.emails, "clicked the email address", (n) => `clicked ${n} email addresses`),
       some(p.outbound, "left for", (n) => `followed links to ${n} other sites`),
@@ -681,6 +685,7 @@
     row("Picked", p.choices.map((st) => (st.item ? `${quoted(st.label)} in ${st.item}` : st.label)));
     row("Downloaded", p.downloads);
     row("Got in touch", p.forms.map((st) => `Sent the form ${quoted(st.label)}`), p.phones.map((x) => `Clicked the phone number ${x}`), p.emails.map((x) => `Clicked ${x}`));
+    row("Forms not sent", p.failedForms.map((st) => `Could not send the form ${quoted(st.label)}`));
     row("Left for", p.outbound.join(", ") || null);
     row("Missing pages", p.notFound);
     return dl;
