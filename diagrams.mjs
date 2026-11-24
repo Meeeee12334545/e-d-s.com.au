@@ -14,7 +14,7 @@
 // a layer of their own over the still drawing (stack()), so the textures are
 // painted once.
 
-import { texDefs, matDefs, instDefs, ground, waterTable, pipeLong, chamber, chamberWalls, shaft, water, eflow3, cable, hawk as hawkLogger, coverFrame, stepIron, avSensor, lidottR, kiosk, d605, dtc, hanger, frameSpan, tag, lead, flowArrow, subPump, riser, pipeRun, hatch, vent, sampler, building, sonde, rag, grease, silt, fouling, textW, lidAside, tablet, alarm2Unit, rainGauge, solarPanel, transmitter, turf } from "./scene.mjs";
+import { texDefs, matDefs, instDefs, ground, waterTable, pipeLong, chamber, chamberWalls, shaft, water, eflow3, cable, hawk as hawkLogger, coverFrame, stepIron, avSensor, lidottR, kiosk, d605, dtc, hanger, frameSpan, tag, lead, flowArrow, subPump, riser, pipeRun, hatch, vent, sampler, building, sonde, rag, grease, silt, fouling, textW, lidAside, tablet, alarm2Unit, msfmUnit, rainGauge, solarPanel, transmitter, turf } from "./scene.mjs";
 
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 const f1 = (n) => Math.round(n * 10) / 10;
@@ -1348,6 +1348,47 @@ function hawkFig(t) {
   return stack(480, 336, body, fx, `${texDefs(p, 0.7)}${matDefs(p)}${instDefs(p)}${bd.defs}${bv.defs}`);
 }
 
+/* ---- msfm: an area velocity flow meter in a manhole ---- */
+// The MSFM S2.5T in its yellow frame on the step irons, high in the shaft,
+// its two sensor cables down the shaft and along the bottom of the incoming
+// pipe to the area velocity sensor, which sits on a stainless ring facing
+// upstream with its ultrasonic beam into the flow. The data goes out through
+// the lid. The ring's far half shows in the air above the water. The
+// labels are placed for the 1.36 scale they take on a phone: the surcharge
+// sits right of the shaft, the cables' label inside the pipe.
+function msfmFig(t) {
+  const L = t.labels, p = "rtm";
+  const G = 74, S0 = 300, S1 = 356, CROWN = 222, INV = 300, LEVEL = 266, SURCH = 178, T = 9;
+  const oc = (S0 + S1) / 2, open = 42, uy = G + 20;
+  const unit = msfmUnit(p, oc, uy, 26);
+  const SX = 168, SW = 30, RX = SX + SW * 0.55;
+  const [[ax, ay], [bx, by]] = unit.plugs;
+  const run = (px, py, dx) => `M${px} ${py}V${py + 6}Q${px} ${py + 11} ${px - 5} ${py + 11}H${S0 + 9 + dx}Q${S0 + 5 + dx} ${py + 11} ${S0 + 5 + dx} ${py + 16}V${INV - 6 - dx}Q${S0 + 5 + dx} ${INV - 2 - dx} ${S0 + dx} ${INV - 2 - dx}H${SX + SW - 1}`;
+  const beam = efBeam(p, "uv", [SX + 6.5, INV - 4.2, -0.58, -0.81], 10, { toY: LEVEL + 1.5, kind: "u", waves: 3 });
+  const body = `
+  ${ground(p, { x0: 0, x1: 480, y: G, bottom: 336, holes: [frameSpan(open, oc)] })}
+  ${pipeLong(p, { x0: 0, x1: 480, crown: CROWN, inv: INV, t: T, joints: [64, 432], gaps: [[S0, S1]], bed: 10, stain: LEVEL - 3 })}
+  ${shaft(p, { a: S0, b: S1, top: G, bottom: CROWN, t: T, ring: 30, slab: 8, open, oc, steps: [uy + 22, uy + 44, G + 92, G + 114, G + 136], stepW: 34, wallTo: CROWN })}
+  <rect x="${f1(RX)}" y="${CROWN}" width="3.2" height="${INV - CROWN}" fill="url(#${p}-ssv)"/>
+  <rect x="${f1(RX - 0.6)}" y="${CROWN - 1}" width="4.4" height="2.2" fill="url(#${p}-ss)"/>
+  ${water(p, { x0: 0, x1: 480, level: LEVEL, bottom: INV })}
+  <g class="dg-level alarm"><path d="M${S0} ${SURCH}H${S1 + 6}"/></g>
+  ${tag(S1 + 10, SURCH - 9, L.surcharge, { cls: "alarm" })}
+  ${unit.draw}
+  ${[uy + 22, uy + 44].map((y) => [oc - 13, oc + 10.7].map((x) => `<rect x="${f1(x - 0.5)}" y="${y - 1.6}" width="3.3" height="3.2" rx=".6" fill="#16191b"/>`).join("")).join("")}
+  ${cable(run(bx, by, 1.8), { w: 1.2 })}
+  ${cable(run(ax, ay, 0), { w: 1.4, cls: "yel" })}
+  ${avSensor(p, SX, INV, SW)}
+  <rect x="${f1(RX - 0.6)}" y="${INV - 1.2}" width="4.4" height="2.2" fill="url(#${p}-ss)"/>
+  ${tag(S0 - 18, uy + 26, L.unit, { a: "end", bold: true })}${lead([[S0 - 14, uy + 23], [oc - 9, uy + 26]])}
+  ${tag(S0 - 8, 250, L.cables, { a: "end", bold: true })}${lead([[S0 - 4, 246], [S0 + 5, 246]])}
+  ${tag(24, 190, L.sensor, { bold: true })}${lead([[104, 212], [SX + 14, INV - 5]])}
+  ${label(oc, G - 40, L.data, { a: "middle", cls: "dg-b" })}
+  ${flowArrow(18, 292, L.flow || "Flow")}`;
+  const fx = `${beam.draw}<circle class="dg-ping" cx="${oc}" cy="${uy - 4}" r="9"/><path class="dg-link" d="M${oc} ${uy - 6}V${G - 30}"/>`;
+  return stack(480, 336, body, fx, `${texDefs(p, 0.7)}${matDefs(p)}${instDefs(p)}${beam.defs}`);
+}
+
 /* ---- alarm2: a radar level alarm at the top of a chamber ---- */
 // Alarm2 looking down from under the cover on its bracket, its beam
 // reaching the water, the alarm set-points dashed across the chamber, and
@@ -1471,6 +1512,7 @@ const DRAW = {
   sampling: (t) => panels(t, [[t.panels[0][0], t.panels[0][1], sampling("time")], [t.panels[1][0], t.panels[1][1], sampling("flow")]]),
   hawk: (t) => hawkFig(t),
   alarm2: (t) => alarm2(t),
+  msfm: (t) => msfmFig(t),
   eflowModes: (t) => efPanels(t, [eflowNormal(t), eflowSurcharge(t)]) + efLegend(t),
   eflowObvert: (t) => efPanels(t, [invertPanel(t), obvertPanel(t)]) + efLegend(t),
   eflowProfile: (t) => efPanels(t, [profileLong(t), profileCross(t)]) + efSum(t) + efLegend(t),

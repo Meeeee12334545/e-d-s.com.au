@@ -545,6 +545,43 @@ export function sonde(p, x, y0, y1, d = 7) {
   ${slots.join("")}`;
 }
 
+// Detectronic MSFM S2.5T, from its photograph: the light grey logger in its
+// yellow protection frame, the slotted hanging bracket across the top, the
+// strap across the front of the case, the connector manifold underneath
+// with its plugs, and the black ATEX battery pack in the foot of the frame.
+// (x, y): the top of the bracket at its centre; w: the frame's width.
+// Returns the drawing and the plugs the sensor cables leave from.
+export function msfmUnit(p, x, y, w = 26) {
+  const h = w * 2.2, rail = w * 0.09, L = x - w / 2, R = x + w / 2;
+  const e0 = y + h * 0.1, e1 = y + h * 0.6, ew = w * 0.7, m1 = e1 + h * 0.035;
+  const b0 = y + h * 0.75, b1 = y + h * 0.93, bw = w * 0.62;
+  const plugs = [-0.2, 0, 0.2].map((k) => [x + w * k, m1 + h * 0.06]);
+  return {
+    plugs,
+    draw: `
+  <g class="sc-msfm">
+    <rect x="${f1(L)}" y="${f1(y)}" width="${f1(w)}" height="${f1(w * 0.13)}" rx=".6" fill="url(#${p}-yelh)"/>
+    ${[-0.24, 0.24].map((k) => `<rect x="${f1(x + w * k - w * 0.07)}" y="${f1(y + w * 0.035)}" width="${f1(w * 0.14)}" height="${f1(w * 0.05)}" rx="${f1(w * 0.025)}" fill="#3a3005"/>`).join("")}
+    <rect x="${f1(L)}" y="${f1(y + w * 0.1)}" width="${f1(rail)}" height="${f1(h - w * 0.1)}" fill="url(#${p}-yel)"/>
+    <rect x="${f1(R - rail)}" y="${f1(y + w * 0.1)}" width="${f1(rail)}" height="${f1(h - w * 0.1)}" fill="url(#${p}-yel)"/>
+    <rect x="${f1(x - ew / 2)}" y="${f1(e0)}" width="${f1(ew)}" height="${f1(e1 - e0)}" rx="${f1(w * 0.04)}" fill="url(#${p}-pvcv)"/>
+    <path class="sc-sheen" d="M${f1(x - ew / 2 + 1)} ${f1(e0 + 0.8)}H${f1(x + ew / 2 - 1)}"/>
+    <rect x="${f1(x - ew * 0.34)}" y="${f1(e0 + h * 0.06)}" width="${f1(ew * 0.42)}" height="${f1(h * 0.1)}" rx=".4" fill="url(#${p}-label)"/>
+    <path d="M${f1(x - ew * 0.3)} ${f1(e0 + h * 0.085)}h${f1(ew * 0.1)}" stroke="#1d4f9c" stroke-width="${f1(w * 0.05)}"/>
+    <path class="sc-lbl-r" d="M${f1(x - ew * 0.3)} ${f1(e0 + h * 0.12)}h${f1(ew * 0.3)}M${f1(x - ew * 0.3)} ${f1(e0 + h * 0.14)}h${f1(ew * 0.24)}"/>
+    <rect x="${f1(L)}" y="${f1(e0 + (e1 - e0) * 0.56)}" width="${f1(w)}" height="${f1(w * 0.09)}" fill="url(#${p}-yelh)"/>
+    <rect x="${f1(x - ew * 0.48)}" y="${f1(e1)}" width="${f1(ew * 0.96)}" height="${f1(m1 - e1)}" fill="#24292c"/>
+    ${plugs.map(([px]) => `<rect x="${f1(px - w * 0.055)}" y="${f1(m1)}" width="${f1(w * 0.11)}" height="${f1(h * 0.045)}" rx=".4" fill="url(#${p}-blkv)"/><rect x="${f1(px - w * 0.06)}" y="${f1(m1 + h * 0.012)}" width="${f1(w * 0.12)}" height="${f1(h * 0.01)}" fill="url(#${p}-brass)"/>`).join("")}
+    <rect x="${f1(L)}" y="${f1(b0 - w * 0.06)}" width="${f1(w)}" height="${f1(w * 0.06)}" fill="url(#${p}-yelh)"/>
+    <rect x="${f1(x - bw / 2)}" y="${f1(b0)}" width="${f1(bw)}" height="${f1(b1 - b0)}" rx="${f1(w * 0.04)}" fill="url(#${p}-blk)"/>
+    <circle class="sc-bolt" cx="${f1(x + bw * 0.32)}" cy="${f1(b0 + (b1 - b0) * 0.3)}" r="${f1(w * 0.035)}"/>
+    <path class="sc-sheen" d="M${f1(x - bw / 2 + 1)} ${f1(b0 + 0.7)}H${f1(x + bw / 2 - 1)}"/>
+    <rect x="${f1(L - w * 0.06)}" y="${f1(y + h - w * 0.07)}" width="${f1(w * 1.12)}" height="${f1(w * 0.07)}" rx=".5" fill="url(#${p}-yelh)"/>
+    <path class="sc-edge-dk" d="M${f1(L - w * 0.06)} ${f1(y + h)}H${f1(R + w * 0.06)}"/>
+  </g>`,
+  };
+}
+
 // Detectronic Alarm2, from its photograph: a black composite box with its
 // label on the side and the big round radar lens on a flange underneath,
 // hung from a stainless bracket. (x, y): top left of the box; w long. The
@@ -637,7 +674,10 @@ export function instDefs(p) {
   return [
     lin(`${p}-orange`, 1, 0, [[0, "#f39a4e"], [0.35, "#e5772c"], [1, "#b4531a"]]),
     lin(`${p}-orange2`, 1, 0, [[0, "#e38440"], [0.4, "#d56a24"], [1, "#a24814"]]),
-    lin(`${p}-redp`, 1, 0, [[0, "#e8584c"], [0.3, "#cf3a2f"], [0.75, "#b02b22"], [1, "#8f211b"]]),
+    // safety yellow: the MSFM's protection frame
+    lin(`${p}-yel`, 1, 0, [[0, "#a77a08"], [0.3, "#f2c230"], [0.6, "#e2ad14"], [1, "#9a7006"]]),
+    lin(`${p}-yelh`, 0, 1, [[0, "#f7d054"], [0.45, "#e6b01a"], [1, "#a77a08"]]),
+    lin(`${p}-redp`, 1, 0,[[0, "#e8584c"], [0.3, "#cf3a2f"], [0.75, "#b02b22"], [1, "#8f211b"]]),
     lin(`${p}-brushed`, 1, 0, [[0, "#c9d0d3"], [0.18, "#e9eef0"], [0.45, "#d3d9dc"], [0.7, "#eef2f3"], [1, "#a9b2b6"]]),
     lin(`${p}-kiosk-sh`, 0, 1, [[0, "#000", 0], [0.7, "#000", 0.04], [1, "#000", 0.14]]),
     lin(`${p}-blue`, 1, 0, [[0, "#2f6fae"], [0.3, "#4f93d1"], [0.55, "#3b7cbc"], [1, "#24548a"]]),
