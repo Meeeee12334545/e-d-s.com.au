@@ -68,7 +68,14 @@
       fit();
     };
     tabs.forEach((tab) => {
-      tab.addEventListener("click", () => show(tab));
+      tab.addEventListener("click", (e) => {
+        // A tab that names a page of its own (Solutions) goes to it. Under a
+        // mouse the tab has usually opened already; a tap or a key opens it
+        // first, and the next one goes.
+        const open = tab.getAttribute("aria-selected") === "true";
+        if (tab.dataset.href && (open || e.pointerType === "mouse")) { location.href = tab.dataset.href; return; }
+        show(tab);
+      });
       tab.addEventListener("pointerenter", (e) => { if (e.pointerType === "mouse") timer = setTimeout(() => show(tab), 90); });
       tab.addEventListener("pointerleave", () => clearTimeout(timer));
     });

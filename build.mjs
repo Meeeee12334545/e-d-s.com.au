@@ -235,7 +235,10 @@ const asideFigure = (s) => (s.asideFigure ? `<figure class="aside-figure" data-r
 function header(r, current, menuTab, file) {
   // The Services menu holds the services and the solutions: a rail of tabs
   // down its left, one per service group and one for the solutions, and the
-  // open tab's links beside it, so only one group is read at a time. It
+  // open tab's links beside it, so only one group is read at a time. The
+  // Solutions tab names a page of its own (`page: true`), so a click on it
+  // goes to that page, as a click on "Services" goes to the services page
+  // (site.js; a tap opens the tab first and goes on the second). It
   // opens on the tab of the page the visitor is on (`menuTab`: a service
   // group's id or "solutions"), or the first. Products has two labelled
   // columns, the ranges and the instruments with a page of their own. Each
@@ -253,7 +256,7 @@ function header(r, current, menuTab, file) {
       items: C.services.filter((s) => s.group === g.id).map((s) => ({ href: `services/${s.slug}.html`, icon: s.icon, label: s.short || s.title, desc: s.summary })),
     })),
     {
-      id: "solutions", label: "Solutions", lede: "Each solution combines EDS instruments, field crews and data into an outcome you can act on.", all: { href: "solutions/index.html", label: "All solutions" },
+      id: "solutions", label: "Solutions", page: true, lede: "Each solution combines EDS instruments, field crews and data into an outcome you can act on.", all: { href: "solutions/index.html", label: "All solutions" },
       items: C.solutions.map((s) => ({ href: `solutions/${s.slug}.html`, icon: s.icon, label: s.title, desc: s.summary })),
     },
   ];
@@ -265,7 +268,7 @@ function header(r, current, menuTab, file) {
           <div class="mega-rail">
             <p class="mega-head" id="mega-rail-label">Services and solutions</p>
             <div role="tablist" aria-labelledby="mega-rail-label">
-              ${tabs.map((t) => `<button class="mega-tab${t.id === "solutions" ? " sep" : ""}" role="tab" id="mega-tab-${t.id}" aria-controls="mega-pane-${t.id}" aria-selected="${t.id === openTab}" tabindex="${t.id === openTab ? 0 : -1}" data-track-label="${esc(t.label)}"><span>${esc(t.label)}</span><i aria-hidden="true">${t.items.length}</i>${icon("chevron-right", false)}</button>`).join("")}
+              ${tabs.map((t) => `<button class="mega-tab${t.id === "solutions" ? " sep" : ""}" role="tab" id="mega-tab-${t.id}" aria-controls="mega-pane-${t.id}" aria-selected="${t.id === openTab}" tabindex="${t.id === openTab ? 0 : -1}"${t.page ? ` data-href="${r}${t.all.href}"` : ""} data-track-label="${esc(t.label)}"><span>${esc(t.label)}</span><i aria-hidden="true">${t.items.length}</i>${icon("chevron-right", false)}</button>`).join("")}
             </div>
           </div>
           <div class="mega-panes">
@@ -1781,6 +1784,7 @@ ${citySection(r)}
       <cite><b>${C.about.quote.who}</b>, ${C.about.quote.org}</cite>
     </figure>
   </div>
+  <div class="wrap hm-proof" role="group" aria-label="Why EDS">${proofRow()}</div>
 </section>
 
 ${ctaSection(r, { video: homeMedia.cta })}`;
@@ -2153,9 +2157,9 @@ ${pageHero(r, { crumbs: [["Products"]], title: "Instruments built for the field,
 </div></section>
 ${quickView()}
 <section class="section" id="featured"><div class="wrap split" style="align-items:center">
-  <div><p class="eyebrow">Featured</p><h2 class="h-lg" data-reveal>LIDoTT Alarm</h2><p class="lede" data-reveal style="--i:1;margin-top:16px">${C.lidott.lede} Radar level sensor, battery, modem and antenna in one compact unit, certified for Zone 0.</p>
-  <div class="hero-actions"><a class="btn btn-brand btn-lg" href="${r}products/lidott-alarm.html">See how it works</a></div></div>
-  <div class="brand-shot" style="border:1px solid var(--border);border-radius:var(--radius);aspect-ratio:1" data-reveal="right"><img src="${C.lidott.image}" alt="LIDoTT Alarm" loading="lazy"></div>
+  <div><p class="eyebrow">Featured</p><h2 class="h-lg" data-reveal>${esc(C.alarm2.title)}</h2><p class="lede" data-reveal style="--i:1;margin-top:16px">${C.alarm2.lede} Accurate to ± 5 mm with no deadband, a battery that lasts over five years, and certified for Zone 0.</p>
+  <div class="hero-actions"><a class="btn btn-brand btn-lg" href="${r}products/alarm2.html">See how it works</a></div></div>
+  <div class="brand-shot" style="border:1px solid var(--border);border-radius:var(--radius);aspect-ratio:1" data-reveal="right"><img src="${C.alarm2.image}" alt="${esc(C.alarm2.title)}" loading="lazy"></div>
 </div></section>
 ${waysSection(r, { cls: "alt" })}
 ${ctaSection(r, { title: "Need help choosing an instrument?", lede: "Our team has installed, serviced and calibrated all of them. Ask us which suits your application.", topic: "Product pricing" })}`;
