@@ -68,7 +68,14 @@
       fit();
     };
     tabs.forEach((tab) => {
-      tab.addEventListener("click", () => show(tab));
+      tab.addEventListener("click", (e) => {
+        // A tab that names a page of its own (Solutions) goes to it. Under a
+        // mouse the tab has usually opened already; a tap or a key opens it
+        // first, and the next one goes.
+        const open = tab.getAttribute("aria-selected") === "true";
+        if (tab.dataset.href && (open || e.pointerType === "mouse")) { location.href = tab.dataset.href; return; }
+        show(tab);
+      });
       tab.addEventListener("pointerenter", (e) => { if (e.pointerType === "mouse") timer = setTimeout(() => show(tab), 90); });
       tab.addEventListener("pointerleave", () => clearTimeout(timer));
     });
@@ -85,7 +92,7 @@
     if (!drawer || drawer.classList.contains("open") === open) return;
     drawer.classList.toggle("open", open);
     burger?.setAttribute("aria-expanded", String(open));
-    document.body.style.overflow = open ? "hidden" : "";
+    document.documentElement.classList.toggle("drawer-open", open);
     $$("body > :not(.drawer, dialog, script)").forEach((el) => (el.inert = open));
     if (open) $(".drawer-close", drawer)?.focus();
     else burger?.focus();
@@ -350,6 +357,41 @@
     }).observe(plot);
     new IntersectionObserver(([en]) => { seen = en.isIntersecting; if (seen) start(); }).observe(live);
     document.addEventListener("visibilitychange", () => { if (!document.hidden) start(); });
+  }
+
+  /* ---- a drawing that scrolls sideways takes keyboard focus ---- */
+  // Only while it does scroll (a phone, or a page zoomed in), so a desktop
+  // gains no tab stops that do nothing.
+  const scrolls = $$("[data-scrolls]");
+  if (scrolls.length) {
+    const sync = () => scrolls.forEach((el) => { if (el.scrollWidth > el.clientWidth + 1) el.tabIndex = 0; else el.removeAttribute("tabindex"); });
+    sync();
+    addEventListener("resize", sync);
+    addEventListener("load", sync);
+  }
+
+  /* ---- a platform screen opens larger ---- */
+  // A screen on a page is a link to its largest file (a[data-zoom]). Here it
+  // opens over the page instead, as wide as the window allows; on a phone it
+  // is set wider than the screen and pans, so its labels can be read.
+  const shotView = $("dialog.shot-view");
+  if (shotView) {
+    const big = $("img", shotView);
+    document.addEventListener("click", (e) => {
+      const a = e.target.closest?.("a[data-zoom]");
+      if (!a || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button) return;
+      e.preventDefault();
+      // the file's own size is in its name: the picture is never drawn larger,
+      // and the dialog has its shape before the file arrives
+      const m = a.href.match(/-(\d+)x(\d+)\.\w+$/);
+      big.removeAttribute("src");
+      if (m) { big.width = +m[1]; big.height = +m[2]; big.style.maxWidth = `${m[1]}px`; shotView.style.maxWidth = `${Math.max(+m[1], 320)}px`; }
+      big.src = a.href;
+      big.alt = $("img", a)?.alt || "";
+      shotView.showModal();
+      $(".shot-pan", shotView).scrollTo(0, 0);
+    });
+    shotView.addEventListener("click", (e) => { if (e.target === shotView || e.target.closest("[data-shot-close]")) shotView.close(); });
   }
 
   /* ---- copying to the clipboard, shared with products.js ---- */
