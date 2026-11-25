@@ -110,8 +110,9 @@ const photoFigure = (f, { i, sizes, cls = "" } = {}) => `
   <div class="photo-frame"${f.pos ? ` style="--pos:${esc(f.pos)}"` : ""}>${photo(f.photo, f.alt, { sizes })}</div>
   ${f.caption ? `<figcaption>${esc(f.caption)}</figcaption>` : ""}
 </figure>`;
-// FlowSense screens. tools/flowsense_screens.py lifts them out of the
-// brochures into src/assets/img/flowsense as <name>-<w>x<h>.jpg with a WebP
+// FlowSense screens. tools/flowsense_screens.py makes them from the
+// brochures' screenshots in the FlowSense repository (docs/images), into
+// src/assets/img/flowsense as <name>-<w>x<h>.jpg with a WebP
 // twin, at one or two widths, laid out like the photographs above. Shown
 // in their own colours: they are the platform, not a photograph.
 // Screens of EDS's own software (EMS-Flow), lifted out of its manuals by

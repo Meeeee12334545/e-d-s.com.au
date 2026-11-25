@@ -3343,6 +3343,17 @@ export const flowsense = {
       layout: "single", shots: [["network-map", "The FlowSense network map on aerial imagery, with the Layers panel narrowing it to alarms, telemetry, battery and hydraulic risk."]],
     },
     {
+      id: "forecast", heading: "Tomorrow's overflow, named today.",
+      lede: "FlowSense reads the rain forecast for each site against what that site did in past storms. It names the pipe the rain will take past its capacity, how many hours away that is, and how much water will have nowhere to go.",
+      points: [
+        ["An overflow, with its lead time", "The site forecast past capacity comes first: its peak, the hours of warning and the volume to absorb."],
+        ["Capacity that is measured", "Read from the site's own depth and flow record where it can be, and from the pipe where it can't."],
+        ["Little headroom, said plainly", "A site that holds, but only just, is named with what would push it over."],
+        ["72 hours of rain, then scored", "Hourly rain for each site's own grid cell from the ECMWF ensemble. Each outlook is kept and marked against the rain that fell."],
+      ],
+      layout: "single", shots: [["forecast", "The FlowSense 72-hour forecast: the site expected to overflow first, with its peak, lead time and volume, then sites with little headroom and each site's own rain trigger."]],
+    },
+    {
       id: "usual", heading: "Every site, judged against its own usual.",
       lede: "FlowSense compares each site's latest hour with its usual pattern for that day and time, learnt from its own record. It says plainly when a site is running above or below.",
       points: [
@@ -3370,10 +3381,10 @@ export const flowsense = {
       points: [
         ["A replace-by date for every battery", "Projected from the site's own discharge trend and battery chemistry. A dying logger becomes a planned visit."],
         ["Late, judged site by site", "Offline means a site missed its own delivery deadline, so a twice-daily logger is never reported late at hour three."],
-        ["Alarms that reach a person", "Threshold, no data and pump condition rules send email and SMS once, when the state changes. They go to people, not to addresses."],
+        ["Alarms that say whether it's weather", "Threshold, no data and pump condition rules alert the people you name once, by email, SMS or phone. Each says what tripped, with a triage note that sets it against the rain and the site's usual range."],
         ["Monday, in the inbox", "Each reader gets a summary of their own network, waiting at the start of the week."],
       ],
-      layout: "stack", shots: [["fleet-health", "FlowSense Fleet Health: every logger on the account with its battery, delivery record and a replace-by date."], ["alarms", "The FlowSense alarm queue: every rule that has tripped, unanswered first, with cleared alarms kept apart from those still breaching."]],
+      layout: "stack", shots: [["fleet-health", "FlowSense Fleet Health: every logger on the account with its battery, delivery record and a replace-by date."], ["alarms", "The FlowSense alarm queue: every rule that has tripped, unanswered first, with a triage note under an alarm that reads it as weather, not a fault."]],
     },
     {
       id: "blockage-watch", heading: "Blockages found in dry weather, weeks before they overflow.",
@@ -3385,6 +3396,17 @@ export const flowsense = {
         ["Tested on your own history", "A one-click backtest replays the detector against the overflows already in your register. The hit rate you see is yours."],
       ],
       layout: "beside", shots: [["blockage-watch", "FlowSense Blockage Watch: the sites needing a decision first, each with its score, mechanism and case, and clear sites folded below."], ["blockage-case", "A Blockage Watch case file in FlowSense: the verdict on its score ladder, the key numbers, and every night of evidence behind it."]],
+    },
+    {
+      id: "pump-condition", heading: "The pump that is slipping, and where to look.",
+      lede: "PSM measures what each pump delivers on every cycle. A pump that is slipping, or running long past its usual time, is named with its likeliest cause and a drawing of the station.",
+      points: [
+        ["What is wrong, in words", "Here Pump 1 is delivering 72% of its rating, and its output has fallen 16% since August."],
+        ["Five tabs, one station", "Overview, Flow, Pumps, Wet weather and Data. Wet weather sets each peak arrival against the pumps."],
+        ["The likeliest cause", "A finding says what PSM saw and what most likely explains it, and stops where the record stops."],
+        ["Where to look", "The station is drawn with the parts to check numbered in order, first to last."],
+      ],
+      layout: "single", shots: [["pump-condition", "Pump condition in the FlowSense Pump Station Manager: a finding that Pump 1 is delivering below its rating, its likeliest cause, and a drawing of the station with the parts to check numbered."]],
     },
     {
       id: "analyse", group: "Analyse", heading: "Infiltration and inflow, in kilolitres.",
@@ -3410,11 +3432,11 @@ export const flowsense = {
     },
     {
       id: "engineer", group: "Engineer", heading: "Severity painted onto the real network.",
-      lede: "FlowSense traces infiltration and inflow along the gravity network, by catchment and flow direction, with a confidence for each estimate. The result: a ranked list of pipes worth sending a camera down.",
+      lede: "FlowSense traces infiltration and inflow along the gravity network, by catchment and flow direction, and fades what rests on thin evidence. The result: a ranked list of pipes worth sending a camera down.",
       points: [
-        ["Six methods", "You choose the method, and the platform says where your data can't support it."],
+        ["Seven methods", "You choose, and the platform says where your data can't support one. One reads level alone."],
         ["Along the pipes", "Severity follows the way the sewer drains, not a circle drawn round a meter."],
-        ["Confidence, 0 to 1", "Pipes far from a gauge fade, rather than pretend to a number."],
+        ["Tested on itself", "Each meter is hidden in turn, and the map reports how often it still names that meter's band."],
         ["Your GIS, as supplied", "The council's sewer layer loads from the file it came in, and the map exports as an A4 report."],
       ],
       layout: "wide", shots: [["heat-map", "The FlowSense I/I heat map: severity painted along the sewer network over aerial imagery, with the inspection priority list of the pipes most likely to be sources."]],
@@ -3444,6 +3466,17 @@ export const flowsense = {
       layout: "beside", shots: [["report-builder", "The FlowSense report builder: template, sections, sites and period, previewed before anything is exported."], ["report", "A generated FlowSense executive summary: headline figures, the network's daily volume stacked by site, and telemetry health for every site."]],
     },
     {
+      id: "ask", heading: "Ask in plain words. Then check its working.",
+      lede: "The assistant answers from your own record, in sentences. FlowSense does the arithmetic and the assistant only writes, so every figure in an answer is matched to the data before you read it.",
+      points: [
+        ["Only your record", "It reads what your login can see: sites, alarms, pump stations, blockage cases, rain and logger health."],
+        ["Every figure checked", "The line under an answer counts its figures and says each one matches the look-ups beneath."],
+        ["The data, one click down", "Open the look-ups an answer came from and read the rows for yourself."],
+        ["It drafts, you decide", "Describe an alarm rule in a sentence and the form opens filled in. Nothing is saved until you press the button."],
+      ],
+      layout: "single", shots: [["ask", "The FlowSense assistant answering which pump stations need attention and why, with a line saying every figure in the answer matches the data below it."]],
+    },
+    {
       id: "field", heading: "The office and the manhole see the same thing.",
       lede: "Your account works on a phone, with nothing to install and no second licence. What the crew finds sits beside the data it explains, where next year's engineer will find it.",
       points: [
@@ -3465,10 +3498,10 @@ export const flowsense = {
     lede: "A wet well fills as sewage arrives and empties as the pumps move it. So its level, the pump run states and its size make a flow record. EDS has built PSM on that idea since 1991. Today it's one of the most used tools in FlowSense.",
     shot: ["psm", "The FlowSense Pump Station Manager: the station's figures across the top, the wet well drawn to scale with its set-points, a briefing in words, and each pump's delivery against its rating on a dial."],
     pins: [
-      ["The station's figures first", "What arrived, what was pumped out, and the balance of the two over whole pump cycles.", 26.8, 42.9],
-      ["The wet well, in kilolitres", "An engineer's section of the well, with its start and stop levels and the volume each cycle moves.", 31.1, 56.4],
-      ["A briefing, in words", "What is worth watching and what is for the record, each with a button to its evidence.", 84.7, 55.4],
-      ["Pump condition, with a date", "Each pump against its rating, a warning when its output slips, and remaining useful life as a range.", 90.4, 70.4],
+      ["The station's figures first", "What arrived, what was pumped out, and the balance of the two over whole pump cycles.", 50, 39.5],
+      ["The wet well, in kilolitres", "An engineer's section of the well, with its start and stop levels and the volume each cycle moves.", 29, 60],
+      ["A finding, in words", "What is worth watching, said in a sentence, with a link to the runs behind it.", 67, 24.8],
+      ["Pump condition, with a date", "Each pump against its rating, a warning when its output slips, and remaining useful life as a range.", 85, 81.8],
     ],
     trace: {
       title: "Two slopes and a well volume are enough.",
@@ -3545,7 +3578,7 @@ export const flowsense = {
   ],
   docs: [
     { label: "Platform overview", note: "The short introduction: what FlowSense does, from the instrument in the pipe to the board paper.", href: localDoc("eds-flowsense-platform-overview.pdf") },
-    { label: "Platform brochure", note: "The whole platform at a glance, in sixteen pages: the screens, the standards it follows and the pricing.", href: localDoc("eds-flowsense-brochure.pdf") },
+    { label: "Platform brochure", note: "The whole platform at a glance, in twenty pages: the screens, the 72-hour forecast, alarms, pump condition, the assistant and the pricing.", href: localDoc("eds-flowsense-brochure.pdf") },
     { label: "Detailed brochure", note: "The longer read: each screen explained, how Blockage Watch and the Pump Station Manager reach a verdict, and the pricing terms in full.", href: localDoc("eds-flowsense-platform-brochure.pdf") },
     { label: "Platform datasheet", note: "The technical reference: every way data gets in and out, the engineering tools, the standards and where the boundaries sit.", href: localDoc("eds-flowsense-datasheet.pdf") },
     { label: "Features and benefits", note: "What FlowSense does to monitor, analyse and engineer a sewer network.", href: localDoc("eds-flowsense-features-and-benefits.pdf") },
