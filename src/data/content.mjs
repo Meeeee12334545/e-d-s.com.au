@@ -2151,7 +2151,7 @@ export const diagrams = {
       ["Tough composite housing.", "Alloy and engineering plastic composite that resists corrosion, impact and water."],
       ["Fully potted, sealed for life.", "The electronics are fully potted and unaffected by temperature cycling."],
       ["316 stainless where it's wet.", "A sealed 316 stainless steel pressure transducer reads depth to 10 m of surcharge."],
-      ["Sealed ultrasonic face.", "Dual 1 MHz transducers sealed into the face. The bidirectional E-Flow 3 B also reports reverse flow."],
+      ["Sealed ultrasonic face.", "Dual 1 MHz transducers sealed into the face. Velocity is signed, so reverse flow shows up too."],
       ["Integral cable.", "Power and RS485 in one cable, sized to suit the manhole. Firmware updates run over it through an EDS logger."],
     ],
   },
@@ -2161,7 +2161,7 @@ export const diagrams = {
     steps: [
       ["Fit the sensor at the crown", "On an EDS bracket sized to the pipe, sensor face towards the incoming flow, from the manhole opening."],
       ["Run the cable up the shaft", "The integral cable is clipped to the shaft wall, its length specified to suit the manhole."],
-      ["Hang the logger near the top", "The EDS logger powers and polls the sensor over RS485, and reports over 4G."],
+      ["Hang the logger near the top", "The EDS logger powers and polls the sensor over RS485, and reports over 4G. Any RS485 device can take its place."],
       ["Commission from the surface", "Set up and verified with EMS-Flow through the logger, with no confined space entry."],
     ],
   },
@@ -2326,7 +2326,7 @@ export const productPages = [
     ],
     intro: [
       "E-Flow 3 is an area velocity flow meter built for sewers and the worst they can throw at it. Four sensors share one body at the top of the pipe (the obvert): non-contact radar for normal flow, and Doppler ultrasonic with a pressure depth sensor for surcharge.",
-      "In normal flow the radars measure from above the water, so there's nothing in the flow for grease, rag and silt to foul. When the sewer surcharges, the ultrasonic and pressure pair takes over on its own, then hands back as the level drops. One sensor, one continuous record, from dry weather to full surcharge.",
+      "In normal flow the radars measure from above the water, so there's nothing in the flow for grease, rag and silt to foul. When the sewer surcharges, the ultrasonic and pressure pair takes over on its own, then hands back as the level drops. It's the only flow meter of its type to measure accurately in both conditions with a single sensor.",
       "That's why E-Flow 3 needs less maintenance than any other type of open channel flow meter, while keeping unmatched accuracy. And it keeps measuring through the storms that matter most, just when a wetted sensor is most likely to be fouled.",
     ],
     anatomy: {
@@ -2417,7 +2417,7 @@ export const productPages = [
       items: [
         ["cloud-rain", "Inflow and Infiltration", "Reliable wet weather velocity and depth through surcharge, the events that define an I&I program."],
         ["waypoints", "Network Monitoring", "Long-term flow at key points in reticulation and trunk sewers, with minimal site visits."],
-        ["waves", "Overflow and Surcharge", "Capture the peak, the duration and, with the bidirectional model, any reverse flow."],
+        ["waves", "Overflow and Surcharge", "Capture the peak, the duration and any reverse flow."],
         ["fan", "Pump Station and Catchment", "Inflow to wet wells and catchment boundaries, feeding capacity and growth planning."],
       ],
     },
@@ -2434,7 +2434,7 @@ export const productPages = [
       links: ["RS485 Modbus", "4G LTE", "Web and API"],
       alt: "The FlowSense network overview screen, with alarms, a site list and a map of the network",
       ems: ["EMS-Flow", "commissions and verifies the sensor from the surface, through the logger."],
-      caption: "The EDS monitoring system around E-Flow 3. It can also be polled by third-party RTUs and loggers over Modbus RTU.",
+      caption: "The EDS monitoring system around E-Flow 3. Already have a logger, RTU or PLC? E-Flow 3 connects to any RS485 device over standard Modbus RTU, with the register map supplied.",
     },
     specs: [
       ["Velocity", [
@@ -2445,6 +2445,7 @@ export const productPages = [
         ["Dead zone", "Ultrasonic unidirectional 0 to 0.002 m/s, bidirectional ± 0.03 m/s; radar ± 0.05 m/s"],
         ["Velocity radar", "24 GHz continuous wave Doppler, 24° × 12° antenna"],
         ["Ultrasonic", "Dual 1 MHz Doppler, 5° beam"],
+        ["Direction", "Signed velocity and flow; reverse flow and backing up identified"],
       ]],
       ["Depth", [
         ["Method", "120 GHz FMCW radar in normal flow, sealed pressure transducer in surcharge"],
@@ -2459,6 +2460,8 @@ export const productPages = [
         ["Current", "150 mA at 12 VDC"],
         ["Interface", "RS485, two-wire"],
         ["Protocol", "Modbus RTU slave, register map supplied"],
+        ["Connects to", "Any RS485 device: EDS loggers, third-party loggers, RTUs and PLCs"],
+        ["Wiring", "One integral cable: V+, 0 V, RS485 A, RS485 B and shield, drained at the device end only"],
         ["Response time", "10 s, with configurable damping"],
         ["Firmware", "Remote update over RS485 with an EDS logger"],
         ["Configuration", "EMS-Flow, from the surface through an EDS logger"],
@@ -2472,8 +2475,7 @@ export const productPages = [
         ["Service", "Sewage, trade waste and combined flows, permanent or temporary"],
       ]],
       ["Ordering", [
-        ["E-Flow 3 U", "Unidirectional. Ultrasonic mode reports absolute velocity."],
-        ["E-Flow 3 B", "Bidirectional. Signed velocity and flow; identifies reverse flow and backing up."],
+        ["E-Flow 3", "One model, supplied with integral cable. Reports signed velocity and flow."],
         ["Bracket", "Obvert mounting bracket, sized to the pipe diameter"],
         ["Cable", "Integral, length specified at order"],
       ]],
