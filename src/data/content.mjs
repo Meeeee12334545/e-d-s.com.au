@@ -100,8 +100,11 @@ export const shelf = {
   items: [
     { name: "MSFM S2 with LIDoTT", kind: "Area velocity flow meter", maker: "Detectronic", href: "products/msfm-s2-5t.html", image: img("detectronic-msfm-s2-lidott.png"), fit: 100,
       text: "The area velocity meter our sewer fleet runs on, with the level sensor that keeps measuring as the chamber surcharges.", specs: ["ATEX and IECEx Zone 0", "LIDoTT level to ± 2 mm"] },
-    { name: "LIDoTT Alarm", kind: "Radar level alarm", maker: "Detectronic", href: "products/lidott-alarm.html", image: img("lidott-alarm-cut.png"), fit: 90,
-      text: "Radar level sensor, battery, modem and antenna in one device, for early warning of blockages and overflows.", specs: ["Radar level to ± 5 mm", "Up to seven years on battery"] },
+    // Alarm2 took the LIDoTT Alarm's place at EDS's request (25 November 2026);
+    // its shot is the catalogue one trimmed to the device (`-cut`), so it
+    // stands on the plate's baseline with the others
+    { name: "Alarm2", kind: "Radar level monitor", maker: "Detectronic", href: "products/alarm2.html", image: img("detectronic-alarm2-cut.png"), fit: 48,
+      text: "Radar level sensor, battery and modem in one device, with high, low and rate of change alarms.", specs: ["Radar level to ± 5 mm", "Over five years on battery"] },
     { name: "Hawk", kind: "Battery-powered 4G logger", maker: "EDS", href: "products/hawk.html", image: img("hawk.png"), fit: 94,
       text: "The 4G logger built for Australian sewer networks. It lives inside the manhole, with no cabinet to build and no power to bring to site.", specs: ["IP68 submersible", "Designed and built by EDS"] },
     { name: "E-Flow 3", kind: "Dual-mode sewer flow meter", maker: "EDS", href: "products/e-flow-3.html", image: img("e-flow-3.png"), fit: 72,
