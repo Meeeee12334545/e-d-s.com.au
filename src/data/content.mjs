@@ -3587,7 +3587,7 @@ export const about = {
     ["2023", "Townsville City Council, Wulguru & Pallarenda", "EDS installed and ran sewer monitoring at 34 sites over 12 weeks, to inform the council's infrastructure planning."],
     ["2023–24", "Yarra Valley Water gauge calibrations", "EDS calibrated long-term sewer flow gauges across multiple Yarra Valley Water sites, keeping the data reliable for modelling and planning."],
     ["2023–24", "Cairns Regional Council monitoring stations", "EDS installed and maintains long-term sewer monitoring stations, giving the council continuous flow and water quality data."],
-    ["2024", "Wingecarribee Shire Council", "EDS installed 15 short-term sewer flow gauges across the Mittagong and Robertson catchments."],
+    ["2025", "Wingecarribee Shire Council", "EDS installed 15 short-term sewer flow gauges across the Mittagong and Robertson catchments."],
     ["2026", "Transurban service provider", "EDS was awarded a service provider contract with Transurban to service and maintain key tunnel infrastructure."],
     ["Today", "Australia's largest supplier", "EDS is now Australia's largest supplier of equipment for the water and wastewater industry. It was also awarded the largest sewer monitoring project in Australia in recent years."],
   ],
