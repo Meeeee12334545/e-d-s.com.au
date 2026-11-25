@@ -159,6 +159,11 @@
       tray.querySelector(".cmp-n").textContent = picked.length === 1 ? "Pick one more to compare" : full ? `${MAX} to compare, the most at once` : `${picked.length} to compare`;
       tray.querySelector(".cmp-sel").innerHTML = picked.map((id) => `<button type="button" data-unpick="${esc(id)}" aria-label="Remove ${esc(byId.get(id).product.name)} from the comparison">${esc(byId.get(id).product.name)}${xIcon}</button>`).join("");
       tray.querySelector("[data-cmp-open]").disabled = picked.length < 2;
+      // Say what the tray holds, and keep the tray off whatever takes focus:
+      // the page scrolls a focused control clear of it.
+      const say = document.querySelector("[data-cmp-say]");
+      if (say) say.textContent = picked.length ? tray.querySelector(".cmp-n").textContent : "";
+      document.documentElement.style.scrollPaddingBottom = picked.length ? `${Math.round(innerHeight - tray.getBoundingClientRect().top + 16)}px` : "";
     }
     const toggle = (id) => {
       picked = picked.includes(id) ? picked.filter((x) => x !== id) : picked.length < MAX ? [...picked, id] : picked;
@@ -337,7 +342,12 @@
     try { localStorage.setItem("eds-products-view", v); } catch { /* storage off */ }
   };
   views.forEach((b) => b.addEventListener("click", () => setView(b.dataset.view)));
-  try { const v = localStorage.getItem("eds-products-view"); if (v === "table") setView(v); } catch { /* storage off */ }
+  // On a phone the list is the way in (56 cards are 14 screens, the list six
+  // rows a screen) until the visitor picks a view; that default is not stored.
+  let stored = "";
+  try { stored = localStorage.getItem("eds-products-view") || ""; } catch { /* storage off */ }
+  if (stored === "table") setView(stored);
+  else if (!stored && grid && matchMedia("(max-width: 700px)").matches) { grid.dataset.view = "table"; views.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.view === "table"))); }
 
   // Search hands over its query as ?q= when there are more products than it lists.
   const q = new URLSearchParams(location.search).get("q");

@@ -580,7 +580,7 @@ export function sfSite(p = "sfw") {
   const K = 0.9, N = 196, INV = 214;
   const X = (mm) => f1(N + mm * K), Y = (mm) => f1(INV - mm * K);
   const XS = N + 345 * K, OBV = INV - 165 * K, TOP = INV - 137 * K;
-  const side = svg(720, 290, `
+  const side = svg(744, 290, `
   <rect x="48" y="${f1(INV - 52 * K)}" width="${f1(XS + 96 - 48)}" height="${f1(52 * K)}" class="sfd-water"/>
   <rect x="${XS}" y="${f1(OBV)}" width="96" height="${f1(165 * K)}" class="sfd-outlet"/>
   <path fill="url(#${p}-cut)" d="M48 ${INV}H${f1(XS + 96)}V${INV + 16}H48ZM${XS} 16H${f1(XS + 46)}V${f1(OBV)}H${XS}Z"/>

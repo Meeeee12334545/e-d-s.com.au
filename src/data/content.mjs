@@ -2193,7 +2193,9 @@ export const lidott = {
   image: img("lidott-alarm-3.png"),
   image2: img("lidott-alarm-interior-drawing-web.jpg"),
   datasheet: localDoc("detectronic-lidott-alarm-datasheet.pdf"),
-  // Detectronic's drawing of the alarm in place, labelled as an illustration.
+  // Detectronic's drawing of the alarm in place. Not shown since 25 November
+  // 2026: its own lettering says "2G fallback" (the alarm is 4G LTE) and the
+  // demo above it shows the same thing in the site's own drawing style.
   figure: { photo: "lidott-alarm-site", alt: "Cutaway illustration of a LIDoTT Alarm mounted at the top of a manhole beneath a street, measuring the sewer level below by radar and sending level alarms to the cloud over the mobile network", caption: "Illustration: where it sits. Mounted in the manhole, measuring the level by radar and reporting alarms over the mobile network.", plain: true },
   photo: { photo: "lidott-alarm-culvert", alt: "A red LIDoTT Alarm bolted to the stone headwall of a culvert, above floodwater held back by a floating barrier", caption: "A LIDoTT Alarm on a culvert headwall, above the water it watches. Photo: Detectronic.", pos: "50% 45%" },
   highlights: [
@@ -2297,6 +2299,7 @@ export const alarm2 = {
 export const productPages = [
   {
     slug: "e-flow-3",
+    built: true,
     name: "E-Flow 3",
     icon: "radar",
     tag: "Dual-mode sewer flow meter",
@@ -2482,6 +2485,7 @@ export const productPages = [
   },
   {
     slug: "hawk",
+    built: true,
     name: "Hawk",
     icon: "radio-tower",
     tag: "Battery-powered 4G logger",
@@ -2586,6 +2590,7 @@ export const productPages = [
   },
   {
     slug: "metalog-4g",
+    built: true,
     name: "Metalog 4G",
     icon: "antenna",
     tag: "Remote 4G data logger",
@@ -3557,6 +3562,8 @@ export const about = {
   // (from `approach.lede`), since the hero already says largest supplier and
   // the heading says Australian owned
   homeIntro: "Graham and Cynthia Harper founded EDS in Queensland in 1991. Today we make instruments, install and maintain them with our own crews, and deliver the data. One team answers for all of it.",
+  // under the client marks on the about page (the FlowSense page has its own, which adds that the marks do not mean use of FlowSense)
+  clientsNote: "Logos are of organisations EDS has supplied, monitored or worked for since 1991. They are the trademarks of their owners.",
   intro: [
     "Graham and Cynthia Harper founded Environmental Data Services (EDS) in Queensland in 1991. Today we're Australia's largest supplier of monitoring equipment to the water and wastewater industry, and still Australian owned.",
     "We also supply instruments and services to mining, manufacturing, power and processing. Our team covers every part of environmental monitoring, from the manhole to the final report.",

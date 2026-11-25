@@ -54,7 +54,7 @@
       if (!s) return 0;
       total += s;
     }
-    if (e._t.startsWith(phrase)) total += 8;
+    if (e._t.startsWith(phrase) && e.g !== "Documents") total += 8;
     return total - e._o * 0.01;
   }
   // A page that keeps mentioning a word is more about it than one that
