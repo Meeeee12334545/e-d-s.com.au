@@ -575,7 +575,7 @@ function shareImage(file, html) {
   return { ...OG_CARD, alt: esc(OG_CARD.alt) };
 }
 
-function layout({ file, title, description, current, menuTab, body, scripts = [], service, app, preload = [] }) {
+function layout({ file, title, description, current, menuTab, body, scripts = [], service, app, preload = [], unlisted = false }) {
   const depth = file.split("/").length - 1;
   // The not-found page can be served at any depth, so it links from the root.
   const r = file === "404.html" ? "/" : "../".repeat(depth);
@@ -586,9 +586,10 @@ function layout({ file, title, description, current, menuTab, body, scripts = []
   const image = shareImage(file, html);
   // Preview copies stay out of search. The live pages let Google show a
   // large image beside them in results and in Discover; the not-found page,
-  // which the host also serves at /404.html, stays out. The ownership
-  // tokens, when set, go on the home page only.
-  const robots = process.env.PREVIEW ? "noindex, nofollow" : file === "404.html" ? "noindex" : "max-image-preview:large";
+  // which the host also serves at /404.html, stays out, and so do the
+  // unlisted client project pages. The ownership tokens, when set, go on
+  // the home page only.
+  const robots = process.env.PREVIEW || unlisted ? "noindex, nofollow" : file === "404.html" ? "noindex" : "max-image-preview:large";
   const verify = file === "index.html" && !process.env.PREVIEW ? [["google-site-verification", site.verify.google], ["msvalidate.01", site.verify.bing]].filter(([, v]) => v).map(([k, v]) => `\n<meta name="${k}" content="${esc(v)}">`).join("") : "";
   // The "js" class hides the blocks that rise into view (site.css). If
   // site.js fails to load, or stops before its reveal code has run (it sets
@@ -601,7 +602,7 @@ function layout({ file, title, description, current, menuTab, body, scripts = []
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(description)}">
 <meta name="theme-color" content="#ffffff">
-<meta name="robots" content="${robots}">${file === "404.html" ? "" : `\n<link rel="canonical" href="${url}">`}${verify}
+<meta name="robots" content="${robots}">${file === "404.html" || unlisted ? "" : `\n<link rel="canonical" href="${url}">`}${verify}
 <meta property="og:site_name" content="EDS, Environmental Data Services">
 <meta property="og:locale" content="en_AU">
 <meta property="og:type" content="website">
@@ -3283,6 +3284,46 @@ add({
 ${pageHero(r, { crumbs: [["Page not found"]], title: "This pipe leads nowhere.", lede: "The page you were looking for has moved or no longer exists. Search for it, or try one of these instead.", actions: `<button class="btn btn-primary btn-lg" type="button" data-search-open>${icon("search")} Search the site</button><a class="btn btn-ghost btn-lg" href="${r}index.html">Home</a>`, after: `<div class="range-grid nf-grid" data-reveal style="--i:3">${[["Services", "services/index.html", `${C.services.length} services, in four groups`], ["Products", "products/index.html", `All ${products.length} instruments`], ["FlowSense", "flowsense.html", "The platform behind every reading"], ["Resources", "resources.html", "White papers, downloads and support"]].map(([t, h, s]) => `<a class="range-link" href="${r}${h}"><span><b>${t}</b><small>${s}</small></span><span class="go" aria-hidden="true">${icon("arrow-right", false)}</span></a>`).join("")}</div>` })}`,
 });
 
+/* ---- client project pages ---- */
+// Photos and clips from a job, for the client (C.projectPages). Unlisted:
+// nothing links to them, and they stay out of search, the sitemap, llms.txt
+// and IndexNow.
+for (const pj of C.projectPages) {
+  const media = (r, name) => `${r}assets/projects/${pj.folder}/${name}`;
+  add({
+    file: `projects/${pj.slug}.html`,
+    unlisted: true,
+    title: pj.title,
+    description: pj.description,
+    current: "",
+    body: (r) => `
+${pageHero(r, { crumbs: [[pj.client]], eyebrow: pj.client, title: pj.heading, lede: pj.lede, visual: heroPanel("The job", `<dl class="pj-facts">${pj.facts.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join("")}</dl>`) })}
+${pj.sites.map((s, i) => `
+<section class="section${i % 2 ? " alt" : ""}" id="${s.id}">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">${esc(s.label)}</p>
+      <h2 class="h-lg">${esc(s.title)}</h2>
+      <p class="lede">${esc(s.note)}</p>
+    </div>
+    <div class="pj-clips">${s.clips.map(([name, label, length]) => `
+      <figure class="pj-clip">
+        <video controls playsinline preload="metadata" poster="${media(r, `${name}.jpg`)}" src="${media(r, `${name}.mp4`)}"></video>
+        <figcaption><b>${esc(label)}</b><span>${esc(length)}</span></figcaption>
+      </figure>`).join("")}
+    </div>
+    ${s.photos.length ? `<h3 class="pj-sub">Photos</h3>
+    <div class="pj-photos">${s.photos.map(([name, caption]) => `
+      <figure class="pj-photo">
+        <a href="${media(r, `${name}.jpg`)}" target="_blank" rel="noopener"><img src="${media(r, `${name}-sm.jpg`)}" alt="${esc(caption)}" loading="lazy"></a>
+        <figcaption>${esc(caption)}</figcaption>
+      </figure>`).join("")}
+    </div>` : ""}
+  </div>
+</section>`).join("")}`,
+  });
+}
+
 /* ---- privacy ---- */
 // content/privacy.txt, one paragraph a line: the first line is the page title
 // and the second its lede. A line that starts "1. " (and so on) is a section
@@ -3396,6 +3437,7 @@ await cp(path.join(ROOT, "src/js"), path.join(DIST, "assets/js"), { recursive: t
 await cp(path.join(ROOT, "src/assets/img"), path.join(DIST, "assets/img"), { recursive: true });
 await cp(path.join(ROOT, "src/assets/docs"), path.join(DIST, "assets/docs"), { recursive: true });
 await cp(path.join(ROOT, "src/assets/video"), path.join(DIST, "assets/video"), { recursive: true });
+await cp(path.join(ROOT, "src/assets/projects"), path.join(DIST, "assets/projects"), { recursive: true });
 // Saira for headings, cut to its semi-expanded width by tools/fonts.py;
 // Aileron, which stands in for Helvetica Neue where a visitor has none; and
 // Geist Mono for readouts.
@@ -3437,6 +3479,9 @@ for (const p of pages) {
   await mkdir(path.dirname(out), { recursive: true });
   const html = layout(p);
   await writeFile(out, html);
+  // IndexNow takes its list of pages from these dates, so an unlisted page
+  // is never sent to the search engines.
+  if (p.unlisted) continue;
   const ld = [...html.matchAll(/<script type="application\/ld\+json">[\s\S]*?<\/script>/g)].join("\n");
   const hash = createHash("sha1").update(`${p.title}\n${p.description}\n${ld}\n${html.match(/<main id="main">[\s\S]*<\/main>/)[0]}`).digest("hex").slice(0, 12);
   pageDates[p.file] = { hash, date: lastDates[p.file]?.hash === hash ? lastDates[p.file].date : today };
@@ -3484,7 +3529,7 @@ await writeFile(path.join(DIST, "assets/js/search-index.js"), `// Generated by b
 await writeFile(
   path.join(DIST, "sitemap.xml"),
   `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${pages
-    .filter((p) => p.file !== "404.html")
+    .filter((p) => p.file !== "404.html" && !p.unlisted)
     .map((p) => `  <url><loc>${pageUrl(p.file)}</loc><lastmod>${pageDates[p.file].date}</lastmod></url>`)
     .join("\n")}\n</urlset>\n`
 );
