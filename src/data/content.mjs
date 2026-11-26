@@ -4589,3 +4589,52 @@ export const oldFiles = {
   "DNS-51-MSFM-S2-5T-Installation-and-Maintenance-Iss-3-07-06-21.pdf": "detectronic-msfm-s2-5t-manual.pdf",
   "DNS-51-MSFM-S2-5T-Installation-and-Maintenance-Iss-3-07-06-21-xjce.pdf": "detectronic-msfm-s2-5t-manual.pdf",
 };
+
+// Client project pages: photos and clips from a job, for sending to the
+// client. They sit at an address with a random part, are left out of the
+// menus, search, the sitemap, llms.txt and IndexNow, and tell search engines
+// not to index them (build.mjs, `unlisted`). The repository is public, so
+// nothing here is secret: keep asset numbers, findings and anything from a
+// "commercial in confidence" report off these pages. Media is cut by
+// tools/project_media.sh into src/assets/projects/<folder>.
+export const projectPages = [
+  {
+    slug: "slr-3f35c29e",
+    folder: "slr",
+    client: "SLR Consulting",
+    title: "Bridge Street Sewer Monitoring for SLR | EDS",
+    description: "Photos and clips from the two Bridge Street sewer flow monitoring sites in Fortitude Valley, for SLR Consulting.",
+    heading: "Bridge Street sewer flow monitoring",
+    lede: "Photos and clips from the two maintenance holes we monitor on the relocated Bridge Street sewer in Fortitude Valley.",
+    facts: [
+      ["Client", "SLR Consulting"],
+      ["Sites", "Bridge Street and Wickham Street, Fortitude Valley"],
+      ["Installed", "2 November 2026"],
+      ["Site visit", "25 November 2026"],
+    ],
+    sites: [
+      {
+        id: "bridge-street",
+        label: "Site 1",
+        title: "Bridge Street 25-11-26",
+        note: "The upstream site, in Bridge Street.",
+        clips: [["bridge-1", "Clip 1", "0:30"], ["bridge-2", "Clip 2", "0:32"]],
+        photos: [
+          ["bridge-down", "Looking down the maintenance hole"],
+          ["bridge-sensor", "The sensor in the channel"],
+          ["bridge-debris-removed", "Debris removed"],
+          ["bridge-bolt-repairs", "Bolt repairs"],
+          ["bridge-mortar", "The repair mortar used"],
+        ],
+      },
+      {
+        id: "wickham-street",
+        label: "Site 2",
+        title: "Wickham Street Removal 25-11-26",
+        note: "The downstream site, where the line meets the Wickham Street sewer.",
+        clips: [["wickham-1", "Clip 1", "0:23"], ["wickham-2", "Clip 2", "0:33"]],
+        photos: [["wickham-debris-removed", "Debris removed from the side 150 mm line"]],
+      },
+    ],
+  },
+];

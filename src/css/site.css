@@ -5289,3 +5289,25 @@ svg .sc-flow text { font: 600 10.5px "EDS Text", "Helvetica Neue", Arial, sans-s
 .diagram .dg-t { fill: var(--brand-dark); font-weight: 600; }
 /* at a short viewport (200% zoom, a phone held sideways) the header and section bar scroll away with the page, so a jump needs no room for them; last, so it follows the phone rule above */
 @media (max-height: 520px) { html, html:has(.secbar) { scroll-padding-top: 16px; } }
+
+/* Client project pages (projects/*.html): the job's facts in the hero
+   panel, then each site's phone clips side by side and its photos in a
+   ruled grid, each opening full size. */
+.pj-facts { display: grid; gap: 12px; margin: 0; }
+.pj-facts div { display: grid; gap: 2px; padding-top: 12px; border-top: 1px solid var(--border); }
+.pj-facts div:first-child { padding-top: 0; border-top: 0; }
+.pj-facts dt { font-size: var(--text-2); color: var(--muted); }
+.pj-facts dd { margin: 0; font-size: var(--text-5); color: var(--ink); }
+.pj-clips { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 340px)); gap: clamp(16px, 2.4vw, 28px); }
+.pj-clip { margin: 0; display: grid; gap: 10px; min-width: 0; }
+.pj-clip video { display: block; width: 100%; max-width: 100%; aspect-ratio: 9 / 16; object-fit: contain; background: #0b1514; border: 1px solid var(--border); border-radius: var(--radius); }
+.pj-clip figcaption { display: flex; justify-content: space-between; gap: 12px; font-size: var(--text-4); }
+.pj-clip figcaption b { font-weight: 600; }
+.pj-clip figcaption span { color: var(--muted); font-variant-numeric: tabular-nums; }
+.pj-sub { font-size: var(--text-8); margin: clamp(36px, 4vw, 52px) 0 18px; }
+.pj-photos { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); gap: clamp(16px, 2vw, 24px); }
+.pj-photo { margin: 0; display: grid; gap: 8px; align-content: start; min-width: 0; }
+.pj-photo a { display: block; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--bg-alt); }
+.pj-photo img { display: block; width: 100%; aspect-ratio: 3 / 4; object-fit: cover; }
+.pj-photo a:focus-visible { outline: 2px solid var(--eds); outline-offset: 2px; }
+.pj-photo figcaption { font-size: var(--text-3); color: var(--muted); }
