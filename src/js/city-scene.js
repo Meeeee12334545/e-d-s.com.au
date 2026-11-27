@@ -43,6 +43,11 @@
   const onR = (xw, y, a, b, z0, z1) => [P(xw, y + a, z0), P(xw, y + b, z0), P(xw, y + b, z1), P(xw, y + a, z1)];
   const mix = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
   // a seeded random (mulberry32), so every build lays the same cracks and leaves
+  const disc = (cx, cy, r, k = 0.86) => `M${f(cx - r)} ${f(cy)}a${f(r)} ${f(r * k)} 0 1 0 ${f(2 * r)} 0a${f(r)} ${f(r * k)} 0 1 0 ${f(-2 * r)} 0Z`;
+  const cluster = (rnd, n, cx, cy, rx, ry, r0, r1, bias = [0, 0]) => Array.from({ length: n }, () => {
+    const a = rnd() * Math.PI * 2, q = Math.sqrt(rnd());
+    return disc(cx + bias[0] * rx + Math.cos(a) * q * rx, cy + bias[1] * ry + Math.sin(a) * q * ry, r0 + rnd() * (r1 - r0));
+  }).join("");
   const seeded = (seed) => () => { seed |= 0; seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
   // The light: a high sun in the north-north-east, so the east faces are lit
   // and the south faces are in shade (site.css derives both from one
@@ -51,10 +56,19 @@
   // footprint to `cast`; build() then draws all of a district's shadows as
   // one path under it, so they cost one node per district.
   const SUN = [-0.35, 1];
-  let cast = null;
+  let cast = null, soft = null;
   const castOf = (foot, h) => {
     const s = 0.04 + 0.0038 * h;
     return hull(foot.concat(foot.map(([x, y]) => [x + SUN[0] * s, y + SUN[1] * s])).map(([x, y]) => P(x, y)));
+  };
+  // (lifelike pass, 28 November 2026) a shadow has a soft edge, the
+  // penumbra, a little past the hard one; and the ground darkens right round
+  // the foot of a wall, where the sky is hidden from it. Both go into
+  // `soft`, drawn as one pale path under the hard shadows.
+  const grow = (foot, e) => { const cx = foot.reduce((a, p) => a + p[0], 0) / foot.length, cy = foot.reduce((a, p) => a + p[1], 0) / foot.length; return foot.map(([x, y]) => [x + Math.sign(x - cx) * e, y + Math.sign(y - cy) * e]); };
+  const throwShadow = (foot, h, round) => {
+    cast.push(castOf(foot, h));
+    if (soft) soft.push(castOf(round ? foot.map(([x, y], i, a) => { const cx = a.reduce((q, p) => q + p[0], 0) / a.length, cy = a.reduce((q, p) => q + p[1], 0) / a.length, k = 1 + 0.06 / Math.max(0.05, Math.hypot(x - cx, y - cy)); return [cx + (x - cx) * k, cy + (y - cy) * k]; }) : grow(foot, 0.045), h * 1.22 + 2));
   };
   const round = (cx, cy, r, n = 10) => Array.from({ length: n }, (_, i) => { const t = i / n * Math.PI * 2; return [cx + Math.cos(t) * r, cy + Math.sin(t) * r]; });
   // the cars, the bin lids and the cafe parasols take their colours in turn
@@ -108,7 +122,7 @@
   /* ---- solids ---- */
   function box(x, y, w, d, h, o = {}) {
     const z = o.z || 0, c = o.cls ? ` ${o.cls}` : "", nodes = [];
-    if (cast && !z && h >= 4) cast.push(castOf([[x, y], [x + w, y], [x + w, y + d], [x, y + d]], h + (o.rh || 0)));
+    if (cast && !z && h >= 4) throwShadow([[x, y], [x + w, y], [x + w, y + d], [x, y + d]], h + (o.rh || 0));
     solid(x, y, [z, z + h].flatMap((zz) => [P(x, y, zz), P(x + w, y, zz), P(x + w, y + d, zz), P(x, y + d, zz)]).concat(o.ridge || []));
     const L = [P(x, y + d, z), P(x + w, y + d, z), P(x + w, y + d, z + h), P(x, y + d, z + h)];
     const R = [P(x + w, y, z), P(x + w, y + d, z), P(x + w, y + d, z + h), P(x + w, y, z + h)];
@@ -267,7 +281,9 @@
     }
     // and the gutter line along the eaves of the two visible faces
     ridge.push([P(x, yd, h), P(xw, yd, h), P(xw, y, h)]);
-    return [shapes("eave", eave), shapes("hwin", dark), shapes("hwin hwin-lit", lit), strokes("sill", sills), strokes("tiles", tiles), strokes("ridge", ridge)];
+    // (lifelike pass) downpipes from the gutters to the ground at the corners
+    const dp = [[P(x + 0.05, yd + 0.012, h - 0.3), P(x + 0.05, yd + 0.012, 0.2)], [P(xw - 0.05, yd + 0.012, h - 0.3), P(xw - 0.05, yd + 0.012, 0.2)], [P(xw + 0.012, y + 0.06, h - 0.3), P(xw + 0.012, y + 0.06, 0.2)]];
+    return [shapes("eave", eave), shapes("hwin", dark), shapes("hwin hwin-lit", lit), strokes("sill", sills), strokes("tiles", tiles), strokes("ridge", ridge), strokes("dpipe", dp)];
   }
   // An open transit canopy on its platform (z 1): a glass wall at the back,
   // posts front and back, benches, people waiting, a white roof on top. It is
@@ -308,7 +324,7 @@
   function cyl(cx, cy, r, h, o = {}) {
     const z = o.z || 0, rx = r * TW / Math.SQRT2, ry = r * TH / Math.SQRT2, c = o.cls ? ` ${o.cls}` : "";
     const [bx, by] = P(cx, cy, z), [, ty] = P(cx, cy, z + h);
-    if (cast && !z && h >= 4) cast.push(castOf(round(cx, cy, r), h));
+    if (cast && !z && h >= 4) throwShadow(round(cx, cy, r), h, true);
     solid(cx - r, cy - r, round(cx, cy, r, 16).flatMap(([x, y]) => [P(x, y, z), P(x, y, z + h + (o.rail ? 3 : 0))]).concat(o.dome ? [-0.97, -0.85, -0.7, -0.4, 0, 0.4, 0.7, 0.85, 0.97].map((k) => [bx + rx * k, ty - rx * 0.55 * Math.sqrt(1 - k * k)]) : o.cap ? [[bx, ty - rx * 0.7]] : []));
     const nodes = [
       el("path", { class: "fr" + c, d: `M${f(bx - rx)} ${f(ty)}L${f(bx - rx)} ${f(by)}A${f(rx)} ${f(ry)} 0 0 0 ${f(bx + rx)} ${f(by)}L${f(bx + rx)} ${f(ty)}Z` }),
@@ -319,9 +335,24 @@
     // side away from the sun, a soft sheen toward it, darker again at the
     // far edge (realism pass)
     if (cast && h >= 4) nodes.splice(1, 2, el("path", { class: "roll", d: nodes[0].getAttribute("d") }), nodes[2]);
-    if (o.dome) nodes.push(el("path", { class: "ft dome", d: `M${f(bx - rx)} ${f(ty)}A${f(rx)} ${f(rx * 0.55)} 0 0 1 ${f(bx + rx)} ${f(ty)}Z` }));
+    if (o.dome && cast) {
+      // (lifelike pass) the dome covers the whole top and rounds in the light
+      const dd = `M${f(bx - rx)} ${f(ty)}A${f(rx)} ${f(rx * 0.55)} 0 0 1 ${f(bx + rx)} ${f(ty)}A${f(rx)} ${f(ry)} 0 0 1 ${f(bx - rx)} ${f(ty)}Z`;
+      nodes.push(el("path", { class: "ft dome" + c, d: dd }), el("path", { class: "dome-sh", d: dd }));
+    } else if (o.dome) nodes.push(el("path", { class: "ft dome", d: `M${f(bx - rx)} ${f(ty)}A${f(rx)} ${f(rx * 0.55)} 0 0 1 ${f(bx + rx)} ${f(ty)}Z` }));
+    // a steel tank's roof: its plates' seams run in to a vent at the middle
+    if (cast && !o.dome && !o.cap && !o.water && !o.top && r >= 0.3 && h >= 8) {
+      const seams = Array.from({ length: 10 }, (_, i) => { const t = i / 10 * Math.PI * 2; return `M${f(bx + Math.cos(t) * rx * 0.12)} ${f(ty + Math.sin(t) * ry * 0.12)}L${f(bx + Math.cos(t) * rx * 0.97)} ${f(ty + Math.sin(t) * ry * 0.97)}`; }).join("");
+      nodes.push(el("path", { class: "tseams", d: seams }), el("ellipse", { class: "tvent", cx: f(bx), cy: f(ty - 0.6), rx: f(rx * 0.1), ry: f(ry * 0.1) }));
+    }
     if (o.cap) nodes.push(poly("fr", [[bx - rx, ty], [bx + rx, ty], [bx, ty - rx * 0.7]]));
     if (o.water) nodes.push(el("ellipse", { class: `wtr ${o.water === true ? "" : o.water}`, cx: f(bx), cy: f(ty), rx: f(rx * 0.82), ry: f(ry * 0.82) }));
+    if (cast && o.water === true && r >= 0.5) {
+      // a clarifier up close: the launder channel inside the wall, the weir's
+      // lit edge, the feed well in the middle and wind on the water
+      const e = (k, cls) => el("ellipse", { class: cls, cx: f(bx), cy: f(ty), rx: f(rx * k), ry: f(ry * k) });
+      nodes.push(e(0.8, "ripples"), e(0.875, "launder"), e(0.83, "weir"), e(0.2, "feedwell"));
+    }
     if (o.ring) nodes.push(el("ellipse", { class: "det", cx: f(bx), cy: f(ty), rx: f(rx * 0.6), ry: f(ry * 0.6) }));
     // the front half of a ring round the shell at height zz above the base
     const arc = (zz) => `M${f(bx - rx)} ${f(by - zz)}A${f(rx)} ${f(ry)} 0 0 0 ${f(bx + rx)} ${f(by - zz)}`;
@@ -473,11 +504,6 @@
     // little discs, so the edge is ragged and the crown has depth, with
     // sunlit clusters on the upper right, gaps of shade between them, and
     // flecks of light on the leaves. Seeded, so every build is the same tree.
-    const disc = (cx, cy, r, k = 0.86) => `M${f(cx - r)} ${f(cy)}a${f(r)} ${f(r * k)} 0 1 0 ${f(2 * r)} 0a${f(r)} ${f(r * k)} 0 1 0 ${f(-2 * r)} 0Z`;
-    const cluster = (rnd, n, cx, cy, rx, ry, r0, r1, bias = [0, 0]) => Array.from({ length: n }, () => {
-      const a = rnd() * Math.PI * 2, q = Math.sqrt(rnd());
-      return disc(cx + bias[0] * rx + Math.cos(a) * q * rx, cy + bias[1] * ry + Math.sin(a) * q * ry, r0 + rnd() * (r1 - r0));
-    }).join("");
     const foliage = (g, rnd, [cx, cy, rx, ry], dark, mid, lit, fleck) => {
       el("path", { d: cluster(rnd, 26, cx, cy, rx * 0.82, ry * 0.8, rx * 0.2, rx * 0.34), style: dark }, g);
       el("path", { d: cluster(rnd, 22, cx, cy, rx * 0.66, ry * 0.62, rx * 0.16, rx * 0.27, [0.16, -0.14]), style: mid }, g);
@@ -1085,7 +1111,12 @@
       const [wx, wy] = P(tx + tl / 2, ty + tw + 0.004, 1.0);
       el("circle", { cx: f(wx), cy: f(wy), r: 1.05, style: F("#121517") }, g); el("circle", { cx: f(wx), cy: f(wy), r: 0.4, style: F("#8a969b") }, g);
     });
-    sym("cone", (g) => { g.append(poly("", [[-2.2, 0], [2.2, 0], [0, -6]], { style: F("var(--amber)") }), seg("", [-3, 0.5], [3, 0.5], { style: "stroke:#06201e;stroke-width:1.2" })); });
+    sym("cone", (g) => {
+      el("ellipse", { cx: -0.6, cy: 0.35, rx: 1.4, ry: 0.5, style: SHADE }, g);
+      g.append(poly("", [[-1.3, 0], [0, 0.55], [1.3, 0], [0, -0.55]], { style: F("#2a2c2c") }));
+      g.append(poly("", [[-0.85, -0.05], [0.85, -0.05], [0.1, -2.9], [-0.1, -2.9]], { style: F("#f07a22") }), poly("", [[-0.85, -0.05], [-0.1, -0.05], [-0.05, -2.9], [-0.1, -2.9]], { style: F("rgba(60,20,0,.28)") }));
+      g.append(poly("", [[-0.55, -1.05], [0.55, -1.05], [0.42, -1.6], [-0.42, -1.6]], { style: F("#f2f2ee") }));
+    });
     sym("person", small((g) => figure(g)));
     // an EDS crew member: hi-vis orange with a reflective band, navy work pants, a white hard hat
     sym("crew", small((g) => figure(g, { legs: "#1e3a5f", top: "#f97316", band: "#fff4e5", shoes: "#3a2c20", hat: (h) => {
@@ -1133,8 +1164,14 @@
     sym("crossing-x", (g) => { for (let i = 0; i < 5; i++) g.append(poly("", [P(i * 0.11, -0.26), P(i * 0.11 + 0.055, -0.26), P(i * 0.11 + 0.055, 0.26), P(i * 0.11, 0.26)], { style: F("rgba(255,255,255,.42)") })); });
     sym("crossing-y", (g) => { for (let i = 0; i < 5; i++) g.append(poly("", [P(-0.26, i * 0.11), P(0.26, i * 0.11), P(0.26, i * 0.11 + 0.055), P(-0.26, i * 0.11 + 0.055)], { style: F("rgba(255,255,255,.42)") })); });
     sym("bench", (g) => { g.append(seg("", P(0.02, 0.04, 0), P(0.02, 0.04, 2.6), { style: "stroke:#3d4245;stroke-width:.5" }), seg("", P(0.17, 0.04, 0), P(0.17, 0.04, 2.6), { style: "stroke:#3d4245;stroke-width:.5" }), poly("", [P(0, 0.01, 2.6), P(0.19, 0.01, 2.6), P(0.19, 0.07, 2.6), P(0, 0.07, 2.6)], { style: F("#8f7a62") }), strokes("", [[P(0, 0.03, 2.6), P(0.19, 0.03, 2.6)], [P(0, 0.05, 2.6), P(0.19, 0.05, 2.6)]], { style: "fill:none;stroke:rgba(0,0,0,.25);stroke-width:.25" })); });
-    sym("reed", (g) => { for (const [dx, h] of [[-1.5, 7], [0, 9], [1.5, 6]]) g.append(seg("", [dx, 0], [dx * 1.4, -h], { style: "stroke:#5fa86a;stroke-width:1" })); });
-    sym("gully", (g) => { g.append(poly("", [P(0, 0), P(0.16, 0), P(0.16, 0.08), P(0, 0.08)], { style: "fill:var(--gully,#1b2427);stroke:rgba(255,255,255,.3);stroke-width:1" }), seg("", P(0.03, 0.04), P(0.13, 0.04), { style: "stroke:rgba(255,255,255,.35);stroke-width:1" })); });
+    sym("reed", (g) => {
+      const rnd = seeded(33), dark = [], light = [];
+      for (let i = 0; i < 16; i++) { const x = (rnd() - 0.5) * 3.2, hgt = 3.5 + rnd() * 4.5, lean = (rnd() - 0.4) * 1.8; (i % 3 ? dark : light).push([[x, 0], [x + lean * 0.5, -hgt * 0.6], [x + lean, -hgt]]); }
+      el("ellipse", { cx: -1, cy: 0.4, rx: 2.6, ry: 0.8, style: SHADE }, g);
+      g.append(strokes("", dark, { style: "fill:none;stroke:#5a7440;stroke-width:.45;stroke-linecap:round" }), strokes("", light, { style: "fill:none;stroke:#a3ac70;stroke-width:.4;stroke-linecap:round" }));
+      g.append(strokes("", [[[0.4, -6.4], [0.5, -7.6]], [[-0.8, -5.4], [-0.9, -6.5]]], { style: "fill:none;stroke:#6b4a2c;stroke-width:.85;stroke-linecap:round" }));
+    });
+    sym("gully", (g) => { g.append(poly("", [P(0, 0), P(0.16, 0), P(0.16, 0.08), P(0, 0.08)], { style: "fill:var(--gully,#1b2427);stroke:rgba(150,150,140,.5);stroke-width:.5" }), strokes("", [0.04, 0.07, 0.1, 0.13].map((t) => [P(t, 0.01), P(t, 0.07)]), { style: "fill:none;stroke:rgba(150,150,140,.45);stroke-width:.35" })); });
     sym("pump-dome", (g) => { const c = cyl(0, 0, 0.13, 4, { dome: true }); g.append(...c.nodes); });
     // street furniture and small parts, placed by the hundred
     // council wheelie bins, dark green with a red, yellow or green lid (--lid)
@@ -1143,15 +1180,34 @@
     sym("sign", (g) => { g.append(seg("", [0, 0], [0, -9], { style: "stroke:#8d9598;stroke-width:.55" })); el("rect", { x: -1.7, y: -10.6, width: 3.4, height: 1.8, rx: .2, style: F("#2f7d55") }, g); el("rect", { x: -1.7, y: -9.1, width: 3.4, height: 0.3, style: F("rgba(0,0,0,.25)") }, g); });
     sym("tlight", (g) => { g.append(seg("", [0, 0], [0, -14], { style: "stroke:rgba(255,255,255,.45);stroke-width:1.2" })); el("rect", { x: -1.6, y: -21, width: 3.2, height: 7.5, rx: .8, style: F("#06201e") }, g); [["-18.8", "var(--red)"], ["-17.2", "var(--amber)"], ["-15.6", "var(--green)"]].forEach(([y, c]) => el("circle", { cx: 0, cy: y, r: .75, style: `fill:color-mix(in oklab, ${c}, #06201e 74%)` }, g)); });
     sym("swing", (g) => { const t = P(0, 0, 9), a = P(-0.12, 0.06), b = P(0.12, -0.06), c = P(-0.12, -0.06), d = P(0.12, 0.06); g.append(seg("", a, [t[0] - 4, t[1]], { style: "stroke:#c9d1d3;stroke-width:1" }), seg("", c, [t[0] - 4, t[1]], { style: "stroke:#c9d1d3;stroke-width:1" }), seg("", b, [t[0] + 4, t[1]], { style: "stroke:#c9d1d3;stroke-width:1" }), seg("", d, [t[0] + 4, t[1]], { style: "stroke:#c9d1d3;stroke-width:1" }), seg("", [t[0] - 4, t[1]], [t[0] + 4, t[1]], { style: "stroke:#c9d1d3;stroke-width:1.2" }), seg("", [t[0] - 1.5, t[1]], [t[0] - 1.5, t[1] + 6], { style: "stroke:rgba(255,255,255,.4);stroke-width:.8" }), seg("", [t[0] + 1.5, t[1]], [t[0] + 1.5, t[1] + 6], { style: "stroke:rgba(255,255,255,.4);stroke-width:.8" })); });
-    sym("rock", (g) => { g.append(poly("", [[-3, 0], [-2, -2.5], [1, -3], [3.2, -1], [2.4, 0.8], [-1.5, 1.2]], { style: F("#7a8784") })); });
+    // (lifelike pass) a weathered boulder: rounded, lit on top and toward the
+    // sun, its shadow on the grass, a crack or two
+    sym("rock", (g) => {
+      el("ellipse", { cx: -1.6, cy: 0.9, rx: 3.6, ry: 1.2, style: SHADE }, g);
+      el("path", { d: "M-3 .4C-3.4 -1 -2.4 -2.6 -.6 -3C1.2 -3.4 3 -2.2 3.3 -.8C3.5 .4 2.4 1.1 .4 1.2C-1.4 1.3 -2.7 1.1 -3 .4Z", style: F("#7d7a70") }, g);
+      el("path", { d: "M-2.2 -1.4C-1.6 -2.5 .2 -3 1.6 -2.6C2.6 -2.2 3 -1.4 2.9 -.9C1.6 -1.5 -.6 -1.6 -2.2 -1.4Z", style: F("#a7a294") }, g);
+      el("path", { d: "M-3 .4C-2.6 .9 -1.4 1.2 .4 1.2C-1 .7 -2.4 .2 -2.9 -.6Z", style: F("rgba(20,22,20,.3)") }, g);
+      g.append(strokes("", [[[0.4, -2.2], [0.8, -1.2], [0.5, -0.4]]], { style: "fill:none;stroke:rgba(30,30,26,.4);stroke-width:.25" }));
+    });
     sym("pallet", (g) => { g.append(poly("", [P(0, 0, 2), P(0.14, 0, 2), P(0.14, 0.14, 2), P(0, 0.14, 2)], { style: F("#b58a55") }), poly("", [P(0, 0.14, 0), P(0.14, 0.14, 0), P(0.14, 0.14, 2), P(0, 0.14, 2)], { style: F("#7a5a35") })); });
-    sym("bollard", (g) => { g.append(seg("", [0, 0], [0, -5], { style: "stroke:rgba(255,255,255,.4);stroke-width:1.2" })); el("circle", { cx: 0, cy: -5.5, r: 1, style: F("#e7fff9") }, g); });
+    sym("bollard", (g) => { g.append(seg("", [0, 0], [-1.6, 0.5], { style: "stroke:rgba(4,10,16,.22);stroke-width:.9;stroke-linecap:round" }), seg("", [0, 0], [0, -3.4], { style: "stroke:#6f6458;stroke-width:1.1" }), seg("", [0.25, -0.2], [0.25, -3.2], { style: "stroke:rgba(255,240,220,.25);stroke-width:.3" })); el("ellipse", { cx: 0, cy: -3.5, rx: 0.6, ry: 0.3, style: F("#b9b2a4") }, g); });
     sym("antenna", (g) => { g.append(strokes("", [[[0, 0], [0, -11]], [[-3, -9], [3, -9]], [[-2, -6.5], [2, -6.5]], [[-1.5, -4.5], [1.5, -4.5]]], { style: "fill:none;stroke:#9aa1a3;stroke-width:.45" })); });
     sym("flag", (g) => { g.append(seg("", [0, 0], [0, -22], { style: "stroke:rgba(255,255,255,.55);stroke-width:1" }), poly("", [[0, -22], [7, -19.5], [0, -17]], { style: F("var(--flag, #6fcfc1)") })); });
-    sym("hedge", (g) => { const b = box(0, 0, 0.3, 0.07, 3); b.nodes.forEach((n) => (n.style.cssText = FM("--tree-2"))); b.nodes[2].style.cssText = FM("--tree"); g.append(...b.nodes); });
-    sym("letterbox", (g) => { g.append(seg("", [0, 0], [0, -4], { style: "stroke:rgba(255,255,255,.4);stroke-width:1" })); el("rect", { x: -1.5, y: -6.5, width: 3, height: 2.5, style: F("#d8dee0") }, g); });
+    sym("hedge", (g) => {
+      const b = box(0, 0, 0.3, 0.07, 3); b.nodes.forEach((n) => (n.style.cssText = FM("--tree-2"))); b.nodes[2].style.cssText = FM("--tree"); g.append(...b.nodes);
+      // clipped leaves catching the light along its top and sunny side
+      const rnd = seeded(41), [ax, ay] = P(0, 0.035, 3), [bx2, by2] = P(0.3, 0.035, 3);
+      el("path", { d: Array.from({ length: 16 }, (_, i) => { const t = (i + rnd() * 0.6) / 16; return disc(ax + (bx2 - ax) * t + (rnd() - 0.5) * 1.2, ay + (by2 - ay) * t + (rnd() - 0.5) * 0.8, 0.35 + rnd() * 0.35); }).join(""), style: LITM("--tree", 30) }, g);
+    });
+    // a garden shrub: a small crown of leaf clusters with no trunk to speak of
+    sym("shrub", (g) => {
+      const rnd = seeded(57);
+      el("ellipse", { cx: -1.6, cy: 0.5, rx: 2.8, ry: 1, style: SHADE }, g);
+      foliage(g, rnd, [0, -1.9, 2.6, 1.9], DARKM("--tree-2"), FM("--tree"), LITM("--tree"), LITM("--tree", 50));
+    });
+    sym("letterbox", (g) => { g.append(seg("", [0, 0], [0, -3.2], { style: "stroke:#7a5c40;stroke-width:.6" })); el("rect", { x: -1.1, y: -4.9, width: 2.2, height: 1.8, style: F("#c9cfcf") }, g); el("rect", { x: -1.1, y: -4.9, width: 2.2, height: 0.5, style: F("rgba(0,0,0,.18)") }, g); });
     // shipping containers: ribbed sides, the doors on the end
-    for (const [k, top, l, r] of [["a", "#d98a52", "#7c3d16", "#a8592a"], ["b", "#6cc7bb", "#1d5f58", "#2f8d84"], ["c", "#9cb9d0", "#2f4b61", "#4b6b85"], ["d", "#c76a64", "#6a2522", "#8f3a35"]]) sym(`ctr-${k}`, (g) => {
+    for (const [k, top, l, r] of [["a", "#d98a52", "#7c3d16", "#a8592a"], ["b", "#d6d8d2", "#6d726e", "#9da29c"], ["c", "#9cb9d0", "#2f4b61", "#4b6b85"], ["d", "#c76a64", "#6a2522", "#8f3a35"]]) sym(`ctr-${k}`, (g) => {
       const b = box(0, 0, 0.36, 0.15, 5.5);
       [l, r, top].forEach((c, i) => (b.nodes[i].style.fill = c));
       g.append(...b.nodes, poly("", onL(0, 0.15, 0, 0.36, 0, 5.5), { style: F("url(#clad-l)") }), seg("", P(0.36, 0.075, 0.4), P(0.36, 0.075, 5.1), { style: "stroke:rgba(0,0,0,.4);stroke-width:.5" }));
@@ -1201,11 +1257,13 @@
     // a slab edge at every floor, a mullion in every lit window, and three
     // lighting variants so neighbouring towers don't match. 0 is dark glass,
     // 1 a lit office, 2 a brighter one.
-    const LIT = { a: "1020 0110 1001 0201", b: "0100 1002 0010 2100", c: "1101 0120 1011 0210" };
+    // (lifelike pass) eight floors before the pattern repeats, so the eye
+    // doesn't find the grid, and a band of sky caught high in every pane
+    const LIT = { a: "1020 0110 1001 0201 0012 1000 0201 1100", b: "0100 1002 0010 2100 0201 0010 1020 0001", c: "1101 0120 1011 0210 1110 0211 0101 1201" };
     const rect = (x, y, w, h) => [[x, y], [x + w, y], [x + w, y + h], [x, y + h]];
     for (const side of ["l", "r"]) for (const v of ["a", "b", "c"]) {
-      const p = el("pattern", { id: `win-${side}-${v}`, width: 28, height: 20, patternUnits: "userSpaceOnUse", patternTransform: `skewY(${side === "l" ? 26.565 : -26.565})` }, D);
-      const cells = { 0: [], 1: [], 2: [] }, mull = [], heads = [], sills = [], blinds = [];
+      const p = el("pattern", { id: `win-${side}-${v}`, width: 28, height: 40, patternUnits: "userSpaceOnUse", patternTransform: `skewY(${side === "l" ? 26.565 : -26.565})` }, D);
+      const cells = { 0: [], 1: [], 2: [] }, mull = [], heads = [], sills = [], blinds = [], catchSky = [];
       LIT[v].split(" ").forEach((row, r) => [...row].forEach((k, c) => {
         cells[k].push(rect(1.1 + c * 7, 0.9 + r * 5, 4.8, 3.2));
         // each window is set into the wall: the head throws a shadow on the
@@ -1215,13 +1273,14 @@
         sills.push(rect(0.9 + c * 7, 4.1 + r * 5, 5.2, 0.4));
         if (k === "0" && (r * 3 + c + v.charCodeAt(0)) % 5 === 0) blinds.push(rect(1.1 + c * 7, 1.5 + r * 5, 4.8, 1.3));
         mull.push(rect(3.3 + c * 7, 0.9 + r * 5, 0.32, 3.2));
+        catchSky.push(rect(1.1 + c * 7, 1.55 + r * 5, 4.8, 0.7));
       }));
-      p.append(shapes("", [0, 1, 2, 3].map((r) => rect(0, 4.5 + r * 5, 28, 0.5)), { style: F("rgba(255,255,255,.06)") }));
+      p.append(shapes("", [0, 1, 2, 3, 4, 5, 6, 7].map((r) => rect(0, 4.5 + r * 5, 28, 0.5)), { style: F("rgba(255,255,255,.06)") }));
       // (realism pass) by day most glass shows the sky, darker low and
       // paler high, and only a few offices are lit
       p.append(...[["0", "rgba(10,22,32,.46)"], ["1", "rgba(170,196,212,.3)"], ["2", "rgba(214,230,240,.36)"]].map(([k, c]) => shapes("", cells[k], { style: F(c) })));
       p.append(shapes("", mull, { style: F("rgba(0,0,0,.28)") }));
-      p.append(shapes("", blinds, { style: F("rgba(214,206,186,.28)") }), shapes("", heads, { style: F("rgba(0,0,0,.26)") }), shapes("", sills, { style: F("rgba(255,250,236,.14)") }));
+      p.append(shapes("", catchSky, { style: F("rgba(214,232,244,.1)") }), shapes("", blinds, { style: F("rgba(214,206,186,.28)") }), shapes("", heads, { style: F("rgba(0,0,0,.26)") }), shapes("", sills, { style: F("rgba(255,250,236,.14)") }));
     }
     // ripples on open water: short pale strokes, and a few glints of the sun
     const ripple = el("pattern", { id: "ripple", width: 46, height: 22, patternUnits: "userSpaceOnUse" }, D);
@@ -1301,6 +1360,8 @@
     grad("cloud-sh", "radialGradient", [[0, "rgba(8,18,32,.3)"], [0.55, "rgba(8,18,32,.19)"], [1, "rgba(8,18,32,0)"]]);
     grad("ao", "linearGradient", [[0, "rgba(255,246,226,.08)"], [0.45, "rgba(255,246,226,0)"], [0.7, "rgba(4,10,16,.08)"], [1, "rgba(4,10,16,.36)"]], { x1: 0, y1: 0, x2: 0, y2: 1 });
     grad("solar-grad", "linearGradient", [[0, "#2b5c8a"], [1, "#6fa6e0"]]);
+    // a dome lit from the upper right, shaded down its far side
+    grad("dome-sh", "radialGradient", [[0, "rgba(255,250,236,.32)"], [0.45, "rgba(255,250,236,.06)"], [0.75, "rgba(8,18,30,.08)"], [1, "rgba(8,18,30,.3)"]], { cx: 0.64, cy: 0.3, r: 0.75 });
     // curtain-wall glass: the sky in its upper floors, the street's shade in its lower
     grad("glaze", "linearGradient", [[0, "rgba(222,236,246,.34)"], [0.35, "rgba(200,222,238,.12)"], [0.7, "rgba(200,222,238,0)"], [1, "rgba(8,16,26,.16)"]], { x1: 0, y1: 0, x2: 0, y2: 1 });
     // by day no vehicle throws a beam ahead of it (vehicles and people pass)
@@ -1681,6 +1742,13 @@
           vol.push(flat("door fine", [P(x + 0.28, y + 0.75, 0), P(x + 0.42, y + 0.75, 0), P(x + 0.42, y + 0.75, 6), P(x + 0.28, y + 0.75, 6)], x + 0.75 + y + 0.75 + 0.001));
           if (i % 3 === 0) vol.push(box(x + 0.5, y + 0.12, 0.1, 0.1, 5, { z: h + 3, bias: 0.002, cls: "brick" }));
           if (i % 4 === 1) vol.push(box(x + 0.5, y + 0.05, 0.3, 0.3, 7, { bias: 0.003, cls: "zinc" }));
+          // (lifelike pass) a whirlybird turning on every other roof, and
+          // shrubs inside the front fence
+          const hd = x + 0.75 + y + (k === "px" ? 0.7 : 0.75);
+          if (i % 2 === 0) vol.push(use("vent", ...(k === "px" ? [x + 0.25, y + 0.42, h + 5.6] : k === "py" ? [x + 0.42, y + 0.3, h + 4.8] : [x + 0.45, y + 0.42, h + 8.2]), { d: hd + 0.004 }));
+          // (they stand in front of the house's east wall and behind the pickets, so they sort between the two)
+          vol.push(lo(use("shrub", x + 0.81, y + 0.4, 0, { cls: "fine", d: x + y + 1.52 })), lo(use("shrub", x + 0.81, y + 0.6, 0, { cls: "fine", d: x + y + 1.53 })));
+          if (x < 6) vol.push(lo(use("shrub", 5.52, y + 0.18, 0, { cls: "fine", d: 5.52 + y + 0.18 })), lo(use("shrub", 5.53, y + 0.52, 0, { cls: "fine", d: 5.53 + y + 0.52 })));
         });
         vol.push(
           ...[[8.7, 0.5, "m"], [9.3, 0.6, "s"], [9.2, 1.15, "m"], [6.2, 0.2, "s"], [7.6, 0.2, "s"], [9.0, 4.4, "s"], [6.3, 4.4, "s"], [7.7, 4.4, "s"], [5.5, 4.4, "s"], [9.45, 2.0, "s"], [9.45, 3.2, "s"]].map(([x, y, s]) => tree(x, y, s)),
@@ -1776,6 +1844,8 @@
           box(ax, ay, 1.5, 1.3, 5, { cls: "concrete" }), flat("wtr", [P(ax + 0.12, ay + 0.12, 5), P(ax + 1.38, ay + 0.12, 5), P(ax + 1.38, ay + 1.18, 5), P(ax + 0.12, ay + 1.18, 5)], ax + 1.5 + ay + 1.3 + 0.01),
           line("wtr-line", [P(ax + 0.2, ay + 0.65, 5), P(ax + 1.3, ay + 0.65, 5)], ax + 1.5 + ay + 1.3 + 0.02),
           item(ax + 1.5 + ay + 1.3 + 0.015, ...[0.35, 0.65, 0.95].map((k) => seg("det fine", P(ax + 0.2, ay + k, 5), P(ax + 1.3, ay + k, 5)))),
+          // (lifelike pass) foam over the diffuser grids, in rafts along each row
+          item(ax + 1.5 + ay + 1.3 + 0.016, ...(() => { const rnd = seeded(12); return [0.35, 0.65, 0.95].flatMap((k) => [0.3, 0.62, 0.98].map((u) => { const [cx, cy] = P(ax + 0.12 + u, ay + k, 5); return el("path", { class: "foam-raft", d: cluster(rnd, 22, cx, cy, 7, 1.6, 0.35, 0.8, [0, 0]) }); })); })()),
           // digesters, the flare and the dosing plant
           cyl(3.0, 6.3, 0.55, 30, { dome: true, bands: 3, cls: "green" }), cyl(4.0, 7.0, 0.45, 22, { dome: true, bands: 2, cls: "green" }),
           line("stair fine", [P(2.5, 6.6, 2), P(2.6, 6.5, 10), P(2.75, 6.35, 18), P(2.9, 6.2, 26)], 9.2),
@@ -2037,6 +2107,8 @@
         // someone fishing from the north bank, and a walker on the footbridge
         who(3.75, 2.66, "#5fb4a6"), lo(item(6.42, seg("rod", P(3.76, 2.66, 6), P(3.95, 2.95, 2)))),
         who(1.14, 1.5, "#e7fff9", { z: 4, d: 3.315 }), who(2.2, 3.4, "#f2c14e"), who(2.35, 3.48, "#8a78c0"),
+        // (lifelike pass) a family by the swings, two people out on the grass
+        who(1.5, 3.1, "#ef4444"), who(1.6, 3.18, "#38bdf8"), who(1.2, 2.75, "#f4f6f2"), who(0.7, 3.6, "#5fb4a6"), who(0.82, 3.62, "#c4a467"),
         ...many("rock", [[2.5, 2.95], [3.25, 3.75], [4.1, 3.0], [0.15, 1.55], [1.75, 1.95]], { cls: "fine" }),
         ...many("reed", [[4.3, 3.85], [4.05, 3.75], [1.9, 2.6], [0.85, 1.75]], { cls: "fine" }),
         // a timber jetty off the south bank of the lower reach, a dinghy tied up to it
@@ -2077,6 +2149,8 @@
         // the plaza: a cafe, people about the fountain
         ...many("parasol", [[11.25, 3.9], [11.75, 3.95]], { cls: "fine" }),
         who(11.15, 4.15, "#f2c14e"), who(11.62, 4.38, "#e7fff9"), who(11.8, 4.15, "#8a78c0"), who(11.0, 3.92, "#ef4444"),
+        // (lifelike pass) the lunchtime crowd crossing the plaza
+        who(11.4, 3.82, "#2a3140"), who(11.52, 3.86, "#f4f6f2"), who(12.15, 4.05, "#38bdf8"), who(10.95, 4.32, "#5b5470"),
       ],
     }),
     plant: () => ({
@@ -2693,15 +2767,15 @@
           poly("g", [P(x0, y0), P(x1, y0), P(x1, y1), P(x0, y1)])
         );
         const sensors = (zd.sensors || []).map((s, i) => sensor(s, i, ui));
-        cast = []; solids = [];
+        cast = []; soft = []; solids = [];
         const parts = z.build(sensors);
         parts.vol.push(...(DETAIL[id] ? DETAIL[id]() : []));
         const fine = FINE[id]?.() || {};
         parts.vol.push(...(fine.vol || []));
         parts.decals.push(...(fine.decals || []));
         // every block's shadow on the ground, as one path under the district
-        if (cast.length) parts.decals.push(lo(item(0, shapes("cast", cast))));
-        cast = null; zoneSolids[id] = solids; solids = null;
+        if (cast.length) parts.decals.push(lo(item(0, shapes("cast-soft", soft), shapes("cast", cast))));
+        cast = null; soft = null; zoneSolids[id] = solids; solids = null;
         const dec = el("g", { class: "decals" }, g), vol = el("g", { class: "vol" }, g), cut = el("g", { class: "cut" }, g);
         // the ground's grain: grass in the green districts, paving in the built ones
         dec.append(poly("tex", [P(x0, y0), P(x1, y0), P(x1, y1), P(x0, y1)], { style: `fill:url(#${TEXTURE[id] || "pave"})` }));
