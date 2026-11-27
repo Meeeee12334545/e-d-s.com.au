@@ -325,6 +325,24 @@ TEXTURES["city-grass"] = (city_grass, 80)
 TEXTURES["city-grain"] = (city_grain, 80)
 
 
+def city_facade():
+    """Weathering on a wall seen from a distance: rain streaks running down
+    from sills and parapets, soft grime, and a fine render grain. Streaks are
+    vertical, so one unskewed tile suits both faces of an iso block."""
+    n = 224
+    streaks = noise(71, beta=2.2, lo=3, hi=60, sx=1.0, sy=0.08, n=n)
+    grime = noise(72, beta=3.0, lo=1, hi=8, n=n)
+    fine = noise(73, beta=0.4, lo=80, n=n)
+    v = 0.8 * streaks + 0.45 * grime + 0.35 * fine
+    v = (v - v.mean()) / v.std()
+    # streaks darken more than they lighten
+    v = np.where(v < 0, v * 1.25, v * 0.7)
+    return overlay(v, (240, 236, 226), (14, 16, 18), 0.16)
+
+
+TEXTURES["city-facade"] = (city_facade, 80)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--preview", help="also write a 2 x 2 tiled sheet of every texture here")

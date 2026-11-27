@@ -765,10 +765,14 @@ html.drawer-open { overflow: hidden; scrollbar-gutter: stable; }
 .city-svg .tex-photo { pointer-events: none; }
 .city-svg .zone .roll { fill: url(#roll); pointer-events: none; }
 .city-svg .zone .ft-tex { fill: url(#tx-grain); pointer-events: none; }
+/* buildings pass (28 November 2026): weathered walls and roofs, and a fascia over the shopfronts */
+.city-svg .zone .wtex { fill: url(#tx-facade); opacity: .45; pointer-events: none; }
+.city-svg .zone .rtex { fill: url(#tx-grain); opacity: .6; pointer-events: none; }
+.city-svg .zone .pod-head { fill: none; stroke: rgba(236, 232, 220, .32); stroke-width: .8; stroke-linejoin: round; }
 .city-svg .soil-photo { fill: url(#tx-soil); opacity: .34; }
 .city-svg .soil-photo-r { opacity: .26; }
 .city-svg .zone .win { opacity: .9; }
-.city-svg .zone .pod { fill: rgba(5, 14, 20, .5); }
+.city-svg .zone .pod { fill: rgba(12, 24, 32, .58); }
 .city-svg .zone .det { stroke: var(--detail); stroke-width: 1; fill: none; }
 .city-svg .zone .mast { stroke: rgba(255, 255, 255, .55); stroke-width: 1.2; fill: none; }
 .city-svg .zone .wtr { fill: var(--water); stroke: rgba(2, 10, 14, .22); stroke-width: .5; transition: fill .35s var(--ease); }

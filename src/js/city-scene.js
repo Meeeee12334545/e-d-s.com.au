@@ -107,6 +107,9 @@
     const L = [P(x, y + d, z), P(x + w, y + d, z), P(x + w, y + d, z + h), P(x, y + d, z + h)];
     const R = [P(x + w, y, z), P(x + w, y + d, z), P(x + w, y + d, z + h), P(x + w, y, z + h)];
     nodes.push(poly("fl" + c, L), poly("fr" + c, R));
+    // weathering on the walls: rain streaks and grime (buildings pass,
+    // 28 November 2026); under the windows, so the glass stays clean
+    if (cast && h >= 5) nodes.push(shapes("wtex", [L, R]));
     if (o.win) {
       // window grids are patterns skewed to the face, over the themed face so
       // the active tint still shows through; a dark band hides the base seam
@@ -114,6 +117,8 @@
       const b = Math.min(7, h / 3);
       nodes.push(poly("pod", [P(x, y + d, z), P(x + w, y + d, z), P(x + w, y + d, z + b), P(x, y + d, z + b)]));
       nodes.push(poly("pod", [P(x + w, y, z), P(x + w, y + d, z), P(x + w, y + d, z + b), P(x + w, y, z + b)]));
+      // the shopfront's head: a light fascia line over the ground floor glazing
+      if (cast) nodes.push(strokes("pod-head", [[P(x, y + d, z + b), P(x + w, y + d, z + b), P(x + w, y, z + b)]]));
       // a parapet coping along the roofline, and a lit edge up the near corner
       const c = Math.min(1.8, h / 10);
       nodes.push(shapes("cope", [onL(x, y + d, 0, w, z + h - c, z + h), onR(x + w, y, 0, d, z + h - c, z + h)]), seg("edge", P(x + w, y + d, z + b), P(x + w, y + d, z + h - c)));
@@ -154,7 +159,10 @@
   }
   function house(x, y, w, d, h, rh, o = {}) {
     const b = box(x, y, w, d, h, { ...o, noTop: true, rh, ridge: [P(x + w / 2, y + d / 2, (o.z || 0) + h + rh)] });
-    b.nodes.push(...roof(x, y, w, d, (o.z || 0) + h, rh, o.roof));
+    const planes = roof(x, y, w, d, (o.z || 0) + h, rh, o.roof);
+    b.nodes.push(...planes);
+    // weathering over the roof planes (buildings pass)
+    if (cast) b.nodes.push(shapes("rtex", planes.map((n) => n.getAttribute("points").split(" ").map((q) => q.split(",").map(Number)))));
     return b;
   }
   // a gabled block: ridge along x or y, with the gable end that faces the viewer
@@ -177,6 +185,7 @@
         poly("fr" + wall, [P(x + w, y, t), P(x + w, y + d, t), r1])
       );
     }
+    if (cast) b.nodes.push(shapes("rtex", b.nodes.filter((n) => /\brf\b/.test(n.getAttribute("class") || "")).map((n) => n.getAttribute("points").split(" ").map((q) => q.split(",").map(Number)))));
     return b;
   }
   // What makes a house read as one up close: windows with sills, a shadow
@@ -790,9 +799,14 @@
     const rect = (x, y, w, h) => [[x, y], [x + w, y], [x + w, y + h], [x, y + h]];
     for (const side of ["l", "r"]) for (const v of ["a", "b", "c"]) {
       const p = el("pattern", { id: `win-${side}-${v}`, width: 28, height: 20, patternUnits: "userSpaceOnUse", patternTransform: `skewY(${side === "l" ? 26.565 : -26.565})` }, D);
-      const cells = { 0: [], 1: [], 2: [] }, mull = [];
+      const cells = { 0: [], 1: [], 2: [] }, mull = [], heads = [], sills = [], blinds = [];
       LIT[v].split(" ").forEach((row, r) => [...row].forEach((k, c) => {
         cells[k].push(rect(1.1 + c * 7, 0.9 + r * 5, 4.8, 3.2));
+        // each window is set into the wall: the head throws a shadow on the
+        // glass, the sill catches the light, and here and there a blind is down
+        heads.push(rect(1.1 + c * 7, 0.9 + r * 5, 4.8, 0.6));
+        sills.push(rect(0.9 + c * 7, 4.1 + r * 5, 5.2, 0.4));
+        if (k === "0" && (r * 3 + c + v.charCodeAt(0)) % 5 === 0) blinds.push(rect(1.1 + c * 7, 1.5 + r * 5, 4.8, 1.3));
         if (k !== "0") mull.push(rect(3.3 + c * 7, 0.9 + r * 5, 0.4, 3.2));
       }));
       p.append(shapes("", [0, 1, 2, 3].map((r) => rect(0, 4.5 + r * 5, 28, 0.5)), { style: F("rgba(255,255,255,.06)") }));
@@ -800,6 +814,7 @@
       // paler high, and only a few offices are lit
       p.append(...[["0", "rgba(10,22,32,.46)"], ["1", "rgba(170,196,212,.3)"], ["2", "rgba(240,214,160,.4)"]].map(([k, c]) => shapes("", cells[k], { style: F(c) })));
       p.append(shapes("", mull, { style: F("rgba(0,0,0,.28)") }));
+      p.append(shapes("", blinds, { style: F("rgba(214,206,186,.28)") }), shapes("", heads, { style: F("rgba(0,0,0,.26)") }), shapes("", sills, { style: F("rgba(255,250,236,.14)") }));
     }
     // corrugated cladding: a rib every 2.4 units, skewed to each face
     for (const side of ["l", "r"]) {
@@ -836,6 +851,8 @@
     };
     isoTex("tx-grass", "city-grass", 2.6);
     isoTex("tx-grain", "city-grain", 2.2);
+    const facade = el("pattern", { id: "tx-facade", width: 110, height: 110, patternUnits: "userSpaceOnUse" }, D);
+    el("image", { href: TEX("city-facade"), width: 110, height: 110, preserveAspectRatio: "none" }, facade);
     const soilTex = el("pattern", { id: "tx-soil", width: 60, height: 60, patternUnits: "userSpaceOnUse" }, D);
     el("image", { href: TEX("soil"), width: 60, height: 60, preserveAspectRatio: "none" }, soilTex);
     const grad = (id, type, stops, attrs = {}) => { const g = el(type, { id, ...attrs }, D); stops.forEach(([o, c]) => el("stop", { offset: o, "stop-color": c }, g)); };
