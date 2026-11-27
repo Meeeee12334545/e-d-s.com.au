@@ -11,6 +11,10 @@
 // properties, so a district's palette still tints them.
 (() => {
   const NS = "http://www.w3.org/2000/svg", XL = "http://www.w3.org/1999/xlink";
+  // the photographic tiles (tools/textures.py) sit beside this script's folder
+  // (read while this script runs: the city is built later, when there is no current script)
+  const HERE = document.currentScript?.src || new URL("assets/js/", location.href).href;
+  const TEX = (name) => new URL(`../img/tex/${name}.webp`, HERE).href;
   const TW = 56, TH = 28;
   const P = (x, y, z = 0) => [(x - y) * TW / 2, (x + y) * TH / 2 - z];
   // two decimals: the camera zooms a district to two or three times its
@@ -52,7 +56,9 @@
   };
   const round = (cx, cy, r, n = 10) => Array.from({ length: n }, (_, i) => { const t = i / n * Math.PI * 2; return [cx + Math.cos(t) * r, cy + Math.sin(t) * r]; });
   // the cars, the bin lids and the cafe parasols take their colours in turn
-  const CARS = ["#d9453b", "#f2f4f1", "#5b8fd6", "#e9b63b", "#2f3c42", "#8ac1c9", "#c9c9c7", "#7a4f9e"], LIDS = ["#c62828", "#e0b020", "#2e7d32"], PARAS = ["#f4f1e8", "#d9453b", "#2f8d84", "#f2c14e"];
+  // (realism pass, 28 November 2026: the colours cars really come in, mostly
+  // white, silver, grey and black, with a few dark blues and reds)
+  const CARS = ["#eceeed", "#a3a9ad", "#2a2e32", "#f4f5f3", "#24324a", "#c4c8c8", "#7c2b2b", "#5a636b", "#e6e7e3", "#1d2024"], LIDS = ["#b3322c", "#d2a52a", "#2f6e35"], PARAS = ["#ebe5d6", "#3f4a4f", "#d6cfbd", "#7b3530"];
   // the kids on the e-bikes: the bike's plastics, a hoodie, trackies, skin,
   // and either hair or a helmet with its visor, a different kid each time
   const KIDS = [
@@ -65,6 +71,9 @@
     "--bike:#f1f2f2;--shirt:#5b4b8a;--legs:#2b3a4a;--hair:#2b1d14;--skin:#e0ac69",
   ];
   const turns = { car: 0, bin: 0, para: 0, kid: 0 };
+  // what people wear, in the colours clothes come in; hi-vis stays hi-vis
+  const CLOTHES = { "#38bdf8": "#4a6a86", "#5fb4a6": "#5d7f78", "#8a78c0": "#5b5470", "#e7fff9": "#e2e4df", "#ef4444": "#9c3a35", "#f2c14e": "#c4a467", "#f4f6f2": "#d9dbd6" };
+  const wear = (c) => CLOTHES[c] || c;
 
   // The overlay paints over the still city, so a vehicle would show through
   // anything standing between it and the viewer. While the city is being
@@ -77,16 +86,18 @@
   // the same for the symbols that stand tall: each a list of convex outlines
   // around its foot. A tree is its crown and trunk, a pole its pole and head.
   const crown = (trunk, ...blobs) => [[[-0.7, 0], [0.7, 0], [0.7, trunk], [-0.7, trunk]], blobs.flatMap(([cx, cy, rx, ry]) => Array.from({ length: 10 }, (_, i) => [cx + Math.cos(i * Math.PI / 5) * rx, cy + Math.sin(i * Math.PI / 5) * ry]))];
+  // street trees a little smaller than they were drawn, so a crown is not as wide as a house (realism pass)
+  const TREE_SIZES = [["s", 0.64], ["m", 0.88], ["l", 1.14]];
   const OUTLINES = {
     "tree-gum": crown(-13, [-3.1, -14.6, 3.8, 2.6], [3.3, -15.6, 3.6, 2.5], [0.4, -18.6, 4.3, 3], [2.6, -13.3, 2.4, 1.7]),
-    "tree-jac": crown(-6, [0, -9, 7.6, 4.6], [-1, -11, 5.4, 3.4]),
+    "tree-jac": crown(-6, [0, -9, 7.8, 4.2], [0, -11, 7.6, 3]),
     lamp: [[[-0.5, 0], [0.5, 0], [0.5, -15.5], [-0.5, -15.5]], [[-0.5, -15], [4.4, -15], [4.4, -17.1], [-0.5, -17.1]]],
     sign: [[[-0.5, 0], [0.5, 0], [0.5, -10], [-0.5, -10]], [[-2.5, -10], [2.5, -10], [2.5, -14], [-2.5, -14]]],
     flag: [[[-0.5, 0], [0.5, 0], [0.5, -22], [-0.5, -22]], [[0, -22], [7, -19.5], [0, -17]]],
     antenna: [[[-0.5, 0], [0.5, 0], [0.5, -11], [-0.5, -11]], [[-3, -8.5], [3, -8.5], [3, -9.5], [-3, -9.5]]],
   };
   for (const k of "abcd") OUTLINES[`ctr-${k}`] = [[P(0, 0), P(0.36, 0), P(0.36, 0.15), P(0, 0.15), P(0, 0, 5.5), P(0.36, 0, 5.5), P(0.36, 0.15, 5.5), P(0, 0.15, 5.5)]];
-  for (const [k, s] of [["s", 0.72], ["m", 1], ["l", 1.3]]) OUTLINES[`tree-${k}`] = crown(-6 * s, [0, -9 * s, 7 * s, 7 * s], [-1.5, -13 * s, 5 * s, 5 * s]);
+  for (const [k, s] of TREE_SIZES) OUTLINES[`tree-${k}`] = crown(-6 * s, [0, -9.2 * s, 6.8 * s, 4.6 * s], [0.2 * s, -12.4 * s, 7.4 * s, 5 * s]);
 
   /* ---- solids ---- */
   function box(x, y, w, d, h, o = {}) {
@@ -109,9 +120,15 @@
       // a lit entrance in the middle of the left face
       if (o.entry) nodes.push(poly("entry", onL(x, y + d, w / 2 - 0.07, w / 2 + 0.07, z, z + Math.min(5.5, b))));
     }
+    // the light on a wall falls off toward its foot, where the ground and
+    // the buildings round it block the sky (realism pass): one gradient over
+    // both visible faces, while a district is being built
+    if (cast && h >= 5 && !o.noAo) nodes.push(shapes("ao", [L, R]));
     // corrugated cladding: ribs skewed to each face
     if (o.clad) nodes.push(poly("clad", L, { style: "fill:url(#clad-l)" }), poly("clad", R, { style: "fill:url(#clad-r)" }));
     if (!o.noTop) nodes.push(poly((o.top || "ft") + c, [P(x, y, z + h), P(x + w, y, z + h), P(x + w, y + d, z + h), P(x, y + d, z + h)]));
+    // weathering on the bigger flat roofs (realism pass)
+    if (cast && !o.noTop && h >= 8 && w * d >= 0.12) nodes.push(poly("ft-tex", [P(x, y, z + h), P(x + w, y, z + h), P(x + w, y + d, z + h), P(x, y + d, z + h)]));
     // a windowed block's roof sits inside a parapet
     if (o.win && !o.noTop && w > 0.3 && d > 0.3) { const i = 0.05; nodes.push(poly("roofin", [P(x + i, y + i, z + h), P(x + w - i, y + i, z + h), P(x + w - i, y + d - i, z + h), P(x + i, y + d - i, z + h)])); }
     // the sun catches the two near edges of the top, which keeps every block crisp
@@ -240,6 +257,10 @@
       el("path", { class: "fl" + c, d: `M${f(bx - rx)} ${f(ty)}L${f(bx - rx)} ${f(by)}A${f(rx)} ${f(ry)} 0 0 0 ${f(bx)} ${f(by + ry)}L${f(bx)} ${f(ty + ry)}A${f(rx)} ${f(ry)} 0 0 1 ${f(bx - rx)} ${f(ty)}Z` }),
       el("ellipse", { class: (o.top || "ft") + c, cx: f(bx), cy: f(ty), rx: f(rx), ry: f(ry) }),
     ];
+    // a shell reads as round when its light rolls across it: shade on the
+    // side away from the sun, a soft sheen toward it, darker again at the
+    // far edge (realism pass)
+    if (cast && h >= 4) nodes.splice(2, 0, el("path", { class: "roll", d: nodes[0].getAttribute("d") }));
     if (o.dome) nodes.push(el("path", { class: "ft dome", d: `M${f(bx - rx)} ${f(ty)}A${f(rx)} ${f(rx * 0.55)} 0 0 1 ${f(bx + rx)} ${f(ty)}Z` }));
     if (o.cap) nodes.push(poly("fr", [[bx - rx, ty], [bx + rx, ty], [bx, ty - rx * 0.7]]));
     if (o.water) nodes.push(el("ellipse", { class: `wtr ${o.water === true ? "" : o.water}`, cx: f(bx), cy: f(ty), rx: f(rx * 0.82), ry: f(ry * 0.82) }));
@@ -296,7 +317,7 @@
   const gum = (x, y) => use("tree-gum", x, y, 0, { d: x + y + 0.1 });
   const jac = (x, y) => use("tree-jac", x, y, 0, { d: x + y + 0.1 });
   // a person, in their own --shirt
-  const who = (x, y, shirt, o = {}) => use("person", x, y, o.z || 0, { d: o.d ?? x + y + 0.06, style: `--shirt:${shirt}`, cls: "fine" });
+  const who = (x, y, shirt, o = {}) => use("person", x, y, o.z || 0, { d: o.d ?? x + y + 0.06, style: `--shirt:${wear(shirt)}`, cls: "fine" });
   const manhole = (x, y, o = {}) => {
     const [cx, cy] = P(x, y);
     return lo(item(x + y, el("ellipse", { class: "mh", cx: f(cx), cy: f(cy), rx: 6, ry: 3 }), el("ellipse", { class: "mh-ring", cx: f(cx), cy: f(cy), rx: 3.4, ry: 1.7 }), o.open && [
@@ -354,16 +375,21 @@
     const F = (color) => `fill:${color}`;
     // a palette colour that a lifted district mixes toward its highlight, like the faces do
     const FM = (v) => `fill:color-mix(in oklab, var(${v}), var(--lit-mix, #eefcf8) var(--lift, 0%))`;
-    // trees: a contact shadow on the ground, the canopy shaded on its far
-    // side and caught by the light on its near one
-    const SHADE = F("rgba(0,0,0,.2)"), SHEEN = F("rgba(255,255,255,.13)");
-    for (const [k, s] of [["s", 0.72], ["m", 1], ["l", 1.3]]) sym(`tree-${k}`, (g) => {
-      el("ellipse", { cx: f(2 * s), cy: 0.6, rx: f(5.6 * s), ry: f(2.3 * s), style: SHADE }, g);
-      g.append(seg("", [0, 0], [0, -6 * s], { style: "stroke:var(--detail);stroke-width:1" }));
-      el("circle", { cx: 0, cy: f(-9 * s), r: f(7 * s), style: FM("--tree-2") }, g);
-      el("circle", { cx: f(2.8 * s), cy: f(-7.2 * s), r: f(4 * s), style: F("rgba(0,0,0,.12)") }, g);
-      el("circle", { cx: -1.5, cy: f(-13 * s), r: f(5 * s), style: FM("--tree") }, g);
-      el("circle", { cx: f(-3.4 * s), cy: f(-15 * s), r: f(2.1 * s), style: SHEEN }, g);
+    // trees (realism pass, 28 November 2026): a canopy of overlapping
+    // lobes in three tones, lit from the sun's side (upper right on screen)
+    // and darker under and away from it, on a dark trunk, with its shadow
+    // falling west-south-west like the buildings'
+    const SHADE = F("rgba(4,10,16,.24)"), UNDER = F("rgba(4,12,8,.22)");
+    const LITM = (v, k = 26) => `fill:color-mix(in oklab, color-mix(in oklab, var(${v}), #fff4cf ${k}%), var(--lit-mix, #eefcf8) var(--lift, 0%))`;
+    const DARKM = (v) => `fill:color-mix(in oklab, color-mix(in oklab, var(${v}), #06140c 30%), var(--lit-mix, #eefcf8) var(--lift, 0%))`;
+    const lobes = (g, list, style, s = 1, dx = 0) => list.forEach(([cx, cy, rx, ry]) => el("ellipse", { cx: f(cx * s + dx), cy: f(cy * s), rx: f(rx * s), ry: f(ry * s), style }, g));
+    for (const [k, s] of TREE_SIZES) sym(`tree-${k}`, (g) => {
+      el("ellipse", { cx: f(-3.2 * s), cy: f(0.9 * s), rx: f(6.4 * s), ry: f(2.4 * s), style: SHADE }, g);
+      g.append(pl("", [[0, 0], [0.2 * s, -4 * s], [-0.1 * s, -7.5 * s]], { style: `fill:none;stroke:#4a3d31;stroke-width:${f(1.1 * s)};stroke-linecap:round` }));
+      lobes(g, [[0, -9.2, 6.8, 4.6], [-3.4, -11.2, 4.2, 3.4], [3.3, -11.6, 4.3, 3.5], [0.2, -13.8, 5, 3.8], [-1.6, -7.8, 4, 2.6]], DARKM("--tree-2"), s);
+      lobes(g, [[1.2, -11.2, 5.2, 4], [-1.8, -13, 3.6, 2.8], [2.8, -14, 3.2, 2.5], [-3.6, -10.4, 2.4, 1.8]], FM("--tree"), s);
+      lobes(g, [[2.8, -13.8, 2.3, 1.7], [0.6, -15.6, 2, 1.3], [4.4, -11.8, 1.7, 1.3], [-1.2, -13.6, 1.4, 1]], LITM("--tree"), s);
+      lobes(g, [[-2.2, -7.4, 4.2, 1.7]], UNDER, s);
     });
     // a street light on a pole with an arm, the head over the road
     sym("lamp", (g) => {
@@ -635,14 +661,19 @@
     });
     sym("cone", (g) => { g.append(poly("", [[-2.2, 0], [2.2, 0], [0, -6]], { style: F("var(--amber)") }), seg("", [-3, 0.5], [3, 0.5], { style: "stroke:#06201e;stroke-width:1.2" })); });
     // people: legs, a top in --shirt (set on each one), a head, a small shadow
+    // people at 85% of their first size, nearer a third of a storey
     sym("person", (g) => {
+      g.setAttribute("transform", "scale(.85)");
       el("ellipse", { cx: 0.8, cy: 0.2, rx: 2.2, ry: 0.8, style: SHADE }, g);
       g.append(shapes("", [[[-1.2, 0], [-0.2, 0], [-0.2, -2.8], [-1.2, -2.8]], [[0.2, 0], [1.2, 0], [1.2, -2.8], [0.2, -2.8]]], { style: F("var(--legs, #2b3a4a)") }));
-      el("rect", { x: -1.4, y: -6.2, width: 2.8, height: 3.8, rx: 1.1, style: F("var(--shirt, #f2c14e)") }, g);
-      el("circle", { cx: 0, cy: -7.7, r: 1.6, style: F("var(--skin, #ffe3b3)") }, g);
+      // (realism pass) adult proportions: a head about an eighth of the height
+      el("rect", { x: -1.25, y: -6.4, width: 2.5, height: 3.9, rx: 0.7, style: F("var(--shirt, #f2c14e)") }, g);
+      el("rect", { x: -1.25, y: -6.4, width: 0.9, height: 3.9, rx: 0.5, style: F("rgba(0,0,0,.18)") }, g);
+      el("circle", { cx: 0, cy: -7.45, r: 1.1, style: F("var(--skin, #e8b98a)") }, g);
     });
     // an EDS crew member: hi-vis orange with a reflective band and a white hard hat
     sym("crew", (g) => {
+      g.setAttribute("transform", "scale(.85)");
       el("ellipse", { cx: 0.8, cy: 0.2, rx: 2.3, ry: 0.8, style: SHADE }, g);
       g.append(shapes("", [[[-1.3, 0], [-0.2, 0], [-0.2, -2.8], [-1.3, -2.8]], [[0.2, 0], [1.3, 0], [1.3, -2.8], [0.2, -2.8]]], { style: F("#1e3a5f") }));
       el("rect", { x: -1.5, y: -6.2, width: 3, height: 3.9, rx: 1.1, style: F("#f97316") }, g); el("rect", { x: -1.5, y: -4.3, width: 3, height: 0.8, style: F("#fff4e5") }, g);
@@ -651,17 +682,23 @@
     // a gum tree: pale trunk, open clumps of grey-green leaves; and a jacaranda
     sym("tree-gum", (g) => {
       const bark = "fill:none;stroke:var(--bark,#c9c1ad);stroke-linecap:round;stroke-width:";
-      el("ellipse", { cx: 2.4, cy: 0.6, rx: 6, ry: 2.4, style: SHADE }, g);
+      el("ellipse", { cx: -3.4, cy: 1, rx: 7, ry: 2.4, style: SHADE }, g);
       g.append(pl("", [[0, 0], [0.5, -7], [0.2, -13.5]], { style: `${bark}1.4` }), seg("", [0.4, -8], [-2.8, -12.6], { style: `${bark}.9` }), seg("", [0.3, -10.5], [3, -14.2], { style: `${bark}.9` }));
-      [[-3.1, -14.6, 3.8, 2.6, "--gum-2"], [3.3, -15.6, 3.6, 2.5, "--gum-2"], [0.4, -18.6, 4.3, 3, "--gum"], [-2.3, -17.2, 2.8, 2, "--gum"], [2.6, -13.3, 2.4, 1.7, "--gum"]].forEach(([cx, cy, rx, ry, v]) => el("ellipse", { cx, cy, rx, ry, style: FM(v) }, g));
+      // a gum's crown is open: separate clumps with sky between them
+      lobes(g, [[-3.1, -14.4, 3.8, 2.5], [3.3, -15.4, 3.6, 2.4], [0.4, -18.4, 4.3, 2.9], [-0.6, -12.6, 2.4, 1.5]], DARKM("--gum-2"));
+      lobes(g, [[-2.6, -15.2, 2.9, 1.9], [3.8, -16.2, 2.7, 1.8], [0.9, -19.2, 3.3, 2.1], [2.6, -13.3, 2.4, 1.6], [-2.3, -17.4, 2.6, 1.7]], FM("--gum"));
+      lobes(g, [[4.6, -16.8, 1.6, 1.1], [1.8, -20, 1.9, 1.2], [-1.6, -16, 1.4, 0.9], [3.4, -13.8, 1.2, 0.8]], LITM("--gum", 22));
     });
     sym("tree-jac", (g) => {
-      el("ellipse", { cx: 2, cy: 0.6, rx: 6, ry: 2.4, style: SHADE }, g);
-      g.append(seg("", [0, 0], [0, -6], { style: "stroke:var(--detail);stroke-width:1.1" }));
-      el("ellipse", { cx: 0, cy: -9, rx: 7.6, ry: 4.6, style: FM("--jac-2") }, g); el("ellipse", { cx: -1, cy: -11, rx: 5.4, ry: 3.4, style: FM("--jac") }, g);
+      el("ellipse", { cx: -3, cy: 1, rx: 7, ry: 2.4, style: SHADE }, g);
       // a few fallen flowers on the ground
-      el("ellipse", { cx: 4.5, cy: 1.4, rx: 2.6, ry: 1, style: F("var(--jac)"), opacity: 0.35 }, g);
-      el("ellipse", { cx: -2.8, cy: -12, rx: 2, ry: 1.2, style: SHEEN }, g);
+      el("ellipse", { cx: 3.6, cy: 1.4, rx: 3, ry: 1.1, style: F("var(--jac)"), opacity: 0.3 }, g);
+      g.append(pl("", [[0, 0], [0.3, -4], [-0.2, -6.5]], { style: "fill:none;stroke:#4a3d31;stroke-width:1.2;stroke-linecap:round" }));
+      // a jacaranda spreads wide and flat-topped
+      lobes(g, [[0, -9, 7.8, 4.2], [-4, -10.2, 3.8, 2.6], [4, -10.6, 3.8, 2.6], [-0.4, -11.6, 5.6, 3]], DARKM("--jac-2"));
+      lobes(g, [[1, -10.6, 5.6, 3.2], [-2.8, -11.2, 3.2, 2.2], [3.6, -11.4, 2.8, 1.9]], FM("--jac"));
+      lobes(g, [[3, -11.8, 2.2, 1.4], [0, -12.8, 2.2, 1.2], [5, -10.4, 1.4, 1]], LITM("--jac", 24));
+      lobes(g, [[-2, -7.4, 4.6, 1.6]], UNDER);
     });
     sym("tank-rw", (g) => {
       const c = cyl(0, 0, 0.11, 9);
@@ -759,7 +796,9 @@
         if (k !== "0") mull.push(rect(3.3 + c * 7, 0.9 + r * 5, 0.4, 3.2));
       }));
       p.append(shapes("", [0, 1, 2, 3].map((r) => rect(0, 4.5 + r * 5, 28, 0.5)), { style: F("rgba(255,255,255,.06)") }));
-      p.append(...[["0", "rgba(6,16,24,.42)"], ["1", "rgba(255,222,160,.38)"], ["2", "rgba(255,238,200,.58)"]].map(([k, c]) => shapes("", cells[k], { style: F(c) })));
+      // (realism pass) by day most glass shows the sky, darker low and
+      // paler high, and only a few offices are lit
+      p.append(...[["0", "rgba(10,22,32,.46)"], ["1", "rgba(170,196,212,.3)"], ["2", "rgba(240,214,160,.4)"]].map(([k, c]) => shapes("", cells[k], { style: F(c) })));
       p.append(shapes("", mull, { style: F("rgba(0,0,0,.28)") }));
     }
     // corrugated cladding: a rib every 2.4 units, skewed to each face
@@ -773,7 +812,6 @@
     el("rect", { x: 0, y: 0, width: 6, height: 0.4, style: F("rgba(255,255,255,.1)") }, slat);
     // grass: tufts and darker patches, scattered so the repeat doesn't show
     const turf = el("pattern", { id: "turf", width: 23, height: 13, patternUnits: "userSpaceOnUse" }, D);
-    turf.append(strokes("", [[2, 3], [5.5, 9], [9, 2], [12.5, 7], [16, 11.5], [19, 4], [21, 9.5], [7, 12]].map(([x, y]) => [[x, y], [x + 0.5, y - 1.3], [x + 1, y]]), { style: "fill:none;stroke:rgba(255,255,255,.09);stroke-width:.55" }));
     [[4, 6, 1.1], [14, 3.5, 0.8], [18, 8, 1.2], [10, 10.5, 0.7]].forEach(([cx, cy, r]) => el("ellipse", { cx, cy, rx: r * 1.8, ry: r, style: F("rgba(0,0,0,.09)") }, turf));
     // soil: stones and darker clods in the cut faces of the ground
     const soil = el("pattern", { id: "soil", width: 19, height: 9, patternUnits: "userSpaceOnUse" }, D);
@@ -789,6 +827,17 @@
     const grid = el("pattern", { id: "grid", width: TW, height: TH, patternUnits: "userSpaceOnUse" }, D);
     grid.append(seg("", [0, TH / 2], [TW / 2, 0], { style: "stroke:rgba(255,255,255,.06);stroke-width:1" }), seg("", [TW / 2, 0], [TW, TH / 2], { style: "stroke:rgba(255,255,255,.06);stroke-width:1" }));
 
+    // photographic tiles laid on the iso grid (realism pass): mown grass
+    // with dry and lush patches, and weathering for paving, yards and roads.
+    // Each repeats every `k` tiles; the slab's cut faces take the soil.
+    const isoTex = (id, file, k) => {
+      const p = el("pattern", { id, width: k, height: k, patternUnits: "userSpaceOnUse", patternTransform: `matrix(${TW / 2} ${TH / 2} ${-TW / 2} ${TH / 2} 0 0)` }, D);
+      el("image", { href: TEX(file), width: k, height: k, preserveAspectRatio: "none" }, p);
+    };
+    isoTex("tx-grass", "city-grass", 2.6);
+    isoTex("tx-grain", "city-grain", 2.2);
+    const soilTex = el("pattern", { id: "tx-soil", width: 60, height: 60, patternUnits: "userSpaceOnUse" }, D);
+    el("image", { href: TEX("soil"), width: 60, height: 60, preserveAspectRatio: "none" }, soilTex);
     const grad = (id, type, stops, attrs = {}) => { const g = el(type, { id, ...attrs }, D); stops.forEach(([o, c]) => el("stop", { offset: o, "stop-color": c }, g)); };
     grad("pool", "radialGradient", [[0, "rgba(255,205,130,.26)"], [1, "rgba(255,205,130,0)"]]);
     grad("pool-bright", "radialGradient", [[0, "rgba(255,226,170,.52)"], [1, "rgba(255,205,130,0)"]]);
@@ -801,6 +850,8 @@
     grad("lift-shadow", "radialGradient", [[0, "rgba(0,0,0,.55)"], [1, "rgba(0,0,0,0)"]]);
     grad("hub-glow", "radialGradient", [[0, "rgba(95,180,166,.55)"], [1, "rgba(95,180,166,0)"]]);
     grad("water-sheen", "linearGradient", [[0, "rgba(255,255,255,.2)"], [1, "rgba(255,255,255,0)"]], { x1: 0, y1: 0, x2: 0, y2: 1 });
+    grad("roll", "linearGradient", [[0, "rgba(4,10,16,.28)"], [0.3, "rgba(4,10,16,.06)"], [0.52, "rgba(255,248,230,0)"], [0.7, "rgba(255,248,230,.2)"], [0.84, "rgba(255,248,230,.05)"], [1, "rgba(4,10,16,.18)"]]);
+    grad("ao", "linearGradient", [[0, "rgba(255,246,226,.08)"], [0.45, "rgba(255,246,226,0)"], [0.7, "rgba(4,10,16,.08)"], [1, "rgba(4,10,16,.36)"]], { x1: 0, y1: 0, x2: 0, y2: 1 });
     grad("solar-grad", "linearGradient", [[0, "#2b5c8a"], [1, "#6fa6e0"]]);
     return D;
   }
@@ -872,6 +923,7 @@
       ...[-4, -9].map((z) => poly("strata", [P(S[0], S[3], z), P(S[2], S[3], z), P(S[2], S[3], z - 1.5), P(S[0], S[3], z - 1.5)])),
       ...[-4, -9].map((z) => poly("strata", [P(S[2], S[1], z), P(S[2], S[3], z), P(S[2], S[3], z - 1.5), P(S[2], S[1], z - 1.5)])),
       poly("soil", [P(S[0], S[3]), P(S[2], S[3]), P(S[2], S[3], -T), P(S[0], S[3], -T)]), poly("soil", [P(S[2], S[1]), P(S[2], S[3]), P(S[2], S[3], -T), P(S[2], S[1], -T)]),
+      poly("soil-photo", [P(S[0], S[3]), P(S[2], S[3]), P(S[2], S[3], -T), P(S[0], S[3], -T)]), poly("soil-photo soil-photo-r", [P(S[2], S[1]), P(S[2], S[3]), P(S[2], S[3], -T), P(S[2], S[1], -T)]),
       // the turf's own layer, a band of sod under the top edge of the cut
       poly("sod", [P(S[0], S[3], 0), P(S[2], S[3], 0), P(S[2], S[3], -1.8), P(S[0], S[3], -1.8)]), poly("sod", [P(S[2], S[1], 0), P(S[2], S[3], 0), P(S[2], S[3], -1.8), P(S[2], S[1], -1.8)]),
       poly("slab-top", slabTop),
@@ -891,6 +943,7 @@
     // roads: a surface, kerbs, lane dashes and crossings
     for (const [x0, y0, x1, y1] of ROADS) g.append(poly("road", [P(x0, y0), P(x1, y0), P(x1, y1), P(x0, y1)]));
     g.append(shapes("asphalt", ROADS.map(quad), { style: "fill:url(#asphalt)" }));
+    g.append(shapes("asphalt tex-photo", ROADS.map(quad).concat(PATHS.map(quad)), { style: "fill:url(#tx-grain)" }));
     // patched and worn asphalt, so the roads aren't one flat colour up close
     g.append(shapes("patch", [[2.2, 4.74, 2.85, 4.93], [8.05, 5.08, 8.6, 5.27], [12.85, 4.72, 13.3, 4.95], [4.74, 8.35, 4.95, 8.95], [9.73, 0.75, 9.98, 1.4], [10.04, 8.8, 10.27, 9.3], [7.35, 7.2, 7.55, 7.7], [14.2, 5.05, 14.9, 5.26]].map(quad)));
     g.append(strokes("wear", [4.85, 5.15].flatMap((y) => [[P(S[0], y - 0.04), P(S[2], y - 0.04)], [P(S[0], y + 0.04), P(S[2], y + 0.04)]])));
@@ -962,7 +1015,7 @@
     // people on the footpaths, along the front of the city, the main road
     // and the river road, at a walking pace
     const walk = (route, dur, begin, shirt, parent = t) => {
-      const w = el("g", { class: "walker fine", style: `--shirt:${shirt}` }, parent);
+      const w = el("g", { class: "walker fine", style: `--shirt:${wear(shirt)}` }, parent);
       el("use", { href: "#person" }, w);
       el("animateMotion", { dur: `${dur}s`, begin: `${begin}s`, repeatCount: "indefinite", path: "M" + route.map((p) => `${f(p[0])} ${f(p[1])}`).join("L") }, w);
     };
@@ -2093,6 +2146,7 @@
         const dec = el("g", { class: "decals" }, g), vol = el("g", { class: "vol" }, g), cut = el("g", { class: "cut" }, g);
         // the ground's grain: grass in the green districts, paving in the built ones
         dec.append(poly("tex", [P(x0, y0), P(x1, y0), P(x1, y1), P(x0, y1)], { style: `fill:url(#${TEXTURE[id] || "pave"})` }));
+        dec.append(poly("tex tex-photo", [P(x0, y0), P(x1, y0), P(x1, y1), P(x0, y1)], { style: `fill:url(#${TEXTURE[id] ? "tx-grass" : "tx-grain"})` }));
         parts.decals.forEach((p) => p.nodes.forEach((n) => dec.appendChild(n)));
         parts.vol.sort((a, b) => a.d - b.d).forEach((p) => p.nodes.forEach((n) => { n.setAttribute("data-s", p.s || "hi"); vol.appendChild(n); }));
         cutaway(z, parts.cut).forEach((n) => cut.appendChild(n));

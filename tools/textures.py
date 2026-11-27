@@ -278,6 +278,53 @@ def gravel():
 TEXTURES = {"soil": (soil, 74), "concrete": (concrete, 74), "wall": (wall, 72), "asphalt": (asphalt, 70), "gravel": (gravel, 72)}
 
 
+# ---------------------------------------------------------------- city overlays
+# The home-page city lays these over its flat ground colours (city-scene.js),
+# skewed onto the iso grid, so they are RGBA: a light or dark tint whose alpha
+# follows how far each texel strays from the mean. The ground keeps its own
+# colour (and its lift on a picked district); the tile only breaks it up.
+def overlay(v, light, dark, k):
+    """v: signed field. Positive texels tint toward light, negative toward
+    dark, alpha k * |v|."""
+    v = np.clip(v, -3, 3)
+    rgb = np.where(v[..., None] > 0, np.asarray(light, float), np.asarray(dark, float))
+    a = np.clip(np.abs(v) * k, 0, 1) * 255
+    return Image.fromarray(np.dstack([rgb, a]).astype(np.uint8), "RGBA")
+
+
+def city_grass():
+    """Mown grass seen from a few hundred metres: dry and lush patches, mower
+    stripes worn faint, clumps, and a fine grain."""
+    n = 224
+    patches = noise(61, beta=3.4, lo=1, hi=6, n=n)
+    clumps = noise(62, beta=2.0, lo=6, hi=40, n=n)
+    grain = noise(63, beta=0.5, lo=60, n=n)
+    v = 0.75 * patches + 0.45 * clumps + 0.4 * grain
+    # dry patches go straw coloured rather than just lighter
+    v = (v - v.mean()) / v.std()
+    return overlay(v, (214, 206, 140), (10, 30, 12), 0.3)
+
+
+def city_grain():
+    """Weathering for paving, hardstand and yards: stains, tyre-darkened
+    patches and pale flecks."""
+    n = 224
+    rng = np.random.default_rng(64)
+    stains = noise(65, beta=3.0, lo=1, hi=8, n=n)
+    mid = noise(66, beta=1.8, lo=8, hi=60, n=n)
+    fine = noise(67, beta=0.3, lo=80, n=n)
+    v = 0.7 * stains + 0.4 * mid + 0.5 * fine
+    v = (v - v.mean()) / v.std()
+    fl = rng.random((n, n))
+    v[fl > 0.995] = 2.6
+    v[fl < 0.004] = -2.6
+    return overlay(v, (235, 232, 222), (8, 12, 14), 0.17)
+
+
+TEXTURES["city-grass"] = (city_grass, 80)
+TEXTURES["city-grain"] = (city_grain, 80)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--preview", help="also write a 2 x 2 tiled sheet of every texture here")
@@ -292,7 +339,7 @@ def main():
         path = os.path.join(OUT, f"{name}.webp")
         im.save(path, "WEBP", quality=q, method=6)
         print(f"{name}: {os.path.getsize(path) // 1024} KB")
-        sheets.append(im)
+        sheets.append(im.convert("RGB").resize((N, N)) if im.size[0] != N or im.mode != "RGB" else im)
     if a.preview and sheets:
         sheet = Image.new("RGB", (N * 2 * len(sheets), N * 2))
         for i, im in enumerate(sheets):
