@@ -403,9 +403,9 @@
     // the back, in their own --helmet or --hair, or an officer in front, in
     // the cap. `u` is how far along the car from its middle, in tiles.
     const aboard = (v, u, style) => {
-      const g = mk("g", { class: "aboard", style }, v.el), [px, py] = P(u, 0.045, 3.25), cap = !style;
-      mk("circle", { cx: px.toFixed(2), cy: py.toFixed(2), r: 0.75, style: cap ? "fill:var(--skin, #ffe3b3)" : "fill:var(--helmet, var(--skin, #ffe3b3))" }, g);
-      mk("path", { d: `M${(px - 0.75).toFixed(2)} ${(py - 0.05).toFixed(2)}a.75 .75 0 0 1 1.5 0z`, style: cap ? "fill:#1c2b4a" : "fill:var(--hair, transparent)" }, g);
+      const g = mk("g", { class: "aboard", style }, v.el), [px, py] = P(u, 0.032, 3.0), cap = !style;
+      mk("circle", { cx: px.toFixed(2), cy: py.toFixed(2), r: 0.4, style: cap ? "fill:var(--skin, #ffe3b3)" : "fill:var(--helmet, var(--skin, #ffe3b3))" }, g);
+      mk("path", { d: `M${(px - 0.4).toFixed(2)} ${(py - 0.03).toFixed(2)}a.4 .4 0 0 1 .8 0z`, style: cap ? "fill:#1c2b4a" : "fill:var(--hair, transparent)" }, g);
     };
     // the click of the cuffs: a glint at the kid's wrists
     function* glint(o) {
