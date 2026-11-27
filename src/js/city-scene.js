@@ -507,15 +507,25 @@
       hatch: { L: 0.28, W: 0.155, clear: 0.55, belt: 2.4, roof: 4.3, wr: 0.95, cab: [0.08, 0.78, 0.12, 0.6] },
       suv: { L: 0.31, W: 0.165, clear: 0.85, belt: 2.85, roof: 5.0, wr: 1.2, cab: [0.08, 0.8, 0.12, 0.62] },
       ute: { L: 0.32, W: 0.165, clear: 0.8, belt: 2.75, roof: 4.8, wr: 1.15, cab: [0.42, 0.8, 0.47, 0.66], tray: 0.4 },
+      // three particular cars, by request (28 November 2026), each drawn to
+      // its own proportions: two long, low wagons whose roofs run almost to
+      // the tail, and a compact electric SUV. `drop` is how far the boot and
+      // the bonnet fall away (tail, nose), `rim` the colour of the wheels.
+      merc: { L: 0.31, W: 0.16, clear: 0.5, belt: 2.3, roof: 4.1, wr: 1.0, cab: [0.03, 0.75, 0.09, 0.59], drop: [0.12, 0.6], rim: "#bcc3c7" },
+      m3: { L: 0.31, W: 0.168, clear: 0.42, belt: 2.3, roof: 4.05, wr: 1.12, cab: [0.04, 0.75, 0.1, 0.6], drop: [0.15, 0.62], rim: "#4b5156", hub: "#262b2f" },
+      atto: { L: 0.29, W: 0.163, clear: 0.8, belt: 2.75, roof: 4.75, wr: 1.12, cab: [0.08, 0.79, 0.13, 0.62], rim: "#a7afb3" },
     };
     const carSym = (id, dir, B, cols, o = {}) => sym(id, (g) => {
-      const ew = dir === "e" || dir === "w", fwd = dir === "e" || dir === "s", { L, W, clear, belt, roof, wr, cab } = B;
+      const ew = dir === "e" || dir === "w", fwd = dir === "e" || dir === "s", { L, W, clear, belt, roof, wr, cab } = B, [dt, dn] = B.drop || [0.3, 0.55];
       const at = (t, s, z) => { const u = (fwd ? t : 1 - t) * L - L / 2, v = s * W - W / 2; return ew ? P(u, v, z) : P(v, u, z); };
       const put = (pts, fill) => g.append(poly("", pts, { style: `fill:${fill}` }));
       const line = (pts, c, w) => g.append(pl("", pts, { style: `fill:none;stroke:${c};stroke-width:${w};stroke-linecap:round;stroke-linejoin:round` }));
       const end = fwd ? 1 : 0, nose = fwd, [top, dark, light] = cols, near = ew ? dark : light, endc = ew ? light : dark;
       // the height of the body's top edge along its length: the bonnet drops toward the nose, the boot a little toward the tail
-      const T = [0, 0.1, 0.24, 0.72, 0.9, 1], bh = (t) => belt - (t > 0.72 ? 0.55 * (t - 0.72) / 0.28 : t < 0.1 ? 0.3 * (0.1 - t) / 0.1 : 0);
+      const T = [0, 0.1, 0.24, 0.72, 0.9, 1], bh = (t) => belt - (t > 0.72 ? dn * (t - 0.72) / 0.28 : t < 0.1 ? dt * (0.1 - t) / 0.1 : 0);
+      // what a model's own details are drawn with (`o.side` before the wheels, `o.face` on the end in view, `o.after` last)
+      const ez = (k) => clear + (bh(end) - clear) * k, quad = (a, b, k0, k1, fill) => put([at(end, a, ez(k0)), at(end, b, ez(k0)), at(end, b, ez(k1)), at(end, a, ez(k1))], fill);
+      const k = { roof, belt, clear, bh, wr, end, nose, ez, quad, put, line, near, top, b0: cab[0], b1: cab[1], r0: cab[2], r1: cab[3], sb: 0.06, sr: 0.15 };
       const foot = ew ? [[-L / 2, -W / 2], [L / 2, -W / 2], [L / 2, W / 2], [-L / 2, W / 2]] : [[-W / 2, -L / 2], [W / 2, -L / 2], [W / 2, L / 2], [-W / 2, L / 2]];
       g.append(poly("", castOf(foot, roof), { style: F("rgba(4,12,22,.3)") }));
       put([at(-0.03, -0.06, 0), at(1.03, -0.06, 0), at(1.03, 1.08, 0), at(-0.03, 1.08, 0)], "rgba(3,8,12,.42)");
@@ -531,17 +541,20 @@
         put([at(0.02, 0.06, z), at(tr, 0.06, z), at(tr, 0.94, z), at(0.02, 0.94, z)], "#22282b");
         line([at(0.02, 0.94, z), at(0.02, 0.06, z), at(tr, 0.06, z)], "rgba(0,0,0,.4)", 0.35);
       }
+      o.side?.(g, at, k);
       // the arches and the near wheels: tyre, rim, hub
       const ring = (t0, z0, r, n = 16) => Array.from({ length: n }, (_, i) => { const a = i / n * Math.PI * 2; return at(t0 + Math.cos(a) * r / 31.3 / L, 1.01, z0 + Math.sin(a) * r); });
       for (const t0 of [0.18, 0.8]) {
         put(Array.from({ length: 9 }, (_, i) => { const a = Math.PI * (i / 8); return at(t0 + Math.cos(a) * wr * 1.3 / 31.3 / L, 1.005, wr + Math.sin(a) * wr * 1.3); }), "rgba(6,10,12,.5)");
-        put(ring(t0, wr, wr), "#111416"); put(ring(t0, wr, wr * 0.56, 10), "#a4adb1"); put(ring(t0, wr, wr * 0.2, 6), "#3b4347");
+        put(ring(t0, wr, wr), "#111416"); put(ring(t0, wr, wr * 0.56, 10), B.rim || "#a4adb1"); put(ring(t0, wr, wr * 0.2, 6), B.hub || "#3b4347");
       }
       // bumper, lights and the number plate on the visible end
-      const ez = (k) => clear + (bh(end) - clear) * k;
       put([at(end, 0.02, clear), at(end, 0.98, clear), at(end, 0.98, ez(0.3)), at(end, 0.02, ez(0.3))], "rgba(10,14,16,.55)");
-      put([at(end, 0.38, ez(0.34)), at(end, 0.62, ez(0.34)), at(end, 0.62, ez(0.58)), at(end, 0.38, ez(0.58))], "#e9ece6");
-      for (const [a, b] of [[0.05, 0.27], [0.73, 0.95]]) put([at(end, a, ez(0.62)), at(end, b, ez(0.62)), at(end, b, ez(0.9)), at(end, a, ez(0.9))], nose ? "#eef3f2" : "#b4262c");
+      if (o.face) o.face(g, at, k);
+      else {
+        quad(0.38, 0.62, 0.34, 0.58, "#e9ece6");
+        for (const [a, b] of [[0.05, 0.27], [0.73, 0.95]]) quad(a, b, 0.62, 0.9, nose ? "#eef3f2" : "#b4262c");
+      }
       // a light wrapping round the near corner, and the shoulder line catching the sun
       put([at(end ? 0.965 : 0, 1, ez(0.62)), at(end ? 1 : 0.035, 1, ez(0.62)), at(end ? 1 : 0.035, 1, ez(0.9)), at(end ? 0.965 : 0, 1, ez(0.9))], nose ? "#d9e0df" : "#9e2328");
       line(T.slice(1, -1).map((t) => at(t, 1, bh(t) - 0.28)), "rgba(255,255,255,.32)", 0.32);
@@ -550,7 +563,7 @@
       line([at(dm, 1, clear + 0.2), at(dm, 1, bh(dm) - 0.1)], "rgba(0,0,0,.28)", 0.25);
       line([at(dm - 0.1, 1, bh(dm) - 0.55), at(dm - 0.05, 1, bh(dm) - 0.55)], "rgba(0,0,0,.4)", 0.3);
       // the glasshouse
-      const [b0, b1, r0, r1] = cab, sb = 0.06, sr = 0.15, zb0 = bh(b0), zb1 = bh(b1);
+      const [b0, b1, r0, r1] = cab, { sb, sr } = k, zb0 = bh(b0), zb1 = bh(b1);
       const rear = () => put([at(b0, sb, zb0), at(b0, 1 - sb, zb0), at(r0, 1 - sr, roof), at(r0, sr, roof)], "#26343d");
       const front = () => put([at(b1, sb, zb1), at(b1, 1 - sb, zb1), at(r1, 1 - sr, roof), at(r1, sr, roof)], "#344a57");
       const lid = () => put([at(r0, sr, roof), at(r1, sr, roof), at(r1, 1 - sr, roof), at(r0, 1 - sr, roof)], `color-mix(in oklab, ${top}, #fff 6%)`);
@@ -561,9 +574,103 @@
       put([at(bm - 0.06, 1 - sb, bh(bm - 0.06)), at(bm + 0.08, 1 - sb, bh(bm + 0.08)), at(mid + 0.02, 1 - sr, roof), at(mid - 0.08, 1 - sr, roof)], "rgba(176,204,218,.2)");
       g.append(strokes("", [[at(bm, 1 - sb, bh(bm)), at(mid, 1 - sr, roof)], [at(b1, 1 - sb, zb1), at(r1, 1 - sr, roof)], [at(b0, 1 - sb, zb0), at(r0, 1 - sr, roof)]], { style: `fill:none;stroke:${near};stroke-width:.45;stroke-linecap:round` }));
       if (nose) line([at(b1 - 0.02, 0.3, zb1 + 0.3), at(r1 + 0.01, 0.45, roof - 0.25)], "rgba(190,215,225,.45)", 0.3);
-      o.after?.(g, at, { roof, belt, clear, bh, r0, r1, sr });
+      o.after?.(g, at, k);
     });
     for (const dir of ["e", "w", "n", "s"]) for (const k of ["car", "hatch", "suv", "ute"]) carSym(`${k}-${dir}`, dir, BODIES[k], CAR);
+    // The three particular cars, in their own paint rather than one of CARS,
+    // each with what tells it apart even this small. `coat` shades a colour
+    // the way CAR shades --car. `rails` lays roof rails along the roof edges.
+    // (`stroke` is declared further down, so these spell their strokes out)
+    const coat = (c) => CAR.map((s) => s.replaceAll("var(--car, #2f8d84)", c)), thin = (c, w) => `fill:none;stroke:${c};stroke-width:${w};stroke-linecap:round;stroke-linejoin:round`;
+    const rails = (g, at, { roof, r0, r1, sr }, c) => g.append(strokes("", [sr + 0.05, 0.95 - sr].map((s) => [at(r0 + 0.05, s, roof), at(r0 + 0.07, s, roof + 0.2), at(r1 - 0.08, s, roof + 0.2), at(r1 - 0.06, s, roof)]), { style: thin(c, 0.24) }));
+    // A Mercedes-Benz C300d estate in Obsidian Black: the long roof to a
+    // near-upright tailgate, chrome round the side glass and along the
+    // belt, silver roof rails, the wide grille with the star at its centre,
+    // slim swept headlights, tail lamps reaching into the tailgate with a
+    // chrome strip between them, and the bumper's chrome exhaust trims.
+    for (const dir of ["e", "w", "n", "s"]) carSym(`merc-${dir}`, dir, BODIES.merc, coat("#25282c"), {
+      face: (g, at, { nose, quad, ez, end, line }) => {
+        if (nose) {
+          quad(0.29, 0.71, 0.36, 1, "#0e1114");
+          line([at(end, 0.3, ez(0.68)), at(end, 0.7, ez(0.68))], "rgba(214,221,224,.75)", 0.22);
+          for (const [a, b] of [[0.04, 0.27], [0.73, 0.96]]) quad(a, b, 0.7, 0.93, "#eef3f2");
+          quad(0.38, 0.62, 0.08, 0.32, "#e9ece6");
+          const [cx, cy] = at(end, 0.5, ez(0.68)); el("circle", { cx: f(cx), cy: f(cy), r: 0.3, style: F("#dfe5e8") }, g);
+        } else {
+          for (const [a, b] of [[0.03, 0.3], [0.7, 0.97]]) quad(a, b, 0.66, 0.9, "#a01d24");
+          line([at(end, 0.3, ez(0.78)), at(end, 0.7, ez(0.78))], "rgba(214,221,224,.8)", 0.25);
+          quad(0.38, 0.62, 0.32, 0.56, "#e9ece6");
+          for (const [a, b] of [[0.1, 0.26], [0.74, 0.9]]) quad(a, b, 0.06, 0.17, "#c9d0d3");
+          const [cx, cy] = at(end, 0.5, ez(0.66)); el("circle", { cx: f(cx), cy: f(cy), r: 0.24, style: F("#dfe5e8") }, g);
+        }
+      },
+      after: (g, at, k) => {
+        const { roof, bh, b0, b1, r0, r1, sb, sr, line, near } = k;
+        line([at(b0 + 0.02, 1 - sb, bh(b0 + 0.02) + 0.05), at(0.1, 1 - sb, bh(0.1) + 0.05), at(b1, 1 - sb, bh(b1) + 0.05)], "rgba(222,229,233,.8)", 0.26);
+        line([at(r0 + 0.01, 1 - sr, roof - 0.08), at(r1, 1 - sr, roof - 0.08)], "rgba(222,229,233,.7)", 0.24);
+        line([at(b0 + 0.12, 1 - sb, bh(b0 + 0.12)), at(r0 + 0.1, 1 - sr, roof)], near, 0.45);
+        rails(g, at, k, "#c3c9cc");
+      },
+    });
+    // A BMW M3 Touring in Yas Marina Blue: lower and wider, on dark wheels,
+    // the black trim of an M car (window line, roof rails, side skirts), the
+    // gill behind the front wheel, the tall black kidney grille between big
+    // corner intakes, and at the tail a black diffuser with four exhausts.
+    for (const dir of ["e", "w", "n", "s"]) carSym(`m3-${dir}`, dir, BODIES.m3, coat("#2d72b9"), {
+      side: (g, at, { clear, put }) => put([at(0.26, 1.003, clear), at(0.72, 1.003, clear), at(0.72, 1.003, clear + 0.32), at(0.26, 1.003, clear + 0.32)], "#121517"),
+      face: (g, at, { nose, quad, ez, end, line }) => {
+        if (nose) {
+          for (const [a, b] of [[0.03, 0.25], [0.75, 0.97]]) quad(a, b, 0.04, 0.42, "#0c0e10");
+          for (const [a, b] of [[0.31, 0.485], [0.515, 0.69]]) quad(a, b, 0.14, 1, "#0b0d0f");
+          line([at(end, 0.32, ez(0.58)), at(end, 0.68, ez(0.58))], "rgba(255,255,255,.14)", 0.2);
+          for (const [a, b] of [[0.04, 0.29], [0.71, 0.96]]) quad(a, b, 0.66, 0.9, "#eef3f2");
+          quad(0.38, 0.62, 0.22, 0.44, "#e9ece6");
+        } else {
+          for (const [a, b] of [[0.03, 0.31], [0.69, 0.97]]) quad(a, b, 0.6, 0.9, "#a3151d");
+          quad(0.12, 0.88, 0, 0.22, "#0c0e10");
+          quad(0.38, 0.62, 0.32, 0.56, "#e9ece6");
+          for (const s of [0.15, 0.23, 0.77, 0.85]) { const [cx, cy] = at(end, s, ez(0.13)); el("circle", { cx: f(cx), cy: f(cy), r: 0.26, style: "fill:#0a0b0c;stroke:#c3c9cc;stroke-width:.12" }, g); }
+          const [cx, cy] = at(end, 0.5, ez(0.7)); el("circle", { cx: f(cx), cy: f(cy), r: 0.28, style: F("#e8edf0") }, g);
+        }
+      },
+      after: (g, at, k) => {
+        const { roof, bh, r0, r1, sr, line } = k;
+        line([at(r0 + 0.01, 1 - sr, roof - 0.08), at(r1, 1 - sr, roof - 0.08)], "#0b0e10", 0.26);
+        line([at(0.69, 1.003, bh(0.69) - 0.9), at(0.66, 1.003, bh(0.66) - 0.75)], "rgba(0,0,0,.7)", 0.3);
+        rails(g, at, k, "#121517");
+      },
+    });
+    // A BYD Atto 3 in Boulder Grey: a compact electric SUV standing tall on
+    // two-tone wheels, black cladding along the sills and round the arches,
+    // the silver blade sweeping up the rear pillar, silver roof rails, a
+    // closed nose with a silver bar joining the headlights over a low black
+    // intake, and a light bar right across the tail.
+    for (const dir of ["e", "w", "n", "s"]) carSym(`atto-${dir}`, dir, BODIES.atto, coat("#63686c"), {
+      side: (g, at, { clear, wr, put }) => {
+        const L = BODIES.atto.L;
+        put([at(0.01, 1.003, clear - 0.05), at(0.99, 1.003, clear - 0.05), at(0.99, 1.003, clear + 0.4), at(0.01, 1.003, clear + 0.4)], "#1b1f21");
+        for (const t0 of [0.18, 0.8]) put(Array.from({ length: 9 }, (_, i) => { const a = Math.PI * (i / 8); return at(t0 + Math.cos(a) * wr * 1.52 / 31.3 / L, 1.004, wr + Math.sin(a) * wr * 1.48); }), "#1b1f21");
+      },
+      face: (g, at, { nose, quad }) => {
+        if (nose) {
+          quad(0.2, 0.8, 0.02, 0.3, "#15191b");
+          quad(0.38, 0.62, 0.34, 0.56, "#e9ece6");
+          for (const [a, b] of [[0.04, 0.29], [0.71, 0.96]]) quad(a, b, 0.68, 0.9, "#eef3f2");
+          quad(0.29, 0.71, 0.75, 0.84, "#c9cfd2");
+        } else {
+          quad(0.04, 0.96, 0.72, 0.84, "#a3151d");
+          for (const [a, b] of [[0.04, 0.24], [0.76, 0.96]]) quad(a, b, 0.64, 0.9, "#a3151d");
+          quad(0.38, 0.62, 0.32, 0.56, "#e9ece6");
+          quad(0.26, 0.74, 0.03, 0.12, "#bfc5c8");
+        }
+      },
+      after: (g, at, k) => {
+        const { roof, belt, r0, sb, sr, put } = k;
+        put([at(0.12, 1 - sb, belt), at(0.24, 1 - sb, belt), at(r0 + 0.16, 1 - sr, roof - 0.12), at(r0 + 0.07, 1 - sr, roof - 0.12)], "#c4cacd");
+        g.append(strokes("", [0.4, 0.65].map((q) => [at(0.12 + 0.12 * q, 1 - sb, belt), at(r0 + 0.07 + 0.09 * q, 1 - sr, roof - 0.12)]), { style: thin("rgba(84,92,98,.55)", 0.18) }));
+        rails(g, at, k, "#c3c9cc");
+      },
+    });
     // the EDS vans, a little larger than the cars to carry the logo
     vehicle("van-e", 0.4, 0.19, 5.6, VAN, "e", { eds: true }); vehicle("van-w", 0.4, 0.19, 5.6, VAN, "w", { eds: true }); vehicle("van-s", 0.19, 0.4, 5.6, VAN, "s", { eds: true }); vehicle("van-n", 0.19, 0.4, 5.6, VAN, "n", { eds: true });
     vehicle("van-x", 0.4, 0.19, 5.6, VAN, "", { eds: true }); vehicle("van-y", 0.19, 0.4, 5.6, VAN, "", { eds: true });
@@ -1095,7 +1202,7 @@
     // then the bikes they wheel to the trailer.
     const scene = el("g", { class: "pullover", "clip-path": "url(#clip-main)" }, LANES.E.far);
     const KERB = { lane: "E", y: { car: 4.63, bike: 4.65, kid: 4.585, cop: 4.6 }, at: { p1: 2.53, kids: [3.15, 2.87], p2: 4.12 }, kids: KIDS, groups: ["kids", "cops", "bikes"].map((c) => el("g", { class: c }, scene)) };
-    const vehicles = [], LEN = { car: 0.3, hatch: 0.3, suv: 0.3, ute: 0.32, van: 0.4, truck: 0.5, tram: 1.1, bike: 0.24 }, PACE = { car: 1.0, hatch: 1.0, suv: 0.97, ute: 0.95, van: 0.95, truck: 0.55, tram: 0.6, bike: 1.2 };
+    const vehicles = [], LEN = { car: 0.3, hatch: 0.3, suv: 0.3, ute: 0.32, merc: 0.31, m3: 0.31, atto: 0.3, van: 0.4, truck: 0.5, tram: 1.1, bike: 0.24 }, PACE = { car: 1.0, hatch: 1.0, suv: 0.97, ute: 0.95, merc: 1.0, m3: 1.04, atto: 0.98, van: 0.95, truck: 0.55, tram: 0.6, bike: 1.2 };
     const vehicle = (sym, lane, at, cls, pace) => {
       // a clip goes on a still wrapper: on the vehicle itself it would move with the vehicle
       const kind = sym.split("-")[0], slot = el("g", { class: "veh-slot" }, LANES[lane].far), v = el("g", { class: `veh${kind === "van" ? " eds" : ""}${cls ? ` ${cls}` : ""}`, style: kind === "bike" ? KIDS[turns.kid++ % KIDS.length] : undefined }, slot);
@@ -1108,6 +1215,9 @@
     // Australian roads: everyone keeps left
     vehicle("van-s", "S5", 3.6); vehicle("ute-s", "S5", 8.6); vehicle("car-n", "N5", 7.6); vehicle("suv-n", "N5", 2.4);
     vehicle("van-n", "N10", 6.9); vehicle("truck-n", "N10", 0.5); vehicle("hatch-s", "S10", 4.7); vehicle("car-s", "S10", 9.6); vehicle("suv-s", "S7", 1.3);
+    // the three particular cars, one on each of three roads: the Mercedes
+    // heading east on the main road, the M3 west, the Atto up the far side road
+    vehicle("merc-e", "E", 6.2); vehicle("m3-w", "W", 10.4); vehicle("atto-n", "N10", 3.7);
     // light rail along the main road, one tram each way
     vehicle("tram-e", "TE", 4.3); vehicle("tram-w", "TW", 13.4);
     // kids on e-bikes: two riding together along the main road, and one on each side road
