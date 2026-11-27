@@ -293,54 +293,73 @@ def overlay(v, light, dark, k):
 
 
 def city_grass():
-    """Mown grass seen from a few hundred metres: dry and lush patches, mower
-    stripes worn faint, clumps, and a fine grain."""
-    n = 320
-    patches = noise(61, beta=3.4, lo=1, hi=6, n=n)
-    clumps = noise(62, beta=2.0, lo=6, hi=40, n=n)
-    grain = noise(63, beta=0.5, lo=60, n=n)
-    v = 0.75 * patches + 0.45 * clumps + 0.4 * grain
+    """Mown grass seen from a few hundred metres, the broad layer: dry and
+    lush patches and clumps. The fine grain is its own tile (city-grass-fine),
+    which repeats far more often, so the ground stays sharp as the camera
+    comes in (resolution pass, 28 November 2026)."""
+    n = 256
+    patches = noise(61, beta=3.4, lo=1, hi=7, n=n)
+    clumps = noise(62, beta=2.2, lo=6, hi=22, n=n)
+    v = 0.8 * patches + 0.5 * clumps
     # dry patches go straw coloured rather than just lighter
     v = (v - v.mean()) / v.std()
-    return overlay(v, (214, 206, 140), (10, 30, 12), 0.3)
+    return overlay(v, (214, 206, 140), (10, 30, 12), 0.32)
+
+
+def city_grass_fine():
+    """Grass up close: blades and the soil between them, laid every half a
+    tile over the broad layer."""
+    n = 128
+    blades = noise(68, beta=0.6, lo=10, n=n, sx=1.0, sy=0.7)
+    tufts = noise(69, beta=1.6, lo=4, hi=24, n=n)
+    v = 0.75 * blades + 0.45 * tufts
+    v = (v - v.mean()) / v.std()
+    return overlay(v, (226, 232, 160), (6, 22, 6), 0.2)
 
 
 def city_grain():
-    """Weathering for paving, hardstand and yards: stains, tyre-darkened
-    patches and pale flecks."""
-    n = 320
-    rng = np.random.default_rng(64)
-    stains = noise(65, beta=3.0, lo=1, hi=8, n=n)
-    mid = noise(66, beta=1.8, lo=8, hi=60, n=n)
-    fine = noise(67, beta=0.3, lo=80, n=n)
-    v = 0.7 * stains + 0.4 * mid + 0.5 * fine
+    """Weathering for paving, hardstand and yards, the broad layer: stains
+    and tyre-darkened patches."""
+    n = 256
+    stains = noise(65, beta=3.0, lo=1, hi=9, n=n)
+    mid = noise(66, beta=1.9, lo=8, hi=30, n=n)
+    v = 0.75 * stains + 0.45 * mid
     v = (v - v.mean()) / v.std()
+    return overlay(v, (235, 232, 222), (8, 12, 14), 0.16)
+
+
+def city_grain_fine():
+    """Aggregate and pale flecks, laid every half a tile over the broad layer."""
+    n = 128
+    rng = np.random.default_rng(64)
+    fine = noise(67, beta=0.2, lo=12, n=n)
+    v = fine.copy()
     fl = rng.random((n, n))
-    v[fl > 0.995] = 2.6
-    v[fl < 0.004] = -2.6
-    return overlay(v, (235, 232, 222), (8, 12, 14), 0.17)
+    v[fl > 0.992] = 2.8
+    v[fl < 0.006] = -2.8
+    return overlay(v, (240, 238, 230), (6, 8, 10), 0.13)
 
 
-TEXTURES["city-grass"] = (city_grass, 50)
-TEXTURES["city-grain"] = (city_grain, 50)
+TEXTURES["city-grass"] = (city_grass, 60)
+TEXTURES["city-grass-fine"] = (city_grass_fine, 62)
+TEXTURES["city-grain"] = (city_grain, 60)
+TEXTURES["city-grain-fine"] = (city_grain_fine, 62)
 
 
 def city_facade():
     """Weathering on a wall seen from a distance: rain streaks running down
-    from sills and parapets, soft grime, and a fine render grain. Streaks are
-    vertical, so one unskewed tile suits both faces of an iso block."""
-    n = 320
-    streaks = noise(71, beta=2.2, lo=3, hi=60, sx=1.0, sy=0.08, n=n)
+    from sills and parapets and soft grime. Streaks are vertical, so one
+    unskewed tile suits both faces of an iso block."""
+    n = 256
+    streaks = noise(71, beta=2.2, lo=3, hi=48, sx=1.0, sy=0.08, n=n)
     grime = noise(72, beta=3.0, lo=1, hi=8, n=n)
-    fine = noise(73, beta=0.4, lo=80, n=n)
-    v = 0.8 * streaks + 0.45 * grime + 0.35 * fine
+    v = 0.85 * streaks + 0.5 * grime
     v = (v - v.mean()) / v.std()
     # streaks darken more than they lighten
     v = np.where(v < 0, v * 1.25, v * 0.7)
     return overlay(v, (240, 236, 226), (14, 16, 18), 0.16)
 
 
-TEXTURES["city-facade"] = (city_facade, 50)
 
 
 def main():
