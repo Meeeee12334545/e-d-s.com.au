@@ -654,7 +654,7 @@ html.drawer-open { overflow: hidden; scrollbar-gutter: stable; }
 .city-svg .road-line { stroke: rgba(255, 255, 255, .34); stroke-width: 1; stroke-dasharray: 5 7; fill: none; }
 .city-svg .pier { fill: #4c585c; }
 .city-svg .culvert-mouth { fill: #141c1f; stroke: rgba(95, 180, 166, .35); stroke-width: 1; }
-.city-svg .base .wtr { fill: #2b8fd4; stroke: rgba(2, 10, 14, .22); stroke-width: .5; }
+.city-svg .base .wtr { fill: #44717d; stroke: rgba(2, 10, 14, .22); stroke-width: .5; }
 .city-svg .sod { fill: rgba(86, 128, 70, .5); }
 .city-svg .rail { fill: none; stroke: rgba(255, 255, 255, .4); stroke-width: 1; }
 .city-svg .post { stroke: rgba(255, 255, 255, .4); stroke-width: 1; }
@@ -664,7 +664,7 @@ html.drawer-open { overflow: hidden; scrollbar-gutter: stable; }
 .city-svg .rail.safety, .city-svg .post.safety { stroke: rgba(242, 193, 78, .8); }
 .city-svg .rail.hoarding, .city-svg .post.hoarding { stroke: rgba(240, 244, 242, .7); }
 /* the sun on the near edges of every block, in the city and the asset views */
-.city-svg .rim-hl, .city-asset-svg .rim-hl { fill: none; stroke: rgba(255, 255, 255, .26); stroke-width: .6; stroke-linejoin: round; stroke-linecap: round; }
+.city-svg .rim-hl, .city-asset-svg .rim-hl { fill: none; stroke: rgba(255, 244, 222, .14); stroke-width: .6; stroke-linejoin: round; stroke-linecap: round; }
 .city-asset-svg .rim-hl { stroke: rgba(255, 255, 255, .18); }
 .city-svg .puddle { fill: var(--water); opacity: 0; transition: opacity 1.5s var(--ease); }
 /* the fine detail: footpaths and their joints, worn and patched asphalt, the
@@ -718,19 +718,23 @@ html.drawer-open { overflow: hidden; scrollbar-gutter: stable; }
    district mixes all of it toward --lit-mix by --lift (its ground by
    --lift-g), which is the one property that transitions, so the lift still
    costs one restyle of the district and nothing more. */
+/* Realism pass (28 November 2026): the colours are those of the real thing
+   seen from the air, a little desaturated: olive lawns and eucalypt greens,
+   river water a deep grey green, clarifier water darker still. */
 .city-svg .zone {
-  --mat: #c5cac6; --ground: #4a5559; --detail: rgba(255, 255, 255, .18); --water: #2b8fd4; --tree: #4f9f5a; --tree-2: #3a7c45;
-  --gum: #9ab38f; --gum-2: #718d6e; --jac: #a98fd9; --jac-2: #8a73c2;
+  --mat: #c5cac6; --ground: #4a5559; --detail: rgba(255, 255, 255, .18); --water: #44717d; --tree: #557d40; --tree-2: #3a5a2e;
+  --gum: #8e9d7a; --gum-2: #66765a; --jac: #9686c4; --jac-2: #786aa8;
   --sun: #fff3dc; --shade: #0a1b24; --lit-mix: #eefcf8; --lift: 0%; --lift-g: 0%;
   cursor: pointer; transform-box: view-box;
   transition: translate .55s var(--ease-spring), scale .55s var(--ease-spring), opacity .35s var(--ease), --lift .35s var(--ease), --lift-g .35s var(--ease), --detail .35s var(--ease);
 }
 /* each district's ground and its usual material */
-.city-svg .zone[data-zone="river"] { --ground: #2d6b3d; }
-.city-svg .zone[data-zone="sewer"] { --ground: #3c7c47; --mat: #ece3cf; }
+.city-svg .zone[data-zone="river"] { --ground: #4b6a38; }
+.city-svg .zone[data-zone="sewer"] { --ground: #50703c; --mat: #ece3cf; }
 .city-svg .zone[data-zone="cbd"] { --ground: #4b5559; --mat: #8aa3b5; }
-.city-svg .zone[data-zone="plant"] { --ground: #5a6562; }
-.city-svg .zone[data-zone="pump"] { --ground: #37713f; --mat: #b8684c; }
+.city-svg .zone[data-zone="plant"] { --ground: #5d6460; --water: #2f4e52; }
+.city-svg .zone.active[data-zone="plant"] { --water: #45686b; }
+.city-svg .zone[data-zone="pump"] { --ground: #4d6b3a; --mat: #b8684c; }
 .city-svg .zone[data-zone="ops"] { --ground: #47525a; --mat: #2fb3a3; }
 .city-svg .zone[data-zone="industry"] { --ground: #4f5654; --mat: #b7c0c2; }
 /* materials: walls and tanks */
@@ -741,7 +745,7 @@ html.drawer-open { overflow: hidden; scrollbar-gutter: stable; }
 .city-svg .zone .green { --mat: #6f9c84; } .city-svg .zone .white { --mat: #f4f6f3; } .city-svg .zone .timber { --mat: #b07a4a; }
 .city-svg .zone .red { --mat: #d8403a; } .city-svg .zone .fork { --mat: #e0a526; }
 /* roofs: terracotta tile, slate, and Colorbond in green, grey and red */
-.city-svg .zone .tile { --roof: #cd6646; } .city-svg .zone .slate { --roof: #6f7f8c; } .city-svg .zone .cb-green { --roof: #5d8f77; }
+.city-svg .zone .tile { --roof: #a95c44; } .city-svg .zone .slate { --roof: #6f7f8c; } .city-svg .zone .cb-green { --roof: #5d8f77; }
 .city-svg .zone .cb-grey { --roof: #a3aeb1; } .city-svg .zone .cb-red { --roof: #a8463a; }
 .city-svg .zone:focus { outline: none; }
 .city-svg .zone > .g, .city-svg .zone .ge-l, .city-svg .zone .ge-r, .city-svg .zone .decals, .city-svg .zone .vol, .city-svg .zone .fx { transition: opacity .45s var(--ease), stroke .35s var(--ease); }
@@ -755,15 +759,22 @@ html.drawer-open { overflow: hidden; scrollbar-gutter: stable; }
 .city-svg .zone .rf-e { fill: color-mix(in oklab, color-mix(in oklab, var(--roof, var(--mat)), var(--sun) 6%), var(--lit-mix) var(--lift)); }
 .city-svg .zone .rf-w { fill: color-mix(in oklab, color-mix(in oklab, var(--roof, var(--mat)), var(--shade) 18%), var(--lit-mix) var(--lift)); }
 .city-svg .zone .rf-s { fill: color-mix(in oklab, color-mix(in oklab, var(--roof, var(--mat)), var(--shade) 34%), var(--lit-mix) var(--lift)); }
-.city-svg .zone .cast { fill: rgba(3, 12, 18, .3); }
+.city-svg .zone .cast { fill: rgba(6, 14, 28, .32); }
+/* the light falling off down every wall, and the photographic ground */
+.city-svg .zone .ao { fill: url(#ao); pointer-events: none; }
+.city-svg .tex-photo { pointer-events: none; }
+.city-svg .zone .roll { fill: url(#roll); pointer-events: none; }
+.city-svg .zone .ft-tex { fill: url(#tx-grain); pointer-events: none; }
+.city-svg .soil-photo { fill: url(#tx-soil); opacity: .34; }
+.city-svg .soil-photo-r { opacity: .26; }
 .city-svg .zone .win { opacity: .9; }
 .city-svg .zone .pod { fill: rgba(5, 14, 20, .5); }
 .city-svg .zone .det { stroke: var(--detail); stroke-width: 1; fill: none; }
 .city-svg .zone .mast { stroke: rgba(255, 255, 255, .55); stroke-width: 1.2; fill: none; }
 .city-svg .zone .wtr { fill: var(--water); stroke: rgba(2, 10, 14, .22); stroke-width: .5; transition: fill .35s var(--ease); }
-.city-svg .zone-fx .wtr-line { stroke: rgba(255, 255, 255, .5); stroke-width: 1.2; fill: none; stroke-dasharray: 6 12; stroke-linecap: round; animation: dash-flow 2.2s linear infinite; }
+.city-svg .zone-fx .wtr-line { stroke: rgba(225, 240, 236, .26); stroke-width: .8; fill: none; stroke-dasharray: 6 12; stroke-linecap: round; animation: dash-flow 2.2s linear infinite; }
 .city-svg .zone .sheen { fill: url(#water-sheen); }
-.city-svg .zone .bank { fill: #6f7d55; opacity: .7; }
+.city-svg .zone .bank { fill: #7b7558; opacity: .75; }
 .city-svg .zone .flood { opacity: 0; transition: opacity 3s var(--ease); }
 .city-svg .zone .pool { opacity: .85; }
 .city-svg .zone .lane { fill: #2a3135; }
@@ -773,7 +784,7 @@ html.drawer-open { overflow: hidden; scrollbar-gutter: stable; }
 .city-svg .zone .park { fill: var(--tree-2); opacity: .5; }
 .city-svg .zone .oval { fill: rgba(255, 255, 255, .06); stroke: rgba(255, 255, 255, .55); stroke-width: 1; }
 .city-svg .zone .pitch { fill: #c9b98c; opacity: .8; }
-.city-svg .zone .pool-b { fill: #38bdf8; opacity: .75; }
+.city-svg .zone .pool-b { fill: #4fb3cf; opacity: .85; }
 /* the EDS fleet and crews: more vans out in a storm, every beacon flashing,
    a crew at each site the storm reaches (city.js adds the crew-* classes) */
 @keyframes vb-flash { 0%, 49% { --vb: #f59e0b; } 50%, 100% { --vb: #4a3208; } }
@@ -829,15 +840,15 @@ html.drawer-open { overflow: hidden; scrollbar-gutter: stable; }
 .city-svg .zone .eave { fill: rgba(0, 0, 0, .2); }
 .city-svg .zone .hwin { fill: rgba(8, 18, 28, .6); }
 .city-svg .zone .hwin-lit { fill: rgba(255, 216, 150, .82); }
-.city-svg .zone .sill { fill: none; stroke: rgba(255, 255, 255, .28); stroke-width: .6; }
+.city-svg .zone .sill { fill: none; stroke: rgba(255, 255, 255, .18); stroke-width: .6; }
 .city-svg .zone .tiles { fill: none; stroke: rgba(0, 0, 0, .16); stroke-width: .6; }
-.city-svg .zone .ridge { fill: none; stroke: rgba(255, 255, 255, .26); stroke-width: .7; stroke-linecap: round; stroke-linejoin: round; }
+.city-svg .zone .ridge { fill: none; stroke: rgba(255, 244, 222, .16); stroke-width: .7; stroke-linecap: round; stroke-linejoin: round; }
 .city-svg .zone .clad { opacity: .9; }
 .city-svg .zone .slats { fill: url(#slats); }
 .city-svg .zone .roofin { fill: rgba(0, 0, 0, .12); stroke: rgba(255, 255, 255, .08); stroke-width: .5; }
 .city-svg .zone .ribs { fill: none; stroke: rgba(0, 0, 0, .1); stroke-width: .6; }
 .city-svg .zone .seam { fill: none; stroke: rgba(0, 0, 0, .18); stroke-width: .6; }
-.city-svg .zone .stripe { fill: none; stroke: var(--red); stroke-width: 2; opacity: .55; }
+.city-svg .zone .stripe { fill: none; stroke: #a04a3e; stroke-width: 2; opacity: .6; }
 .city-svg .zone .tank-rail { fill: none; stroke: rgba(255, 255, 255, .32); stroke-width: .6; }
 .city-svg .zone .trail { fill: none; stroke: rgba(222, 205, 170, .3); stroke-width: 3.4; stroke-linecap: round; stroke-linejoin: round; }
 .city-svg .zone .sludge { fill: #4b4034; opacity: .85; }
@@ -883,7 +894,7 @@ html.drawer-open { overflow: hidden; scrollbar-gutter: stable; }
 /* definition (November 2026): a dark line along the foot of every block and
    down its near corner where no lit edge runs; and the detail pass's
    pickets, flower beds, awnings, helipad, lit crown and grated walkway */
-.city-svg .zone .ink { fill: none; stroke: rgba(2, 10, 14, .34); stroke-width: .7; stroke-linejoin: round; stroke-linecap: round; }
+.city-svg .zone .ink { fill: none; stroke: rgba(2, 10, 14, .28); stroke-width: .9; stroke-linejoin: round; stroke-linecap: round; }
 .city-svg .zone .picket { fill: none; stroke: rgba(240, 244, 242, .6); stroke-width: .6; }
 .city-svg .zone .flower-a { fill: #f472b6; } .city-svg .zone .flower-b { fill: #fde68a; }
 .city-svg .zone .awning { fill: #e6dccb; } .city-svg .zone .awning-edge { stroke: rgba(0, 0, 0, .35); stroke-width: .7; }
@@ -949,7 +960,7 @@ html.drawer-open { overflow: hidden; scrollbar-gutter: stable; }
 .city-svg.has-active .zone:not(.active) { opacity: .78; }
 /* a third of the way to the highlight: the pick reads, and the tiles stay
    terracotta and the brick red rather than going pastel */
-.city-svg .zone.active { --lift: 34%; --lift-g: 17%; --detail: rgba(4, 32, 29, .32); --water: #4fc3f7; translate: 0 -14px; scale: 1.07; }
+.city-svg .zone.active { --lift: 34%; --lift-g: 17%; --detail: rgba(4, 32, 29, .32); --water: #5d8c97; translate: 0 -14px; scale: 1.07; }
 .city-svg .zone.active .g { stroke: var(--aqua); stroke-width: 1.6; }
 /* keyboard focus: a white edge round the district, heavier than the selection's */
 .city-svg .zone:focus-visible > .g, .city-svg .zone.active:focus-visible > .g { stroke: #fff; stroke-width: 2.8; }
