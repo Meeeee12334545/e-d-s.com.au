@@ -295,7 +295,7 @@ def overlay(v, light, dark, k):
 def city_grass():
     """Mown grass seen from a few hundred metres: dry and lush patches, mower
     stripes worn faint, clumps, and a fine grain."""
-    n = 224
+    n = 320
     patches = noise(61, beta=3.4, lo=1, hi=6, n=n)
     clumps = noise(62, beta=2.0, lo=6, hi=40, n=n)
     grain = noise(63, beta=0.5, lo=60, n=n)
@@ -308,7 +308,7 @@ def city_grass():
 def city_grain():
     """Weathering for paving, hardstand and yards: stains, tyre-darkened
     patches and pale flecks."""
-    n = 224
+    n = 320
     rng = np.random.default_rng(64)
     stains = noise(65, beta=3.0, lo=1, hi=8, n=n)
     mid = noise(66, beta=1.8, lo=8, hi=60, n=n)
@@ -321,15 +321,15 @@ def city_grain():
     return overlay(v, (235, 232, 222), (8, 12, 14), 0.17)
 
 
-TEXTURES["city-grass"] = (city_grass, 80)
-TEXTURES["city-grain"] = (city_grain, 80)
+TEXTURES["city-grass"] = (city_grass, 50)
+TEXTURES["city-grain"] = (city_grain, 50)
 
 
 def city_facade():
     """Weathering on a wall seen from a distance: rain streaks running down
     from sills and parapets, soft grime, and a fine render grain. Streaks are
     vertical, so one unskewed tile suits both faces of an iso block."""
-    n = 224
+    n = 320
     streaks = noise(71, beta=2.2, lo=3, hi=60, sx=1.0, sy=0.08, n=n)
     grime = noise(72, beta=3.0, lo=1, hi=8, n=n)
     fine = noise(73, beta=0.4, lo=80, n=n)
@@ -340,7 +340,7 @@ def city_facade():
     return overlay(v, (240, 236, 226), (14, 16, 18), 0.16)
 
 
-TEXTURES["city-facade"] = (city_facade, 80)
+TEXTURES["city-facade"] = (city_facade, 50)
 
 
 def main():

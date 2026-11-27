@@ -766,6 +766,17 @@ html.drawer-open { overflow: hidden; scrollbar-gutter: stable; }
 .city-svg .zone .roll { fill: url(#roll); pointer-events: none; }
 .city-svg .zone .ft-tex { fill: url(#tx-grain); pointer-events: none; }
 /* buildings pass (28 November 2026): weathered walls and roofs, and a fascia over the shopfronts */
+/* life pass (28 November 2026): cloud shadows on a westerly (down and to the
+   right on screen) and a flock of birds crossing now and then */
+.city-fx .sky-life { pointer-events: none; }
+.city-fx .cloud-sh { fill: url(#cloud-sh); animation: cloud-drift 170s linear infinite; }
+.city-fx .cloud-sh ellipse { fill: url(#cloud-sh); }
+@keyframes cloud-drift { from { translate: -560px -280px; } to { translate: 560px 280px; } }
+.city-fx .flock { animation: flock-cross 46s linear infinite; animation-delay: -30s; }
+@keyframes flock-cross { 0% { translate: -380px 40px; } 55%, 100% { translate: 520px -70px; } }
+.city-fx .bird { fill: none; stroke: rgba(18, 24, 28, .7); stroke-width: .6; stroke-linecap: round; stroke-linejoin: round; transform-box: fill-box; transform-origin: center; animation: wing .42s ease-in-out infinite alternate; }
+@keyframes wing { to { scale: 1 -.5; } }
+.city-fx.is-storm .sky-life, .city-fx:is(.is-underground, .is-exploded) .sky-life { visibility: hidden; }
 .city-svg .zone .wtex { fill: url(#tx-facade); opacity: .45; pointer-events: none; }
 .city-svg .zone .rtex { fill: url(#tx-grain); opacity: .6; pointer-events: none; }
 .city-svg .zone .pod-head { fill: none; stroke: rgba(236, 232, 220, .32); stroke-width: .8; stroke-linejoin: round; }

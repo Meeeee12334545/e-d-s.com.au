@@ -805,6 +805,7 @@
         // each window is set into the wall: the head throws a shadow on the
         // glass, the sill catches the light, and here and there a blind is down
         heads.push(rect(1.1 + c * 7, 0.9 + r * 5, 4.8, 0.6));
+        heads.push(rect(1.1 + c * 7, 2.05 + r * 5, 4.8, 0.22));
         sills.push(rect(0.9 + c * 7, 4.1 + r * 5, 5.2, 0.4));
         if (k === "0" && (r * 3 + c + v.charCodeAt(0)) % 5 === 0) blinds.push(rect(1.1 + c * 7, 1.5 + r * 5, 4.8, 1.3));
         if (k !== "0") mull.push(rect(3.3 + c * 7, 0.9 + r * 5, 0.4, 3.2));
@@ -868,6 +869,7 @@
     grad("hub-glow", "radialGradient", [[0, "rgba(95,180,166,.55)"], [1, "rgba(95,180,166,0)"]]);
     grad("water-sheen", "linearGradient", [[0, "rgba(255,255,255,.2)"], [1, "rgba(255,255,255,0)"]], { x1: 0, y1: 0, x2: 0, y2: 1 });
     grad("roll", "linearGradient", [[0, "rgba(4,10,16,.28)"], [0.3, "rgba(4,10,16,.06)"], [0.52, "rgba(255,248,230,0)"], [0.7, "rgba(255,248,230,.2)"], [0.84, "rgba(255,248,230,.05)"], [1, "rgba(4,10,16,.18)"]]);
+    grad("cloud-sh", "radialGradient", [[0, "rgba(8,18,32,.3)"], [0.55, "rgba(8,18,32,.19)"], [1, "rgba(8,18,32,0)"]]);
     grad("ao", "linearGradient", [[0, "rgba(255,246,226,.08)"], [0.45, "rgba(255,246,226,0)"], [0.7, "rgba(4,10,16,.08)"], [1, "rgba(4,10,16,.36)"]], { x1: 0, y1: 0, x2: 0, y2: 1 });
     grad("solar-grad", "linearGradient", [[0, "#2b5c8a"], [1, "#6fa6e0"]]);
     return D;
@@ -1045,6 +1047,18 @@
     walk([P(15.14, -0.4), P(15.14, 10.4)], 105, -60, "#5fb4a6");
     walk([P(4.65, -0.4), ...bridge(0, 1), P(4.65, 10.4)], 85, -40, "#fda4af", behind5);
     walk([P(4.65, 10.4), ...bridge(1, 0), P(4.65, -0.4)], 90, -5, "#e7fff9", behind5);
+    // (life pass, 28 November 2026) more people out: the south side of the
+    // main road, both footpaths of the x = 10 road and the near side road,
+    // each behind whatever stands in front of that road
+    const behind10 = el("g", { class: "walkers", "clip-path": "url(#clip-x10)" }, far10), behind7 = el("g", { class: "walkers", "clip-path": "url(#clip-x7)" }, x7);
+    walk([P(-0.4, 5.35), P(15.4, 5.35)], 135, -25, "#f4f6f2", behind);
+    walk([P(15.4, 5.35), P(-0.4, 5.35)], 125, -100, "#38bdf8", behind);
+    walk([P(9.65, -0.4), P(9.65, 10.4)], 80, -15, "#ef4444", behind10);
+    walk([P(10.35, 10.4), P(10.35, -0.4)], 88, -50, "#f2c14e", behind10);
+    walk([P(10.35, -0.4), P(10.35, 10.4)], 92, -78, "#8a78c0", behind10);
+    walk([P(5.35, 10.4), P(5.35, -0.4)], 84, -33, "#5fb4a6", behind5);
+    walk([P(7.95, 5.4), P(7.95, 10.4)], 44, -12, "#e7fff9", behind7);
+    walk([P(7.25, 10.4), P(7.25, 5.4)], 48, -30, "#ef4444", behind7);
     // in a storm more of the EDS fleet is on the road, and moving faster
     vehicle("van-e", "E", 3.0, "patrol", 1.8); vehicle("van-s", "S10", 7.4, "patrol", 1.8); vehicle("van-n", "N5", 1.5, "patrol", 1.8); vehicle("van-w", "W", 10.1, "patrol", 1.8);
     // the lit lamps of each signal head: city-traffic.js sets data-state as the signals cycle
@@ -2193,6 +2207,22 @@
         labels[id] = lg;
       });
 
+    // Life (28 November 2026): the shadows of fair-weather clouds drift
+    // across the city on a westerly, and now and then a flock of birds
+    // crosses. Both are in the overlay, moved by transform alone; the cloud
+    // shadows keep to the slab (a clip without holes costs nothing).
+    const sky = el("g", { class: "sky-life", "aria-hidden": "true" });
+    fx.insertBefore(sky, heliLayer);
+    const clouds = el("g", { class: "cloud-shadows", "clip-path": "url(#clip-slab)" }, sky);
+    [[P(4, 2), 160, -20, 1.35], [P(11, 3), 200, -120, 1.1], [P(6, 8), 180, -75, 1.5]].forEach(([[cx, cy], dur, delay, k], i) => {
+      const c = el("g", { class: "cloud-sh", style: `animation-duration:${dur}s;animation-delay:${delay}s` }, clouds);
+      [[0, 0, 70, 30], [-48, 10, 48, 21], [52, 6, 54, 23], [8, -16, 44, 18]].forEach(([dx, dy, rx, ry]) => el("ellipse", { cx: f(cx + dx * k), cy: f(cy + dy * k), rx: f(rx * k), ry: f(ry * k) }, c));
+    });
+    const flock = el("g", { class: "flock" }, sky);
+    [[0, 0], [-7, 3], [-6, -4], [-14, 5], [-13, -2], [-20, 1]].forEach(([dx, dy], i) => {
+      const b = el("g", { transform: `translate(${dx} ${dy})` }, flock);
+      el("path", { class: "bird", d: "M-2.2 0Q-1.1 -1.3 0 0Q1.1 -1.3 2.2 0", style: `animation-delay:${(-i * 0.13).toFixed(2)}s` }, b);
+    });
     // EDS crews that turn out in a storm. Each stands in the street layer of
     // its district, so it lifts and comes apart with it; city.js shows each
     // crew as the storm reaches that district.
