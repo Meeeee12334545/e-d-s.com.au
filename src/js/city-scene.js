@@ -74,6 +74,10 @@
   // what people wear, in the colours clothes come in; hi-vis stays hi-vis
   const CLOTHES = { "#38bdf8": "#4a6a86", "#5fb4a6": "#5d7f78", "#8a78c0": "#5b5470", "#e7fff9": "#e2e4df", "#ef4444": "#9c3a35", "#f2c14e": "#c4a467", "#f4f6f2": "#d9dbd6" };
   const wear = (c) => CLOTHES[c] || c;
+  // and the rest of what makes people look like a crowd: skin, hair, trousers
+  const SKINS = ["#e8b98a", "#c68642", "#f1c9a5", "#8d5524", "#d9a172", "#a8703f"], HAIRS = ["#2b1d14", "#6b4a2e", "#1a1a1a", "#c9a66b", "#3b2a1e", "#8a8a86", "#4a2a1a"], LEGS = ["#2b3a4a", "#3d3a36", "#1f2328", "#6b6255", "#30455e", "#5a5f63", "#2a2f38"];
+  let people = 0;
+  const dress = (shirt) => { const i = people++; return `--shirt:${wear(shirt)};--skin:${SKINS[(i * 5 + 1) % SKINS.length]};--hair:${HAIRS[(i * 3) % HAIRS.length]};--legs:${LEGS[(i * 2 + 3) % LEGS.length]}`; };
 
   // The overlay paints over the still city, so a vehicle would show through
   // anything standing between it and the viewer. While the city is being
@@ -298,7 +302,7 @@
     const [px, py] = P(x, y, z);
     if (solids) OUTLINES[sym]?.forEach((a) => solid(x, y, a.map(([ax, ay]) => [px + ax, py + ay])));
     let style = o.style;
-    if (!style && sym.startsWith("car-")) style = `--car:${CARS[turns.car++ % CARS.length]}`;
+    if (!style && /^(car|hatch|suv|ute)-/.test(sym)) style = `--car:${CARS[turns.car++ % CARS.length]}`;
     if (!style && sym === "bin") style = `--lid:${LIDS[turns.bin++ % LIDS.length]}`;
     if (!style && sym === "parasol") style = `--para:${PARAS[turns.para++ % PARAS.length]}`;
     return { ...item(o.d ?? x + y + 0.05, el("use", { href: `#${sym}`, class: o.cls, transform: `translate(${f(px)} ${f(py)})`, style })), s: z > 0.5 ? "hi" : "lo" };
@@ -326,7 +330,7 @@
   const gum = (x, y) => use("tree-gum", x, y, 0, { d: x + y + 0.1 });
   const jac = (x, y) => use("tree-jac", x, y, 0, { d: x + y + 0.1 });
   // a person, in their own --shirt
-  const who = (x, y, shirt, o = {}) => use("person", x, y, o.z || 0, { d: o.d ?? x + y + 0.06, style: `--shirt:${wear(shirt)}`, cls: "fine" });
+  const who = (x, y, shirt, o = {}) => use("person", x, y, o.z || 0, { d: o.d ?? x + y + 0.06, style: dress(shirt), cls: "fine" });
   const manhole = (x, y, o = {}) => {
     const [cx, cy] = P(x, y);
     return lo(item(x + y, el("ellipse", { class: "mh", cx: f(cx), cy: f(cy), rx: 6, ry: 3 }), el("ellipse", { class: "mh-ring", cx: f(cx), cy: f(cy), rx: 3.4, ry: 1.7 }), o.open && [
@@ -384,6 +388,30 @@
     const F = (color) => `fill:${color}`;
     // a palette colour that a lifted district mixes toward its highlight, like the faces do
     const FM = (v) => `fill:color-mix(in oklab, var(${v}), var(--lit-mix, #eefcf8) var(--lift, 0%))`;
+    // People (vehicles and people pass, 28 November 2026): an adult's build,
+    // about seven and a half heads tall, drawn from one figure: shoes, legs
+    // in --legs, a top in --shirt with its shoulders and arms, hands, a neck,
+    // a head in --skin and hair in --hair. The side away from the sun is in
+    // shade, and the shadow falls the way the buildings' do. `kit` dresses
+    // the figure for a crew member or an officer.
+    const figure = (g, kit = {}) => {
+      el("ellipse", { cx: -1.3, cy: 0.35, rx: 2.1, ry: 0.6, style: F("rgba(4,10,16,.3)") }, g);
+      const legs = kit.legs || "var(--legs, #2b3a4a)", top = kit.top || "var(--shirt, #c4a467)", skin = "var(--skin, #e8b98a)";
+      g.append(shapes("", [[[-0.78, -0.3], [-0.12, -0.3], [-0.08, -3.1], [-0.86, -3.1]], [[0.12, -0.3], [0.78, -0.3], [0.86, -3.1], [0.08, -3.1]]], { style: F(legs) }));
+      g.append(shapes("", [[[-0.9, 0], [-0.08, 0], [-0.1, -0.38], [-0.82, -0.38]], [[0.1, 0], [0.92, 0], [0.84, -0.38], [0.1, -0.38]]], { style: F(kit.shoes || "#1c1e20") }));
+      // arms hang just outside the torso, hands at the hips
+      g.append(strokes("", [[[-1.02, -5.35], [-1.22, -3.3]], [[1.02, -5.35], [1.22, -3.3]]], { style: `fill:none;stroke:${top};stroke-width:.62;stroke-linecap:round` }));
+      el("path", { d: "M-1.05 -3.0L-1.0 -5.25Q-1.0 -5.75 -.5 -5.8H.5Q1.0 -5.75 1.0 -5.25L1.05 -3.0Z", style: F(top) }, g);
+      if (kit.band) el("rect", { x: -1.03, y: -4.35, width: 2.06, height: 0.42, style: F(kit.band) }, g);
+      if (kit.belt) el("rect", { x: -1.05, y: -3.3, width: 2.1, height: 0.32, style: F(kit.belt) }, g);
+      el("path", { d: "M-1.05 -3.0L-1.0 -5.25Q-1.0 -5.75 -.5 -5.8H-.3V-3.0Z", style: F("rgba(0,0,0,.2)") }, g);
+      g.append(shapes("", [[[-1.4, -3.32], [-1.0, -3.32], [-1.04, -2.86], [-1.36, -2.86]], [[1.0, -3.32], [1.4, -3.32], [1.36, -2.86], [1.04, -2.86]]], { style: F(skin) }));
+      el("rect", { x: -0.26, y: -6.15, width: 0.52, height: 0.45, style: F(skin) }, g);
+      el("circle", { cx: 0, cy: -6.62, r: 0.74, style: F(skin) }, g);
+      el("path", { d: "M-.3 -6.0A.74 .74 0 0 1 -.74 -6.62", style: "fill:none;stroke:rgba(0,0,0,.18);stroke-width:.3" }, g);
+      if (kit.hat) kit.hat(g);
+      else el("path", { d: "M-.78 -6.55A.78 .78 0 0 1 .78 -6.55Q.7 -6.95 0 -6.98Q-.62 -6.95 -.78 -6.4Z", style: F("var(--hair, #3b2a1e)") }, g);
+    };
     // trees (realism pass, 28 November 2026): a canopy of overlapping
     // lobes in three tones, lit from the sun's side (upper right on screen)
     // and darker under and away from it, on a dark trunk, with its shadow
@@ -406,6 +434,13 @@
       g.append(pl("", [[0, 0], [0, -15], [2.2, -16.2]], { style: "fill:none;stroke:rgba(255,255,255,.3);stroke-width:1" }));
       el("ellipse", { cx: 2.4, cy: -16, rx: 2, ry: 1.1, style: F("#fff1c9") }, g);
     });
+    // the near wheels of a box-bodied vehicle (vans and trucks): a dark sill
+    // along the foot of the near side, then tyre, rim and hub at each `t`
+    const wheelsOn = (g, alongX, x, y, w, d, ts, r) => {
+      const at = alongX ? (t, z, k = 0) => P(x + w * t + k / 31.3, y + d + 0.003, z) : (t, z, k = 0) => P(x + w + 0.003, y + d * t + k / 31.3, z);
+      g.append(poly("", [at(0.02, 0), at(0.98, 0), at(0.98, r * 0.9), at(0.02, r * 0.9)], { style: F("rgba(10,14,16,.6)") }));
+      for (const t of ts) for (const [k, c, n] of [[1, "#111416", 16], [0.56, "#a4adb1", 10], [0.2, "#3b4347", 6]]) g.append(poly("", Array.from({ length: n }, (_, i) => { const a = i / n * Math.PI * 2; return at(t, r + Math.sin(a) * r * k, Math.cos(a) * r * k); }), { style: F(c) }));
+    };
     // vehicles: one symbol per direction of travel, so the beam leads
     const vehicle = (id, len, wid, h, cols, dir, o = {}) => sym(id, (g) => {
       const x = -len / 2, y = -wid / 2, w = len, d = wid;
@@ -451,11 +486,84 @@
         const end = alongX ? (a, b, z0, z1) => onR(x + w, y, a * d, b * d, z0, z1) : (a, b, z0, z1) => onL(x, y + d, a * w, b * w, z0, z1);
         g.append(dir === "e" || dir === "s" ? poly("", end(0.08, 0.92, h * 0.56, h * 0.88), { style: F("#0c2422") }) : shapes("", [end(0.1, 0.46, h * 0.56, h * 0.84), end(0.54, 0.9, h * 0.56, h * 0.84)], { style: F("#0c2422") }));
       }
+      if (o.eds) wheelsOn(g, w >= d, x, y, w, d, [0.2, 0.8], 1.1);
       const tail = { e: [[x, y + d * 0.25], [x, y + d * 0.75]], w: [[x + w, y + d * 0.25], [x + w, y + d * 0.75]], s: [[x + w * 0.25, y], [x + w * 0.75, y]], n: [[x + w * 0.25, y + d], [x + w * 0.75, y + d]] }[dir];
       if (tail) for (const [tx, ty] of tail) { const [a, c] = P(tx, ty, h * 0.5); el("circle", { cx: f(a), cy: f(c), r: 0.9, style: F("var(--red)") }, g); }
     });
     const CAR = ["var(--car, #2f8d84)", "color-mix(in oklab, var(--car, #2f8d84), #0a1b24 48%)", "color-mix(in oklab, var(--car, #2f8d84), #0a1b24 26%)"], VAN = ["#f1fffc", "#6fcfc1", "#a9ebe1"], TRK = ["#9ca9ad", "#3b474b", "#5a6a6f"];
-    vehicle("car-e", 0.3, 0.16, 4.2, CAR, "e", { cabin: true }); vehicle("car-w", 0.3, 0.16, 4.2, CAR, "w", { cabin: true }); vehicle("car-s", 0.16, 0.3, 4.2, CAR, "s", { cabin: true }); vehicle("car-n", 0.16, 0.3, 4.2, CAR, "n", { cabin: true });
+    // Cars (vehicles and people pass, 28 November 2026), drawn as cars rather
+    // than boxes, the way the roadster is: `at(t, s, z)` places a point by
+    // length (0 tail to 1 nose), across (0 far side to 1 near side) and
+    // height, so one drawing serves all four directions. A body with a bonnet
+    // and boot that fall away at the ends, the near wheels in their arches,
+    // bumpers, lights and a number plate on the end the viewer sees, a
+    // shoulder line catching the sun, and a glasshouse that tapers in to the
+    // roof: the slope facing away first, the roof, the slope facing the
+    // viewer, then the side glass with its pillars and a reflection across it.
+    // The traffic has four bodies, as an Australian street does: sedans,
+    // hatches, SUVs and utes. `o.after(g, at, k)` adds a livery (the police).
+    const BODIES = {
+      car: { L: 0.3, W: 0.16, clear: 0.55, belt: 2.35, roof: 4.2, wr: 1.0, cab: [0.2, 0.8, 0.34, 0.64] },
+      hatch: { L: 0.28, W: 0.155, clear: 0.55, belt: 2.4, roof: 4.3, wr: 0.95, cab: [0.08, 0.78, 0.12, 0.6] },
+      suv: { L: 0.31, W: 0.165, clear: 0.85, belt: 2.85, roof: 5.0, wr: 1.2, cab: [0.08, 0.8, 0.12, 0.62] },
+      ute: { L: 0.32, W: 0.165, clear: 0.8, belt: 2.75, roof: 4.8, wr: 1.15, cab: [0.42, 0.8, 0.47, 0.66], tray: 0.4 },
+    };
+    const carSym = (id, dir, B, cols, o = {}) => sym(id, (g) => {
+      const ew = dir === "e" || dir === "w", fwd = dir === "e" || dir === "s", { L, W, clear, belt, roof, wr, cab } = B;
+      const at = (t, s, z) => { const u = (fwd ? t : 1 - t) * L - L / 2, v = s * W - W / 2; return ew ? P(u, v, z) : P(v, u, z); };
+      const put = (pts, fill) => g.append(poly("", pts, { style: `fill:${fill}` }));
+      const line = (pts, c, w) => g.append(pl("", pts, { style: `fill:none;stroke:${c};stroke-width:${w};stroke-linecap:round;stroke-linejoin:round` }));
+      const end = fwd ? 1 : 0, nose = fwd, [top, dark, light] = cols, near = ew ? dark : light, endc = ew ? light : dark;
+      // the height of the body's top edge along its length: the bonnet drops toward the nose, the boot a little toward the tail
+      const T = [0, 0.1, 0.24, 0.72, 0.9, 1], bh = (t) => belt - (t > 0.72 ? 0.55 * (t - 0.72) / 0.28 : t < 0.1 ? 0.3 * (0.1 - t) / 0.1 : 0);
+      const foot = ew ? [[-L / 2, -W / 2], [L / 2, -W / 2], [L / 2, W / 2], [-L / 2, W / 2]] : [[-W / 2, -L / 2], [W / 2, -L / 2], [W / 2, L / 2], [-W / 2, L / 2]];
+      g.append(poly("", castOf(foot, roof), { style: F("rgba(4,12,22,.3)") }));
+      put([at(-0.03, -0.06, 0), at(1.03, -0.06, 0), at(1.03, 1.08, 0), at(-0.03, 1.08, 0)], "rgba(3,8,12,.42)");
+      // the running gear under the body, in shadow
+      put([at(0.04, 1, 0.15), at(0.96, 1, 0.15), at(0.96, 1, clear), at(0.04, 1, clear)], "#121618");
+      // the body: the end the viewer sees, the near side, the top
+      put([at(end, 0, clear), at(end, 1, clear), at(end, 1, bh(end)), at(end, 0, bh(end))], endc);
+      put([...T.map((t) => at(t, 1, clear)).reverse(), ...T.map((t) => at(t, 1, bh(t)))], near);
+      for (let i = 0; i < T.length - 1; i++) put([at(T[i], 0, bh(T[i])), at(T[i + 1], 0, bh(T[i + 1])), at(T[i + 1], 1, bh(T[i + 1])), at(T[i], 1, bh(T[i]))], top);
+      if (B.tray) {
+        // a ute's tray: the open tub behind the cab, dark inside, a rim round it
+        const tr = B.tray, z = bh(0.3);
+        put([at(0.02, 0.06, z), at(tr, 0.06, z), at(tr, 0.94, z), at(0.02, 0.94, z)], "#22282b");
+        line([at(0.02, 0.94, z), at(0.02, 0.06, z), at(tr, 0.06, z)], "rgba(0,0,0,.4)", 0.35);
+      }
+      // the arches and the near wheels: tyre, rim, hub
+      const ring = (t0, z0, r, n = 16) => Array.from({ length: n }, (_, i) => { const a = i / n * Math.PI * 2; return at(t0 + Math.cos(a) * r / 31.3 / L, 1.01, z0 + Math.sin(a) * r); });
+      for (const t0 of [0.18, 0.8]) {
+        put(Array.from({ length: 9 }, (_, i) => { const a = Math.PI * (i / 8); return at(t0 + Math.cos(a) * wr * 1.3 / 31.3 / L, 1.005, wr + Math.sin(a) * wr * 1.3); }), "rgba(6,10,12,.5)");
+        put(ring(t0, wr, wr), "#111416"); put(ring(t0, wr, wr * 0.56, 10), "#a4adb1"); put(ring(t0, wr, wr * 0.2, 6), "#3b4347");
+      }
+      // bumper, lights and the number plate on the visible end
+      const ez = (k) => clear + (bh(end) - clear) * k;
+      put([at(end, 0.02, clear), at(end, 0.98, clear), at(end, 0.98, ez(0.3)), at(end, 0.02, ez(0.3))], "rgba(10,14,16,.55)");
+      put([at(end, 0.38, ez(0.34)), at(end, 0.62, ez(0.34)), at(end, 0.62, ez(0.58)), at(end, 0.38, ez(0.58))], "#e9ece6");
+      for (const [a, b] of [[0.05, 0.27], [0.73, 0.95]]) put([at(end, a, ez(0.62)), at(end, b, ez(0.62)), at(end, b, ez(0.9)), at(end, a, ez(0.9))], nose ? "#eef3f2" : "#b4262c");
+      // a light wrapping round the near corner, and the shoulder line catching the sun
+      put([at(end ? 0.965 : 0, 1, ez(0.62)), at(end ? 1 : 0.035, 1, ez(0.62)), at(end ? 1 : 0.035, 1, ez(0.9)), at(end ? 0.965 : 0, 1, ez(0.9))], nose ? "#d9e0df" : "#9e2328");
+      line(T.slice(1, -1).map((t) => at(t, 1, bh(t) - 0.28)), "rgba(255,255,255,.32)", 0.32);
+      // the door seam and handle
+      const dm = (cab[0] + cab[1]) / 2;
+      line([at(dm, 1, clear + 0.2), at(dm, 1, bh(dm) - 0.1)], "rgba(0,0,0,.28)", 0.25);
+      line([at(dm - 0.1, 1, bh(dm) - 0.55), at(dm - 0.05, 1, bh(dm) - 0.55)], "rgba(0,0,0,.4)", 0.3);
+      // the glasshouse
+      const [b0, b1, r0, r1] = cab, sb = 0.06, sr = 0.15, zb0 = bh(b0), zb1 = bh(b1);
+      const rear = () => put([at(b0, sb, zb0), at(b0, 1 - sb, zb0), at(r0, 1 - sr, roof), at(r0, sr, roof)], "#26343d");
+      const front = () => put([at(b1, sb, zb1), at(b1, 1 - sb, zb1), at(r1, 1 - sr, roof), at(r1, sr, roof)], "#344a57");
+      const lid = () => put([at(r0, sr, roof), at(r1, sr, roof), at(r1, 1 - sr, roof), at(r0, 1 - sr, roof)], `color-mix(in oklab, ${top}, #fff 6%)`);
+      nose ? (rear(), lid(), front()) : (front(), lid(), rear());
+      put([at(b0, 1 - sb, zb0), at(b1, 1 - sb, zb1), at(r1, 1 - sr, roof), at(r0, 1 - sr, roof)], "#1b2830");
+      // the reflection across the side glass, the pillars, the windscreen's sheen
+      const mid = (r0 + r1) / 2, bm = (b0 + b1) / 2;
+      put([at(bm - 0.06, 1 - sb, bh(bm - 0.06)), at(bm + 0.08, 1 - sb, bh(bm + 0.08)), at(mid + 0.02, 1 - sr, roof), at(mid - 0.08, 1 - sr, roof)], "rgba(176,204,218,.2)");
+      g.append(strokes("", [[at(bm, 1 - sb, bh(bm)), at(mid, 1 - sr, roof)], [at(b1, 1 - sb, zb1), at(r1, 1 - sr, roof)], [at(b0, 1 - sb, zb0), at(r0, 1 - sr, roof)]], { style: `fill:none;stroke:${near};stroke-width:.45;stroke-linecap:round` }));
+      if (nose) line([at(b1 - 0.02, 0.3, zb1 + 0.3), at(r1 + 0.01, 0.45, roof - 0.25)], "rgba(190,215,225,.45)", 0.3);
+      o.after?.(g, at, { roof, belt, clear, bh, r0, r1, sr });
+    });
+    for (const dir of ["e", "w", "n", "s"]) for (const k of ["car", "hatch", "suv", "ute"]) carSym(`${k}-${dir}`, dir, BODIES[k], CAR);
     // the EDS vans, a little larger than the cars to carry the logo
     vehicle("van-e", 0.4, 0.19, 5.6, VAN, "e", { eds: true }); vehicle("van-w", 0.4, 0.19, 5.6, VAN, "w", { eds: true }); vehicle("van-s", 0.19, 0.4, 5.6, VAN, "s", { eds: true }); vehicle("van-n", 0.19, 0.4, 5.6, VAN, "n", { eds: true });
     vehicle("van-x", 0.4, 0.19, 5.6, VAN, "", { eds: true }); vehicle("van-y", 0.19, 0.4, 5.6, VAN, "", { eds: true });
@@ -490,6 +598,7 @@
         paint(box(x, y + cab + gap, wid, len - cab - gap, h), [TRK[1], TRK[2], TRK[0]]);
         g.append(poly("", onR(x + wid, y, 0.02, cab - 0.03, h * 0.42, h * 0.68), { style: F("#0c2422") }));
       }
+      wheelsOn(g, along, x, y, along ? len : wid, along ? wid : len, along ? [0.15, 0.62, 0.8] : [0.15, 0.62, 0.8].map((t) => 1 - t), 1.3);
       // ribs down the body's long side
       const n = 5, side = along ? (t) => onL(x + (len - cab) * t, y + wid, 0, 0.012, 1, h - 0.6) : (t) => onR(x + wid, y + cab + (len - cab) * t, 0, 0.012, 1, h - 0.6);
       g.append(shapes("", Array.from({ length: n - 1 }, (_, i) => side((i + 1) / n)), { style: F("rgba(0,0,0,.18)") }));
@@ -580,7 +689,7 @@
       const leg = (v) => [at(-0.6, v, 3.9), at(0.9, v * 1.1, 3.5), at(0.3, v * 1.1, 1.7)], arm = (v) => [at(0.2, v, 6.2), at(1.45, v * 1.55, 5.3)];
       g.append(strokes("", [leg(-0.7), leg(0.7)], { style: stroke("var(--legs, #2b3a4a)", 1) }), strokes("", [arm(-0.9), arm(0.9)], { style: stroke("var(--shirt, #f2c14e)", 0.8) }), seg("", at(-0.7, 0, 4.3), at(0.15, 0, 6.3), { style: stroke("var(--shirt, #f2c14e)", 2.3) }));
       const [hx, hy] = at(0.45, 0, 7.9), [nx, ny] = at(1.25, 0, 7.8);
-      headOf(g, hx, hy, 1.35, fwd ? [nx - hx, ny - hy] : null);
+      headOf(g, hx, hy, 1.05, fwd ? [nx - hx, ny - hy] : null);
     });
     // a kid standing, and the same kid with their hands cuffed behind them
     for (const cuffed of [false, true]) sym(cuffed ? "kid-cuffed" : "kid", (g) => {
@@ -588,53 +697,36 @@
       g.append(shapes("", [[[-1.05, 0], [-0.2, 0], [-0.2, -2.5], [-1.05, -2.5]], [[0.2, 0], [1.05, 0], [1.05, -2.5], [0.2, -2.5]]], { style: F("var(--legs, #2b3a4a)") }));
       el("rect", { x: -1.25, y: -5.6, width: 2.5, height: 3.4, rx: 1, style: F("var(--shirt, #f2c14e)") }, g);
       if (cuffed) el("rect", { x: -1.45, y: -3.2, width: 2.9, height: 0.6, rx: 0.3, style: F("#dfe7ea") }, g);
-      headOf(g, 0, -6.95, 1.4);
+      headOf(g, 0, -6.6, 1.0);
     });
-    // a police officer: navy trousers, a pale blue shirt with a dark belt, a navy cap
-    sym("officer", (g) => {
-      el("ellipse", { cx: 0.8, cy: 0.2, rx: 2.2, ry: 0.8, style: SHADE }, g);
-      g.append(shapes("", [[[-1.2, 0], [-0.2, 0], [-0.2, -2.8], [-1.2, -2.8]], [[0.2, 0], [1.2, 0], [1.2, -2.8], [0.2, -2.8]]], { style: F("#1c2b4a") }));
-      el("rect", { x: -1.4, y: -6.2, width: 2.8, height: 3.8, rx: 1.1, style: F("#9cc3ea") }, g);
-      el("rect", { x: -1.4, y: -3.1, width: 2.8, height: 0.6, style: F("#16191c") }, g);
-      el("circle", { cx: 0, cy: -7.7, r: 1.6, style: F("var(--skin, #ffe3b3)") }, g);
-      el("path", { d: "M-1.75 -8.2h3.5v-1.2a1.75 .95 0 0 0 -3.5 0zM1.6 -8.3h1.3v.5h-1.3z", style: F("#1c2b4a") }, g);
-      el("rect", { x: -1.75, y: -8.75, width: 3.5, height: 0.45, style: F("#e9eef2") }, g);
-    });
+    // a police officer: navy trousers, a pale blue shirt with a dark duty belt, a navy cap with its white band
+    sym("officer", (g) => figure(g, { legs: "#1c2b4a", top: "#9cc3ea", belt: "#16191c", hat: (h) => {
+      el("path", { d: "M-.85 -6.75h1.7v-.45a.85 .55 0 0 0 -1.7 0zM.7 -6.8h.75v.3h-.75z", style: F("#1c2b4a") }, h);
+      el("rect", { x: -0.85, y: -7.0, width: 1.7, height: 0.22, style: F("#e9eef2") }, h);
+    } }));
     // The police: a white sedan with a blue and white chequered band along
     // its side and a light bar across the roof, whose two halves flash red
     // and blue while the car is .lit (site.css runs --lbr and --lbb, and the
     // glow round them, --lgr and --lgb). One symbol for each direction, so
     // it can chase the kids round corners.
     const paintOn = (g, b, cols) => { b.nodes.forEach((n, i) => { if (cols[i]) n.style.fill = cols[i]; }); g.append(...b.nodes); };
-    for (const dir of ["e", "w", "n", "s"]) sym(`police-${dir}`, (g) => {
-      const ew = dir === "e" || dir === "w", len = 0.3, wid = 0.16, w = ew ? len : wid, d = ew ? wid : len, x = -w / 2, y = -d / 2, h = 4.2, bh = h * 0.62, paint = (b, cols) => paintOn(g, b, cols);
-      g.append(poly("", castOf([[x, y], [x + w, y], [x + w, y + d], [x, y + d]], h), { style: F("rgba(3,12,18,.3)") }));
-      const beam = { e: [P(x + w, y, 2), P(x + w, y + d, 2), P(x + w + 0.42, y + d + 0.1, 0), P(x + w + 0.42, y - 0.1, 0), "url(#beam)"],
-        w: [P(x, y, 2), P(x, y + d, 2), P(x - 0.42, y + d + 0.1, 0), P(x - 0.42, y - 0.1, 0), "url(#beam-r)"],
-        s: [P(x, y + d, 2), P(x + w, y + d, 2), P(x + w + 0.1, y + d + 0.42, 0), P(x - 0.1, y + d + 0.42, 0), "url(#beam-r)"],
-        n: [P(x, y, 2), P(x + w, y, 2), P(x + w + 0.1, y - 0.42, 0), P(x - 0.1, y - 0.42, 0), "url(#beam)"] }[dir];
-      g.append(poly("beam", beam.slice(0, 4), { style: F(beam[4]) }));
-      paint(box(x, y, w, d, bh), ["#c9d2d1", "#e3e9e8", "#f6f9f8"]);
-      // the chequers: two rows along the side the viewer sees, and a blue band across the end they see
-      const n = 8, cells = [];
-      for (let r = 0; r < 2; r++) for (let i = 0; i < n; i++) if ((i + r) % 2 === 0) cells.push(ew ? onL(x, y + d, len * i / n, len * (i + 1) / n, 0.75 + r * 0.6, 1.35 + r * 0.6) : onR(x + w, y, len * i / n, len * (i + 1) / n, 0.75 + r * 0.6, 1.35 + r * 0.6));
-      g.append(shapes("", cells, { style: F("#1d4fa8") }), poly("", ew ? onR(x + w, y, 0.01, wid - 0.01, 0.75, 1.95) : onL(x, y + d, 0.01, wid - 0.01, 0.75, 1.95), { style: F("#2a5fbf") }));
-      // the glasshouse, set back from the bonnet
-      const t0 = { e: 0.14, s: 0.14, w: 0.36, n: 0.36 }[dir], i = 0.012;
-      paint(ew ? box(x + len * t0, y + i, len * 0.5, d - 2 * i, h - bh, { z: bh }) : box(x + i, y + len * t0, w - 2 * i, len * 0.5, h - bh, { z: bh }), ["#101d24", "#1a2c35", "#f6f9f8"]);
-      g.append(ew ? seg("", P(x + len * (t0 + 0.25), y + d - i, bh), P(x + len * (t0 + 0.25), y + d - i, h), { style: "stroke:#f6f9f8;stroke-width:.5" }) : seg("", P(x + w - i, y + len * (t0 + 0.25), bh), P(x + w - i, y + len * (t0 + 0.25), h), { style: "stroke:#f6f9f8;stroke-width:.5" }));
+    for (const dir of ["e", "w", "n", "s"]) carSym(`police-${dir}`, dir, BODIES.car, ["#f4f7f6", "#c9d2d1", "#e3e9e8"], { after: (g, at, { roof, clear, bh, r0, r1, sr }) => {
+      // the chequers: two rows along the near side, and a blue band across the end the viewer sees
+      const n = 10, cells = [], end = dir === "e" || dir === "s" ? 1 : 0, z0 = clear + 0.25, k = 0.55;
+      for (let r = 0; r < 2; r++) for (let i = 0; i < n; i++) if ((i + r) % 2 === 0) { const a = 0.04 + 0.92 * i / n, b = 0.04 + 0.92 * (i + 1) / n; cells.push([at(a, 1.002, z0 + r * k), at(b, 1.002, z0 + r * k), at(b, 1.002, z0 + (r + 1) * k), at(a, 1.002, z0 + (r + 1) * k)]); }
+      g.append(shapes("", cells, { style: F("#1d4fa8") }), poly("", [at(end, 0.03, z0), at(end, 0.97, z0), at(end, 0.97, z0 + 2 * k), at(end, 0.03, z0 + 2 * k)], { style: F("#2a5fbf") }));
       // the light bar across the roof: its glow, then the red half and the blue half
-      const mid = len * (t0 + 0.25) - 0.018, half = (wid - 2 * i - 0.02) / 2, across = (ew ? y : x) + i + 0.01;
-      const bar = (k) => (ew ? box(x + mid, across + half * k, 0.036, half, 0.75, { z: h }) : box(across + half * k, y + mid, half, 0.036, 0.75, { z: h }));
-      for (const [k, glow] of [[0, "--lgr"], [1, "--lgb"]]) {
-        const [gx, gy] = ew ? P(x + mid + 0.018, across + half * (k + 0.5), h + 0.5) : P(across + half * (k + 0.5), y + mid + 0.018, h + 0.5);
+      const m = (r0 + r1) / 2, bar = (s0, s1, cols) => {
+        g.append(poly("", [at(m - 0.05, s1, roof), at(m + 0.05, s1, roof), at(m + 0.05, s1, roof + 0.75), at(m - 0.05, s1, roof + 0.75)], { style: F(cols[0]) }));
+        g.append(poly("", [at(m - 0.05, s0, roof + 0.75), at(m + 0.05, s0, roof + 0.75), at(m + 0.05, s1, roof + 0.75), at(m - 0.05, s1, roof + 0.75)], { style: F(cols[1]) }));
+      };
+      for (const [s0, glow] of [[sr, "--lgr"], [0.5, "--lgb"]]) {
+        const [gx, gy] = at(m, s0 + 0.17, roof + 0.5);
         for (const [r, o] of [[4.6, 0.45], [2.6, 1]]) el("circle", { cx: f(gx), cy: f(gy), r, style: `${F(`var(${glow}, transparent)`)};fill-opacity:${o}` }, g);
       }
-      paint(bar(0), ["color-mix(in oklab, var(--lbr, #5a1f24), #000 30%)", "color-mix(in oklab, var(--lbr, #5a1f24), #000 15%)", "var(--lbr, #5a1f24)"]);
-      paint(bar(1), ["color-mix(in oklab, var(--lbb, #1f2c5a), #000 30%)", "color-mix(in oklab, var(--lbb, #1f2c5a), #000 15%)", "var(--lbb, #1f2c5a)"]);
-      const tail = { e: [[x, y + d * 0.25], [x, y + d * 0.75]], w: [[x + w, y + d * 0.25], [x + w, y + d * 0.75]], s: [[x + w * 0.25, y], [x + w * 0.75, y]], n: [[x + w * 0.25, y + d], [x + w * 0.75, y + d]] }[dir];
-      for (const [tx, ty] of tail) { const [a, c] = P(tx, ty, bh * 0.5); el("circle", { cx: f(a), cy: f(c), r: 0.9, style: F("var(--red)") }, g); }
-    });
+      bar(sr, 0.5, ["color-mix(in oklab, var(--lbr, #5a1f24), #000 25%)", "var(--lbr, #5a1f24)"]);
+      bar(0.5, 1 - sr, ["color-mix(in oklab, var(--lbb, #1f2c5a), #000 25%)", "var(--lbb, #1f2c5a)"]);
+    } });
     // The police helicopter, seen side on with its nose to the right
     // (city-traffic.js flips it to fly left, tilts it into its turns and
     // spins the main rotor, drawn there): a white cabin with a blue band of
@@ -669,25 +761,12 @@
       el("circle", { cx: f(wx), cy: f(wy), r: 1.05, style: F("#121517") }, g); el("circle", { cx: f(wx), cy: f(wy), r: 0.4, style: F("#8a969b") }, g);
     });
     sym("cone", (g) => { g.append(poly("", [[-2.2, 0], [2.2, 0], [0, -6]], { style: F("var(--amber)") }), seg("", [-3, 0.5], [3, 0.5], { style: "stroke:#06201e;stroke-width:1.2" })); });
-    // people: legs, a top in --shirt (set on each one), a head, a small shadow
-    // people at 85% of their first size, nearer a third of a storey
-    sym("person", (g) => {
-      g.setAttribute("transform", "scale(.85)");
-      el("ellipse", { cx: 0.8, cy: 0.2, rx: 2.2, ry: 0.8, style: SHADE }, g);
-      g.append(shapes("", [[[-1.2, 0], [-0.2, 0], [-0.2, -2.8], [-1.2, -2.8]], [[0.2, 0], [1.2, 0], [1.2, -2.8], [0.2, -2.8]]], { style: F("var(--legs, #2b3a4a)") }));
-      // (realism pass) adult proportions: a head about an eighth of the height
-      el("rect", { x: -1.25, y: -6.4, width: 2.5, height: 3.9, rx: 0.7, style: F("var(--shirt, #f2c14e)") }, g);
-      el("rect", { x: -1.25, y: -6.4, width: 0.9, height: 3.9, rx: 0.5, style: F("rgba(0,0,0,.18)") }, g);
-      el("circle", { cx: 0, cy: -7.45, r: 1.1, style: F("var(--skin, #e8b98a)") }, g);
-    });
-    // an EDS crew member: hi-vis orange with a reflective band and a white hard hat
-    sym("crew", (g) => {
-      g.setAttribute("transform", "scale(.85)");
-      el("ellipse", { cx: 0.8, cy: 0.2, rx: 2.3, ry: 0.8, style: SHADE }, g);
-      g.append(shapes("", [[[-1.3, 0], [-0.2, 0], [-0.2, -2.8], [-1.3, -2.8]], [[0.2, 0], [1.3, 0], [1.3, -2.8], [0.2, -2.8]]], { style: F("#1e3a5f") }));
-      el("rect", { x: -1.5, y: -6.2, width: 3, height: 3.9, rx: 1.1, style: F("#f97316") }, g); el("rect", { x: -1.5, y: -4.3, width: 3, height: 0.8, style: F("#fff4e5") }, g);
-      el("circle", { cx: 0, cy: -7.8, r: 1.6, style: F("#ffe3b3") }, g); el("path", { d: "M-2.1 -8.3a2.1 1.8 0 0 1 4.2 0z", style: F("#ffffff") }, g);
-    });
+    sym("person", (g) => figure(g));
+    // an EDS crew member: hi-vis orange with a reflective band, navy work pants, a white hard hat
+    sym("crew", (g) => figure(g, { legs: "#1e3a5f", top: "#f97316", band: "#fff4e5", shoes: "#3a2c20", hat: (h) => {
+      el("path", { d: "M-.95 -6.55A.95 .9 0 0 1 .95 -6.55Z", style: F("#f6f7f4") }, h);
+      el("rect", { x: -1.1, y: -6.6, width: 2.2, height: 0.22, rx: 0.1, style: F("#dfe2dd") }, h);
+    } }));
     // a gum tree: pale trunk, open clumps of grey-green leaves; and a jacaranda
     sym("tree-gum", (g) => {
       const bark = "fill:none;stroke:var(--bark,#c9c1ad);stroke-linecap:round;stroke-width:";
@@ -872,6 +951,8 @@
     grad("cloud-sh", "radialGradient", [[0, "rgba(8,18,32,.3)"], [0.55, "rgba(8,18,32,.19)"], [1, "rgba(8,18,32,0)"]]);
     grad("ao", "linearGradient", [[0, "rgba(255,246,226,.08)"], [0.45, "rgba(255,246,226,0)"], [0.7, "rgba(4,10,16,.08)"], [1, "rgba(4,10,16,.36)"]], { x1: 0, y1: 0, x2: 0, y2: 1 });
     grad("solar-grad", "linearGradient", [[0, "#2b5c8a"], [1, "#6fa6e0"]]);
+    // by day no vehicle throws a beam ahead of it (vehicles and people pass)
+    D.querySelectorAll(".beam").forEach((n) => n.remove());
     return D;
   }
 
@@ -1014,19 +1095,19 @@
     // then the bikes they wheel to the trailer.
     const scene = el("g", { class: "pullover", "clip-path": "url(#clip-main)" }, LANES.E.far);
     const KERB = { lane: "E", y: { car: 4.63, bike: 4.65, kid: 4.585, cop: 4.6 }, at: { p1: 2.53, kids: [3.15, 2.87], p2: 4.12 }, kids: KIDS, groups: ["kids", "cops", "bikes"].map((c) => el("g", { class: c }, scene)) };
-    const vehicles = [], LEN = { car: 0.3, van: 0.4, truck: 0.5, tram: 1.1, bike: 0.24 }, PACE = { car: 1.0, van: 0.95, truck: 0.55, tram: 0.6, bike: 1.2 };
+    const vehicles = [], LEN = { car: 0.3, hatch: 0.3, suv: 0.3, ute: 0.32, van: 0.4, truck: 0.5, tram: 1.1, bike: 0.24 }, PACE = { car: 1.0, hatch: 1.0, suv: 0.97, ute: 0.95, van: 0.95, truck: 0.55, tram: 0.6, bike: 1.2 };
     const vehicle = (sym, lane, at, cls, pace) => {
       // a clip goes on a still wrapper: on the vehicle itself it would move with the vehicle
       const kind = sym.split("-")[0], slot = el("g", { class: "veh-slot" }, LANES[lane].far), v = el("g", { class: `veh${kind === "van" ? " eds" : ""}${cls ? ` ${cls}` : ""}`, style: kind === "bike" ? KIDS[turns.kid++ % KIDS.length] : undefined }, slot);
-      el("use", { href: `#${sym}`, style: kind === "car" ? `--car:${CARS[turns.car++ % CARS.length]}` : undefined }, v);
+      el("use", { href: `#${sym}`, style: /^(car|hatch|suv|ute)$/.test(kind) ? `--car:${CARS[turns.car++ % CARS.length]}` : undefined }, v);
       if (kind === "bike") el("use", { href: `#rider-${sym.split("-")[1]}` }, v);
       vehicles.push({ el: v, slot, lane, s: at, len: LEN[kind], speed: pace || PACE[kind], tram: kind === "tram", patrol: cls === "patrol" });
     };
-    vehicle("van-e", "E", 0.4); vehicle("car-e", "E", 3.6); vehicle("van-e", "E", 8.9); vehicle("car-e", "E", 13.0);
-    vehicle("car-w", "W", 2.7); vehicle("car-w", "W", 7.5); vehicle("car-w", "W", 13.4);
+    vehicle("van-e", "E", 0.4); vehicle("suv-e", "E", 3.6); vehicle("van-e", "E", 8.9); vehicle("car-e", "E", 13.0);
+    vehicle("hatch-w", "W", 2.7); vehicle("ute-w", "W", 7.5); vehicle("car-w", "W", 13.4);
     // Australian roads: everyone keeps left
-    vehicle("van-s", "S5", 3.6); vehicle("car-s", "S5", 8.6); vehicle("car-n", "N5", 7.6); vehicle("car-n", "N5", 2.4);
-    vehicle("van-n", "N10", 6.9); vehicle("truck-n", "N10", 0.5); vehicle("car-s", "S10", 4.7); vehicle("car-s", "S10", 9.6); vehicle("car-s", "S7", 1.3);
+    vehicle("van-s", "S5", 3.6); vehicle("ute-s", "S5", 8.6); vehicle("car-n", "N5", 7.6); vehicle("suv-n", "N5", 2.4);
+    vehicle("van-n", "N10", 6.9); vehicle("truck-n", "N10", 0.5); vehicle("hatch-s", "S10", 4.7); vehicle("car-s", "S10", 9.6); vehicle("suv-s", "S7", 1.3);
     // light rail along the main road, one tram each way
     vehicle("tram-e", "TE", 4.3); vehicle("tram-w", "TW", 13.4);
     // kids on e-bikes: two riding together along the main road, and one on each side road
@@ -1034,7 +1115,7 @@
     // people on the footpaths, along the front of the city, the main road
     // and the river road, at a walking pace
     const walk = (route, dur, begin, shirt, parent = t) => {
-      const w = el("g", { class: "walker fine", style: `--shirt:${wear(shirt)}` }, parent);
+      const w = el("g", { class: "walker fine", style: dress(shirt) }, parent);
       el("use", { href: "#person" }, w);
       el("animateMotion", { dur: `${dur}s`, begin: `${begin}s`, repeatCount: "indefinite", path: "M" + route.map((p) => `${f(p[0])} ${f(p[1])}`).join("L") }, w);
     };
@@ -1425,7 +1506,7 @@
       ...many("rock", [[0.35, 1.7], [0.9, 0.55], [1.7, 0.95], [2.0, 2.95], [2.9, 2.55], [3.9, 2.85], [4.3, 4.2], [1.45, 2.05], [3.05, 3.85]], { cls: "fine" }),
       ...many("reed", [[0.55, 1.55], [2.85, 3.75], [3.15, 3.95], [4.4, 4.25], [0.2, 1.45]], { cls: "fine" }),
       ...[[2.35, 0.3, "s"], [4.45, 1.85, "s"], [0.75, 4.4, "s"]].map(([x, y, k]) => tree(x, y, k)), gum(2.55, 4.4), gum(1.75, 3.55),
-      house(3.95, 4.05, 0.3, 0.3, 5, 4, { roof: "cb-green" }), slab(4.1, 2.9, 0.45, 0.5, "track"), use("car-s", 4.2, 3.0, 0, { d: 7.4 }), use("car-s", 4.4, 3.15, 0, { d: 7.75 }),
+      house(3.95, 4.05, 0.3, 0.3, 5, 4, { roof: "cb-green" }), slab(4.1, 2.9, 0.45, 0.5, "track"), use("suv-s", 4.2, 3.0, 0, { d: 7.4 }), use("hatch-s", 4.4, 3.15, 0, { d: 7.75 }),
       rail([[0.5, 0.45], [1.75, 0.45], [1.75, 1.05], [0.5, 1.05], [0.5, 0.45]], 4, { posts: 0.3, cls: "fence fine", d: 2.9 }),
       use("antenna", 1.95, 1.25, 12, { d: 3.3 }), ...many("bollard", [[0.95, 2.25], [1.15, 2.25], [1.35, 2.25]], { cls: "fine" }), use("swing", 1.35, 2.95, 0, { cls: "fine" }),
       ...many("sign", [[4.45, 2.35], [0.4, 0.4]], { cls: "fine" }), use("bench", 2.75, 1.65, 0, { cls: "fine" }),
@@ -1438,7 +1519,7 @@
       ...many("antenna", [[6.1, 1.75, 17], [7.4, 3.75, 17], [8.75, 1.75, 23], [6.1, 3.75, 17], [7.45, 0.75, 17]], { cls: "fine" }),
       ...many("letterbox", [[6.5, 1.15], [6.5, 2.15], [7.85, 2.15], [7.85, 3.15], [9.2, 2.15], [9.2, 3.15]], { cls: "fine" }),
       ...many("bin", [[6.55, 0.55], [6.55, 2.6], [7.9, 1.6], [7.9, 3.6], [9.25, 1.6], [9.25, 3.65]], { cls: "fine" }),
-      ...many("car-s", [[6.6, 1.1], [7.95, 3.1], [9.3, 2.1]], { d: 0 }).map((u) => ({ ...u, d: 99 })),
+      ...["ute-s", "car-s", "suv-s"].map((k, i) => use(k, ...[[6.6, 1.1], [7.95, 3.1], [9.3, 2.1]][i], 0, { d: 0 })).map((u) => ({ ...u, d: 99 })),
       ...many("hedge", [[5.7, 1.25], [7.05, 2.25], [8.4, 3.25], [5.7, 3.25], [7.05, 1.25]], { cls: "fine" }),
       ...many("sign", [[6.6, 4.45], [8.0, 4.45]], { cls: "fine" }), use("bench", 9.38, 1.18, 0, { cls: "fine" }),
       // Australian backyards: rainwater tanks, Hills Hoists, a pool
@@ -1455,7 +1536,7 @@
       lo(item(10.905, shapes("asphalt", [[6.6, 0.3, 6.95, 4.45], [7.95, 0.3, 8.3, 4.45]].map(([x0, y0, x1, y1]) => [P(x0, y0), P(x1, y0), P(x1, y1), P(x0, y1)]), { style: "fill:url(#asphalt)" }))),
       lo(item(10.91, strokes("kerb", [6.6, 6.95, 7.95, 8.3].map((x) => [P(x, 0.3), P(x, 4.45)])))),
       lo(item(0.7, el("ellipse", { class: "tramp", cx: f(P(7.6, 3.24)[0]), cy: f(P(7.6, 3.24)[1]), rx: 5.2, ry: 2.6 }), el("ellipse", { class: "tramp-mat", cx: f(P(7.6, 3.24)[0]), cy: f(P(7.6, 3.24)[1] - 0.4), rx: 4.2, ry: 2.1 }))),
-      ...many("car-s", [[6.6, 2.1], [7.95, 1.1]], { d: 0 }).map((u) => ({ ...u, d: 99 })),
+      ...["hatch-s", "ute-s"].map((k, i) => use(k, ...[[6.6, 2.1], [7.95, 1.1]][i], 0, { d: 0 })).map((u) => ({ ...u, d: 99 })),
     ],
     cbd: () => [
       box(13.35, 1.55, 0.45, 0.5, 34, { win: "b", cls: "glass" }), box(10.5, 1.85, 0.3, 0.4, 20, { win: "a", cls: "glass" }),
@@ -1490,7 +1571,7 @@
       // a transformer yard inside its own fence, and the marked car park by the laboratory
       rail([[3.65, 5.58], [4.25, 5.58], [4.25, 5.88], [3.65, 5.88], [3.65, 5.58]], 4, { posts: 0.15, cls: "fence fine", d: 10.14 }),
       ...many("transformer", [[3.72, 5.66], [3.98, 5.66]]),
-      slab(2.4, 9.55, 0.95, 0.38, "yard", 0, { style: "fill:url(#bays)" }), ...many("car-e", [[2.55, 9.74], [2.88, 9.74]], { d: 12.8 }),
+      slab(2.4, 9.55, 0.95, 0.38, "yard", 0, { style: "fill:url(#bays)" }), use("ute-e", 2.55, 9.74, 0, { d: 12.8 }), use("car-e", 2.88, 9.74, 0, { d: 12.8 }),
       // the second digester's stair, the gas line between the two, a grated walkway across the aeration basin
       line("stair fine", [P(3.62, 7.3, 2), P(3.72, 7.2, 8), P(3.86, 7.06, 14), P(3.98, 6.94, 20)], 11.2),
       item(10.65, pl("rail pipe-rack", [P(3.42, 6.62, 27), P(3.75, 6.85, 27), P(3.98, 7.02, 22)])),
