@@ -1,0 +1,637 @@
+// Shared behaviour for every page: navigation, scroll
+// reveals, counters and the flow-field canvas.
+(() => {
+  const root = document.documentElement;
+  const $ = (s, el = document) => el.querySelector(s);
+  const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+  // Visitors who ask their system for less motion keep the ambient animation
+  // but lose the smooth scrolling (see site.css).
+  const calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ---- header ---- */
+  const header = $(".header");
+  const progress = $(".progress");
+  const onScroll = () => {
+    header?.classList.toggle("scrolled", window.scrollY > 16);
+    if (progress) {
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      progress.style.scale = `${max > 0 ? Math.min(1, window.scrollY / max) : 0} 1`;
+    }
+  };
+  window.addEventListener("scroll", onScroll, { passive: true });
+  onScroll();
+
+  // Mega menus open under the pointer and on a click of the chevron beside
+  // the word (the word itself is a link to the page that lists everything in
+  // the menu), and close on Escape or outside click. A menu opened by a click
+  // stays open when the pointer leaves, and a click on a menu that hover has
+  // just opened keeps it open rather than shutting it in the visitor's face.
+  // Closing a menu that holds keyboard focus hands the focus back to its
+  // chevron, since its links are no longer focusable. Tabbing out of a menu
+  // closes it, so it never hides what the focus moves on to.
+  const items = $$(".nav-item.has-mega");
+  const shut = (i) => {
+    const btn = $(".nav-toggle", i);
+    i.classList.remove("open"); delete i.dataset.by; btn?.setAttribute("aria-expanded", "false");
+    if (btn && i.contains(document.activeElement) && document.activeElement !== btn) btn.focus();
+  };
+  const closeAll = (except) => items.forEach((i) => { if (i !== except) shut(i); });
+  items.forEach((item) => {
+    const btn = $(".nav-toggle", item);
+    let timer;
+    const open = (by) => { clearTimeout(timer); closeAll(item); item.classList.add("open"); item.dataset.by = by; btn.setAttribute("aria-expanded", "true"); };
+    item.addEventListener("pointerenter", (e) => { if (e.pointerType === "mouse" && item.dataset.by !== "click") open("hover"); else clearTimeout(timer); });
+    item.addEventListener("pointerleave", (e) => { if (e.pointerType === "mouse" && item.dataset.by === "hover") timer = setTimeout(() => shut(item), 140); });
+    btn.addEventListener("click", () => (item.dataset.by === "click" ? shut(item) : open("click")));
+    item.addEventListener("focusout", (e) => { if (e.relatedTarget && !item.contains(e.relatedTarget)) shut(item); });
+  });
+  document.addEventListener("click", (e) => { if (!e.target.closest(".nav-item")) closeAll(); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") { closeAll(); setDrawer(false); } });
+
+  // The Services menu: a rail of tabs, one per group, beside the open group's
+  // links. A tab opens on click, on the arrow keys (the tab lists below) and
+  // after a short pause under the pointer, so the rail can be crossed on the
+  // way to a link without every group flashing past.
+  // The panel takes the open tab's height (site.css eases the change), which
+  // is measured again once the fonts are in and whenever the window changes
+  // width, since both change how the lines wrap.
+  $$(".mega-tabs").forEach((menu) => {
+    const tabs = $$('[role="tab"]', menu);
+    const panes = $$('[role="tabpanel"]', menu);
+    const box = $(".mega-panes", menu);
+    let timer;
+    const fit = () => { const on = $(".mega-pane.on", menu); if (on && box) box.style.height = `${on.offsetHeight}px`; };
+    const show = (tab) => {
+      tabs.forEach((t) => { const on = t === tab; t.setAttribute("aria-selected", String(on)); t.tabIndex = on ? 0 : -1; });
+      // inert takes the closing list out of the tab order at once, before its fade ends
+      panes.forEach((p) => { const on = p.id === tab.getAttribute("aria-controls"); p.classList.toggle("on", on); p.inert = !on; });
+      fit();
+    };
+    tabs.forEach((tab) => {
+      tab.addEventListener("click", (e) => {
+        // A tab that names a page of its own (Solutions) goes to it. Under a
+        // mouse the tab has usually opened already; a tap or a key opens it
+        // first, and the next one goes.
+        const open = tab.getAttribute("aria-selected") === "true";
+        if (tab.dataset.href && (open || e.pointerType === "mouse")) { location.href = tab.dataset.href; return; }
+        show(tab);
+      });
+      tab.addEventListener("pointerenter", (e) => { if (e.pointerType === "mouse") timer = setTimeout(() => show(tab), 90); });
+      tab.addEventListener("pointerleave", () => clearTimeout(timer));
+    });
+    fit();
+    document.fonts?.ready.then(fit);
+    window.addEventListener("resize", fit);
+  });
+
+  // While the drawer is open the page behind it is inert, so keyboard focus
+  // stays in the menu; closing it hands focus back to the menu button.
+  const drawer = $(".drawer");
+  const burger = $(".burger");
+  function setDrawer(open) {
+    if (!drawer || drawer.classList.contains("open") === open) return;
+    drawer.classList.toggle("open", open);
+    burger?.setAttribute("aria-expanded", String(open));
+    document.documentElement.classList.toggle("drawer-open", open);
+    $$("body > :not(.drawer, dialog, script)").forEach((el) => (el.inert = open));
+    if (open) $(".drawer-close", drawer)?.focus();
+    else burger?.focus();
+  }
+  burger?.addEventListener("click", () => setDrawer(true));
+  $$(".drawer-close, .drawer-scrim").forEach((b) => b.addEventListener("click", () => setDrawer(false)));
+  // Search opens over the drawer, so close the drawer first.
+  if (drawer) $$("[data-search-open]", drawer).forEach((b) => b.addEventListener("click", () => setDrawer(false)));
+
+  /* ---- tabs: arrow keys move between tabs, as in any tab list ---- */
+  $$('[role="tablist"]').forEach((list) => {
+    list.addEventListener("keydown", (e) => {
+      const tabs = $$('[role="tab"]', list);
+      const i = tabs.indexOf(document.activeElement);
+      if (i < 0) return;
+      const next = { ArrowRight: i + 1, ArrowDown: i + 1, ArrowLeft: i - 1, ArrowUp: i - 1, Home: 0, End: tabs.length - 1 }[e.key];
+      if (next === undefined) return;
+      e.preventDefault();
+      const tab = tabs[(next + tabs.length) % tabs.length];
+      tab.focus();
+      tab.click();
+    });
+  });
+
+  /* ---- reveal on scroll ---- */
+  const io = new IntersectionObserver(
+    (entries) => entries.forEach((en) => {
+      if (!en.isIntersecting) return;
+      en.target.classList.add("in");
+      io.unobserve(en.target);
+      if (en.target.matches("[data-count]")) count(en.target);
+      $$("[data-count]", en.target).forEach(count);
+    }),
+    { rootMargin: "0px 0px -8% 0px", threshold: 0.08 }
+  );
+  $$("[data-reveal], [data-count]").forEach((el) => io.observe(el));
+  // The page's inline script keeps the blocks hidden only while this flag
+  // can still be set; if this script fails first, they show as they are.
+  window.EDS_READY = true;
+
+  /* ---- print: the questions print with their answers ---- */
+  addEventListener("beforeprint", () => $$(".faq-item:not([open])").forEach((d) => { d.open = true; d.dataset.printOpen = ""; }));
+  addEventListener("afterprint", () => $$(".faq-item[data-print-open]").forEach((d) => { d.open = false; delete d.dataset.printOpen; }));
+
+  /* ---- counters ---- */
+  function count(el) {
+    if (el.dataset.done) return;
+    el.dataset.done = "1";
+    const to = parseFloat(el.dataset.count);
+    const dec = parseInt(el.dataset.decimals || "0", 10);
+    const from = el.dataset.from ? parseFloat(el.dataset.from) : 0;
+    const fmt = (v) => (el.dataset.plain ? v.toFixed(dec) : v.toLocaleString("en-AU", { minimumFractionDigits: dec, maximumFractionDigits: dec }));
+    const t0 = performance.now(), dur = 1700;
+    const tick = (now) => {
+      const p = Math.min(1, (now - t0) / dur);
+      const e = 1 - Math.pow(2, -10 * p);
+      el.textContent = fmt(p === 1 ? to : from + (to - from) * e);
+      if (p < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }
+
+  /* ---- timeline fill ---- */
+  const tl = $(".timeline");
+  if (tl) {
+    const fill = $(".timeline-fill", tl);
+    const upd = () => {
+      const r = tl.getBoundingClientRect();
+      const p = Math.max(0, Math.min(1, (window.innerHeight * 0.6 - r.top) / r.height));
+      fill.style.height = `${p * (r.height - 16)}px`;
+    };
+    window.addEventListener("scroll", upd, { passive: true });
+    upd();
+  }
+
+  /* ---- FlowSense tabs ---- */
+  // The four screens play in turn: the tool on show runs a thin line under
+  // its text (site.css: fs-progress) and the next screen comes up when the
+  // line is full, so the pace pauses with the page. Picking a tool, or
+  // pointing at one with a mouse, stops the play for good.
+  const fsItems = $$(".fs-item");
+  if (fsItems.length) {
+    const list = fsItems[0].parentElement, screen = $(".fs-screen");
+    let i = 0;
+    const show = (n) => {
+      i = n;
+      fsItems.forEach((b, k) => b.setAttribute("aria-pressed", String(k === n)));
+      $$(".fs-view").forEach((v, k) => v.classList.toggle("active", k === n));
+      if (screen) screen.dataset.view = String(n);
+    };
+    const stop = () => list.removeAttribute("data-auto");
+    fsItems.forEach((b, k) => {
+      b.addEventListener("click", () => { stop(); show(k); });
+      b.addEventListener("focus", stop);
+      b.addEventListener("pointerenter", (e) => { if (e.pointerType === "mouse") { stop(); show(k); } });
+    });
+    list.addEventListener("animationend", (e) => { if (e.animationName === "fs-progress" && list.hasAttribute("data-auto")) show((i + 1) % fsItems.length); });
+  }
+
+  /* ---- Pump Station Manager pins ---- */
+  // On the FlowSense page the PSM screen carries four numbered pins and a
+  // key beside it. Pointing at a line in the key lights its pin, and the
+  // other way round.
+  const pinned = $(".fs-pinned");
+  if (pinned) {
+    const all = $$(".fs-pin, .fs-key li");
+    const light = (n, on) => all.forEach((el) => el.classList.toggle("on", on && el.dataset.n === n));
+    all.forEach((el) => {
+      el.addEventListener("pointerenter", () => light(el.dataset.n, true));
+      el.addEventListener("pointerleave", () => light(el.dataset.n, false));
+    });
+  }
+
+  /* ---- sidebars follow the page only when they fit on screen ---- */
+  // A sticky sidebar taller than the window hides its last cards until the
+  // end of the page, so those scroll with the page instead.
+  const asides = $$(".aside");
+  if (asides.length) {
+    const fit = () => asides.forEach((a) => a.classList.toggle("fits", a.offsetHeight < window.innerHeight - 140));
+    const ro = new ResizeObserver(fit);
+    asides.forEach((a) => ro.observe(a));
+    window.addEventListener("resize", fit, { passive: true });
+  }
+
+  /* ---- section bar: marks the section in view ---- */
+  // On service and solution pages. The section whose top has passed under the
+  // bar is the current one, and its link scrolls into view along the bar.
+  const secbar = $(".secbar");
+  if (secbar) {
+    const list = $("ol", secbar);
+    const links = $$("a", list);
+    const targets = links.map((a) => document.getElementById(a.hash.slice(1))).filter(Boolean);
+    let current, ticking = false;
+    const update = () => {
+      ticking = false;
+      const bar = secbar.getBoundingClientRect();
+      secbar.classList.toggle("stuck", bar.top <= (header?.offsetHeight || 0) + 1);
+      // A section counts once its top passes a line a little below the bar;
+      // of two side by side (same top), the first one wins.
+      const line = bar.bottom + Math.min(innerHeight * 0.3, 240);
+      let id = "", best = -Infinity;
+      for (const t of targets) {
+        const top = Math.round(t.getBoundingClientRect().top);
+        if (top <= line && top > best) { id = t.id; best = top; }
+      }
+      // How far the reader is through the current section, for the hairline
+      // under its link in the bar.
+      const cur = targets.find((t) => t.id === id);
+      if (cur) {
+        const box = cur.getBoundingClientRect();
+        secbar.style.setProperty("--p", Math.max(0, Math.min(1, (line - box.top) / box.height)).toFixed(3));
+      }
+      if (id === current) return;
+      current = id;
+      if (!id) list.scrollTo({ left: 0, behavior: "auto" });
+      for (const a of links) {
+        const on = a.hash === `#${id}`;
+        a.classList.toggle("on", on);
+        if (on) {
+          a.setAttribute("aria-current", "location");
+          list.scrollTo({ left: a.offsetLeft - (list.clientWidth - a.offsetWidth) / 2, behavior: calm ? "auto" : "smooth" });
+        } else a.removeAttribute("aria-current");
+      }
+    };
+    window.addEventListener("scroll", () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
+    window.addEventListener("resize", update, { passive: true });
+    update();
+  }
+
+  /* ---- home hero: the flow tile of an illustrative meter reporting in ---- */
+  // The last day of flow at half-hour steps, against the dry weather pattern,
+  // drawn across the tile and moved on like a chart recorder: one reading
+  // every few seconds, the line sliding left at a steady pace so the newest
+  // reading is always at "now". Not live data. Everything is laid out in real
+  // pixels from the plot's own size, so the line is never stretched.
+  const live = $(".live");
+  if (live) {
+    const plot = $(".trace-plot", live);
+    const lineEl = $(".trace-line", live), areaEl = $(".trace-area", live), dwfEl = $(".trace-dwf", live);
+    const run = $(".trace-run", live), clip = $(".trace-clip", live), grid = $(".trace-grid", live);
+    const axis = $(".trace-axis", live), now = $(".trace-now", live), dwfSvg = $(".trace-dwf-svg", live);
+    const out = Object.fromEntries($$("[data-live]", live).map((el) => [el.dataset.live, el]));
+    const DAY = 48, BEAT = 2000;
+    const bump = (h, c, w) => Math.exp(-(((h - c + 36) % 24 - 12) ** 2) / (2 * w * w));
+    const dwf = (t) => { const h = (t / 2) % 24; return 26 + 20 * bump(h, 7.5, 1.6) + 15 * bump(h, 19, 2.1) + 6 * bump(h, 13, 2.5); };
+    // readings by time step: the measured flow wanders about the pattern
+    const flow = [];
+    let wobble = 0;
+    const q = (t) => {
+      while (flow.length <= t) { wobble = wobble * 0.6 + (Math.random() - 0.5) * 2.4; flow.push(Math.max(4, dwf(flow.length) + wobble)); }
+      return flow[t];
+    };
+    // the time step at "now", far enough in to have a day of history behind it
+    let t = 400 + Math.floor(Math.random() * DAY);
+    let W = 0, H = 0, L = 0, X = 0, step = 1, lead = 0, dash = 0, drawn = false, moving = false, seen = true, timer = 0;
+    // the line keeps clear of the title along the top of the plot and the hour labels along its foot
+    const y = (v) => H - 27 - ((v - 17) / 36) * (H - 56);
+    const tx = (el, x, yy = 0, ms = 0) => { el.style.transition = ms ? `transform ${ms}ms linear` : "none"; el.style.transform = `translate(${x}px, ${yy}px)`; };
+    const measure = () => {
+      W = plot.clientWidth; H = plot.clientHeight; L = 0;
+      X = W - parseFloat(getComputedStyle(plot).getPropertyValue("--now-inset") || 96);
+      step = (X - L) / DAY;
+      lead = Math.ceil(L / step) + 1;
+      run.style.width = dwfSvg.style.width = `${Math.ceil(W + 2 * step)}px`;
+      axis.style.width = `${X - L}px`;
+      grid.innerHTML = [1, 2, 3, 4].map((k) => { const gx = Math.round(L + (k * (X - L)) / 4) + 0.5; return `<line x1="${gx}" x2="${gx}" y1="0" y2="${H}"/>`; }).join("");
+    };
+    // the paths at rest: the measured line runs one step past "now" (hidden
+    // by the clip until it slides in), the pattern runs on to the right edge
+    const paths = () => {
+      const pt = (i, v) => `${(X + i * step).toFixed(1)} ${y(v).toFixed(1)}`;
+      let d = "";
+      for (let i = -DAY - lead; i <= 1; i++) d += `${d ? "L" : "M"}${pt(i, q(t + i))}`;
+      lineEl.setAttribute("d", d);
+      areaEl.setAttribute("d", `${d}L${(X + step).toFixed(1)} ${H}L${(X - (DAY + lead) * step).toFixed(1)} ${H}Z`);
+      let e = "";
+      for (let i = -DAY - lead, end = Math.ceil((W - X) / step) + 2; i <= end; i++) e += `${e ? "L" : "M"}${pt(i, dwf(t + i))}`;
+      dwfEl.setAttribute("d", e);
+      dwfEl.style.strokeDashoffset = dash;
+    };
+    const read = () => {
+      const v = q(t);
+      out.q.textContent = v.toFixed(1);
+      out.d.textContent = Math.round(118 + v * 2.3);
+      out.v.textContent = (0.32 + v / 95).toFixed(2);
+    };
+    const rest = () => { tx(run, 0); tx(dwfSvg, 0); tx(now, X, y(q(t))); paths(); read(); };
+    // one beat: everything slides one step left while the dot rides to the next reading
+    const beat = () => {
+      clearTimeout(timer);
+      if (!drawn || !seen || document.hidden) { moving = false; return; }
+      moving = true;
+      rest();
+      void plot.offsetWidth;
+      tx(run, -step, 0, BEAT); tx(dwfSvg, -step, 0, BEAT); tx(now, X, y(q(t + 1)), BEAT);
+      timer = setTimeout(() => {
+        // the pattern's first segment leaves the path, so its dashes are held in place
+        dash = (dash + Math.hypot(step, y(dwf(t - DAY - lead + 1)) - y(dwf(t - DAY - lead)))) % 8;
+        t++;
+        beat();
+      }, BEAT);
+    };
+    const start = () => { if (!moving) beat(); };
+    // first paint: the line draws itself in from the left, then the reading appears and the chart moves on
+    const intro = () => {
+      measure(); rest();
+      const t0 = performance.now() + 900, ms = 1500;
+      const frame = (ts) => {
+        const k = Math.min(1, Math.max(0, (ts - t0) / ms)), e = 1 - (1 - k) ** 3;
+        clip.style.width = `${(X * e).toFixed(1)}px`;
+        if (k < 1) return requestAnimationFrame(frame);
+        drawn = true; live.classList.add("is-live"); start();
+      };
+      requestAnimationFrame(frame);
+    };
+    intro();
+    new ResizeObserver(() => {
+      if (Math.abs(plot.clientWidth - W) < 1 && Math.abs(plot.clientHeight - H) < 1) return;
+      clearTimeout(timer); moving = false;
+      measure(); rest();
+      if (drawn) { clip.style.width = `${X.toFixed(1)}px`; start(); }
+    }).observe(plot);
+    new IntersectionObserver(([en]) => { seen = en.isIntersecting; if (seen) start(); }).observe(live);
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) start(); });
+  }
+
+  /* ---- a drawing that scrolls sideways takes keyboard focus ---- */
+  // Only while it does scroll (a phone, or a page zoomed in), so a desktop
+  // gains no tab stops that do nothing.
+  const scrolls = $$("[data-scrolls]");
+  if (scrolls.length) {
+    const sync = () => scrolls.forEach((el) => { if (el.scrollWidth > el.clientWidth + 1) el.tabIndex = 0; else el.removeAttribute("tabindex"); });
+    sync();
+    addEventListener("resize", sync);
+    addEventListener("load", sync);
+  }
+
+  /* ---- a platform screen opens larger ---- */
+  // A screen on a page is a link to its largest file (a[data-zoom]). Here it
+  // opens over the page instead, as wide as the window allows; on a phone it
+  // is set wider than the screen and pans, so its labels can be read.
+  const shotView = $("dialog.shot-view");
+  if (shotView) {
+    const big = $("img", shotView);
+    document.addEventListener("click", (e) => {
+      const a = e.target.closest?.("a[data-zoom]");
+      if (!a || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button) return;
+      e.preventDefault();
+      // the file's own size is in its name: the picture is never drawn larger,
+      // and the dialog has its shape before the file arrives
+      const m = a.href.match(/-(\d+)x(\d+)\.\w+$/);
+      big.removeAttribute("src");
+      if (m) { big.width = +m[1]; big.height = +m[2]; big.style.maxWidth = `${m[1]}px`; shotView.style.maxWidth = `${Math.max(+m[1], 320)}px`; }
+      big.src = a.href;
+      big.alt = $("img", a)?.alt || "";
+      shotView.showModal();
+      $(".shot-pan", shotView).scrollTo(0, 0);
+    });
+    shotView.addEventListener("click", (e) => { if (e.target === shotView || e.target.closest("[data-shot-close]")) shotView.close(); });
+  }
+
+  /* ---- copying to the clipboard, shared with products.js ---- */
+  // The Clipboard API is refused in some browsers and embedded views, so fall
+  // back to selecting a hidden text box and copying that.
+  async function copyText(text) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      const box = Object.assign(document.createElement("textarea"), { value: text, readOnly: true });
+      box.style.cssText = "position:fixed;opacity:0;pointer-events:none";
+      (document.querySelector("dialog[open]") || document.body).appendChild(box);
+      box.select();
+      let ok = false;
+      try { ok = document.execCommand("copy"); } catch { /* nothing more to try */ }
+      box.remove();
+      return ok;
+    }
+  }
+  window.EDS = { copyText };
+
+  /* ---- forms: sent from the page ---- */
+  // Each form posts to Web3Forms with its access key (data-key, from
+  // site.formKey), which emails it to site.email. Nothing opens the
+  // visitor's email program. If sending fails, the form stays as it was
+  // with a message to try again or call. The enquiry form has more to it
+  // and is run by enquiry.js, which uses send() and check() from here.
+  // The topic only picks the subject, which goes as "Interested in".
+  const UNSENT = new Set(["subject", "Topic"]);
+  async function send(form) {
+    const data = new FormData(form);
+    const product = data.get("Product");
+    const subject = [data.get("subject") || form.dataset.subject || "Website enquiry", product].filter(Boolean).join(": ");
+    const body = new FormData();
+    body.set("access_key", form.dataset.key);
+    body.set("subject", `Website: ${subject}`);
+    body.set("from_name", "EDS website");
+    if (data.get("Email")) body.set("replyto", data.get("Email"));
+    if (data.get("subject")) body.set("Interested in", data.get("subject"));
+    data.forEach((v, k) => { if (!UNSENT.has(k) && String(v).trim()) body.append(k, v); });
+    try {
+      // AbortSignal.timeout is missing before Safari 16; there, send without a limit
+      // rather than fail every time.
+      const res = await fetch("https://api.web3forms.com/submit", { method: "POST", body, headers: { Accept: "application/json" }, signal: AbortSignal.timeout?.(20000) });
+      return (await res.json()).success === true;
+    } catch {
+      return false;
+    }
+  }
+  const ERRORS = { Name: "Please tell us your name.", Email: "Please enter an email address we can reply to.", Phone: "Please add a number we can call you on.", Message: "Please tell us a little about it." };
+  function check(field) {
+    const ok = field.checkValidity();
+    field.setAttribute("aria-invalid", String(!ok));
+    let msg = field.parentElement.querySelector(".field-error");
+    if (ok) { msg?.remove(); return true; }
+    if (!msg) {
+      msg = document.createElement("small");
+      msg.className = "field-error";
+      msg.setAttribute("aria-hidden", "true"); // read as the description, not as part of the label
+      msg.id = `err-${field.name}`;
+      field.after(msg);
+      field.setAttribute("aria-describedby", msg.id);
+    }
+    msg.textContent = field.validity.typeMismatch || field.validity.patternMismatch ? "That email address doesn't look quite right." : ERRORS[field.name] || "Please fill this in.";
+    return false;
+  }
+  window.EDS.form = { send, check };
+
+  // The updates sign-up in the footer.
+  $$("form[data-key]:not(.enquiry)").forEach((form) => {
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (form.hasAttribute("aria-busy")) return;
+      const btn = $("button[type=submit]", form);
+      $$("[data-done]", form).forEach((d) => (d.hidden = true));
+      form.setAttribute("aria-busy", "true");
+      btn.setAttribute("aria-disabled", "true");
+      const subject = form.dataset.subject;
+      const sent = await send(form);
+      // For the analytics dashboard (track.js): whether it actually went.
+      form.dispatchEvent(new CustomEvent("eds:form", { bubbles: true, detail: { sent, subject } }));
+      form.removeAttribute("aria-busy");
+      btn.removeAttribute("aria-disabled");
+      if (sent) form.reset();
+      $(`[data-done=${sent ? "sent" : "error"}]`, form).hidden = false;
+    });
+  });
+
+  /* ---- head office: open now, or when it next opens ---- */
+  // The hours come from site.openingHours in content.mjs, via the footer.
+  const hours = $("[data-open-status]");
+  if (hours) {
+    const spec = JSON.parse(hours.dataset.openStatus);
+    const mins = (hm) => { const [h, m] = hm.split(":").map(Number); return h * 60 + m; };
+    const clock = (m) => { const h = Math.floor(m / 60), mm = m % 60; return `${h % 12 || 12}${mm ? `:${String(mm).padStart(2, "0")}` : ""}${h < 12 ? "am" : "pm"}`; };
+    const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const update = () => {
+      const parts = Object.fromEntries(new Intl.DateTimeFormat("en-AU", { timeZone: spec.timeZone, weekday: "short", hour: "numeric", minute: "numeric", hourCycle: "h23" }).formatToParts(new Date()).map((p) => [p.type, p.value]));
+      const day = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(parts.weekday);
+      const now = Number(parts.hour) * 60 + Number(parts.minute);
+      const open = spec.days.includes(day) && now >= mins(spec.opens) && now < mins(spec.closes);
+      let text = `Head office open now, until ${clock(mins(spec.closes))}`;
+      if (!open) {
+        let d = day, ahead = 0;
+        if (!(spec.days.includes(day) && now < mins(spec.opens))) do { d = (d + 1) % 7; ahead++; } while (!spec.days.includes(d));
+        text = `Head office closed, opens ${clock(mins(spec.opens))} ${ahead === 0 ? "today" : ahead === 1 ? "tomorrow" : DAYS[d]}`;
+      }
+      const tz = spec.timeZone === "Australia/Brisbane" ? " (Brisbane time)" : "";
+      $$("[data-open-status]").forEach((el) => {
+        el.hidden = false;
+        el.classList.toggle("is-open", open);
+        $("span", el).textContent = text + tz;
+      });
+      $$("[data-open-dot]").forEach((el) => el.classList.toggle("is-open", open));
+    };
+    update();
+    setInterval(update, 60000);
+  }
+
+  /* ---- phone action bar: out of the way at the top and by the footer ---- */
+  const bar = $(".actionbar");
+  if (bar) {
+    let past = false, near = false;
+    const sync = () => bar.classList.toggle("show", past && !near);
+    window.addEventListener("scroll", () => { const p = window.scrollY > 320; if (p !== past) { past = p; sync(); } }, { passive: true });
+    const seen = new Set();
+    const io2 = new IntersectionObserver((entries) => {
+      entries.forEach((en) => (en.isIntersecting ? seen.add(en.target) : seen.delete(en.target)));
+      near = seen.size > 0;
+      sync();
+    });
+    $$(".footer, .cta, .contact-grid").forEach((el) => io2.observe(el));
+  }
+
+  /* ---- ambient loops pause while off screen ---- */
+  // The FlowSense screens, the office map, the flow lab's pipe, the moving
+  // parts of the illustrations and the "open now" dot animate for as long
+  // as a page is open. Off screen they would
+  // still be restyled and repainted on every frame, so they pause until
+  // they are back in view (site.css: .offscreen).
+  const loops = $$(".fs-screen, .fs-list, #ausmap, #lab-pipe, #lidott-svg, .diagram, #ef-svg, #eas-svg, .ef-hero, .open-status, .live-tag");
+  if (loops.length) {
+    const io3 = new IntersectionObserver((entries) => entries.forEach((en) => en.target.classList.toggle("offscreen", !en.isIntersecting)), { rootMargin: "80px 0px" });
+    loops.forEach((el) => io3.observe(el));
+  }
+
+  /* ---- footage plays only on screen ---- */
+  // The home page's two loops (build.mjs: homeMedia) play while in view and
+  // pause off it; the closing band's is not fetched until it nears the
+  // screen. A visitor who has asked to save data keeps the still frames.
+  const clips = $$("video[data-ambient]");
+  if (clips.length && !navigator.connection?.saveData) {
+    const io4 = new IntersectionObserver((entries) => entries.forEach((en) => (en.isIntersecting ? en.target.play().catch(() => {}) : en.target.pause())), { rootMargin: "200px 0px" });
+    clips.forEach((v) => io4.observe(v));
+  } else clips.forEach((v) => { v.autoplay = false; v.pause(); });
+
+  /* ---- flow field: streamlines that part around the pointer ---- */
+  function flowField(canvas) {
+    const ctx = canvas.getContext("2d");
+    const dense = canvas.dataset.flowfield === "dense";
+    let w = 0, h = 0, dpr = 1, parts = [], raf = 0, visible = false, t = 0;
+    const pointer = { x: -9999, y: -9999, active: false };
+    // The canvas is see-through: the band behind it is the water, and old
+    // strokes fade by wearing away (destination-out) rather than by painting
+    // the band's colour over them, so one script serves the light heroes and
+    // the teal closing band. The three stroke colours come from the
+    // stylesheet (--ff-1 to --ff-3), read once per resize.
+    let inks = [];
+    const readInks = () => {
+      const cs = getComputedStyle(canvas);
+      inks = [1, 2, 3].map((i) => cs.getPropertyValue(`--ff-${i}`).trim());
+      if (inks.some((c) => !c)) inks = ["rgba(95, 180, 166, .4)", "rgba(56, 189, 248, .5)", "rgba(255, 255, 255, .6)"];
+    };
+
+    const spawn = (p, anywhere) => {
+      p.x = anywhere ? Math.random() * w : -10;
+      p.y = Math.random() * h;
+      p.life = 120 + Math.random() * 260;
+      p.speed = 0.6 + Math.random() * 1.3;
+      p.hue = Math.random();
+    };
+    const resize = () => {
+      const r = canvas.getBoundingClientRect();
+      dpr = Math.min(2, window.devicePixelRatio || 1);
+      w = r.width; h = r.height;
+      canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const n = Math.round(Math.max(160, Math.min(dense ? 1100 : 700, (w * h) / (dense ? 1300 : 2200))));
+      parts = Array.from({ length: n }, () => { const p = {}; spawn(p, true); return p; });
+      readInks();
+      ctx.clearRect(0, 0, w, h);
+    };
+    const step = () => {
+      t += 1;
+      // Fade every fourth frame by what four frames of .07 would take
+      // (.93^4 = .75). At .07 a frame the step rounds to nothing below an
+      // alpha of 7/255, so old trails were never cleared and built up into a
+      // haze over the hero; at .25 nothing outlives 1/255.
+      if (t % 4 === 0) {
+        ctx.globalCompositeOperation = "destination-out";
+        ctx.fillStyle = "rgba(0, 0, 0, .25)"; ctx.fillRect(0, 0, w, h);
+        ctx.globalCompositeOperation = "source-over";
+      }
+      ctx.lineWidth = 1.1;
+      ctx.lineCap = "round";
+      for (const p of parts) {
+        const a = Math.sin(p.x * 0.0023 + t * 0.0016) * 1.1 + Math.cos(p.y * 0.0036 - t * 0.0021) * 0.9 + Math.sin((p.x + p.y) * 0.0013) * 0.6;
+        let vx = (0.9 + Math.cos(a) * 0.75) * p.speed, vy = Math.sin(a) * 0.8 * p.speed;
+        if (pointer.active) {
+          const dx = p.x - pointer.x, dy = p.y - pointer.y, d2 = dx * dx + dy * dy, R = 170;
+          if (d2 < R * R) {
+            const d = Math.sqrt(d2) || 1, f = (1 - d / R) * 3.2;
+            // push out and swirl, like water passing an obstruction
+            vx += (dx / d) * f - (dy / d) * f * 0.7;
+            vy += (dy / d) * f + (dx / d) * f * 0.7;
+          }
+        }
+        const nx = p.x + vx, ny = p.y + vy;
+        ctx.strokeStyle = p.hue < 0.72 ? inks[0] : p.hue < 0.93 ? inks[1] : inks[2];
+        ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(nx, ny); ctx.stroke();
+        p.x = nx; p.y = ny;
+        if (--p.life < 0 || nx > w + 10 || ny < -10 || ny > h + 10) spawn(p, Math.random() < 0.35);
+      }
+    };
+    const loop = () => { step(); raf = requestAnimationFrame(loop); };
+    const sync = () => {
+      cancelAnimationFrame(raf); raf = 0;
+      if (visible && !document.hidden) raf = requestAnimationFrame(loop);
+    };
+    new ResizeObserver(resize).observe(canvas);
+    new IntersectionObserver(([en]) => { visible = en.isIntersecting; sync(); }).observe(canvas);
+    document.addEventListener("visibilitychange", sync);
+    const host = canvas.parentElement;
+    host.addEventListener("pointermove", (e) => {
+      const r = canvas.getBoundingClientRect();
+      pointer.x = e.clientX - r.left; pointer.y = e.clientY - r.top; pointer.active = true;
+    });
+    host.addEventListener("pointerleave", () => { pointer.active = false; });
+    resize();
+  }
+  $$("canvas[data-flowfield]").forEach(flowField);
+})();
