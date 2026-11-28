@@ -326,6 +326,8 @@
     // every so often a clear sheet in place of a steel one lets the daylight in
     for (let k = x + 0.3; k < x + w - 0.2; k += 0.52) for (const [a, c] of [[0.12, 0.42], [0.58, 0.88]]) sky.push([P(k, y + d * a, h), P(k + 0.08, y + d * a, h), P(k + 0.08, y + d * c, h), P(k, y + d * c, h)]);
     b.nodes.push(shapes("skylight", sky), strokes("ribs", ribs));
+    // sheet steel weathers evenly, not in the blotches a membrane roof does
+    for (const n of b.nodes) if (n.classList?.contains("ft-tex") && !n.classList.contains("ft-fine")) n.classList.add("ft-metal");
     return b;
   };
   const arms = [];
@@ -1193,8 +1195,8 @@
     });
     sym("ac", (g) => { const b = box(0, 0, 0.14, 0.14, 3); b.nodes.forEach((n, i) => (n.style.fill = ["#d6dcdd", "#5c686b", "#8b979a"][[2, 0, 1][i]])); g.append(...b.nodes); });
     sym("chamber", (g) => { el("ellipse", { cx: 0, cy: 0, rx: 7, ry: 3.5, style: "fill:none;stroke:var(--aqua);stroke-width:1;stroke-dasharray:2 3" }, g); g.append(seg("", [-3, -1], [-3, 3], { style: "stroke:var(--aqua);stroke-width:1" }), seg("", [3, -1], [3, 3], { style: "stroke:var(--aqua);stroke-width:1" })); });
-    sym("crossing-x", (g) => { for (let i = 0; i < 5; i++) g.append(poly("", [P(i * 0.11, -0.26), P(i * 0.11 + 0.055, -0.26), P(i * 0.11 + 0.055, 0.26), P(i * 0.11, 0.26)], { style: F("rgba(255,255,255,.42)") })); });
-    sym("crossing-y", (g) => { for (let i = 0; i < 5; i++) g.append(poly("", [P(-0.26, i * 0.11), P(0.26, i * 0.11), P(0.26, i * 0.11 + 0.055), P(-0.26, i * 0.11 + 0.055)], { style: F("rgba(255,255,255,.42)") })); });
+    sym("crossing-x", (g) => { for (let i = 0; i < 5; i++) g.append(poly("", [P(i * 0.11, -0.26), P(i * 0.11 + 0.055, -0.26), P(i * 0.11 + 0.055, 0.26), P(i * 0.11, 0.26)], { style: F("rgba(242,242,236,.66)") })); });
+    sym("crossing-y", (g) => { for (let i = 0; i < 5; i++) g.append(poly("", [P(-0.26, i * 0.11), P(0.26, i * 0.11), P(0.26, i * 0.11 + 0.055), P(-0.26, i * 0.11 + 0.055)], { style: F("rgba(242,242,236,.66)") })); });
     sym("bench", (g) => { g.append(seg("", P(0.02, 0.04, 0), P(0.02, 0.04, 2.6), { style: "stroke:#3d4245;stroke-width:.5" }), seg("", P(0.17, 0.04, 0), P(0.17, 0.04, 2.6), { style: "stroke:#3d4245;stroke-width:.5" }), poly("", [P(0, 0.01, 2.6), P(0.19, 0.01, 2.6), P(0.19, 0.07, 2.6), P(0, 0.07, 2.6)], { style: F("#8f7a62") }), strokes("", [[P(0, 0.03, 2.6), P(0.19, 0.03, 2.6)], [P(0, 0.05, 2.6), P(0.19, 0.05, 2.6)]], { style: "fill:none;stroke:rgba(0,0,0,.25);stroke-width:.25" })); });
     sym("reed", (g) => {
       const rnd = seeded(33), dark = [], light = [];

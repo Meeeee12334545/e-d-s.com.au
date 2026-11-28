@@ -664,8 +664,9 @@ html.drawer-open { overflow: hidden; scrollbar-gutter: stable; }
 .city-svg .asphalt { pointer-events: none; }
 /* the light rail's overhead wire, between the catenary poles on the north footpath */
 .city-svg .catenary { fill: none; stroke: rgba(30, 34, 36, .55); stroke-width: .4; stroke-linejoin: round; }
-.city-svg .stopline { fill: none; stroke: rgba(255, 255, 255, .5); stroke-width: 1.4; }
-.city-svg .road-line { stroke: rgba(255, 255, 255, .34); stroke-width: 1; stroke-dasharray: 5 7; fill: none; }
+/* road paint: crisp, slightly worn white, as it shows from the air (lifelike pass 4) */
+.city-svg .stopline { fill: none; stroke: rgba(242, 242, 236, .72); stroke-width: 1.3; }
+.city-svg .road-line { stroke: rgba(242, 242, 236, .6); stroke-width: .7; stroke-dasharray: 6 9; fill: none; }
 .city-svg .pier { fill: #4c585c; }
 .city-svg .culvert-mouth { fill: #141c1f; stroke: rgba(95, 180, 166, .35); stroke-width: 1; }
 .city-svg .base .wtr { fill: #44717d; stroke: rgba(2, 10, 14, .22); stroke-width: .5; }
@@ -689,7 +690,7 @@ html.drawer-open { overflow: hidden; scrollbar-gutter: stable; }
 .city-svg .joint { fill: none; stroke: rgba(40, 38, 32, .32); stroke-width: .4; }
 .city-svg .patch { fill: rgba(255, 255, 255, .05); }
 .city-svg .tramrail { fill: none; stroke: rgba(220, 232, 230, .4); stroke-width: .6; }
-.city-svg .arrow { fill: rgba(255, 255, 255, .32); }
+.city-svg .arrow { fill: rgba(242, 242, 236, .55); }
 .city-svg .lid { fill: #3a4448; stroke: rgba(95, 180, 166, .55); stroke-width: .8; }
 .city-svg .lid-ring { fill: none; stroke: rgba(95, 180, 166, .4); stroke-width: .6; }
 .city-svg .post { fill: none; }
@@ -800,6 +801,7 @@ html.drawer-open { overflow: hidden; scrollbar-gutter: stable; }
 .city-svg .tex-photo { pointer-events: none; }
 .city-svg .zone .roll { fill: url(#roll); pointer-events: none; }
 .city-svg .zone .ft-tex { fill: url(#tx-grain); fill-opacity: .45; pointer-events: none; }
+.city-svg .zone .ft-tex.ft-metal { fill-opacity: .16; }
 /* lifelike pass (28 November 2026): domes round in the light, steel roofs
    in plates, clarifiers with launder, weir and feed well, foam on the
    aeration basin, downpipes on the houses */
