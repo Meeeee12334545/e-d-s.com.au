@@ -637,7 +637,7 @@ html.drawer-open { overflow: hidden; scrollbar-gutter: stable; }
 /* The slab is cut from the earth: a dark green plinth on top, soil in its
    faces. The roads are asphalt with bright markings, the footpaths concrete. */
 .city-svg .slab-top { fill: #58683c; }
-.city-svg .slab-top.tex-photo { fill: url(#tx-grass); fill-opacity: .5; }
+.city-svg .slab-top.tex-photo { fill: url(#tx-grass); fill-opacity: .35; }
 /* with the blocks faded back (the sewer view, a district taken apart) the ground goes dark again, so what is shown stands out */
 .city-svg:is(.is-exploded, .is-underground) .slab-top { fill: url(#slab-grad); }
 .city-svg:is(.is-exploded, .is-underground) .slab-top.tex-photo { display: none; }
@@ -663,9 +663,10 @@ html.drawer-open { overflow: hidden; scrollbar-gutter: stable; }
 .city-svg .crackseal { fill: none; stroke: rgba(14, 15, 16, .42); stroke-width: .32; stroke-linecap: round; stroke-linejoin: round; }
 .city-svg .asphalt { pointer-events: none; }
 /* the light rail's overhead wire, between the catenary poles on the north footpath */
-.city-svg .catenary { fill: none; stroke: rgba(30, 34, 36, .55); stroke-width: .4; stroke-linejoin: round; }
-.city-svg .stopline { fill: none; stroke: rgba(255, 255, 255, .5); stroke-width: 1.4; }
-.city-svg .road-line { stroke: rgba(255, 255, 255, .34); stroke-width: 1; stroke-dasharray: 5 7; fill: none; }
+.city-svg .catenary { fill: none; stroke: rgba(30, 34, 36, .7); stroke-width: .5; stroke-linejoin: round; }
+/* road paint: crisp, slightly worn white, as it shows from the air (lifelike pass 4) */
+.city-svg .stopline { fill: none; stroke: rgba(242, 242, 236, .72); stroke-width: 1.3; }
+.city-svg .road-line { stroke: rgba(242, 242, 236, .6); stroke-width: .7; stroke-dasharray: 6 9; fill: none; }
 .city-svg .pier { fill: #4c585c; }
 .city-svg .culvert-mouth { fill: #141c1f; stroke: rgba(95, 180, 166, .35); stroke-width: 1; }
 .city-svg .base .wtr { fill: #44717d; stroke: rgba(2, 10, 14, .22); stroke-width: .5; }
@@ -689,7 +690,7 @@ html.drawer-open { overflow: hidden; scrollbar-gutter: stable; }
 .city-svg .joint { fill: none; stroke: rgba(40, 38, 32, .32); stroke-width: .4; }
 .city-svg .patch { fill: rgba(255, 255, 255, .05); }
 .city-svg .tramrail { fill: none; stroke: rgba(220, 232, 230, .4); stroke-width: .6; }
-.city-svg .arrow { fill: rgba(255, 255, 255, .32); }
+.city-svg .arrow { fill: rgba(242, 242, 236, .55); }
 .city-svg .lid { fill: #3a4448; stroke: rgba(95, 180, 166, .55); stroke-width: .8; }
 .city-svg .lid-ring { fill: none; stroke: rgba(95, 180, 166, .4); stroke-width: .6; }
 .city-svg .post { fill: none; }
@@ -744,7 +745,7 @@ html.drawer-open { overflow: hidden; scrollbar-gutter: stable; }
 .city-svg .zone {
   --mat: #c5cac6; --ground: #777b78; --detail: rgba(184, 190, 188, .75); --water: #44717d; --tree: #557d40; --tree-2: #3a5a2e;
   --gum: #8e9d7a; --gum-2: #66765a; --jac: #9686c4; --jac-2: #786aa8;
-  --sun: #fff4dc; --shade: #0c1c2c; --lit-mix: #eefcf8; --lift: 0%; --lift-g: 0%;
+  --sun: #fff6e2; --shade: #0e1f36; --lit-mix: #eefcf8; --lift: 0%; --lift-g: 0%;
   cursor: pointer; transform-box: view-box;
   /* Each district paints as a group of its own (an opacity just short of 1
      makes it one, and looks the same): measured on 28 November 2026, a pick's
@@ -785,21 +786,24 @@ html.drawer-open { overflow: hidden; scrollbar-gutter: stable; }
 .city-svg .zone .ge-l.ge-kerb { fill: #85847c; } .city-svg .zone .ge-r.ge-kerb { fill: #9c9b93; }
 .city-svg .zone .ge-l.ge-deep { fill: #2b2521; } .city-svg .zone .ge-r.ge-deep { fill: #372f29; }
 .city-svg .zone.active .ge-deep, .city-svg .zone.exploded .ge-deep { opacity: 1; }
-.city-svg .zone .ft { fill: color-mix(in oklab, color-mix(in oklab, var(--mat), var(--sun) 30%), var(--lit-mix) var(--lift)); }
-.city-svg .zone .fr { fill: color-mix(in oklab, color-mix(in oklab, var(--mat), var(--shade) 9%), var(--lit-mix) var(--lift)); }
+.city-svg .zone .ft { fill: color-mix(in oklab, color-mix(in oklab, var(--mat), var(--sun) 40%), var(--lit-mix) var(--lift)); }
+.city-svg .zone .fr { fill: color-mix(in oklab, color-mix(in oklab, var(--mat), var(--sun) 14%), var(--lit-mix) var(--lift)); }
 .city-svg .zone .fl { fill: color-mix(in oklab, color-mix(in oklab, var(--mat), var(--shade) 50%), var(--lit-mix) var(--lift)); }
-.city-svg .zone .rf-n { fill: color-mix(in oklab, color-mix(in oklab, var(--roof, var(--mat)), var(--sun) 34%), var(--lit-mix) var(--lift)); }
-.city-svg .zone .rf-e { fill: color-mix(in oklab, color-mix(in oklab, var(--roof, var(--mat)), var(--sun) 14%), var(--lit-mix) var(--lift)); }
+.city-svg .zone .rf-n { fill: color-mix(in oklab, color-mix(in oklab, var(--roof, var(--mat)), var(--sun) 42%), var(--lit-mix) var(--lift)); }
+.city-svg .zone .rf-e { fill: color-mix(in oklab, color-mix(in oklab, var(--roof, var(--mat)), var(--sun) 24%), var(--lit-mix) var(--lift)); }
 .city-svg .zone .rf-w { fill: color-mix(in oklab, color-mix(in oklab, var(--roof, var(--mat)), var(--shade) 26%), var(--lit-mix) var(--lift)); }
 .city-svg .zone .rf-s { fill: color-mix(in oklab, color-mix(in oklab, var(--roof, var(--mat)), var(--shade) 46%), var(--lit-mix) var(--lift)); }
-.city-svg .zone .cast { fill: rgba(8, 16, 30, .32); }
+.city-svg .zone .cast { fill: rgba(10, 18, 34, .38); }
 /* the penumbra past each shadow and the shade round each foot (lifelike pass) */
-.city-svg .zone .cast-soft { fill: rgba(6, 14, 28, .13); }
+.city-svg .zone .cast-soft { fill: rgba(8, 16, 30, .15); }
 /* the light falling off down every wall, and the photographic ground */
 .city-svg .zone .ao { fill: url(#ao); pointer-events: none; }
 .city-svg .tex-photo { pointer-events: none; }
+/* (lifelike pass 4) the broad patches calmer: blotches tens of metres across read as camouflage */
+.city-svg .zone .tex-photo:not(.tex-fine) { fill-opacity: .6; }
 .city-svg .zone .roll { fill: url(#roll); pointer-events: none; }
-.city-svg .zone .ft-tex { fill: url(#tx-grain); fill-opacity: .45; pointer-events: none; }
+.city-svg .zone .ft-tex { fill: url(#tx-grain); fill-opacity: .3; pointer-events: none; }
+.city-svg .zone .ft-tex.ft-metal { fill-opacity: .16; }
 /* lifelike pass (28 November 2026): domes round in the light, steel roofs
    in plates, clarifiers with launder, weir and feed well, foam on the
    aeration basin, downpipes on the houses */
@@ -810,6 +814,8 @@ html.drawer-open { overflow: hidden; scrollbar-gutter: stable; }
 .city-svg .zone .weir { fill: none; stroke: rgba(236, 240, 232, .55); stroke-width: .35; }
 .city-svg .zone .feedwell { fill: color-mix(in oklab, var(--water), #fff 14%); stroke: rgba(225, 230, 222, .7); stroke-width: .5; }
 .city-svg .zone .foam-raft { fill: rgba(246, 247, 240, .42); pointer-events: none; }
+.city-svg .zone .wtr.aer { fill: #6c6246; }
+.city-svg .zone .walkway { fill: rgba(176, 182, 178, .9); stroke: rgba(40, 44, 42, .4); stroke-width: .3; }
 .city-svg .zone .dpipe { fill: none; stroke: rgba(70, 72, 68, .55); stroke-width: .45; }
 /* buildings pass (28 November 2026): weathered walls and roofs, and a fascia over the shopfronts */
 /* life pass (28 November 2026): cloud shadows on a westerly (down and to the
@@ -825,7 +831,7 @@ html.drawer-open { overflow: hidden; scrollbar-gutter: stable; }
 .city-fx.is-storm .sky-life, .city-fx:is(.is-underground, .is-exploded) .sky-life { visibility: hidden; }
 /* faded through fill-opacity, not opacity, which would give each of these
    paths a layer of its own to composite whenever the city repaints */
-.city-svg .zone .wtex { fill: url(#tx-facade); fill-opacity: .36; pointer-events: none; }
+.city-svg .zone .wtex { fill: url(#tx-facade); fill-opacity: .26; pointer-events: none; }
 /* glass doesn't streak like render does */
 .city-svg .zone .wtex.wtex-glass { fill-opacity: .12; }
 .city-svg .zone .ft-fine { fill: url(#tx-grain-fine); }
@@ -853,6 +859,15 @@ html.drawer-open { overflow: hidden; scrollbar-gutter: stable; }
 .city-svg .zone .oval { fill: rgba(255, 255, 255, .06); stroke: rgba(255, 255, 255, .55); stroke-width: 1; }
 .city-svg .zone .pitch { fill: #c9b98c; fill-opacity: .8; }
 .city-svg .zone .pool-b { fill: #4fb3cf; fill-opacity: .85; }
+/* lifelike pass 4: the pool's coping, deeper water toward the middle; rust
+   on the old sheds; pavers in the plaza; the fountain's jets */
+.city-svg .zone .pool-coping { fill: #d8d4c8; }
+.city-svg .zone .pool-deep { fill: url(#water-sheen); fill-opacity: .5; }
+.city-svg .zone .rust { fill: url(#rust); pointer-events: none; }
+.city-svg .zone .sign-text { fill: none; stroke: rgba(246, 240, 226, .75); stroke-width: .55; stroke-dasharray: 1 .4; }
+.city-svg .zone .plaza-pavers { fill: url(#pavers); pointer-events: none; }
+.city-svg .zone-fx .spray path { fill: none; stroke: rgba(236, 246, 248, .55); stroke-width: .45; stroke-linecap: round; stroke-dasharray: 1.2 1.8; animation: dash-flow .9s linear infinite reverse; }
+.city-svg .zone-fx .spray .jet { stroke: rgba(240, 248, 250, .7); stroke-width: .6; stroke-dasharray: 1.5 1.5; }
 /* the EDS fleet and crews: more vans out in a storm, every beacon flashing,
    a crew at each site the storm reaches (city.js adds the crew-* classes) */
 @keyframes vb-flash { 0%, 49% { --vb: #f59e0b; } 50%, 100% { --vb: #4a3208; } }
@@ -940,7 +955,7 @@ html.drawer-open { overflow: hidden; scrollbar-gutter: stable; }
 .city-svg .zone .rod { stroke: #4a4440; stroke-width: .4; }
 /* the transit canopy's glass wall (`glass` on a block is the material above) */
 .city-svg .zone .pane { fill: rgba(167, 230, 220, .14); stroke: rgba(167, 230, 220, .35); stroke-width: .6; }
-.city-svg .zone .entry { fill: #ffd27a; opacity: .75; transition: opacity .35s var(--ease); }
+.city-svg .zone .entry { fill: #2b3840; opacity: .9; transition: opacity .35s var(--ease); }
 /* the new tower: its floor slabs, the crane and its lines; the EDS wordmark on the operations centre */
 .city-svg .zone .floor-line { fill: none; stroke: rgba(0, 0, 0, .3); stroke-width: .6; }
 .city-svg .zone .crane { fill: none; stroke: #f0c23a; stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round; }
@@ -970,7 +985,7 @@ html.drawer-open { overflow: hidden; scrollbar-gutter: stable; }
 .city-svg .zone .mh-open { fill: #020c0b; }
 .city-svg .zone .lit { fill: color-mix(in oklab, var(--aqua) 62%, #eef3f1); opacity: 1; transition: opacity .35s var(--ease), fill .35s var(--ease); }
 .city-svg .zone .lit.sky { fill: #c3d3dc; opacity: .8; }
-.city-svg .zone .lit.shop { fill: #ffd98a; opacity: .8; }
+.city-svg .zone .lit.shop { fill: #34444c; opacity: .92; }
 .city-svg .zone-fx .foam { fill: none; stroke: rgba(255, 255, 255, .75); stroke-width: 1.4; stroke-dasharray: 2 3; animation: dash-flow 1s linear infinite; }
 .city-svg .zone .funnel { fill: #dfe4e6; stroke: rgba(0, 0, 0, .25); stroke-width: 1; }
 .city-svg .zone .deck { fill: #b07a4a; }
@@ -993,10 +1008,11 @@ html.drawer-open { overflow: hidden; scrollbar-gutter: stable; }
 .city-svg .zone-fx .hub { fill: url(#hub-glow); opacity: .35; transition: opacity .4s var(--ease); }
 .city-svg .zone-fx .beacon { fill: #fff; fill-opacity: 0; transform-box: fill-box; transform-origin: center; }
 .city-svg .zone-fx .blink { fill: var(--red); animation: blink 2s steps(1) infinite; }
-.city-svg .zone-fx .smoke { fill: rgba(255, 255, 255, .5); animation: smoke 3.6s linear infinite; }
-.city-svg .zone-fx .smoke.steam { fill: rgba(255, 255, 255, .3); }
+.city-svg .zone-fx .smoke { fill: url(#puff); fill-opacity: .7; animation: smoke 3.6s linear infinite; }
+.city-svg .zone-fx .smoke.steam { fill: url(#puff); fill-opacity: .45; }
 @keyframes smoke { 0% { translate: 0 0; fill-opacity: 0; stroke-opacity: 0; scale: .5; } 15% { fill-opacity: .55; stroke-opacity: .55; } 100% { translate: 10px -34px; fill-opacity: 0; stroke-opacity: 0; scale: 1.7; } }
-.city-svg .zone-fx .arm { stroke: rgba(255, 255, 255, .75); stroke-width: 1.4; }
+/* a clarifier's bridge: a galvanised walkway turning over the water */
+.city-svg .zone-fx .arm { stroke: #c3c7c3; stroke-width: 1.9; stroke-linecap: butt; }
 .city-svg .zone .well { transform-box: fill-box; transform-origin: 50% 50%; scale: .8; transition: scale 2s var(--ease); }
 .city-svg .zone-fx .bubble { fill: rgba(255, 255, 255, .6); animation: rise 2.4s linear infinite; animation-delay: calc(var(--d, 0) * -1s); }
 .city-svg .zone-fx .flare { fill: #ffb048; fill-opacity: .62; transform-box: fill-box; transform-origin: 50% 100%; animation: flicker .5s ease-in-out infinite alternate; }

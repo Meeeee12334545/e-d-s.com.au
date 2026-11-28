@@ -118,12 +118,14 @@
     antenna: [[[-0.5, 0], [0.5, 0], [0.5, -11], [-0.5, -11]], [[-3, -8.5], [3, -8.5], [3, -9.5], [-3, -9.5]]],
   };
   for (const k of "abcd") OUTLINES[`ctr-${k}`] = [[P(0, 0), P(0.36, 0), P(0.36, 0.15), P(0, 0.15), P(0, 0, 5.5), P(0.36, 0, 5.5), P(0.36, 0.15, 5.5), P(0, 0.15, 5.5)]];
-  for (const [k, s] of TREE_SIZES) OUTLINES[`tree-${k}`] = crown(-6 * s, [0, -9.2 * s, 6.8 * s, 4.6 * s], [0.2 * s, -12.4 * s, 7.4 * s, 5 * s]);
+  for (const [k, s] of TREE_SIZES) OUTLINES[`tree-${k}`] = OUTLINES[`tree-${k}b`] = crown(-6 * s, [0, -9.2 * s, 6.8 * s, 4.6 * s], [0.2 * s, -12.4 * s, 7.4 * s, 5 * s]);
 
   /* ---- solids ---- */
   function box(x, y, w, d, h, o = {}) {
     const z = o.z || 0, c = o.cls ? ` ${o.cls}` : "", nodes = [];
     if (cast && !z && h >= 4) throwShadow([[x, y], [x + w, y], [x + w, y + d], [x, y + d]], h + (o.rh || 0));
+    // a canopy on posts shades the ground beneath it, offset by its height (lifelike pass 4)
+    if (cast && o.shade) { const k = 0.04 + 0.0062 * z; cast.push(castOf([[x, y], [x + w, y], [x + w, y + d], [x, y + d]].map(([a, b]) => [a + SUN[0] * k, b + SUN[1] * k]), h)); }
     solid(x, y, [z, z + h].flatMap((zz) => [P(x, y, zz), P(x + w, y, zz), P(x + w, y + d, zz), P(x, y + d, zz)]).concat(o.ridge || []));
     const L = [P(x, y + d, z), P(x + w, y + d, z), P(x + w, y + d, z + h), P(x, y + d, z + h)];
     const R = [P(x + w, y, z), P(x + w, y + d, z), P(x + w, y + d, z + h), P(x + w, y, z + h)];
@@ -158,6 +160,8 @@
     if (cast && h >= 5 && !o.noAo) nodes.push(shapes("ao", [L, R]));
     // corrugated cladding: ribs skewed to each face
     if (o.clad) nodes.push(poly("clad", L, { style: "fill:url(#clad-l)" }), poly("clad", R, { style: "fill:url(#clad-r)" }));
+    // (lifelike pass 4) rust run down from the eaves and fixings of old sheeting
+    if (o.clad && cast && h >= 8) nodes.push(shapes("rust", [L, R]));
     if (!o.noTop) nodes.push(poly((o.top || "ft") + c, [P(x, y, z + h), P(x + w, y, z + h), P(x + w, y + d, z + h), P(x, y + d, z + h)]));
     // weathering on the bigger flat roofs (realism pass)
     if (cast && !o.noTop && h >= 8 && w * d >= 0.12) { const t = [P(x, y, z + h), P(x + w, y, z + h), P(x + w, y + d, z + h), P(x, y + d, z + h)]; nodes.push(poly("ft-tex", t), poly("ft-tex ft-fine", t)); }
@@ -301,7 +305,7 @@
       use("bench", x + 0.3, y + 0.12, 1, { cls: "fine", d: x + y + 0.5 }), use("bench", x + w - 0.5, y + 0.12, 1, { cls: "fine", d: x + w + y - 0.2 }),
       who(x + 0.55, y + 0.3, "#e7fff9", { z: 1 }), who(x + 0.68, y + 0.34, "#f2c14e", { z: 1 }), who(x + w - 0.3, y + 0.28, "#38bdf8", { z: 1 }),
       item(x + w + y + d - 0.01, xs.map((px) => post(px, y + d - 0.04))),
-      box(x, y, w, d, 2.4, { z: 9, cls: "white" }),
+      box(x, y, w, d, 2.4, { z: 9, cls: "white", shade: true }),
     ].map(lo);
   };
   // A tram shelter on the north footpath of the main road: a glass back, a
@@ -313,7 +317,7 @@
       lo(item(d, poly("pane", [P(x0 + 0.03, 4.605, 1), P(x0 + w - 0.03, 4.605, 1), P(x0 + w - 0.03, 4.605, 6.5), P(x0 + 0.03, 4.605, 6.5)]), strokes("det", [[P(x0 + 0.03, 4.67), P(x0 + 0.03, 4.67, 7)], [P(x0 + w - 0.03, 4.67), P(x0 + w - 0.03, 4.67, 7)]]))),
       use("bench", x0 + 0.08, 4.625, 0, { cls: "fine", d: d + 0.001 }),
       who(x0 + 0.14, 4.655, "#38bdf8", { d: d + 0.0015 }), who(x0 + 0.3, 4.66, "#f2c14e", { d: d + 0.0016 }),
-      { ...box(x0, 4.6, w, 0.08, 1.6, { z: 7, cls: "white" }), d: d + 0.002, s: "lo" },
+      { ...box(x0, 4.6, w, 0.08, 1.6, { z: 7, cls: "white", shade: true }), d: d + 0.002, s: "lo" },
       use("sign", x0 + w + 0.04, 4.66, 0, { cls: "fine", d: d + 0.003 }),
     ];
   };
@@ -324,6 +328,8 @@
     // every so often a clear sheet in place of a steel one lets the daylight in
     for (let k = x + 0.3; k < x + w - 0.2; k += 0.52) for (const [a, c] of [[0.12, 0.42], [0.58, 0.88]]) sky.push([P(k, y + d * a, h), P(k + 0.08, y + d * a, h), P(k + 0.08, y + d * c, h), P(k, y + d * c, h)]);
     b.nodes.push(shapes("skylight", sky), strokes("ribs", ribs));
+    // sheet steel weathers evenly, not in the blotches a membrane roof does
+    for (const n of b.nodes) if (n.classList?.contains("ft-tex") && !n.classList.contains("ft-fine")) n.classList.add("ft-metal");
     return b;
   };
   const arms = [];
@@ -359,7 +365,7 @@
       const e = (k, cls) => el("ellipse", { class: cls, cx: f(bx), cy: f(ty), rx: f(rx * k), ry: f(ry * k) });
       nodes.push(e(0.8, "ripples"), e(0.875, "launder"), e(0.83, "weir"), e(0.2, "feedwell"));
     }
-    if (o.ring) nodes.push(el("ellipse", { class: "det", cx: f(bx), cy: f(ty), rx: f(rx * 0.6), ry: f(ry * 0.6) }));
+    if (o.ring && !(cast && o.water === true && r >= 0.5)) nodes.push(el("ellipse", { class: "det", cx: f(bx), cy: f(ty), rx: f(rx * 0.6), ry: f(ry * 0.6) }));
     // the front half of a ring round the shell at height zz above the base
     const arc = (zz) => `M${f(bx - rx)} ${f(by - zz)}A${f(rx)} ${f(ry)} 0 0 0 ${f(bx + rx)} ${f(by - zz)}`;
     if (h >= 4) nodes.push(el("path", { class: "rim-hl", d: arc(h) }));
@@ -408,7 +414,8 @@
   const pipeline = (points, z, cls, d) => item(d ?? Math.max(...points.map(([x, y]) => x + y)), pl(cls, points.map(([x, y]) => P(x, y, z))));
   const line = (cls, a, d) => item(d, pl(cls, a));
   const flat = (cls, a, d, extra) => item(d, poly(cls, a, extra));
-  const tree = (x, y, s = "m", o = {}) => use(`tree-${s}`, x, y, 0, { d: x + y + 0.1, ...o });
+  // every other tree takes the second crown of its size (lifelike pass 4)
+  const tree = (x, y, s = "m", o = {}) => use(`tree-${s}${Math.round(x * 7 + y * 13) % 2 ? "b" : ""}`, x, y, 0, { d: x + y + 0.1, ...o });
   const gum = (x, y) => use("tree-gum", x, y, 0, { d: x + y + 0.1 });
   const jac = (x, y) => use("tree-jac", x, y, 0, { d: x + y + 0.1 });
   // a person, in their own --shirt
@@ -517,8 +524,8 @@
       el("path", { d: cluster(rnd, 10, cx, cy, rx * 0.5, ry * 0.46, rx * 0.03, rx * 0.05, [0.36, -0.3]), style: fleck }, g);
       el("path", { d: cluster(rnd, 12, cx, cy, rx * 0.6, ry * 0.55, rx * 0.04, rx * 0.08, [-0.3, 0.25]), style: F("rgba(4,14,6,.32)") }, g);
     };
-    for (const [k, s] of TREE_SIZES) sym(`tree-${k}`, (g) => {
-      const rnd = seeded(500 + Math.round(s * 100));
+    for (const [k, s] of TREE_SIZES) for (const v of ["", "b"]) sym(`tree-${k}${v}`, (g) => {
+      const rnd = seeded(500 + Math.round(s * 100) + (v ? 37 : 0));
       // its shadow, the crown's own ragged shape, thrown west-south-west
       el("path", { d: cluster(rnd, 12, -3.4 * s, 0.9 * s, 5.2 * s, 1.9 * s, 1.4 * s, 2.3 * s, [0, 0]).replace(/a([\d.]+) ([\d.]+)/g, (m, a, b) => `a${a} ${f(b * 0.45)}`), style: SHADE }, g);
       g.append(pl("", [[0, 0], [0.2 * s, -4 * s], [-0.1 * s, -7.5 * s]], { style: `fill:none;stroke:#4a3d31;stroke-width:${f(1.1 * s)};stroke-linecap:round` }));
@@ -1153,7 +1160,8 @@
     });
     sym("tank-rw", (g) => {
       const c = cyl(0, 0, 0.11, 9);
-      ["#8d999b", "#b4bfc1", "#e2e8e9"].forEach((col, i) => (c.nodes[i].style.fill = col));
+      // in its Colorbond colour (--tank), shaded as the walls are
+      ["color-mix(in oklab, var(--tank, #b4bfc1), #0c1c2c 32%)", "color-mix(in oklab, var(--tank, #b4bfc1), #0c1c2c 8%)", "color-mix(in oklab, var(--tank, #b4bfc1), #fff4dc 30%)"].forEach((col, i) => (c.nodes[i].style.fill = col));
       g.append(...c.nodes);
       const rx = 0.11 * TW / Math.SQRT2, ry = 0.11 * TH / Math.SQRT2;
       for (const z of [3, 6]) el("path", { d: `M${f(-rx)} ${-z}a${f(rx)} ${f(ry)} 0 0 0 ${f(2 * rx)} 0`, style: "fill:none;stroke:rgba(0,0,0,.22);stroke-width:.7" }, g);
@@ -1168,6 +1176,12 @@
       hang(tips[0], tips[1], 0.12, 0.5, 3, "#eef0ea"); hang(tips[0], tips[1], 0.6, 0.82, 1.8, "#3f6fa6");
       hang(tips[1], tips[2], 0.2, 0.42, 1.6, "#c4473a"); hang(tips[1], tips[2], 0.55, 0.8, 2.2, "#e9d7a8");
       hang(tips[3], tips[0], 0.3, 0.55, 1.5, "#5e7a54");
+    });
+    // (lifelike pass 4) a split-system condenser against a house wall: a pale
+    // box with its fan grille, on a little slab
+    sym("split", (g) => {
+      const b = box(0, 0, 0.075, 0.03, 2.4); b.nodes.forEach((n, i) => (n.style.fill = ["#bfc4c2", "#e2e5e2", "#eef0ed"][i])); g.append(...b.nodes);
+      const [cx, cy] = P(0.04, 0.03, 1.2); el("ellipse", { cx: f(cx), cy: f(cy), rx: 0.75, ry: 0.85, style: "fill:#7d8482;stroke:#5c6362;stroke-width:.15" }, g);
     });
     // a dog on a lead, a medium-sized one, its shadow under it
     sym("dog", (g) => {
@@ -1185,8 +1199,8 @@
     });
     sym("ac", (g) => { const b = box(0, 0, 0.14, 0.14, 3); b.nodes.forEach((n, i) => (n.style.fill = ["#d6dcdd", "#5c686b", "#8b979a"][[2, 0, 1][i]])); g.append(...b.nodes); });
     sym("chamber", (g) => { el("ellipse", { cx: 0, cy: 0, rx: 7, ry: 3.5, style: "fill:none;stroke:var(--aqua);stroke-width:1;stroke-dasharray:2 3" }, g); g.append(seg("", [-3, -1], [-3, 3], { style: "stroke:var(--aqua);stroke-width:1" }), seg("", [3, -1], [3, 3], { style: "stroke:var(--aqua);stroke-width:1" })); });
-    sym("crossing-x", (g) => { for (let i = 0; i < 5; i++) g.append(poly("", [P(i * 0.11, -0.26), P(i * 0.11 + 0.055, -0.26), P(i * 0.11 + 0.055, 0.26), P(i * 0.11, 0.26)], { style: F("rgba(255,255,255,.42)") })); });
-    sym("crossing-y", (g) => { for (let i = 0; i < 5; i++) g.append(poly("", [P(-0.26, i * 0.11), P(0.26, i * 0.11), P(0.26, i * 0.11 + 0.055), P(-0.26, i * 0.11 + 0.055)], { style: F("rgba(255,255,255,.42)") })); });
+    sym("crossing-x", (g) => { for (let i = 0; i < 5; i++) g.append(poly("", [P(i * 0.11, -0.26), P(i * 0.11 + 0.055, -0.26), P(i * 0.11 + 0.055, 0.26), P(i * 0.11, 0.26)], { style: F("rgba(242,242,236,.66)") })); });
+    sym("crossing-y", (g) => { for (let i = 0; i < 5; i++) g.append(poly("", [P(-0.26, i * 0.11), P(0.26, i * 0.11), P(0.26, i * 0.11 + 0.055), P(-0.26, i * 0.11 + 0.055)], { style: F("rgba(242,242,236,.66)") })); });
     sym("bench", (g) => { g.append(seg("", P(0.02, 0.04, 0), P(0.02, 0.04, 2.6), { style: "stroke:#3d4245;stroke-width:.5" }), seg("", P(0.17, 0.04, 0), P(0.17, 0.04, 2.6), { style: "stroke:#3d4245;stroke-width:.5" }), poly("", [P(0, 0.01, 2.6), P(0.19, 0.01, 2.6), P(0.19, 0.07, 2.6), P(0, 0.07, 2.6)], { style: F("#8f7a62") }), strokes("", [[P(0, 0.03, 2.6), P(0.19, 0.03, 2.6)], [P(0, 0.05, 2.6), P(0.19, 0.05, 2.6)]], { style: "fill:none;stroke:rgba(0,0,0,.25);stroke-width:.25" })); });
     sym("reed", (g) => {
       const rnd = seeded(33), dark = [], light = [];
@@ -1237,7 +1251,7 @@
       g.append(...b.nodes, poly("", onL(0, 0.15, 0, 0.36, 0, 5.5), { style: F("url(#clad-l)") }), seg("", P(0.36, 0.075, 0.4), P(0.36, 0.075, 5.1), { style: "stroke:rgba(0,0,0,.4);stroke-width:.5" }));
     });
     // a roof ventilator, the kind that spins on a shed
-    sym("vent", (g) => { const c = cyl(0, 0, 0.035, 2.2, { dome: true }); ["#7f9995", "#b6c8c5", "#dfe9e7", "#e7f2f0"].forEach((col, i) => (c.nodes[i].style.fill = col)); g.append(...c.nodes); });
+    sym("vent", (g) => { const c = cyl(0, 0, 0.03, 2, { dome: true }); ["#8b9194", "#b9bec0", "#dfe2e3", "#e9ebec"].forEach((col, i) => (c.nodes[i].style.fill = col)); g.append(...c.nodes); });
     // a cafe table under a market umbrella
     sym("parasol", (g) => {
       el("ellipse", { cx: 1.5, cy: 0.4, rx: 5, ry: 2, style: SHADE }, g);
@@ -1261,7 +1275,7 @@
 
     // a catenary pole for the light rail: on the north footpath, its bracket
     // arm reaching over the tracks to hold the contact wire
-    sym("catpole", (g) => { const [ax, ay] = P(0, 0.38, 15), [dx, dy] = P(0, 0.38, 13.6); g.append(pl("", [[0, 0], [0, -16], [ax, ay]], { style: "fill:none;stroke:rgba(255,255,255,.5);stroke-width:1;stroke-linejoin:round" }), seg("", [ax, ay], [dx, dy], { style: "stroke:rgba(255,255,255,.5);stroke-width:.7" })); });
+    sym("catpole", (g) => { const [ax, ay] = P(0, 0.38, 15), [dx, dy] = P(0, 0.38, 13.6); g.append(pl("", [[0, 0], [0, -16], [ax, ay]], { style: "fill:none;stroke:#9ba1a1;stroke-width:.8;stroke-linejoin:round" }), seg("", [ax, ay], [dx, dy], { style: "stroke:#9ba1a1;stroke-width:.55" })); });
     // park furniture: a picnic table with a bench each side, a slide, footy
     // goals (two tall posts, two short) and a dinghy tied up at the jetty
     sym("picnic", (g) => {
@@ -1314,6 +1328,14 @@
       for (let n = 0; n < 26; n++) { const x = rnd() * 46, y = rnd() * 22, w = 1.5 + rnd() * 3.5; r.push([[x, y], [x + w * 0.5, y - 0.35], [x + w, y]]); }
       for (let n = 0; n < 7; n++) { const x = rnd() * 46, y = rnd() * 22; gl.push([[x - 0.9, y], [x, y - 0.3], [x + 0.9, y], [x, y + 0.3]]); }
       ripple.append(strokes("", r, { style: "fill:none;stroke:rgba(236,244,240,.22);stroke-width:.32;stroke-linecap:round" }), shapes("", gl, { style: F("rgba(255,252,236,.55)") })); }
+    // rust streaks: thin runs from the top edge, longer and fainter as they go
+    const rust = el("pattern", { id: "rust", width: 52, height: 60, patternUnits: "userSpaceOnUse" }, D);
+    { const rnd = seeded(19), runs = [];
+      for (let n = 0; n < 11; n++) { const x = rnd() * 52, len = 6 + rnd() * 22, w = 0.4 + rnd() * 0.9; runs.push([[x, 0], [x + w, 0], [x + w * 0.6, len], [x + w * 0.3, len]]); }
+      rust.append(shapes("", runs, { style: F("rgba(122,64,30,.32)") })); }
+    // pavers: large-format slabs laid on the iso grid, an eighth of a tile each
+    const pavers = el("pattern", { id: "pavers", width: TW / 8, height: TH / 8, patternUnits: "userSpaceOnUse" }, D);
+    pavers.append(strokes("", [[[0, 0], [TW / 8, TH / 8]], [[0, TH / 8], [TW / 8, 0]]], { style: "fill:none;stroke:rgba(40,38,32,.16);stroke-width:.3" }));
     // a balcony on every floor of the flats: the slab's lit edge, its shadow
     // on the glass below and a glass balustrade, two bays to a balcony
     for (const side of ["l", "r"]) {
@@ -1384,7 +1406,8 @@
     grad("hub-glow", "radialGradient", [[0, "rgba(95,180,166,.55)"], [1, "rgba(95,180,166,0)"]]);
     grad("water-sheen", "linearGradient", [[0, "rgba(255,255,255,.2)"], [1, "rgba(255,255,255,0)"]], { x1: 0, y1: 0, x2: 0, y2: 1 });
     grad("roll", "linearGradient", [[0, "rgba(8,18,30,.5)"], [0.18, "rgba(8,18,30,.36)"], [0.4, "rgba(8,18,30,.12)"], [0.58, "rgba(255,248,230,0)"], [0.72, "rgba(255,248,230,.22)"], [0.82, "rgba(255,248,230,.08)"], [0.94, "rgba(8,18,30,.06)"], [1, "rgba(8,18,30,.2)"]]);
-    grad("cloud-sh", "radialGradient", [[0, "rgba(8,18,32,.3)"], [0.55, "rgba(8,18,32,.19)"], [1, "rgba(8,18,32,0)"]]);
+    grad("puff", "radialGradient", [[0, "rgba(255,255,255,.9)"], [0.55, "rgba(255,255,255,.45)"], [1, "rgba(255,255,255,0)"]]);
+    grad("cloud-sh", "radialGradient", [[0, "rgba(8,18,32,.36)"], [0.5, "rgba(8,18,32,.25)"], [0.8, "rgba(8,18,32,.1)"], [1, "rgba(8,18,32,0)"]]);
     grad("ao", "linearGradient", [[0, "rgba(255,246,226,.08)"], [0.45, "rgba(255,246,226,0)"], [0.7, "rgba(4,10,16,.08)"], [1, "rgba(4,10,16,.36)"]], { x1: 0, y1: 0, x2: 0, y2: 1 });
     grad("solar-grad", "linearGradient", [[0, "#1a2230"], [0.6, "#25324a"], [1, "#4a5d78"]]);
     // a dome lit from the upper right, shaded down its far side
@@ -1776,7 +1799,8 @@
           // (lifelike pass) a whirlybird turning on every other roof, and
           // shrubs inside the front fence
           const hd = x + 0.75 + y + (k === "px" ? 0.7 : 0.75);
-          if (i % 2 === 0) vol.push(use("vent", ...(k === "px" ? [x + 0.25, y + 0.42, h + 5.6] : k === "py" ? [x + 0.42, y + 0.3, h + 4.8] : [x + 0.45, y + 0.42, h + 8.2]), { d: hd + 0.004 }));
+          if (i % 2 === 1) vol.push(use("split", x + 0.08, y + (k === "px" ? 0.7 : 0.75) + 0.004, 0, { cls: "fine", d: hd + 0.006 }));
+          if (i % 3 === 0) vol.push(use("vent", ...(k === "px" ? [x + 0.25, y + 0.42, h + 5.6] : k === "py" ? [x + 0.42, y + 0.3, h + 4.8] : [x + 0.45, y + 0.42, h + 8.2]), { d: hd + 0.004 }));
           // (they stand in front of the house's east wall and behind the pickets, so they sort between the two)
           vol.push(lo(use("shrub", x + 0.81, y + 0.4, 0, { cls: "fine", d: x + y + 1.52 })), lo(use("shrub", x + 0.81, y + 0.6, 0, { cls: "fine", d: x + y + 1.53 })));
           if (x < 6) vol.push(lo(use("shrub", 5.52, y + 0.18, 0, { cls: "fine", d: 5.52 + y + 0.18 })), lo(use("shrub", 5.53, y + 0.52, 0, { cls: "fine", d: 5.53 + y + 0.52 })));
@@ -1815,7 +1839,7 @@
       build(S) {
         // each tower in its own material: glass, dark glass, sandstone, concrete, brick, rendered white
         const towers = [[10.8, 0.5, 1.1, 1.1, 86, "a", "glass"], [12.4, 0.4, 1.0, 1.0, 118, "b", "glass-dark"], [13.9, 0.6, 0.8, 0.9, 64, "c", "sand"], [10.9, 2.4, 1.2, 0.9, 46, "b", "grey"], [12.6, 2.2, 1.0, 1.2, 72, "a", "glass"], [14.0, 2.5, 0.7, 0.8, 54, "c", "brick"], [14.2, 1.65, 0.5, 0.6, 30, "a", "white"], [11.7, 3.35, 0.7, 0.5, 26, "b", "sand"]];
-        const decals = [slab(10.9, 3.75, 1.1, 0.75, "plaza")];
+        const decals = [slab(10.9, 3.75, 1.1, 0.75, "plaza"), slab(10.9, 3.75, 1.1, 0.75, "plaza-pavers")];
         const vol = [
           ...towers.map(([x, y, w, d, h, v, m]) => box(x, y, w, d, h, { win: v, entry: true, cls: m })),
           box(12.55, 0.55, 0.7, 0.7, 20, { z: 118, cls: "glass-dark" }), box(12.75, 0.75, 0.3, 0.3, 8, { z: 138, top: "lit", cls: "white" }),
@@ -1847,13 +1871,23 @@
           use("car-e", 12.45, 4.45, 0, { d: 17.0 }), use("car-w", 10.65, 4.45, 0, { d: 15.2 }),
           // awnings over the shop fronts, each sorting just after its tower
           ...[[10.8, 1.6, 1.1, 13.5], [12.4, 1.4, 1.0, 14.8], [13.9, 1.5, 0.8, 16.2]].map(([x, y, w, d]) => item(d + 0.003, poly("awning", [P(x + 0.02, y, 5.4), P(x + w - 0.02, y, 5.4), P(x + w - 0.02, y + 0.1, 4.7), P(x + 0.02, y + 0.1, 4.7)]), seg("awning-edge", P(x + 0.02, y + 0.1, 4.7), P(x + w - 0.02, y + 0.1, 4.7)))),
+          // (lifelike pass 4) shop signs over the awnings: a coloured panel per
+          // shop with its pale lettering, two or three shops to a frontage
+          ...[[10.8, 1.6, 1.1, 13.5, ["#1f5d43", "#7a2a30", "#23354f"]], [12.4, 1.4, 1.0, 14.8, ["#b8862f", "#1f5d43"]], [13.9, 1.5, 0.8, 16.2, ["#23354f", "#7a2a30"]]].map(([x, y, w, d, cols]) => {
+            const n = cols.length, seg = w / n;
+            return item(d + 0.004, ...cols.map((c, i) => poly("shop-sign", onL(x, y, i * seg + 0.04, (i + 1) * seg - 0.04, 5.9, 7.3), { style: `fill:${c}` })), strokes("sign-text", cols.map((_, i) => [P(x + i * seg + seg * 0.3, y, 6.6), P(x + i * seg + seg * 0.7, y, 6.6)])));
+          }),
           // a glass sky bridge between the two western towers
           box(11.22, 1.6, 0.3, 0.8, 5.5, { z: 30, cls: "glass" }), item(13.921, poly("pane", onR(11.52, 1.6, 0.03, 0.77, 31, 34.5))),
           // a helipad on the grey tower, and a lit band under the crown of the tallest
           item(15.401, el("ellipse", { class: "helipad", cx: f(P(11.5, 2.95, 46)[0]), cy: f(P(11.5, 2.95, 46)[1]), rx: f(0.25 * TW / Math.SQRT2), ry: f(0.25 * TH / Math.SQRT2) }), strokes("heli-h", [[P(11.42, 2.87, 46), P(11.42, 3.03, 46)], [P(11.58, 2.87, 46), P(11.58, 3.03, 46)], [P(11.42, 2.95, 46), P(11.58, 2.95, 46)]])),
           item(14.801, shapes("crown", [onL(12.4, 1.4, 0.03, 0.97, 113.5, 115.5), onR(13.4, 0.4, 0.03, 0.97, 113.5, 115.5)])),
         ];
-        return { decals, vol, fx: [...S], cut: [{ type: "pipe", x: 12.6 }] };
+        // (lifelike pass 4) the fountain's jets arc up and fall back into the basin
+        const [fx0, fy0] = P(11.45, 4.1, 2.4), spray = el("g", { class: "spray", "data-layer": "street" });
+        [[-6.4, 2.2], [6.4, 2.2], [-3.6, 3.4], [3.6, 3.4], [0, -2.6]].forEach(([dx, dy], i) => el("path", { d: `M${f(fx0)} ${f(fy0)}Q${f(fx0 + dx * 0.45)} ${f(fy0 - 9 + dy * 0.4)} ${f(fx0 + dx)} ${f(fy0 + dy)}`, style: `animation-delay:${(-i * 0.17).toFixed(2)}s` }, spray));
+        el("path", { class: "jet", d: `M${f(fx0)} ${f(fy0)}V${f(fy0 - 10)}` }, spray);
+        return { decals, vol, fx: [spray, ...S], cut: [{ type: "pipe", x: 12.6 }] };
       },
     },
     plant: {
@@ -1870,9 +1904,12 @@
           // two clarifiers with turning scraper arms, launder rings and walkways
           cyl(1.1, 6.55, 0.78, 5, { water: true, arm: true, ring: true, cls: "concrete" }), cyl(1.1, 8.65, 0.78, 5, { water: true, arm: true, ring: true, cls: "concrete" }),
           cyl(1.1, 6.55, 0.12, 3, { z: 5, bias: 0.01, cls: "steel" }), cyl(1.1, 8.65, 0.12, 3, { z: 5, bias: 0.01, cls: "steel" }),
-          rail([[0.32, 6.55], [1.1, 6.55]], 8, { posts: 0.26, cls: "fine safety", d: 7.7 }), rail([[0.32, 8.65], [1.1, 8.65]], 8, { posts: 0.26, cls: "fine safety", d: 9.8 }),
+          // the walkways out to each centre: a grated deck under the handrail
+          // (over the water, so they sort just after their clarifier)
+          ...[6.55, 8.65].map((y) => flat("grate walkway", [P(0.32, y - 0.04, 5.2), P(1.06, y - 0.04, 5.2), P(1.06, y + 0.04, 5.2), P(0.32, y + 0.04, 5.2)], y + 2.22)),
+          rail([[0.32, 6.59], [1.1, 6.59]], 8, { posts: 0.26, base: 5.2, cls: "fine safety", d: 8.775 }), rail([[0.32, 8.69], [1.1, 8.69]], 8, { posts: 0.26, base: 5.2, cls: "fine safety", d: 10.875 }),
           // aeration basin with diffusers
-          box(ax, ay, 1.5, 1.3, 5, { cls: "concrete" }), flat("wtr", [P(ax + 0.12, ay + 0.12, 5), P(ax + 1.38, ay + 0.12, 5), P(ax + 1.38, ay + 1.18, 5), P(ax + 0.12, ay + 1.18, 5)], ax + 1.5 + ay + 1.3 + 0.01),
+          box(ax, ay, 1.5, 1.3, 5, { cls: "concrete" }), flat("wtr aer", [P(ax + 0.12, ay + 0.12, 5), P(ax + 1.38, ay + 0.12, 5), P(ax + 1.38, ay + 1.18, 5), P(ax + 0.12, ay + 1.18, 5)], ax + 1.5 + ay + 1.3 + 0.01),
           line("wtr-line", [P(ax + 0.2, ay + 0.65, 5), P(ax + 1.3, ay + 0.65, 5)], ax + 1.5 + ay + 1.3 + 0.02),
           item(ax + 1.5 + ay + 1.3 + 0.015, ...[0.35, 0.65, 0.95].map((k) => seg("det fine", P(ax + 0.2, ay + k, 5), P(ax + 1.3, ay + k, 5)))),
           // (lifelike pass) foam over the diffuser grids, in rafts along each row
@@ -1963,7 +2000,7 @@
           // the sawtooth works and its office
           ...[0, 1, 2].map((i) => prism(13.3 + i * 0.43, 7.9, 0.43, 1.3, 16, 6, { gable: "y", skylight: true, bias: i * 0.001, cls: "brick", roof: "cb-grey" })), box(13.3, 9.2, 1.3, 0.35, 16, { win: "a", cls: "render" }),
           // the stacks and the tank farm inside its bund
-          cyl(13.95, 6.2, 0.17, 58, { stripes: [3, 9], bands: 4, cls: "concrete" }), cyl(14.45, 6.7, 0.17, 46, { stripes: [3, 9], bands: 3, cls: "concrete" }), line("ladder fine", [P(14.1, 6.2, 2), P(14.1, 6.2, 56)], 20.5), line("ladder fine", [P(14.6, 6.7, 2), P(14.6, 6.7, 44)], 21.4),
+          cyl(13.95, 6.2, 0.17, 58, { stripes: [3, 9], bands: 4, cls: "concrete" }), cyl(14.6, 6.55, 0.17, 46, { stripes: [3, 9], bands: 3, cls: "concrete" }), line("ladder fine", [P(14.1, 6.2, 2), P(14.1, 6.2, 56)], 20.5), line("ladder fine", [P(14.6, 6.7, 2), P(14.6, 6.7, 44)], 21.4),
           box(10.75, 8.1, 2.4, 0.06, 3, { cls: "concrete" }), box(10.75, 8.1, 0.06, 1.75, 3, { bias: 0.001, cls: "concrete" }), box(13.1, 8.1, 0.06, 1.75, 3, { cls: "concrete" }), box(10.75, 9.8, 2.4, 0.06, 3, { cls: "concrete" }),
           cyl(11.3, 8.7, 0.5, 18, { bands: 2, rail: true, cls: "steel" }), cyl(12.5, 8.7, 0.5, 18, { bands: 2, rail: true, cls: "steel" }), cyl(11.9, 9.45, 0.28, 12, { bands: 1, cls: "blue" }), cyl(12.85, 9.5, 0.22, 10, { bands: 1, cls: "green" }), box(12.35, 9.55, 0.25, 0.2, 5, { cls: "white" }),
           rail([[11.3, 8.1], [11.3, 7.6], [12.4, 7.6]], 9, { posts: 0.5, cls: "pipe-rack", d: 19.8 }),
@@ -1979,7 +2016,7 @@
           gum(14.85, 9.4), tree(10.5, 8.6, "s"), tree(12.0, 5.55, "s"),
         ];
         const smoke = [];
-        [[13.95, 6.2, 58], [14.45, 6.7, 46], [14.55, 9.45, 14]].forEach(([x, y, z], k) => {
+        [[13.95, 6.2, 58], [14.6, 6.55, 46], [14.55, 9.45, 14]].forEach(([x, y, z], k) => {
           const [cx, cy] = P(x, y, z + 3);
           for (let i = 0; i < (k === 2 ? 2 : 3); i++) smoke.push(el("circle", { class: k === 2 ? "smoke steam" : "smoke", cx: f(cx), cy: f(cy), r: 4, style: `animation-delay:${(i * 1.2 + k * 0.5).toFixed(1)}s;transform-box:fill-box;transform-origin:center` }));
         });
@@ -1995,7 +2032,7 @@
       ...many("rock", [[0.35, 1.7], [0.9, 0.55], [1.7, 0.95], [2.0, 2.95], [2.9, 2.55], [3.9, 2.85], [4.3, 4.2], [1.45, 2.05], [3.05, 3.85]], { cls: "fine" }),
       ...many("reed", [[0.55, 1.55], [2.85, 3.75], [3.15, 3.95], [4.4, 4.25], [0.2, 1.45]], { cls: "fine" }),
       ...[[2.35, 0.3, "s"], [4.45, 1.85, "s"], [0.75, 4.4, "s"]].map(([x, y, k]) => tree(x, y, k)), gum(2.55, 4.4), gum(1.75, 3.55),
-      house(3.95, 4.05, 0.3, 0.3, 5, 4, { roof: "cb-green" }), slab(4.1, 2.9, 0.45, 0.5, "track"), use("suv-s", 4.2, 3.0, 0, { d: 7.4 }), use("hatch-s", 4.4, 3.15, 0, { d: 7.75 }),
+      house(3.95, 4.05, 0.3, 0.3, 5, 4, { roof: "cb-green" }), slab(4.1, 2.2, 0.45, 0.5, "track"), use("suv-s", 4.2, 2.3, 0, { d: 6.7 }), use("hatch-s", 4.4, 2.45, 0, { d: 7.05 }),
       rail([[0.5, 0.45], [1.75, 0.45], [1.75, 1.05], [0.5, 1.05], [0.5, 0.45]], 4, { posts: 0.3, cls: "fence fine", d: 2.9 }),
       use("antenna", 1.95, 1.25, 12, { d: 3.3 }), ...many("bollard", [[0.95, 2.25], [1.15, 2.25], [1.35, 2.25]], { cls: "fine" }), use("swing", 1.35, 2.95, 0, { cls: "fine" }),
       ...many("sign", [[4.45, 2.35], [0.4, 0.4]], { cls: "fine" }), use("bench", 2.75, 1.65, 0, { cls: "fine" }),
@@ -2012,9 +2049,9 @@
       ...many("hedge", [[5.7, 1.25], [7.05, 2.25], [8.4, 3.25], [5.7, 3.25], [7.05, 1.25]], { cls: "fine" }),
       ...many("sign", [[6.6, 4.45], [8.0, 4.45]], { cls: "fine" }), use("bench", 9.38, 1.18, 0, { cls: "fine" }),
       // Australian backyards: rainwater tanks, Hills Hoists, a pool
-      ...many("tank-rw", [[6.32, 1.26], [7.67, 2.26], [9.02, 3.26], [6.32, 3.26], [7.67, 0.26]]),
+      ...[[6.32, 1.26, "#7d8a6e"], [7.67, 2.26, "#d4cdb8"], [9.02, 3.26, "#4d5357"], [6.32, 3.26, "#a39c87"], [7.67, 0.26, "#3f5444"]].map(([x, y, c]) => use("tank-rw", x, y, 0, { d: x + y + 0.05, style: `--tank:${c}` })),
       ...many("hoist", [[6.3, 0.2], [7.45, 1.2], [8.8, 2.2]], { cls: "fine" }),
-      slab(5.78, 0.05, 0.3, 0.2, "pool-b"),
+      slab(5.78, 0.05, 0.3, 0.2, "pool-coping"), slab(5.8, 0.065, 0.26, 0.17, "pool-b"), slab(5.8, 0.065, 0.26, 0.17, "pool-deep"),
       ...[[6.35, 2.95, "s"], [7.75, 1.0, "s"], [9.15, 2.95, "s"], [9.1, 0.4, "s"], [9.5, 0.95, "s"]].map(([x, y, k]) => tree(x, y, k)),
       jac(6.35, 0.95), jac(7.75, 2.95),
       ...many("lamp", [[6.78, 4.3], [8.13, 0.55]]),
@@ -2066,7 +2103,7 @@
       line("stair fine", [P(3.62, 7.3, 2), P(3.72, 7.2, 8), P(3.86, 7.06, 14), P(3.98, 6.94, 20)], 11.2),
       item(10.65, pl("rail pipe-rack", [P(3.42, 6.62, 27), P(3.75, 6.85, 27), P(3.98, 7.02, 22)])),
       flat("deck grate", [P(2.3, 8.8, 6), P(3.8, 8.8, 6), P(3.8, 8.9, 6), P(2.3, 8.9, 6)], 12.99), rail([[2.3, 8.8], [3.8, 8.8]], 10, { posts: 0.3, cls: "fine safety", d: 12.995 }),
-      who(0.7, 6.52, "#f97316", { z: 5, d: 8.77 }), who(3.55, 5.75, "#f97316"),
+      who(0.7, 6.53, "#f97316", { z: 5.2, d: 8.772 }), who(3.55, 5.75, "#f97316"),
     ],
     pump: () => [
       ...many("solar", [[6.55, 5.7, 3], [6.85, 5.7, 3], [6.55, 5.95, 3], [6.85, 5.95, 3]]),
@@ -2157,7 +2194,7 @@
         ...many("picnic", [[2.95, 4.32], [3.72, 3.68]], { cls: "fine" }), box(3.1, 4.42, 0.1, 0.08, 4, { cls: "zinc" }),
         use("slide", 1.6, 2.62, 0, { cls: "fine" }),
         // marked bays on the car park by the road, and a stand of gums in the corner
-        slab(4.1, 2.9, 0.45, 0.5, "yard", 0, { style: "fill:url(#bays)" }),
+        slab(4.1, 2.2, 0.45, 0.5, "yard", 0, { style: "fill:url(#bays)" }),
         gum(0.2, 0.3), gum(0.3, 1.3),
         lo(item(5.1, shapes("duck", [[3.5, 1.0], [3.62, 1.25], [3.88, 0.9]].map(([x, y]) => { const [px, py] = P(x, y); return [[px - 1.3, py + 0.2], [px - 0.3, py - 0.9], [px + 1.3, py - 0.3], [px + 0.6, py + 0.6]]; })))),
       ],
