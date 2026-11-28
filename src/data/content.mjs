@@ -82,7 +82,7 @@ export const homeLede = "Australia's largest supplier of water and wastewater mo
 // is a claim made elsewhere on the site (the About timeline, the footer
 // credentials, the DaaS page).
 export const proof = [
-  { lead: "Looking after Defence and Transurban sites", text: "An Australian Defence facility since 2003, and Transurban since 2009." },
+  { lead: "Looking after Defence and Transurban sites", text: "An Australian Defence facility since 2003, and Transurban since 2015." },
   { lead: "Supplied, installed and serviced by EDS", text: "Our own loggers and flow meters, plus Detectronic, Hach, ORI, Beadedstream and more, fitted and maintained by our crews." },
   { lead: "Sydney Water panel provider", text: "Sewer flow and level instruments on a five-year panel, and EDS loggers at the Bureau of Meteorology since the 1990s." },
   { lead: "Certified for the sewer", text: "Intrinsically safe instruments under ATEX and IECEx for Zone 0. And 99.95% data availability under EDS Data as a Service." },
@@ -261,7 +261,7 @@ export const glance = {
   ],
   "facility-management": [
     ["shield", "Defence since 2003", "Servicing and monitoring, under a contract still in place"],
-    ["route", "Transurban since 2009", "Key tunnel infrastructure, now under a contract awarded in 2026"],
+    ["route", "Transurban since 2015", "Key tunnel infrastructure, now under a contract awarded in 2026"],
     ["clock", "24/7 support", "Continuous oversight and rapid response"],
     ["building-2", "Your BMS", "New technology integrated into existing infrastructure"],
   ],
@@ -1358,7 +1358,7 @@ export const services = [
     group: "field",
     summary: "Facility management with the monitoring built in, for major corporate and government organisations including Defence and Transurban.",
     intro: [
-      "For more than thirty years, major corporate and government organisations have trusted EDS with their facilities. That includes Defence since 2003 and Transurban since 2009.",
+      "For more than thirty years, major corporate and government organisations have trusted EDS with their facilities. That includes Defence since 2003 and Transurban since 2015.",
       "Facility management is more than maintenance. It's keeping your assets performing, safe and sustainable, with little downtime and every standard met. And because one team delivers several services, costs come down.",
       "We're a monitoring company, so the monitoring comes built in: sensors, data platforms and real-time reporting. No two facilities are the same, so we build each service around your site, budget, risks and legal requirements.",
     ],
@@ -1376,7 +1376,7 @@ export const services = [
         heading: "Where we have delivered",
         items: [
           ["Australian Defence facility", "Servicing and monitoring since 2003, under a contract still in place."],
-          ["Transurban", "Looked after since 2009, and now servicing and maintaining key tunnel infrastructure under a contract awarded in 2026."],
+          ["Transurban", "Looked after since 2015, and now servicing and maintaining key tunnel infrastructure under a contract awarded in 2026."],
           ["Amberley Fire Training Facility", "Built by EDS in 2001 and 2002."],
         ],
       },
@@ -3619,7 +3619,7 @@ export const about = {
     ["2001–02", "Amberley Fire Training Facility", "EDS built the facility under Graham's leadership."],
     ["2003", "Defence facility contract", "EDS began servicing and monitoring the Australian Defence facility, under a contract still in place."],
     ["2005", "A founder's legacy", "Graham sadly passed away. EDS has continued to grow under Cynthia's leadership."],
-    ["2009", "Transurban", "EDS began looking after Transurban, a client ever since."],
+    ["2015", "Transurban", "EDS began looking after Transurban, a client ever since."],
     ["2022–23", "Goulburn Valley Water, Kilmore", "EDS monitored sewer flow at 10 sites in Kilmore, supporting Goulburn Valley Water's infrastructure planning and management."],
     ["2023", "Sydney Water panel provider", "EDS was awarded a five-year panel contract to supply sewer flow and level instruments to Sydney Water."],
     ["2023", "North East Water", "EDS monitored sewers and rainfall at 15 sites over eight weeks, giving North East Water high-resolution data for infrastructure planning."],
@@ -3627,7 +3627,7 @@ export const about = {
     ["2023–24", "Yarra Valley Water gauge calibrations", "EDS calibrated long-term sewer flow gauges across multiple Yarra Valley Water sites, keeping the data reliable for modelling and planning."],
     ["2023–24", "Cairns Regional Council monitoring stations", "EDS installed and maintains long-term sewer monitoring stations, giving the council continuous flow and water quality data."],
     ["2025", "Wingecarribee Shire Council", "EDS installed 15 short-term sewer flow gauges across the Mittagong and Robertson catchments."],
-    ["2026", "Transurban service provider", "EDS was awarded a service provider contract with Transurban, a client since 2009, to service and maintain key tunnel infrastructure."],
+    ["2026", "Transurban service provider", "EDS was awarded a service provider contract with Transurban, a client since 2015, to service and maintain key tunnel infrastructure."],
     ["Today", "Australia's largest supplier", "EDS is now Australia's largest supplier of equipment for the water and wastewater industry. It was also awarded the largest sewer monitoring project in Australia in recent years."],
   ],
   approach: {
